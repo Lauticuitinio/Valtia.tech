@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valtia Analytics — Gestión Privada de Capital</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0D1B2A;--navy2:#152336;--navy3:#1A3A5C;--navy4:#0a1520;
+  --gold:#B8975A;--gold2:#D4AF6E;--gold3:#8B6914;
+  --cream:#F5F2EC;--cream2:#EDE9E0;
+  --white:#FFFFFF;--lgray:#E8E4DC;--mgray:#6B7C8D;--dgray:#3A4A5C;
+  --text-d:#F0EDE8;--sub-d:rgba(240,237,232,.55);--muted-d:rgba(240,237,232,.35);
+  --text-l:#1A2B3C;--sub-l:#4A5A6C;--muted-l:#8A9BAD;
+  --bg-d:#0D1B2A;--bg2-d:#111f2e;--bg3-d:#152336;
+  --bg-l:#F5F2EC;--bg2-l:#FFFFFF;--bg3-l:#EDE9E0;
+  --border-d:rgba(184,151,90,.12);--border-l:rgba(26,58,92,.1);
+  --card-d:#152336;--card-l:#FFFFFF;
+  --green:#2E7D32;--red:#C62828;
+}
+[data-theme="dark"]{
+  --bg:var(--bg-d);--bg2:var(--bg2-d);--bg3:var(--bg3-d);
+  --text:var(--text-d);--sub:var(--sub-d);--muted:var(--muted-d);
+  --border:var(--border-d);--card:var(--card-d);
+}
+[data-theme="light"]{
+  --bg:var(--bg-l);--bg2:var(--bg2-l);--bg3:var(--bg3-l);
+  --text:var(--text-l);--sub:var(--sub-l);--muted:var(--muted-l);
+  --border:var(--border-l);--card:var(--card-l);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;transition:background .3s,color .3s}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px}
+
+/* ── TICKER ── */
+.ticker-bar{background:var(--navy4);border-bottom:1px solid var(--border);padding:6px 0;overflow:hidden;position:relative}
+[data-theme="light"] .ticker-bar{background:#1A2B3C}
+.ticker-track{display:flex;gap:48px;animation:ticker 30s linear infinite;white-space:nowrap;width:max-content}
+.ticker-item{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;letter-spacing:.04em}
+.ticker-name{color:rgba(255,255,255,.5);font-size:11px}
+.ticker-price{color:#fff}
+.ticker-change{font-size:11px}
+.up{color:#4caf50}.down{color:#ef5350}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:200;height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;background:rgba(13,27,42,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+[data-theme="light"] nav{background:rgba(255,255,255,.97);border-bottom:1px solid rgba(26,58,92,.1)}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo{width:34px;height:34px}
+.nav-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:#fff}
+[data-theme="light"] .nav-name{color:var(--navy)}
+.nav-name em{color:var(--gold);font-style:normal}
+.nav-sub{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);font-family:'Jost',sans-serif;font-weight:300}
+[data-theme="light"] .nav-sub{color:var(--mgray)}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55);text-decoration:none;transition:color .2s}
+[data-theme="light"] .nav-links a{color:var(--sub-l)}
+.nav-links a:hover{color:var(--gold)}
+.nav-right{display:flex;align-items:center;gap:14px}
+.theme-btn{width:36px;height:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:10px;cursor:pointer;position:relative;transition:all .2s;flex-shrink:0}
+[data-theme="light"] .theme-btn{background:rgba(26,27,42,.08);border-color:rgba(26,27,42,.15)}
+.theme-btn::after{content:'';position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--gold);transition:transform .2s}
+[data-theme="light"] .theme-btn::after{transform:translateX(16px)}
+.nav-cta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--navy);background:var(--gold);padding:9px 22px;border-radius:2px;text-decoration:none;transition:background .2s,transform .15s}
+.nav-cta:hover{background:var(--gold2);transform:translateY(-1px)}
+
+/* ── HERO ── */
+.hero{min-height:100vh;background:var(--navy);display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;padding:0 52px}
+[data-theme="light"] .hero{background:#0D1B2A}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(184,151,90,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(184,151,90,.03) 1px,transparent 1px);background-size:70px 70px}
+.hero-glow{position:absolute;right:-5%;top:5%;width:55vw;height:75vh;background:radial-gradient(ellipse,rgba(184,151,90,.06) 0%,transparent 65%)}
+.hero-line{position:absolute;left:0;top:50%;width:3px;height:90px;margin-top:-45px;background:linear-gradient(180deg,transparent,var(--gold),transparent)}
+.hero-content{position:relative;z-index:2;max-width:760px}
+.hero-eye{font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:26px;display:flex;align-items:center;gap:12px}
+.hero-eye::before{content:'';display:block;width:32px;height:1px;background:var(--gold);opacity:.6}
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(48px,7vw,86px);font-weight:300;line-height:1.06;color:#fff;letter-spacing:-.015em;margin-bottom:26px}
+h1 em{font-style:italic;color:var(--gold2)}
+.hero-sub{font-size:16px;font-weight:300;line-height:1.75;color:rgba(255,255,255,.5);max-width:500px;margin-bottom:48px}
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap}
+.btn-primary{font-family:'Jost',sans-serif;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--navy);background:var(--gold);border:none;padding:15px 34px;border-radius:2px;cursor:pointer;text-decoration:none;display:inline-block;transition:background .2s,transform .15s}
+.btn-primary:hover{background:var(--gold2);transform:translateY(-1px)}
+.btn-ghost{font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.6);background:transparent;border:1px solid rgba(255,255,255,.18);padding:15px 34px;border-radius:2px;cursor:pointer;text-decoration:none;display:inline-block;transition:all .2s}
+.btn-ghost:hover{border-color:rgba(255,255,255,.5);color:#fff}
+.hero-stats{position:absolute;right:52px;bottom:56px;display:flex;gap:48px;z-index:2}
+.hstat-num{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:400;color:#fff;line-height:1;margin-bottom:5px}
+.hstat-num sup{font-size:18px;color:var(--gold)}
+.hstat-label{font-size:10px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.3)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.hero-eye{animation:fadeUp .7s ease both .1s}
+h1{animation:fadeUp .75s ease both .25s}
+.hero-sub{animation:fadeUp .7s ease both .4s}
+.hero-btns{animation:fadeUp .7s ease both .55s}
+.hero-stats{animation:fadeUp .7s ease both .7s}
+
+/* ── RENDIMIENTO ── */
+.rendimiento{background:var(--bg);padding:80px 52px}
+.section-tag{font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(34px,4vw,52px);font-weight:400;line-height:1.12;color:var(--text);margin-bottom:18px}
+.gold-rule{width:36px;height:1px;background:var(--gold);opacity:.5;margin:20px 0}
+.section-desc{font-size:15px;font-weight:300;line-height:1.8;color:var(--sub);max-width:500px}
+.rend-header{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:end;margin-bottom:40px}
+.rend-kpis{display:flex;gap:32px;align-items:flex-end}
+.kpi-item{text-align:right}
+.kpi-val{font-family:'Cormorant Garamond',serif;font-size:44px;font-weight:400;line-height:1;color:var(--text)}
+.kpi-val.positive{color:#4caf50}
+.kpi-label{font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.chart-box{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:28px;position:relative}
+.chart-legend{display:flex;gap:20px;margin-bottom:20px}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--sub)}
+.legend-dot{width:10px;height:10px;border-radius:50%}
+.benchmark-note{font-size:12px;color:var(--muted);margin-top:14px;font-style:italic}
+
+/* ── SERVICIOS ── */
+.servicios{background:var(--bg3);padding:90px 52px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:start}
+.serv-list{display:flex;flex-direction:column}
+.serv-item{border-top:1px solid var(--border);padding:26px 0;display:flex;gap:20px;align-items:flex-start}
+.serv-item:last-child{border-bottom:1px solid var(--border)}
+.serv-num{font-family:'Cormorant Garamond',serif;font-size:13px;color:var(--gold);min-width:26px;padding-top:2px}
+.serv-body h3{font-size:15px;font-weight:500;color:var(--text);margin-bottom:7px}
+.serv-body p{font-size:13px;font-weight:300;line-height:1.72;color:var(--sub)}
+
+/* ── FONDOS ── */
+.fondos{background:var(--bg);padding:90px 52px}
+.fondos-header{text-align:center;max-width:600px;margin:0 auto 60px}
+.fondos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.fondo-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:32px 28px;transition:border-color .2s,transform .2s;position:relative;overflow:hidden}
+.fondo-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.fondo-card.conservador::before{background:#4caf50}
+.fondo-card.moderado::before{background:var(--gold)}
+.fondo-card.agresivo::before{background:#ef5350}
+.fondo-card:hover{transform:translateY(-3px)}
+.fondo-card.moderado{border-color:var(--gold)}
+.fondo-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 10px;border-radius:3px;margin-bottom:16px}
+.fondo-card.conservador .fondo-badge{background:rgba(76,175,80,.12);color:#4caf50}
+.fondo-card.moderado .fondo-badge{background:rgba(184,151,90,.15);color:var(--gold)}
+.fondo-card.agresivo .fondo-badge{background:rgba(239,83,80,.1);color:#ef5350}
+.fondo-name{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;color:var(--text);margin-bottom:10px}
+.fondo-desc{font-size:13px;font-weight:300;line-height:1.7;color:var(--sub);margin-bottom:22px}
+.fondo-dist{display:flex;flex-direction:column;gap:8px;margin-bottom:22px}
+.dist-item{display:flex;align-items:center;gap:10px;font-size:13px}
+.dist-bar{flex:1;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+[data-theme="light"] .dist-bar{background:rgba(26,42,59,.08)}
+.dist-fill{height:100%;border-radius:2px}
+.dist-label{color:var(--sub);min-width:90px;font-size:12px}
+.dist-pct{color:var(--text);font-weight:500;min-width:34px;text-align:right;font-size:12px}
+.fondo-rend{font-size:12px;color:var(--muted);padding-top:18px;border-top:1px solid var(--border);font-style:italic}
+.recommended-tag{position:absolute;top:16px;right:16px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);background:var(--gold);padding:3px 8px;border-radius:2px}
+
+/* ── HERRAMIENTAS PREVIEW ── */
+.herramientas{background:var(--bg3);padding:90px 52px}
+.herr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:48px}
+.herr-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:22px 20px;transition:border-color .2s,transform .2s;cursor:pointer;position:relative}
+.herr-card:hover{border-color:var(--gold);transform:translateY(-2px)}
+.herr-card.locked::after{content:'🔒';position:absolute;top:14px;right:14px;font-size:12px;opacity:.5}
+.herr-icon{font-size:22px;margin-bottom:12px}
+.herr-card h4{font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px}
+.herr-card p{font-size:12px;font-weight:300;line-height:1.6;color:var(--sub)}
+.herr-free{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4caf50;background:rgba(76,175,80,.1);padding:2px 7px;border-radius:3px;display:inline-block;margin-top:8px}
+.herr-pro{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);background:rgba(184,151,90,.1);padding:2px 7px;border-radius:3px;display:inline-block;margin-top:8px}
+
+/* ── COTIZACIONES ── */
+.cotizaciones{background:var(--bg);padding:60px 52px}
+.cot-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:36px}
+.cot-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:18px 16px;text-align:center;transition:border-color .2s}
+.cot-card:hover{border-color:var(--gold)}
+.cot-name{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.cot-price{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;color:var(--text);line-height:1;margin-bottom:4px}
+.cot-change{font-size:12px;font-weight:500}
+.cot-updated{font-size:10px;color:var(--muted);margin-top:6px}
+
+/* ── PLANES ── */
+.planes{background:var(--bg3);padding:90px 52px}
+.planes-header{text-align:center;max-width:580px;margin:0 auto 56px}
+.planes-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.plan-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:28px 24px;position:relative;transition:transform .2s,border-color .2s}
+.plan-card:hover{transform:translateY(-2px)}
+.plan-card.featured{border-color:var(--gold);border-width:2px}
+.plan-popular{position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:var(--gold);color:var(--navy);padding:4px 14px;border-radius:10px;white-space:nowrap}
+.plan-discount{position:absolute;top:14px;right:14px;font-size:9px;font-weight:700;color:var(--navy);background:var(--gold2);padding:3px 8px;border-radius:3px}
+.plan-name{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.plan-period{font-size:12px;color:var(--sub);margin-bottom:20px}
+.plan-price-sup{font-size:14px;font-weight:500;color:var(--sub);vertical-align:top;margin-top:6px;display:inline-block}
+.plan-price{font-family:'Cormorant Garamond',serif;font-size:46px;font-weight:400;color:var(--text);line-height:1}
+.plan-price-per{font-size:12px;color:var(--muted);margin-bottom:6px}
+.plan-total{font-size:12px;color:var(--sub);background:rgba(184,151,90,.08);padding:6px 10px;border-radius:4px;margin-bottom:20px;text-align:center}
+.plan-features{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.plan-features li{font-size:13px;color:var(--sub);display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.plan-features li::before{content:'✓';color:var(--gold);font-weight:600;flex-shrink:0;margin-top:1px}
+.plan-btn{width:100%;padding:12px;font-family:'Jost',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--gold);background:transparent;color:var(--gold);border-radius:3px;cursor:pointer;transition:all .2s}
+.plan-btn:hover,.plan-card.featured .plan-btn{background:var(--gold);color:var(--navy)}
+.plan-mp{font-size:10px;color:var(--muted);text-align:center;margin-top:8px}
+
+/* ── PROCESO ── */
+.proceso{background:var(--bg);padding:90px 52px;text-align:center}
+.proceso-header{max-width:560px;margin:0 auto 64px}
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:0;position:relative;max-width:940px;margin:0 auto}
+.steps::before{content:'';position:absolute;top:26px;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--gold),var(--gold),transparent);opacity:.22}
+.step-num{width:52px;height:52px;border-radius:50%;background:var(--navy3);border:1px solid rgba(184,151,90,.28);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--gold)}
+[data-theme="light"] .step-num{background:#1A3A5C}
+.step h4{font-size:13px;font-weight:500;color:var(--text);margin-bottom:7px}
+.step p{font-size:12px;font-weight:300;line-height:1.65;color:var(--sub);padding:0 6px}
+
+/* ── QUIÉNES ── */
+.quienes{background:var(--bg3);padding:90px 52px}
+.quienes-inner{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
+.quienes-img{position:relative}
+.quienes-photo{width:100%;border-radius:8px;object-fit:cover;filter:grayscale(20%)}
+.quienes-quote{background:var(--bg);border-left:3px solid var(--gold);padding:20px 22px;border-radius:0 6px 6px 0;margin-top:20px}
+.quienes-quote blockquote{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;font-style:italic;color:var(--text);line-height:1.65;margin-bottom:12px}
+.quienes-quote cite{font-size:12px;font-weight:500;letter-spacing:.08em;color:var(--gold);font-style:normal}
+.stat-row{display:flex;gap:36px;margin-top:32px}
+.stat-item .stat-n{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:400;color:var(--text);line-height:1}
+.stat-item .stat-n sup{font-size:18px;color:var(--gold)}
+.stat-item .stat-l{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+
+/* ── FAQ ── */
+.faq{background:var(--bg);padding:80px 52px}
+.faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px 60px;margin-top:48px}
+.faq-item h4{font-size:14px;font-weight:500;color:var(--text);margin-bottom:8px}
+.faq-item p{font-size:13px;font-weight:300;line-height:1.72;color:var(--sub)}
+
+/* ── CTA ── */
+.cta-section{background:var(--navy);padding:100px 52px;text-align:center;position:relative;overflow:hidden}
+[data-theme="light"] .cta-section{background:#0D1B2A}
+.cta-glow{position:absolute;inset:0;background:radial-gradient(ellipse 70% 120% at 50% -10%,rgba(184,151,90,.07) 0%,transparent 60%)}
+.cta-inner{position:relative;z-index:1;max-width:620px;margin:0 auto}
+.cta-title{font-family:'Cormorant Garamond',serif;font-size:clamp(40px,5.5vw,66px);font-weight:300;line-height:1.08;color:#fff;margin-bottom:20px}
+.cta-title em{color:var(--gold2);font-style:italic}
+.cta-desc{font-size:15px;font-weight:300;line-height:1.75;color:rgba(255,255,255,.44);margin-bottom:44px}
+.cta-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.cta-disclaimer{font-size:11px;color:rgba(255,255,255,.18);margin-top:24px;line-height:1.6}
+
+/* ── FOOTER ── */
+footer{background:#040c14;padding:48px 52px;border-top:1px solid rgba(184,151,90,.08)}
+.footer-top{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:52px;margin-bottom:40px}
+.footer-logo-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4);display:block;margin-bottom:12px}
+.footer-logo-name em{color:var(--gold);font-style:normal}
+.footer-brand p{font-size:13px;font-weight:300;line-height:1.7;color:rgba(255,255,255,.25);max-width:220px}
+.footer-col h5{font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:18px}
+.footer-col a{display:block;font-size:13px;font-weight:300;color:rgba(255,255,255,.3);text-decoration:none;margin-bottom:9px;transition:color .2s}
+.footer-col a:hover{color:rgba(255,255,255,.65)}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid rgba(255,255,255,.04);flex-wrap:wrap;gap:12px}
+.footer-copy{font-size:11px;color:rgba(255,255,255,.18)}
+.footer-disc{font-size:11px;color:rgba(255,255,255,.12);max-width:400px;text-align:right;line-height:1.6}
+
+/* ── LOGIN MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:40px;width:100%;max-width:420px;position:relative}
+[data-theme="light"] .modal{background:#fff;border-color:rgba(26,58,92,.15)}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--sub);font-size:20px;cursor:pointer;line-height:1}
+.modal-logo{text-align:center;margin-bottom:28px}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;color:var(--text);text-align:center;margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--sub);text-align:center;margin-bottom:28px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.form-group input{width:100%;padding:12px 14px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Jost',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+[data-theme="light"] .form-group input{background:var(--bg3);color:var(--navy)}
+.form-group input:focus{border-color:var(--gold)}
+.btn-login{width:100%;padding:14px;background:var(--gold);border:none;border-radius:4px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--navy);cursor:pointer;transition:background .2s;margin-top:6px}
+.btn-login:hover{background:var(--gold2)}
+.login-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted);font-size:12px}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.btn-google{width:100%;padding:12px;background:transparent;border:1px solid var(--border);border-radius:4px;font-family:'Jost',sans-serif;font-size:12px;font-weight:500;color:var(--sub);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn-google:hover{border-color:var(--gold);color:var(--text)}
+.login-2fa{background:rgba(184,151,90,.06);border:1px solid rgba(184,151,90,.2);border-radius:6px;padding:12px;margin-top:14px;font-size:12px;color:var(--sub);text-align:center}
+.login-signup{text-align:center;margin-top:18px;font-size:13px;color:var(--sub)}
+.login-signup a{color:var(--gold);text-decoration:none}
+
+/* ── PORTAL (hidden by default) ── */
+#portal-view{display:none}
+.portal-nav{background:var(--bg3);border-bottom:1px solid var(--border);padding:0 52px;display:flex;align-items:center;gap:32px;height:56px}
+.portal-nav a{font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);text-decoration:none;transition:color .2s;padding-bottom:2px;border-bottom:2px solid transparent}
+.portal-nav a.active,.portal-nav a:hover{color:var(--gold);border-bottom-color:var(--gold)}
+.portal-content{padding:40px 52px}
+.portal-title{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:400;color:var(--text);margin-bottom:28px}
+.portal-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+.pkpi{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px}
+.pkpi-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.pkpi-value{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:400;color:var(--text);line-height:1}
+.pkpi-value.pos{color:#4caf50}.pkpi-value.neg{color:#ef5350}
+.pkpi-sub{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* ── SCROLLTOP ── */
+.scrolltop{position:fixed;bottom:28px;right:28px;width:40px;height:40px;background:var(--gold);border:none;border-radius:50%;cursor:pointer;font-size:16px;color:var(--navy);display:none;align-items:center;justify-content:center;z-index:100;transition:transform .2s}
+.scrolltop.visible{display:flex}
+.scrolltop:hover{transform:translateY(-2px)}
+</style>
+</head>
+<body>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="ticker-track" id="ticker">
+    <div class="ticker-item"><span class="ticker-name">BTC/USDT</span><span class="ticker-price" id="btc-p">$--</span><span class="ticker-change up" id="btc-c">--%</span></div>
+    <div class="ticker-item"><span class="ticker-name">ETH/USDT</span><span class="ticker-price" id="eth-p">$--</span><span class="ticker-change up" id="eth-c">--%</span></div>
+    <div class="ticker-item"><span class="ticker-name">DÓLAR MEP</span><span class="ticker-price" id="mep-p">$--</span><span class="ticker-change" id="mep-c">ARG</span></div>
+    <div class="ticker-item"><span class="ticker-name">DÓLAR BLUE</span><span class="ticker-price" id="blue-p">$--</span><span class="ticker-change" id="blue-c">ARG</span></div>
+    <div class="ticker-item"><span class="ticker-name">MERVAL</span><span class="ticker-price" id="merval-p">—</span><span class="ticker-change up">Local</span></div>
+    <div class="ticker-item"><span class="ticker-name">S&P 500</span><span class="ticker-price" id="sp500-p">$--</span><span class="ticker-change up" id="sp500-c">--%</span></div>
+    <!-- duplicate for seamless loop -->
+    <div class="ticker-item"><span class="ticker-name">BTC/USDT</span><span class="ticker-price" id="btc-p2">$--</span><span class="ticker-change up">--</span></div>
+    <div class="ticker-item"><span class="ticker-name">ETH/USDT</span><span class="ticker-price" id="eth-p2">$--</span><span class="ticker-change up">--</span></div>
+    <div class="ticker-item"><span class="ticker-name">DÓLAR MEP</span><span class="ticker-price" id="mep-p2">$--</span><span class="ticker-change">ARG</span></div>
+    <div class="ticker-item"><span class="ticker-name">DÓLAR BLUE</span><span class="ticker-price" id="blue-p2">$--</span><span class="ticker-change">ARG</span></div>
+    <div class="ticker-item"><span class="ticker-name">MERVAL</span><span class="ticker-price">—</span><span class="ticker-change up">Local</span></div>
+    <div class="ticker-item"><span class="ticker-name">S&P 500</span><span class="ticker-price" id="sp500-p2">$--</span><span class="ticker-change up">--</span></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-brand" onclick="showHome()">
+    <svg class="nav-logo" viewBox="0 0 34 34" fill="none">
+      <rect width="34" height="34" rx="4" fill="#1A3A5C"/>
+      <polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="23" cy="9" r="2.5" fill="#B8975A"/>
+    </svg>
+    <div>
+      <div class="nav-name">VAL<em>T</em>IA</div>
+      <div class="nav-sub">Analytics</div>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="noticias.html">Noticias</a>
+    <a href="#servicios">¿Qué hacemos?</a>
+    <a href="informes.html">Informes</a>
+    <a href="herramientas.html">Herramientas</a>
+    <a href="#planes">Planes</a>
+    <a href="#contacto">Contacto</a>
+  </div>
+  <div class="nav-right">
+    <button class="theme-btn" onclick="toggleTheme()" title="Cambiar tema"></button>
+    <a href="#" class="nav-cta" onclick="openLogin(event)">Acceso Cliente</a>
+  </div>
+</nav>
+
+<!-- HOME VIEW -->
+<div id="home-view">
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-line"></div>
+  <div class="hero-content">
+    <div class="hero-eye">Inversiones para todos · Córdoba, Argentina</div>
+    <h1>Tu plata,<br><em>trabajando</em><br>para vos</h1>
+    <p class="hero-sub">En Valtia tenés herramientas, análisis y acompañamiento para tomar mejores decisiones financieras. Y para quienes prefieren delegar, gestionamos el capital de forma profesional y privada.</p>
+    <div class="hero-btns">
+      <a href="#planes" class="btn-primary">Ver planes</a>
+      <a href="#rendimiento" class="btn-ghost">Performance del fondo →</a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div>
+      <div class="hstat-num">2025<sup></sup></div>
+      <div class="hstat-label">Año de fundación</div>
+    </div>
+    <div>
+      <div class="hstat-num">CBA<sup></sup></div>
+      <div class="hstat-label">Córdoba, Argentina</div>
+    </div>
+    <div>
+      <div class="hstat-num">100<sup>%</sup></div>
+      <div class="hstat-label">Visibilidad en tiempo real</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- DOS CAMINOS -->
+<section style="background:var(--bg3);padding:60px 52px">
+  <div style="text-align:center;margin-bottom:44px">
+    <div class="section-tag">¿Por dónde empezás?</div>
+    <h2 class="section-title" style="margin-bottom:10px">Dos caminos, un mismo objetivo</h2>
+    <p class="section-desc" style="margin:0 auto;text-align:center">Hacer crecer tu plata — ya sea que tengas tiempo para ocuparte o no.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:880px;margin:0 auto">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:36px 32px;border-top:3px solid var(--gold)">
+      <div style="font-size:32px;margin-bottom:16px">📚</div>
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;color:var(--text);margin-bottom:12px">Quiero invertir<br>mi propio dinero</h3>
+      <p style="font-size:14px;font-weight:300;line-height:1.75;color:var(--sub);margin-bottom:24px">Herramientas financieras, análisis de mercado y acompañamiento personalizado para tomar mejores decisiones de inversión.</p>
+      <ul style="list-style:none;padding:0;margin:0 0 28px;display:flex;flex-direction:column;gap:9px">
+        <li style="font-size:13px;color:var(--sub);display:flex;gap:8px;align-items:flex-start"><span style="color:var(--gold);font-weight:600;flex-shrink:0">✓</span>Panel de herramientas completo</li>
+        <li style="font-size:13px;color:var(--sub);display:flex;gap:8px;align-items:flex-start"><span style="color:var(--gold);font-weight:600;flex-shrink:0">✓</span>Asesoría financiera 1 a 1</li>
+        <li style="font-size:13px;color:var(--sub);display:flex;gap:8px;align-items:flex-start"><span style="color:var(--gold);font-weight:600;flex-shrink:0">✓</span>Reunión mensual incluida en planes Pro</li>
+        <li style="font-size:13px;color:var(--sub);display:flex;gap:8px;align-items:flex-start"><span style="color:var(--gold);font-weight:600;flex-shrink:0">✓</span>Desde cualquier monto</li>
+      </ul>
+      <a href="#planes" class="btn-primary" style="display:inline-block">Ver planes →</a>
+    </div>
+    <div style="background:var(--navy3);border:1px solid rgba(184,151,90,.25);border-radius:10px;padding:36px 32px;border-top:3px solid var(--gold)">
+      <div style="font-size:32px;margin-bottom:16px">🏦</div>
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;color:#fff;margin-bottom:12px">Quiero que gestionen<br>mi capital</h3>
+      <p style="font-size:14px;font-weight:300;line-height:1.75;color:rgba(255,255,255,.55);margin-bottom:24px">Accedés a una gestión profesional y privada del capital. Con reporte periódico y visibilidad total desde tu portal privado.</p>
+      <ul style="list-style:none;padding:0;margin:0 0 28px;display:flex;flex-direction:column;gap:9px">
+        <li style="font-size:13px;color:rgba(255,255,255,.55);display:flex;gap:8px;align-items:flex-start"><span style="color:var(--gold);font-weight:600;flex-shrink:0">✓</span>Gestión activa por el equipo Valtia</li>
+        <li style="font-size:13px;color:rgba(255,255,255,.55);display:flex;gap:8px;align-items:flex-start"><span style="color:var(--gold);font-weight:600;flex-shrink:0">✓</span>Portal privado con tu capital en tiempo real</li>
+        <li style="font-size:13px;color:rgba(255,255,255,.55);display:flex;gap:8px;align-items:flex-start"><span style="color:var(--gold);font-weight:600;flex-shrink:0">✓</span>Sistema de cuotapartes transparente</li>
+        <li style="font-size:13px;color:rgba(255,255,255,.55);display:flex;gap:8px;align-items:flex-start"><span style="color:var(--gold);font-weight:600;flex-shrink:0">✓</span>Mínimo $1.000.000 ARS · Comisión sobre rendimiento</li>
+      </ul>
+      <a href="#fondos" class="btn-primary" style="display:inline-block">Ver perfiles del fondo →</a>
+    </div>
+  </div>
+</section>
+
+<!-- RENDIMIENTO PÚBLICO -->
+<section class="rendimiento" id="rendimiento">
+  <div class="rend-header">
+    <div>
+      <div class="section-tag">Rendimiento público</div>
+      <h2 class="section-title">Performance del fondo Valtia</h2>
+      <div class="gold-rule"></div>
+      <p class="section-desc">Publicamos mensualmente la performance del fondo frente al S&P 500. Los datos se actualizan al cierre de cada período.</p>
+    </div>
+    <div class="rend-kpis">
+      <div class="kpi-item">
+        <div class="kpi-val positive">+40.8%</div>
+        <div class="kpi-label">Valtia (YTD)</div>
+      </div>
+      <div class="kpi-item">
+        <div class="kpi-val">+15.9%</div>
+        <div class="kpi-label">S&P 500 (YTD)</div>
+      </div>
+      <div class="kpi-item">
+        <div class="kpi-val positive">+24.9pp</div>
+        <div class="kpi-label">Por encima del S&P 500</div>
+      </div>
+    </div>
+  </div>
+  <div class="chart-box">
+    <div class="chart-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#B8975A"></div>Valtia Fund</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4A90D9"></div>S&P 500</div>
+    </div>
+    <canvas id="rendChart" height="80"></canvas>
+    <p class="benchmark-note">* Datos de ejemplo. Los rendimientos pasados no garantizan resultados futuros. Actualización: Mayo 2026.</p>
+  </div>
+</section>
+
+<!-- SERVICIOS -->
+<section class="servicios" id="servicios">
+  <div class="two-col">
+    <div>
+      <div class="section-tag">¿A qué nos dedicamos?</div>
+      <h2 class="section-title">Gestión profesional de capital privado</h2>
+      <div class="gold-rule"></div>
+      <p class="section-desc">Nos especializamos en la gestión de inversiones y en el análisis de mercados. Diseñamos estrategias según el perfil y los objetivos de cada persona, con seguimiento continuo y reportes periódicos.</p>
+      <br><br>
+      <a href="#contacto" class="btn-primary">Hablar con un asesor</a>
+    </div>
+    <div class="serv-list">
+      <div class="serv-item"><div class="serv-num">01</div><div class="serv-body"><h3>Gestión activa</h3><p>Monitoreamos y ajustamos el portafolio de forma continua según las condiciones del mercado local e internacional.</p></div></div>
+      <div class="serv-item"><div class="serv-num">02</div><div class="serv-body"><h3>Cada decisión tiene un fundamento</h3><p>Analizamos los números de cada empresa antes de invertir: rentabilidad, deuda, valuación. Sin modas, sin tips de redes.</p></div></div>
+      <div class="serv-item"><div class="serv-num">03</div><div class="serv-body"><h3>Control del riesgo</h3><p>Cada posición se dimensiona en función del riesgo total de la cartera. Con revisión periódica y límites de pérdida definidos.</p></div></div>
+      <div class="serv-item"><div class="serv-num">04</div><div class="serv-body"><h3>Gestión del fondo privado</h3><p>Para quienes prefieren delegar: administramos el capital dentro de un fondo privado con reporte periódico y acceso a portal exclusivo.</p></div></div>
+      <div class="serv-item"><div class="serv-num">05</div><div class="serv-body"><h3>Asesoramiento personalizado</h3><p>Para quienes prefieren gestionar su propio capital. Análisis, seguimiento y reuniones periódicas adaptadas a cada perfil.</p></div></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- FONDOS ESTILO COCOS -->
+<section class="fondos" id="fondos">
+  <div class="fondos-header">
+    <div class="section-tag">Perfiles de inversión</div>
+    <h2 class="section-title">El fondo Valtia — elegí tu perfil</h2>
+    <p class="section-desc" style="margin:0 auto;text-align:center">Cada perfil tiene una distribución de cartera adaptada a tu tolerancia al riesgo. El rendimiento del fondo es público y se actualiza mensualmente.</p>
+  </div>
+
+  <!-- Fondo tabs -->
+  <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;max-width:540px;margin:0 auto 40px">
+    <button onclick="switchFondo('conservador')" id="btn-conservador" style="flex:1;padding:12px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;background:rgba(76,175,80,.12);color:#4caf50;border:none;cursor:pointer;border-right:1px solid var(--border);transition:all .2s">Conservador</button>
+    <button onclick="switchFondo('moderado')" id="btn-moderado" style="flex:1;padding:12px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;background:var(--gold);color:var(--navy);border:none;cursor:pointer;border-right:1px solid var(--border);transition:all .2s">Moderado ★</button>
+    <button onclick="switchFondo('agresivo')" id="btn-agresivo" style="flex:1;padding:12px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;background:rgba(239,83,80,.1);color:#ef5350;border:none;cursor:pointer;transition:all .2s">Agresivo</button>
+  </div>
+
+  <!-- Fondo cards -->
+  <div id="fondo-conservador" class="fondo-detail" style="display:none">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px;border-top:3px solid #4caf50">
+        <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Perfil</div>
+        <div style="font-size:18px;font-weight:500;color:var(--text)">Conservador</div>
+        <div style="font-size:12px;color:var(--sub);margin-top:4px">Horizonte sugerido: 6 meses o más</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px;border-top:3px solid #4caf50">
+        <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Orientación</div>
+        <div style="font-size:18px;font-weight:500;color:var(--text)">Preservación de capital</div>
+        <div style="font-size:12px;color:var(--sub);margin-top:4px">Alta proporción en renta fija</div>
+      </div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:28px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px">
+        <div>
+          <h4 style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:12px">Objetivo</h4>
+          <p style="font-size:13px;font-weight:300;line-height:1.75;color:var(--sub)">Obtener una rentabilidad superior al plazo fijo, priorizando la preservación del capital con exposición mínima a activos volátiles. Ideal para quienes quieren hacer crecer sus ahorros sin asumir riesgos altos.</p>
+        </div>
+        <div>
+          <h4 style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:12px">Política de inversión</h4>
+          <p style="font-size:13px;font-weight:300;line-height:1.75;color:var(--sub)">Cartera compuesta principalmente por cauciones bursátiles, LECAPs, bonos CER y money market. Pequeña exposición a CEDEARs defensivos y stablecoins para diversificación dolarizada.</p>
+        </div>
+      </div>
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);display:flex;gap:32px;flex-wrap:wrap">
+        <div><span style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Inversión mínima</span><div style="font-size:15px;font-weight:500;color:var(--text);margin-top:4px">$1.000.000 ARS</div></div>
+        <div><span style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Comisión</span><div style="font-size:15px;font-weight:500;color:var(--text);margin-top:4px">20% sobre rendimiento</div></div>
+        <div><span style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Rescate</span><div style="font-size:15px;font-weight:500;color:var(--text);margin-top:4px">Mensual · T+2</div></div>
+        <div><span style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Moneda</span><div style="font-size:15px;font-weight:500;color:var(--text);margin-top:4px">Pesos (ARS)</div></div>
+        <div style="margin-left:auto"><a href="#contacto" class="btn-primary">Solicitar acceso →</a></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="fondo-moderado" class="fondo-detail">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px;border-top:3px solid var(--gold)">
+        <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Perfil</div>
+        <div style="font-size:18px;font-weight:500;color:var(--text)">Moderado</div>
+        <div style="font-size:12px;color:var(--sub);margin-top:4px">Horizonte sugerido: 12 meses o más</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px;border-top:3px solid var(--gold)">
+        <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Orientación</div>
+        <div style="font-size:18px;font-weight:500;color:var(--text)">Crecimiento sostenido</div>
+        <div style="font-size:12px;color:var(--sub);margin-top:4px">Balance entre renta fija y variable</div>
+      </div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:28px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px">
+        <div>
+          <h4 style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:12px">Objetivo</h4>
+          <p style="font-size:13px;font-weight:300;line-height:1.75;color:var(--sub)">Balance entre crecimiento y estabilidad. Es la distribución actual del fondo Valtia. Busca superar al S&P 500 de forma consistente, combinando instrumentos de renta fija como base y renta variable dolarizada como motor de crecimiento.</p>
+        </div>
+        <div>
+          <h4 style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:12px">Política de inversión</h4>
+          <p style="font-size:13px;font-weight:300;line-height:1.75;color:var(--sub)">Cauciones, LECAPs y bonos como ancla. CEDEARs de empresas analizadas con criterio fundamental y técnico. BTC spot como reserva de valor. Arbitraje para capturar rendimiento sin riesgo direccional.</p>
+        </div>
+      </div>
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);display:flex;gap:32px;flex-wrap:wrap">
+        <div><span style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Inversión mínima</span><div style="font-size:15px;font-weight:500;color:var(--text);margin-top:4px">$1.000.000 ARS</div></div>
+        <div><span style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Comisión</span><div style="font-size:15px;font-weight:500;color:var(--text);margin-top:4px">20% sobre rendimiento</div></div>
+        <div><span style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Rescate</span><div style="font-size:15px;font-weight:500;color:var(--text);margin-top:4px">Mensual · T+2</div></div>
+        <div><span style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Moneda</span><div style="font-size:15px;font-weight:500;color:var(--text);margin-top:4px">Pesos (ARS)</div></div>
+        <div style="margin-left:auto"><a href="#contacto" class="btn-primary">Solicitar acceso →</a></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="fondo-agresivo" class="fondo-detail" style="display:none">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px;border-top:3px solid #ef5350">
+        <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Perfil</div>
+        <div style="font-size:18px;font-weight:500;color:var(--text)">Agresivo</div>
+        <div style="font-size:12px;color:var(--sub);margin-top:4px">Horizonte sugerido: 18 meses o más</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px;border-top:3px solid #ef5350">
+        <div style="font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Orientación</div>
+        <div style="font-size:18px;font-weight:500;color:var(--text)">Maximización del retorno</div>
+        <div style="font-size:12px;color:var(--sub);margin-top:4px">Alta exposición a renta variable</div>
+      </div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:28px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px">
+        <div>
+          <h4 style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:12px">Objetivo</h4>
+          <p style="font-size:13px;font-weight:300;line-height:1.75;color:var(--sub)">Máximo potencial de retorno con alta exposición a renta variable y activos cripto. Para inversores con tolerancia al riesgo elevada que buscan rendimientos significativamente por encima del mercado.</p>
+        </div>
+        <div>
+          <h4 style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:12px">Política de inversión</h4>
+          <p style="font-size:13px;font-weight:300;line-height:1.75;color:var(--sub)">Alta concentración en CEDEARs de crecimiento, futuros de BTC con apalancamiento controlado (máx 3x), y exposición táctica a sectores de alto rendimiento. Renta fija solo como colchón de liquidez.</p>
+        </div>
+      </div>
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);display:flex;gap:32px;flex-wrap:wrap">
+        <div><span style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Inversión mínima</span><div style="font-size:15px;font-weight:500;color:var(--text);margin-top:4px">$1.000.000 ARS</div></div>
+        <div><span style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Comisión</span><div style="font-size:15px;font-weight:500;color:var(--text);margin-top:4px">20% sobre rendimiento</div></div>
+        <div><span style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Rescate</span><div style="font-size:15px;font-weight:500;color:var(--text);margin-top:4px">Mensual · T+2</div></div>
+        <div><span style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Moneda</span><div style="font-size:15px;font-weight:500;color:var(--text);margin-top:4px">Pesos (ARS)</div></div>
+        <div style="margin-left:auto"><a href="#contacto" class="btn-primary">Solicitar acceso →</a></div>
+      </div>
+    </div>
+  </div>
+
+  <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:24px;font-style:italic">* Los rendimientos pasados no garantizan resultados futuros. Datos de ejemplo hasta integración con datos reales.</p>
+</section>
+
+<script>
+function switchFondo(perfil){
+  document.querySelectorAll('.fondo-detail').forEach(el=>el.style.display='none');
+  document.getElementById('fondo-'+perfil).style.display='block';
+  const colors={conservador:'rgba(76,175,80,.12)',moderado:'var(--gold)',agresivo:'rgba(239,83,80,.1)'};
+  const textColors={conservador:'#4caf50',moderado:'var(--navy)',agresivo:'#ef5350'};
+  ['conservador','moderado','agresivo'].forEach(p=>{
+    const btn=document.getElementById('btn-'+p);
+    if(btn){btn.style.background=p===perfil?colors[p]:'transparent';btn.style.color=p===perfil?textColors[p]:'var(--sub)'}
+  });
+}
+</script>
+
+<!-- HERRAMIENTAS PREVIEW -->
+<section class="herramientas" id="herramientas">
+  <div>
+    <div class="section-tag">Plataforma</div>
+    <h2 class="section-title">Herramientas para el inversor</h2>
+    <div class="gold-rule"></div>
+    <p class="section-desc">Todas las herramientas que necesitás en un solo lugar. Algunas son gratuitas, el panel completo está disponible con suscripción.</p>
+  </div>
+  <div class="herr-grid">
+    <div class="herr-card" onclick="location.href='herramientas.html'" style="cursor:pointer"><div class="herr-icon">📊</div><h4>Mapa de calor</h4><p>Visualizá qué sectores y activos se destacan por rendimiento en tiempo real.</p><span class="herr-pro">PRO</span></div>
+    <div class="herr-card" onclick="location.href='herramientas.html'" style="cursor:pointer"><div class="herr-icon">💱</div><h4>Cotizaciones en vivo</h4><p>BTC, dólar MEP, CCL, blue, Merval actualizados automáticamente.</p><span class="herr-free">GRATIS</span></div>
+    <div class="herr-card locked" onclick="location.href='herramientas.html'" style="cursor:pointer"><div class="herr-icon">📅</div><h4>Calendario económico</h4><p>Eventos Fed, INDEC, BCE, NFP y todas las fechas clave del mercado.</p><span class="herr-pro">PRO</span></div>
+    <div class="herr-card locked" onclick="location.href='herramientas.html'" style="cursor:pointer"><div class="herr-icon">🏦</div><h4>Bonos y letras</h4><p>AL30, GD30, LECAPs. TIR, vencimiento y precio actualizado.</p><span class="herr-pro">PRO</span></div>
+    <div class="herr-card" onclick="location.href='herramientas.html'" style="cursor:pointer"><div class="herr-icon">🧮</div><h4>Calc. cauciones</h4><p>Estimá el rendimiento de una caución según plazo, monto y tasa vigente.</p><span class="herr-free">GRATIS</span></div>
+    <div class="herr-card locked" onclick="location.href='herramientas.html'" style="cursor:pointer"><div class="herr-icon">📈</div><h4>Renta variable</h4><p>CEDEARs con precios, variaciones y ratios de conversión actualizados.</p><span class="herr-pro">PRO</span></div>
+    <div class="herr-card" onclick="location.href='herramientas.html'" style="cursor:pointer"><div class="herr-icon">💵</div><h4>Cotización histórica $</h4><p>Evolución del dólar MEP, CCL y blue. Compará períodos y analizá tendencias.</p><span class="herr-free">GRATIS</span></div>
+    <div class="herr-card locked" onclick="location.href='herramientas.html'" style="cursor:pointer"><div class="herr-icon">⚖️</div><h4>Ratios CEDEARs</h4><p>Cuántas acciones equivale cada CEDEAR. Facilitá tu análisis de precios.</p><span class="herr-pro">PRO</span></div>
+  </div>
+</section>
+
+<!-- COTIZACIONES EN VIVO -->
+<section class="cotizaciones" id="cotizaciones">
+  <div class="section-tag">Mercado en vivo</div>
+  <h2 class="section-title">Cotizaciones en tiempo real</h2>
+  <div class="cot-grid">
+    <div class="cot-card"><div class="cot-name">Bitcoin</div><div class="cot-price" id="cot-btc">$--</div><div class="cot-change up" id="cot-btc-c">--</div><div class="cot-updated">BTC/USDT</div></div>
+    <div class="cot-card"><div class="cot-name">Ethereum</div><div class="cot-price" id="cot-eth">$--</div><div class="cot-change up" id="cot-eth-c">--</div><div class="cot-updated">ETH/USDT</div></div>
+    <div class="cot-card"><div class="cot-name">Dólar MEP</div><div class="cot-price" id="cot-mep">$--</div><div class="cot-change" style="color:var(--muted)">Argentina</div><div class="cot-updated">AL30</div></div>
+    <div class="cot-card"><div class="cot-name">Dólar Blue</div><div class="cot-price" id="cot-blue">$--</div><div class="cot-change" style="color:var(--muted)">Argentina</div><div class="cot-updated">Informal</div></div>
+    <div class="cot-card"><div class="cot-name">S&P 500</div><div class="cot-price" id="cot-sp">$--</div><div class="cot-change up" id="cot-sp-c">--</div><div class="cot-updated">Index</div></div>
+  </div>
+</section>
+
+<!-- PLANES -->
+<section class="planes" id="planes">
+  <div class="planes-header">
+    <div class="section-tag">Planes y precios</div>
+    <h2 class="section-title">Elegí tu acceso a Valtia</h2>
+    <p class="section-desc" style="margin:0 auto;text-align:center">Desde herramientas gratuitas hasta gestión profesional del capital.</p>
+  </div>
+  <div class="planes-grid">
+    <!-- Plan Herramientas -->
+    <div class="plan-card">
+      <div class="plan-name">Herramientas</div>
+      <div class="plan-period">Acceso mensual</div>
+      <div><span class="plan-price-sup">ARS</span><span class="plan-price">21.000</span></div>
+      <div class="plan-price-per">por mes</div>
+      <div class="plan-total">Un solo pago de $21.000/mes</div>
+      <ul class="plan-features">
+        <li>Panel de herramientas completo</li>
+        <li>Cotizaciones en tiempo real</li>
+        <li>Bonos, letras y CEDEARs</li>
+        <li>Mapa de calor sectorial</li>
+        <li>Calculadoras financieras</li>
+        <li>Noticias y análisis</li>
+      </ul>
+      <button class="plan-btn" onclick="openLogin(event)">Suscribirme</button>
+      <div class="plan-mp">Paga con MercadoPago</div>
+    </div>
+    <!-- Plan 3 meses -->
+    <div class="plan-card">
+      <div class="plan-name">Asesoría + Herramientas</div>
+      <div class="plan-period">3 meses</div>
+      <div><span class="plan-price-sup">ARS</span><span class="plan-price">50.866</span></div>
+      <div class="plan-price-per">por mes</div>
+      <div class="plan-total">Un solo pago de $152.600 cada 3 meses</div>
+      <ul class="plan-features">
+        <li>Todo lo del plan Herramientas</li>
+        <li>Reunión mensual 1 a 1</li>
+        <li>Análisis fundamental y técnico</li>
+        <li>Reportes en audio</li>
+        <li>Grupo privado de WhatsApp</li>
+        <li>Revisión de tu cartera personal</li>
+      </ul>
+      <button class="plan-btn" onclick="openLogin(event)">Suscribirme</button>
+      <div class="plan-mp">Paga con MercadoPago</div>
+    </div>
+    <!-- Plan 6 meses -->
+    <div class="plan-card featured">
+      <div class="plan-popular">Más popular</div>
+      <div class="plan-discount">13% OFF</div>
+      <div class="plan-name">Asesoría + Herramientas</div>
+      <div class="plan-period">6 meses</div>
+      <div><span class="plan-price-sup">ARS</span><span class="plan-price">44.100</span></div>
+      <div class="plan-price-per">por mes</div>
+      <div class="plan-total">Un solo pago de $264.600 cada 6 meses</div>
+      <ul class="plan-features">
+        <li>Todo lo del plan 3 meses</li>
+        <li>Reunión mensual 1 a 1</li>
+        <li>Análisis fundamental y técnico</li>
+        <li>Reportes en audio</li>
+        <li>Grupo privado de WhatsApp</li>
+        <li>Prioridad en respuesta</li>
+      </ul>
+      <button class="plan-btn" onclick="openLogin(event)">Suscribirme</button>
+      <div class="plan-mp">Paga con MercadoPago</div>
+    </div>
+    <!-- Plan Fondo -->
+    <div class="plan-card">
+      <div class="plan-discount" style="background:var(--gold);color:var(--navy)">FONDO</div>
+      <div class="plan-name">Fondo Valtia</div>
+      <div class="plan-period">Asset Management</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;color:var(--text);margin:8px 0">Desde $1M ARS</div>
+      <div class="plan-price-per">comisión sobre rendimiento</div>
+      <div class="plan-total">20% del profit generado</div>
+      <ul class="plan-features">
+        <li>Gestión profesional de tu capital</li>
+        <li>Portal privado del inversor</li>
+        <li>3 perfiles: conservador / moderado / agresivo</li>
+        <li>Rendimiento comparado vs S&P 500</li>
+        <li>Sistema de cuotapartes transparente</li>
+        <li>Informes mensuales exclusivos</li>
+      </ul>
+      <button class="plan-btn" onclick="openContacto()">Solicitar acceso</button>
+      <div class="plan-mp">Por evaluación e invitación</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESO -->
+<section class="proceso" id="como-funciona">
+  <div class="proceso-header">
+    <div class="section-tag">Contacto</div>
+    <h2 class="section-title">¿Querés saber más?</h2>
+    <p class="section-desc" style="margin:0 auto">Escribinos por cualquiera de estos canales y te respondemos a la brevedad.</p>
+  </div>
+  <div style="display:flex;gap:20px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+    <a href="https://wa.me/543515067066" target="_blank" style="display:flex;align-items:center;gap:10px;background:var(--navy3);border:1px solid rgba(184,151,90,.25);border-radius:8px;padding:18px 32px;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='rgba(184,151,90,.25)'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      <div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:3px">Vía WhatsApp</div>
+        <div style="font-size:14px;font-weight:500;color:#fff">Escribinos por WhatsApp</div>
+      </div>
+    </a>
+    <a href="mailto:valtyaanalytics@gmail.com" style="display:flex;align-items:center;gap:10px;background:var(--navy3);border:1px solid rgba(184,151,90,.25);border-radius:8px;padding:18px 32px;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='rgba(184,151,90,.25)'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+      <div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:3px">Vía Mail</div>
+        <div style="font-size:14px;font-weight:500;color:#fff">valtyaanalytics@gmail.com</div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- QUIÉNES SOMOS -->
+<section class="quienes">
+  <div class="quienes-inner">
+    <div class="quienes-img">
+      <div style="width:100%;height:320px;background:linear-gradient(135deg,#152336,#1A3A5C);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:64px;color:rgba(184,151,90,.3)">V</div>
+      <div class="quienes-quote">
+        <blockquote>"En Argentina la mayoría trabaja toda la vida y llega al final del camino con muy poco. No porque sea inevitable, sino porque nadie les enseñó a hacer crecer su dinero. Eso es exactamente lo que queremos cambiar."</blockquote>
+        <cite>— Valtia Analytics · Córdoba, Argentina</cite>
+      </div>
+    </div>
+    <div>
+      <div class="section-tag">Quiénes somos</div>
+      <h2 class="section-title">Valtia Analytics</h2>
+      <div class="gold-rule"></div>
+      <p class="section-desc">En Valtia nos especializamos en la gestión de inversiones y en el desarrollo de herramientas financieras para el inversor moderno.</p>
+      <p class="section-desc" style="margin-top:16px">Diseñamos estrategias según el perfil y los objetivos de cada persona, con monitoreo constante y reportes periódicos. Cada decision esta respaldada por analisis, no por intuicion.</p>
+      <div class="stat-row">
+        <div class="stat-item"><div class="stat-n">5<sup>+</sup></div><div class="stat-l">Inversores activos</div></div>
+        <div class="stat-item"><div class="stat-n">2025<sup></sup></div><div class="stat-l">Córdoba, Argentina</div></div>
+        <div class="stat-item"><div class="stat-n">+40<sup>%</sup></div><div class="stat-l">Rendimiento YTD</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq">
+  <div class="section-tag">Preguntas frecuentes</div>
+  <h2 class="section-title">Respuestas a tus preguntas</h2>
+  <p class="section-desc" style="margin-bottom:36px">Aqui encontras la informacion que necesitas para entender como funciona Valtia y como puede ayudarte con tus finanzas.</p>
+  <div class="faq-grid">
+    <div class="faq-item"><h4>¿Cuáles son los beneficios de las reuniones mensuales?</h4><p>Las reuniones mensuales incluidas en los planes de asesoria te permiten hacer consultas directas, revisar tu cartera y recibir recomendaciones personalizadas segun el contexto del mercado.</p></div>
+    <div class="faq-item"><h4>¿Qué tipo de informacion incluyen los informes periodicos?</h4><p>Los informes cubren el estado del mercado local e internacional, analisis de los activos principales y perspectivas para el siguiente periodo. Disponibles para suscriptores activos.</p></div>
+    <div class="faq-item"><h4>¿Esto sirve si nunca inveite antes?</h4><p>Si. Las herramientas y el servicio de asesoria estan disenados tanto para quienes empiezan como para inversores con experiencia. Podes empezar desde el plan que mejor se adapte a tu situacion.</p></div>
+    <div class="faq-item"><h4>¿Puedo acceder al panel de herramientas desde el celular?</h4><p>Si, el portal y las herramientas estan optimizados para mobile. Podés acceder desde cualquier dispositivo con conexion a internet.</p></div>
+    <div class="faq-item"><h4>¿Garantizan resultados?</h4><p>No. Los mercados financieros implican riesgos y los rendimientos pasados no garantizan resultados futuros. Lo que ofrecemos es analisis riguroso, seguimiento constante y decisiones fundamentadas.</p></div>
+    <div class="faq-item"><h4>¿Como cancelo o cambio mi suscripcion?</h4><p>Podes contactarnos en cualquier momento por WhatsApp o mail para hacer cambios en tu plan. No hay renovacion automatica — cada periodo se gestiona de forma manual.</p></div>
+  </div>
+</section>
+
+<!-- CTA / CONTACTO -->
+<section class="cta-section" id="contacto">
+  <div class="cta-glow"></div>
+  <div class="cta-inner">
+    <div class="section-tag">Contacto</div>
+    <h2 class="cta-title">¿Querés <em>empezar</em> a invertir mejor?</h2>
+    <p class="cta-desc">Escribinos y te respondemos a la brevedad. Sin compromiso.</p>
+    <div class="cta-actions">
+      <a href="https://wa.me/543515067066" target="_blank" class="btn-primary">Contactar por WhatsApp</a>
+      <a href="mailto:valtyaanalytics@gmail.com" class="btn-ghost">Enviar email →</a>
+    </div>
+    <p class="cta-disclaimer">La información publicada no constituye una oferta pública de valores ni asesoramiento financiero formal.<br>El acceso al fondo es por evaluación. Las herramientas y asesoría están disponibles para cualquier persona.</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <span class="footer-logo-name">VAL<em>T</em>IA <span style="font-size:11px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(255,255,255,.2)">Analytics</span></span>
+      <p>Gestión privada de capital con enfoque cuantitativo y control de riesgo. Córdoba, Argentina.</p>
+    </div>
+    <div class="footer-col">
+      <h5>Plataforma</h5>
+      <a href="noticias.html">Noticias</a>
+      <a href="herramientas.html">Herramientas</a>
+      <a href="#cotizaciones">Cotizaciones</a>
+      <a href="#planes">Planes</a>
+    </div>
+    <div class="footer-col">
+      <h5>El fondo</h5>
+      <a href="#servicios">¿Qué hacemos?</a>
+      <a href="informes.html">Informes</a>
+      <a href="#fondos">Perfiles</a>
+      <a href="#como-funciona">Cómo funciona</a>
+    </div>
+    <div class="footer-col">
+      <h5>Contacto</h5>
+      <a href="mailto:valtyaanalytics@gmail.com">valtyaanalytics@gmail.com</a>
+      <a href="https://wa.me/543515067066" target="_blank" style="display:flex;align-items:center;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#4caf50"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp
+      </a>
+      <a href="#planes">Ver planes</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2026 Valtia Analytics. Todos los derechos reservados. · valtia.tech</span>
+    <span class="footer-disc">Las inversiones implican riesgos, incluyendo la posible pérdida del capital. Los rendimientos pasados no garantizan resultados futuros.</span>
+  </div>
+</footer>
+
+</div><!-- end home-view -->
+
+<!-- PORTAL VIEW -->
+<div id="portal-view">
+  <nav class="portal-nav">
+    <a href="#" class="active" onclick="portalTab(event,'dashboard')">Dashboard</a>
+    <a href="#" onclick="portalTab(event,'rendimientos')">Rendimientos</a>
+    <a href="#" onclick="portalTab(event,'movimientos')">Movimientos</a>
+    <a href="#" onclick="portalTab(event,'informes')">Informes</a>
+    <a href="#" onclick="portalTab(event,'herramientas-p')">Herramientas</a>
+    <a href="#" id="admin-tab" onclick="portalTab(event,'admin')" style="display:none">Admin ⚙️</a>
+    <span style="flex:1"></span>
+    <span style="font-size:12px;color:var(--muted);margin-right:16px" id="portal-user-name">—</span>
+    <button onclick="logout()" style="font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:none;border:none;cursor:pointer;padding:4px 0">Salir</button>
+  </nav>
+  <div class="portal-content">
+    <div id="tab-dashboard">
+      <div class="portal-title">Tu portfolio</div>
+      <div class="portal-kpis">
+        <div class="pkpi"><div class="pkpi-label">Capital actual</div><div class="pkpi-value" id="pkpi-capital">$--</div><div class="pkpi-sub">ARS</div></div>
+        <div class="pkpi"><div class="pkpi-label">Cuotapartes</div><div class="pkpi-value" id="pkpi-cp">--</div><div class="pkpi-sub">participación en el fondo</div></div>
+        <div class="pkpi"><div class="pkpi-label">Ganancia neta</div><div class="pkpi-value pos" id="pkpi-pnl">$--</div><div class="pkpi-sub">desde el inicio</div></div>
+        <div class="pkpi"><div class="pkpi-label">ROI</div><div class="pkpi-value pos" id="pkpi-roi">--%</div><div class="pkpi-sub">acumulado</div></div>
+      </div>
+      <div class="chart-box" style="max-width:700px">
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#B8975A"></div>Tu capital</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#4A90D9"></div>Valor cuotaparte</div>
+        </div>
+        <canvas id="portalChart" height="90"></canvas>
+      </div>
+    </div>
+    <div id="tab-rendimientos" style="display:none">
+      <div class="portal-title">Rendimientos históricos</div>
+      <p style="color:var(--sub);font-size:14px">Historial mensual de rendimiento de tu participación en el fondo. Próximamente con datos en tiempo real.</p>
+    </div>
+    <div id="tab-movimientos" style="display:none">
+      <div class="portal-title">Movimientos</div>
+      <p style="color:var(--sub);font-size:14px">Historial de depósitos, retiros y cuotapartes asignadas. Próximamente con datos reales de Firebase.</p>
+    </div>
+    <div id="tab-informes" style="display:none">
+      <div class="portal-title">Informes del fondo</div>
+      <p style="color:var(--sub);font-size:14px">Reportes mensuales exclusivos para clientes del fondo. Próximamente disponibles aquí.</p>
+    </div>
+    <div id="tab-herramientas-p" style="display:none">
+      <div class="portal-title">Herramientas</div>
+      <p style="color:var(--sub);font-size:14px">Acceso completo al panel de herramientas según tu plan.</p>
+      <br><a href="herramientas.html" class="btn-primary">Ir al panel de herramientas →</a>
+    </div>
+    <div id="tab-admin" style="display:none">
+      <div class="portal-title">Panel de administrador</div>
+      <p style="color:var(--sub);font-size:14px">Cargando datos...</p>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeLogin()">✕</button>
+    <div class="modal-logo">
+      <svg width="40" height="40" viewBox="0 0 34 34" fill="none">
+        <rect width="34" height="34" rx="4" fill="#1A3A5C"/>
+        <polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="23" cy="9" r="2.5" fill="#B8975A"/>
+      </svg>
+    </div>
+    <div class="modal-title">Acceso Valtia</div>
+    <div class="modal-sub">Ingresá con tu cuenta para acceder al portal</div>
+    <button class="btn-google" onclick="loginWithGoogle()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
+      Continuar con Google
+    </button>
+    <div class="login-divider">o</div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="tu@email.com">
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="••••••••">
+    </div>
+    <button class="btn-login" onclick="loginWithEmail()">Ingresar</button>
+    <div class="login-2fa">🔐 Verificación en 2 pasos disponible · Google Authenticator / SMS / Email</div>
+    <div class="login-signup">¿No tenés cuenta? <a href="#" onclick="openContacto()">Contactanos</a></div>
+  </div>
+</div>
+
+<button class="scrolltop" id="scrolltop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<a href="https://wa.me/543515067066" target="_blank" style="position:fixed;bottom:28px;left:28px;width:48px;height:48px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;box-shadow:0 4px 16px rgba(37,211,102,.35);transition:transform .2s" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<script>
+// ── THEME ──
+function toggleTheme(){
+  const html=document.documentElement;
+  html.dataset.theme=html.dataset.theme==='dark'?'light':'dark';
+  localStorage.setItem('valtia-theme',html.dataset.theme);
+  if(window.rendChart)updateChartTheme();
+}
+const savedTheme=localStorage.getItem('valtia-theme');
+if(savedTheme)document.documentElement.dataset.theme=savedTheme;
+
+// ── LOGIN / MODAL ──
+function openLogin(e){if(e)e.preventDefault();document.getElementById('loginModal').classList.add('open')}
+function closeLogin(){document.getElementById('loginModal').classList.remove('open')}
+document.getElementById('loginModal').addEventListener('click',function(e){if(e.target===this)closeLogin()})
+function openContacto(){closeLogin();document.getElementById('contacto')?.scrollIntoView({behavior:'smooth'})}
+// loginWithGoogle, loginWithEmail, logout, showHome handled by Firebase module
+
+// ── PORTAL TABS ──
+function portalTab(e,tab){
+  e.preventDefault();
+  document.querySelectorAll('.portal-nav a').forEach(a=>a.classList.remove('active'));
+  e.target.classList.add('active');
+  ['dashboard','rendimientos','movimientos','informes','herramientas-p'].forEach(t=>{
+    const el=document.getElementById('tab-'+t);
+    if(el)el.style.display=t===tab?'block':'none';
+  });
+}
+
+// ── SCROLLTOP ──
+window.addEventListener('scroll',()=>{
+  const btn=document.getElementById('scrolltop');
+  btn.classList.toggle('visible',window.scrollY>400);
+});
+
+// ── CHARTS ──
+const months=['May','Jun','Jul','Ago','Sep','Oct','Nov','Dic','Ene','Feb','Mar','Abr','May'];
+const valtiaData=[0,3.2,7.1,11.4,14.8,18.2,22.5,27.3,30.1,33.8,37.2,39.6,40.8];
+const sp500Data=[0,2.1,3.8,4.2,5.1,6.3,8.2,9.4,10.8,12.1,13.9,15.1,15.9];
+const btcData=[0,5.1,12.3,8.7,18.4,22.1,35.2,41.8,28.4,45.2,52.1,48.7,55.3];
+
+function getChartColors(){
+  const dark=document.documentElement.dataset.theme==='dark';
+  return{grid:dark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)',text:dark?'rgba(240,237,232,.4)':'rgba(26,43,60,.5)'}
+}
+let rendChart,portalChart;
+
+function initRendChart(){
+  const ctx=document.getElementById('rendChart');
+  if(!ctx)return;
+  const c=getChartColors();
+  rendChart=new Chart(ctx,{type:'line',data:{labels:months,datasets:[
+    {label:'Valtia',data:valtiaData,borderColor:'#B8975A',backgroundColor:'rgba(184,151,90,.08)',borderWidth:2.5,pointRadius:3,pointBackgroundColor:'#B8975A',tension:.4,fill:true},
+    {label:'S&P 500',data:sp500Data,borderColor:'#4A90D9',backgroundColor:'transparent',borderWidth:1.8,pointRadius:2,pointBackgroundColor:'#4A90D9',tension:.4}
+  ]},options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(13,27,42,.9)',borderColor:'rgba(184,151,90,.3)',borderWidth:1,titleColor:'rgba(240,237,232,.8)',bodyColor:'rgba(240,237,232,.6)',padding:12,callbacks:{label:function(ctx){return` ${ctx.dataset.label}: +${ctx.parsed.y.toFixed(1)}%`}}}},scales:{x:{grid:{color:c.grid},ticks:{color:c.text,font:{family:"'Jost'",size:11}}},y:{grid:{color:c.grid},ticks:{color:c.text,font:{family:"'Jost'",size:11},callback:v=>'+'+v+'%'}}}}});
+}
+
+function initPortalChart(){
+  const ctx=document.getElementById('portalChart');
+  if(!ctx||portalChart)return;
+  const c=getChartColors();
+  const capital=[3800000,3850000,3920000,3880000,3950000,3990000,4050000,4000000,4100000,4180000,4250000,4350000,4000000];
+  portalChart=new Chart(ctx,{type:'line',data:{labels:months,datasets:[
+    {label:'Tu capital',data:capital,borderColor:'#B8975A',backgroundColor:'rgba(184,151,90,.1)',borderWidth:2.5,pointRadius:3,pointBackgroundColor:'#B8975A',tension:.4,fill:true}
+  ]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:c.grid},ticks:{color:c.text,font:{size:11}}},y:{grid:{color:c.grid},ticks:{color:c.text,font:{size:11},callback:v=>'$'+(v/1000000).toFixed(1)+'M'}}}}});
+}
+
+function updateChartTheme(){
+  const c=getChartColors();
+  [rendChart,portalChart].forEach(ch=>{if(!ch)return;['x','y'].forEach(ax=>{ch.options.scales[ax].grid.color=c.grid;ch.options.scales[ax].ticks.color=c.text});ch.update()});
+}
+
+// ── COTIZACIONES LIVE ──
+async function fetchCrypto(){
+  try{
+    const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true',{headers:{'Accept':'application/json'}});
+    if(!r.ok)throw new Error('status '+r.status);
+    const d=await r.json();
+    const fmt=n=>'$'+n.toLocaleString('en-US',{maximumFractionDigits:0});
+    const fmtc=n=>(n>0?'+':'')+n.toFixed(2)+'%';
+    ['btc-p','btc-p2','cot-btc'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=fmt(d.bitcoin.usd)});
+    ['eth-p','eth-p2','cot-eth'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=fmt(d.ethereum.usd)});
+    const bc=d.bitcoin.usd_24h_change;const ec=d.ethereum.usd_24h_change;
+    ['btc-c','cot-btc-c'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=fmtc(bc);el.className='ticker-change '+(bc>0?'up':'down')}});
+    ['eth-c','cot-eth-c'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=fmtc(ec);el.className='ticker-change '+(ec>0?'up':'down')}});
+  }catch(e){
+    // fallback: show placeholder prices if API blocked (CORS on localhost)
+    ['btc-p','btc-p2','cot-btc'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='Sin datos'});
+    ['eth-p','eth-p2','cot-eth'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='Sin datos'});
+    console.log('Crypto API (funciona en valtia.tech, no en preview local):',e.message);
+  }
+}
+async function fetchDolar(){
+  try{
+    const r=await fetch('https://dolarapi.com/v1/dolares');
+    if(!r.ok)throw new Error('status '+r.status);
+    const d=await r.json();
+    const mep=d.find(x=>x.casa==='bolsa');
+    const blue=d.find(x=>x.casa==='blue');
+    if(mep){const v='$'+mep.venta;['mep-p','mep-p2','cot-mep'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=v})}
+    if(blue){const v='$'+blue.venta;['blue-p','blue-p2','cot-blue'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=v})}
+  }catch(e){
+    console.log('Dólar API (funciona en valtia.tech, no en preview local):',e.message);
+  }
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded',()=>{
+  initRendChart();
+  fetchCrypto();
+  fetchDolar();
+  setInterval(fetchCrypto,60000);
+  setInterval(fetchDolar,300000);
+});
+</script>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider,
+           onAuthStateChanged, signOut, sendEmailVerification,
+           multiFactor } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getFirestore, doc, getDoc, setDoc, collection, getDocs }
+           from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  
+  // ── FIREBASE CONFIG ──
+  const firebaseConfig = {
+    apiKey: "AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw",
+    authDomain: "valtia-analytics.firebaseapp.com",
+    databaseURL: "https://valtia-analytics-default-rtdb.firebaseio.com",
+    projectId: "valtia-analytics",
+    storageBucket: "valtia-analytics.firebasestorage.app",
+    messagingSenderId: "132662487977",
+    appId: "1:132662487977:web:37345b5f718736523772b8",
+    measurementId: "G-3VVV4R6JKY"
+  };
+
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const googleProvider = new GoogleAuthProvider();
+
+  // Admin email
+  const ADMIN_EMAIL = 'valtyaanalytics@gmail.com';
+
+  // ── AUTH STATE LISTENER ──
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const isAdmin = user.email === ADMIN_EMAIL;
+      const userData = await getUserData(user.email, isAdmin);
+      enterPortal(user, userData, isAdmin);
+    } else {
+      showHome();
+    }
+  });
+
+  // ── GET USER DATA FROM FIRESTORE ──
+  async function getUserData(email, isAdmin) {
+    if (isAdmin) {
+      // Admin: get all clients
+      try {
+        const snap = await getDocs(collection(db, 'inversores'));
+        const clientes = [];
+        snap.forEach(d => clientes.push({ id: d.id, ...d.data() }));
+        return { isAdmin: true, clientes };
+      } catch(e) {
+        return { isAdmin: true, clientes: [] };
+      }
+    } else {
+      // Regular user: get own data
+      try {
+        const snap = await getDoc(doc(db, 'inversores', email));
+        if (snap.exists()) return { isAdmin: false, ...snap.data() };
+        return { isAdmin: false, nombre: email.split('@')[0], capital: 0, cuotapartes: 0, pnl: 0 };
+      } catch(e) {
+        return { isAdmin: false, nombre: email.split('@')[0], capital: 0, cuotapartes: 0, pnl: 0 };
+      }
+    }
+  }
+
+  // ── LOGIN WITH GOOGLE ──
+  window.loginWithGoogle = async function() {
+    try {
+      showLoginLoading(true);
+      await signInWithPopup(auth, googleProvider);
+    } catch(e) {
+      showLoginLoading(false);
+      showLoginError('Error al iniciar sesión con Google. Intentá de nuevo.');
+    }
+  };
+
+  // ── LOGIN WITH EMAIL ──
+  window.loginWithEmail = async function() {
+    const email = document.getElementById('login-email').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    if (!email || !pass) { showLoginError('Completá email y contraseña.'); return; }
+    try {
+      showLoginLoading(true);
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch(e) {
+      showLoginLoading(false);
+      const msgs = {
+        'auth/user-not-found': 'No existe una cuenta con ese email.',
+        'auth/wrong-password': 'Contraseña incorrecta.',
+        'auth/invalid-email': 'Email inválido.',
+        'auth/too-many-requests': 'Demasiados intentos. Esperá unos minutos.',
+        'auth/invalid-credential': 'Email o contraseña incorrectos.'
+      };
+      showLoginError(msgs[e.code] || 'Error al iniciar sesión.');
+    }
+  };
+
+  // ── LOGOUT ──
+  window.logout = async function() {
+    await signOut(auth);
+  };
+
+  // ── UI HELPERS ──
+  function showLoginLoading(show) {
+    const btn = document.querySelector('.btn-login');
+    if (btn) btn.textContent = show ? 'Ingresando...' : 'Ingresar';
+  }
+
+  function showLoginError(msg) {
+    let err = document.getElementById('login-error');
+    if (!err) {
+      err = document.createElement('div');
+      err.id = 'login-error';
+      err.style.cssText = 'background:rgba(198,40,40,.1);border:1px solid rgba(198,40,40,.3);border-radius:6px;padding:10px 12px;font-size:13px;color:#ef5350;margin-top:10px;text-align:center';
+      document.querySelector('.btn-login').after(err);
+    }
+    err.textContent = msg;
+  }
+
+  // ── ENTER PORTAL ──
+  function enterPortal(user, data, isAdmin) {
+    document.getElementById('loginModal').classList.remove('open');
+    document.getElementById('home-view').style.display = 'none';
+    document.getElementById('portal-view').style.display = 'block';
+    window.scrollTo(0, 0);
+
+    const displayName = user.displayName || user.email.split('@')[0];
+    document.getElementById('portal-user-name').textContent = displayName;
+
+    if (isAdmin) {
+      renderAdminDashboard(data);
+    } else {
+      renderClientDashboard(data, displayName);
+    }
+    initPortalChart(data);
+  }
+
+  // ── CLIENT DASHBOARD ──
+  function renderClientDashboard(data, name) {
+    const fmt = n => '$' + Math.round(n || 0).toLocaleString('es-AR');
+    const pnl = data.pnl || 0;
+    const pnlPct = data.capital && data.capitalInicial
+      ? ((data.capital - data.capitalInicial) / data.capitalInicial * 100).toFixed(2)
+      : '0.00';
+
+    document.getElementById('pkpi-capital').textContent = fmt(data.capital || 0);
+    document.getElementById('pkpi-cp').textContent = (data.cuotapartes || 0).toLocaleString('es-AR', {maximumFractionDigits:2});
+    document.getElementById('pkpi-pnl').textContent = (pnl >= 0 ? '+' : '') + fmt(pnl);
+    document.getElementById('pkpi-pnl').className = 'pkpi-value ' + (pnl >= 0 ? 'pos' : 'neg');
+    document.getElementById('pkpi-roi').textContent = (pnlPct >= 0 ? '+' : '') + pnlPct + '%';
+    document.getElementById('pkpi-roi').className = 'pkpi-value ' + (pnlPct >= 0 ? 'pos' : 'neg');
+
+    // Show admin tab only for admin
+    const adminTab = document.getElementById('admin-tab');
+    if (adminTab) adminTab.style.display = 'none';
+  }
+
+  // ── ADMIN DASHBOARD ──
+  function renderAdminDashboard(data) {
+    document.getElementById('pkpi-capital').textContent = '$19.208.485';
+    document.getElementById('pkpi-cp').textContent = '19.208,49';
+    document.getElementById('pkpi-pnl').textContent = '+$3.400.000';
+    document.getElementById('pkpi-pnl').className = 'pkpi-value pos';
+    document.getElementById('pkpi-roi').textContent = '+21,5%';
+    document.getElementById('pkpi-roi').className = 'pkpi-value pos';
+
+    // Show admin panel
+    const adminTab = document.getElementById('admin-tab');
+    if (adminTab) adminTab.style.display = 'inline';
+
+    // Render clients table
+    renderClientsTable(data.clientes || []);
+  }
+
+  function renderClientsTable(clientes) {
+    const wrap = document.getElementById('tab-admin');
+    if (!wrap) return;
+    if (clientes.length === 0) {
+      wrap.innerHTML = '<div class="portal-title">Panel de administrador</div><p style="color:var(--sub);font-size:14px">No hay inversores cargados aún. Los inversores se cargan desde Firestore → colección "inversores".</p>';
+      return;
+    }
+    const fmt = n => '$' + Math.round(n || 0).toLocaleString('es-AR');
+    const rows = clientes.map(c => `
+      <tr style="border-bottom:0.5px solid var(--border)">
+        <td style="padding:10px 14px;font-weight:500;color:var(--text)">${c.nombre || c.id}</td>
+        <td style="padding:10px 14px;color:var(--sub)">${c.id}</td>
+        <td style="padding:10px 14px;font-variant-numeric:tabular-nums;color:var(--text)">${fmt(c.capital)}</td>
+        <td style="padding:10px 14px;font-variant-numeric:tabular-nums;color:var(--text)">${(c.cuotapartes||0).toFixed(2)}</td>
+        <td style="padding:10px 14px;font-variant-numeric:tabular-nums" class="${(c.pnl||0)>=0?'up':'down'}">${(c.pnl||0)>=0?'+':''}${fmt(c.pnl)}</td>
+      </tr>`).join('');
+    wrap.innerHTML = `
+      <div class="portal-title">Panel de administrador</div>
+      <p style="color:var(--sub);font-size:13px;margin-bottom:20px">${clientes.length} inversores activos</p>
+      <div style="overflow:auto;background:var(--card);border:1px solid var(--border);border-radius:8px">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="border-bottom:1px solid var(--border)">
+            <th style="padding:11px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Nombre</th>
+            <th style="padding:11px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Email</th>
+            <th style="padding:11px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Capital</th>
+            <th style="padding:11px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Cuotapartes</th>
+            <th style="padding:11px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">PnL</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
+  function showHome() {
+    document.getElementById('home-view').style.display = 'block';
+    document.getElementById('portal-view').style.display = 'none';
+  }
+
+  // Expose to global scope for onclick handlers
+  window.showHome = showHome;
+</script>
+
+</body>
+</html>
