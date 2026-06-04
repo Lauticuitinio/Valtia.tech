@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Noticias — Valtia Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0D1B2A;--navy2:#152336;--navy3:#1A3A5C;--gold:#B8975A;--gold2:#D4AF6E;--cream:#F5F2EC;--mgray:#6B7C8D;--text-d:#F0EDE8;--sub-d:rgba(240,237,232,.55);--muted-d:rgba(240,237,232,.35);--text-l:#1A2B3C;--sub-l:#4A5A6C;--muted-l:#8A9BAD;--bg-d:#0D1B2A;--bg2-d:#111f2e;--bg3-d:#152336;--bg-l:#F5F2EC;--bg2-l:#FFFFFF;--bg3-l:#EDE9E0;--border-d:rgba(184,151,90,.12);--border-l:rgba(26,58,92,.1);--card-d:#152336;--card-l:#FFFFFF;}
+[data-theme="dark"]{--bg:var(--bg-d);--bg2:var(--bg2-d);--bg3:var(--bg3-d);--text:var(--text-d);--sub:var(--sub-d);--muted:var(--muted-d);--border:var(--border-d);--card:var(--card-d)}
+[data-theme="light"]{--bg:var(--bg-l);--bg2:var(--bg2-l);--bg3:var(--bg3-l);--text:var(--text-l);--sub:var(--sub-l);--muted:var(--muted-l);--border:var(--border-l);--card:var(--card-l)}
+html{scroll-behavior:smooth}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;transition:background .3s,color .3s}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px}
+nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;background:rgba(13,27,42,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+[data-theme="light"] nav{background:rgba(255,255,255,.97);border-bottom:1px solid rgba(26,58,92,.1)}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:#fff}
+[data-theme="light"] .nav-name{color:var(--navy)}
+.nav-name em{color:var(--gold);font-style:normal}
+.nav-sub{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);font-family:'Jost',sans-serif}
+[data-theme="light"] .nav-sub{color:var(--mgray)}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55);text-decoration:none;transition:color .2s}
+[data-theme="light"] .nav-links a{color:var(--sub-l)}
+.nav-links a:hover,.nav-links a.active{color:var(--gold)}
+.nav-right{display:flex;align-items:center;gap:14px}
+.theme-btn{width:36px;height:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:10px;cursor:pointer;position:relative;transition:all .2s;flex-shrink:0}
+[data-theme="light"] .theme-btn{background:rgba(26,27,42,.08);border-color:rgba(26,27,42,.15)}
+.theme-btn::after{content:'';position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--gold);transition:transform .2s}
+[data-theme="light"] .theme-btn::after{transform:translateX(16px)}
+.nav-cta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--navy);background:var(--gold);padding:9px 22px;border-radius:2px;text-decoration:none;transition:background .2s}
+.nav-cta:hover{background:var(--gold2)}
+.news-hero{background:var(--navy);padding:48px 52px 40px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+[data-theme="light"] .news-hero{background:#0D1B2A}
+.news-hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 50% 80% at 100% 50%,rgba(184,151,90,.05) 0%,transparent 60%)}
+.news-hero-inner{position:relative;z-index:1}
+.news-hero-tag{font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.news-hero-title{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,4vw,46px);font-weight:400;color:#fff;margin-bottom:8px}
+.news-hero-desc{font-size:13px;font-weight:300;color:rgba(255,255,255,.45);max-width:500px}
+.filters-bar{padding:16px 52px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--bg2)}
+.cats{display:flex;gap:8px;flex-wrap:wrap}
+.cat-btn{font-size:11px;font-weight:500;letter-spacing:.06em;padding:6px 14px;border-radius:20px;border:1px solid var(--border);cursor:pointer;background:transparent;color:var(--sub);font-family:'Jost',sans-serif;transition:all .2s;white-space:nowrap}
+.cat-btn:hover{border-color:var(--gold);color:var(--text)}
+.cat-btn.active{background:var(--gold);color:var(--navy);border-color:var(--gold);font-weight:600}
+.search-wrap{position:relative}
+.search-input{padding:7px 14px 7px 34px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;color:var(--text);font-family:'Jost',sans-serif;font-size:12px;outline:none;width:200px;transition:border-color .2s}
+[data-theme="light"] .search-input{background:var(--bg3)}
+.search-input:focus{border-color:var(--gold)}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px}
+.page-layout{display:grid;grid-template-columns:1fr 260px;gap:0;align-items:start}
+.featured-wrap{padding:36px 52px 0}
+.featured-label{font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+.featured-card{display:grid;grid-template-columns:1.3fr 1fr;gap:0;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:transform .2s;cursor:pointer;margin-bottom:36px}
+.featured-card:hover{transform:translateY(-2px)}
+.featured-img{height:340px;overflow:hidden;position:relative}
+.featured-img img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.featured-card:hover .featured-img img{transform:scale(1.03)}
+.featured-img-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:52px}
+.featured-body{padding:32px 28px;display:flex;flex-direction:column;justify-content:space-between}
+.featured-cats{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
+.art-cat{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:3px}
+.cat-local{background:rgba(74,144,217,.15);color:#4A90D9}
+.cat-wall{background:rgba(76,175,80,.1);color:#4caf50}
+.cat-cripto{background:rgba(255,152,0,.1);color:#FF9800}
+.cat-bonos{background:rgba(184,151,90,.12);color:var(--gold)}
+.featured-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--text);line-height:1.25;margin-bottom:12px}
+.featured-excerpt{font-size:13px;font-weight:300;line-height:1.75;color:var(--sub);margin-bottom:18px}
+.featured-meta{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--muted)}
+.read-more{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:12px;transition:gap .2s}
+.read-more:hover{gap:10px}
+.news-section{padding:0 52px 60px}
+.news-count{font-size:12px;color:var(--muted);margin-bottom:18px;padding-top:24px}
+.news-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.news-card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:transform .2s,border-color .2s;cursor:pointer}
+.news-card:hover{transform:translateY(-3px);border-color:rgba(184,151,90,.3)}
+.card-img{height:168px;overflow:hidden;position:relative}
+.card-img img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.news-card:hover .card-img img{transform:scale(1.04)}
+.card-img-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px}
+.card-body{padding:18px}
+.card-cats{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.card-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--text);line-height:1.3;margin-bottom:8px}
+.card-excerpt{font-size:12px;font-weight:300;line-height:1.65;color:var(--sub);margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-meta{font-size:10px;color:var(--muted)}
+.no-results{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
+.sidebar{padding:36px 0 36px 28px;position:sticky;top:80px}
+.sidebar-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:14px}
+.sidebar-title{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.ticker-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--border)}
+.ticker-row:last-child{border:none}
+.ticker-name{font-size:11px;font-weight:500;color:var(--text)}
+.ticker-price{font-size:12px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--text)}
+.ticker-chg{font-size:10px;font-weight:500}
+.up{color:#4caf50}.down{color:#ef5350}
+.popular-item{display:flex;gap:8px;align-items:flex-start;padding:9px 0;border-bottom:0.5px solid var(--border);cursor:pointer;transition:opacity .2s}
+.popular-item:hover{opacity:.75}
+.popular-item:last-child{border:none}
+.popular-num{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:var(--gold);line-height:1;min-width:20px}
+.popular-text{font-size:11px;font-weight:400;color:var(--sub);line-height:1.5}
+.load-more-wrap{text-align:center;padding:16px 0 40px}
+.btn-load{font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid rgba(184,151,90,.3);padding:10px 28px;border-radius:4px;cursor:pointer;transition:all .2s}
+.btn-load:hover{background:var(--gold);color:var(--navy)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:500;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal-article{background:var(--bg2);border:1px solid var(--border);border-radius:12px;width:100%;max-width:740px;position:relative;overflow:hidden}
+.modal-img{height:280px;overflow:hidden;position:relative}
+.modal-img img{width:100%;height:100%;object-fit:cover}
+.modal-img-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:64px}
+.modal-close{position:absolute;top:14px;right:14px;width:34px;height:34px;background:rgba(0,0,0,.45);border:none;border-radius:50%;color:#fff;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(4px)}
+.modal-body{padding:32px 36px 40px}
+.modal-cats{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:500;color:var(--text);line-height:1.2;margin-bottom:14px}
+.modal-meta{font-size:11px;color:var(--muted);margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+.modal-content{font-size:14px;font-weight:300;line-height:1.85;color:var(--sub)}
+.modal-content p{margin-bottom:16px}
+.modal-content h3{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--text);margin:24px 0 10px}
+.wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;box-shadow:0 4px 16px rgba(37,211,102,.35);transition:transform .2s;text-decoration:none}
+.wa-float:hover{transform:scale(1.1)}
+footer{background:#040c14;padding:28px 52px;border-top:1px solid rgba(184,151,90,.08);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.footer-copy{font-size:11px;color:rgba(255,255,255,.2)}
+#no-results{display:none}
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-brand">
+    <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
+  </a>
+  <div class="nav-links">
+    <a href="noticias.html" class="active">Noticias</a>
+    <a href="index.html#servicios">¿Qué hacemos?</a>
+    <a href="informes.html">Informes</a>
+    <a href="herramientas.html">Herramientas</a>
+    <a href="index.html#planes">Planes</a>
+    <a href="index.html#contacto">Contacto</a>
+  </div>
+  <div class="nav-right">
+    <button class="theme-btn" onclick="toggleTheme()"></button>
+    <a href="index.html" class="nav-cta">Acceso Cliente</a>
+  </div>
+</nav>
+
+<div class="news-hero">
+  <div class="news-hero-bg"></div>
+  <div class="news-hero-inner">
+    <div class="news-hero-tag">Análisis de mercado</div>
+    <h1 class="news-hero-title">Noticias financieras</h1>
+    <p class="news-hero-desc">Análisis del mercado local e internacional, cripto, bonos y acciones. Contenido actualizado por el equipo Valtia.</p>
+  </div>
+</div>
+
+<div class="filters-bar">
+  <div class="cats">
+    <button class="cat-btn active" onclick="filterCat('todos',this)">Todos</button>
+    <button class="cat-btn" onclick="filterCat('local',this)">Mercado local</button>
+    <button class="cat-btn" onclick="filterCat('wall',this)">Wall Street</button>
+    <button class="cat-btn" onclick="filterCat('cripto',this)">Cripto</button>
+    <button class="cat-btn" onclick="filterCat('bonos',this)">Bonos y acciones</button>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" class="search-input" placeholder="Buscar nota..." oninput="searchNews(this.value)">
+  </div>
+</div>
+
+<div class="page-layout">
+  <div>
+    <div class="featured-wrap" id="featured-section">
+      <div class="featured-label">Destacado</div>
+      <div class="featured-card" onclick="openArticle(0)">
+        <div class="featured-img">
+          <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=700&q=80&auto=format&fit=crop" alt="Mercado financiero" onerror="this.parentNode.innerHTML='<div class=featured-img-fallback style=background:linear-gradient(135deg,#0D1B2A,#1A3A5C)>🌍</div>'">
+        </div>
+        <div class="featured-body">
+          <div>
+            <div class="featured-cats"><span class="art-cat cat-local">Mercado local</span><span class="art-cat cat-bonos">Bonos</span></div>
+            <div class="featured-title">Dólar y tasas: el mercado argentino frente a un nuevo ciclo de ajuste</div>
+            <div class="featured-excerpt">El equilibrio cambiario vuelve a estar bajo presión. Analizamos los factores macro que están moviendo el tipo de cambio implícito y qué esperar en los próximos 30 días para posiciones en renta fija local.</div>
+          </div>
+          <div>
+            <div class="featured-meta"><span>📅 30 de marzo, 2026</span><span>⏱ 5 min de lectura</span></div>
+            <div class="read-more">Leer análisis →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="news-section">
+      <div class="news-count" id="news-count">Mostrando <strong>6</strong> artículos</div>
+      <div class="news-grid" id="news-grid"></div>
+      <div id="no-results" class="no-results">No se encontraron artículos para tu búsqueda.</div>
+      <div class="load-more-wrap" id="load-more-wrap"><button class="btn-load" onclick="loadMore()">Ver más artículos</button></div>
+    </div>
+  </div>
+  <div class="sidebar">
+    <div class="sidebar-card">
+      <div class="sidebar-title">Mercado ahora</div>
+      <div class="ticker-row"><span class="ticker-name">BTC</span><span class="ticker-price" id="s-btc">$--</span><span class="ticker-chg up" id="s-btc-c">--%</span></div>
+      <div class="ticker-row"><span class="ticker-name">ETH</span><span class="ticker-price" id="s-eth">$--</span><span class="ticker-chg up" id="s-eth-c">--%</span></div>
+      <div class="ticker-row"><span class="ticker-name">Dólar MEP</span><span class="ticker-price" id="s-mep">$--</span><span class="ticker-chg" style="color:var(--muted)">ARS</span></div>
+      <div class="ticker-row"><span class="ticker-name">Dólar Blue</span><span class="ticker-price" id="s-blue">$--</span><span class="ticker-chg" style="color:var(--muted)">ARS</span></div>
+      <div class="ticker-row"><span class="ticker-name">S&P 500</span><span class="ticker-price" id="s-sp">$--</span><span class="ticker-chg up" id="s-sp-c">--%</span></div>
+    </div>
+    <div class="sidebar-card">
+      <div class="sidebar-title">Lo más leído</div>
+      <div id="popular-list"></div>
+    </div>
+    <div class="sidebar-card" style="background:linear-gradient(135deg,var(--navy3),var(--navy2));border-color:rgba(184,151,90,.2)">
+      <div class="sidebar-title" style="color:rgba(255,255,255,.5)">¿Querés más análisis?</div>
+      <p style="font-size:12px;font-weight:300;color:rgba(255,255,255,.4);line-height:1.65;margin-bottom:12px">Suscribite y recibí informes detallados y reuniones mensuales.</p>
+      <a href="index.html#planes" style="display:block;text-align:center;background:var(--gold);color:var(--navy);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:9px;border-radius:3px;text-decoration:none">Ver planes →</a>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="articleModal" onclick="closeIfOverlay(event)">
+  <div class="modal-article">
+    <div class="modal-img" id="modal-img-wrap">
+      <button class="modal-close" onclick="closeArticle()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-cats" id="modal-cats"></div>
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-meta" id="modal-meta"></div>
+      <div class="modal-content" id="modal-content"></div>
+    </div>
+  </div>
+</div>
+
+<a href="https://wa.me/543515067066" target="_blank" class="wa-float">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<footer>
+  <span class="footer-copy">© 2026 Valtia Analytics · valtia.tech</span>
+  <span class="footer-copy">Los análisis son de carácter informativo y no constituyen asesoramiento financiero.</span>
+</footer>
+
+<script>
+function toggleTheme(){const h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'light':'dark';localStorage.setItem('valtia-theme',h.dataset.theme)}
+const t=localStorage.getItem('valtia-theme');if(t)document.documentElement.dataset.theme=t;
+
+// Images from Unsplash (financial/market themed, free to use)
+const IMGS=[
+  'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&q=75&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=600&q=75&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1640340434855-6084b1f4901c?w=600&q=75&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=600&q=75&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1559526324-593bc073d938?w=600&q=75&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1607944024060-0450380ddd33?w=600&q=75&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?w=600&q=75&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=600&q=75&auto=format&fit=crop',
+];
+const IMGS_BIG=[
+  'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1640340434855-6084b1f4901c?w=800&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1559526324-593bc073d938?w=800&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1607944024060-0450380ddd33?w=800&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?w=800&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800&q=80&auto=format&fit=crop',
+];
+const BG=[
+  'linear-gradient(135deg,#0D1B2A,#1A3A5C)',
+  'linear-gradient(135deg,#152336,#0D3B6E)',
+  'linear-gradient(135deg,#1a1a2e,#16213e)',
+  'linear-gradient(135deg,#0a1628,#1A3A5C)',
+  'linear-gradient(135deg,#1a0a00,#3d2200)',
+  'linear-gradient(135deg,#0a2818,#1a4d2e)',
+  'linear-gradient(135deg,#1a1500,#3d3200)',
+  'linear-gradient(135deg,#0d0d1a,#1a1a3e)',
+];
+
+const articles=[
+  {id:0,cat:['local','bonos'],title:'Dólar y tasas: el mercado argentino frente a un nuevo ciclo de ajuste',excerpt:'El equilibrio cambiario vuelve a estar bajo presión. Analizamos los factores que mueven el tipo de cambio implícito.',date:'30 de marzo, 2026',read:'5 min',featured:true,content:`<p>El mercado argentino atraviesa una etapa de recalibración. La convergencia entre la tasa de política monetaria y la inflación esperada está generando movimientos en el tramo corto de la curva de rendimientos, con implicancias directas para quienes tienen posiciones en LECAPs y bonos CER.</p><h3>El tipo de cambio implícito</h3><p>El dólar MEP cerró la semana en torno a los $1.180, mientras el CCL operó con una brecha mínima respecto al financiero. Esta compresión de spreads refleja un mercado con escasa volatilidad cambiaria en el corto plazo.</p><h3>¿Qué hacer con la renta fija local?</h3><p>Para posiciones en pesos, la estrategia más conservadora sigue siendo el tramo corto: cauciones de 30 a 60 días y LECAPs con vencimiento antes de junio. El riesgo de extensión de duration en este contexto no está suficientemente compensado por el spread adicional.</p>`},
+  {id:1,cat:['wall'],title:'Geopolítica, petróleo y empleo: 5 factores que mueven Wall Street esta semana',excerpt:'Los principales índices norteamericanos operan con volatilidad ante datos macro mixtos.',date:'30 de marzo, 2026',read:'4 min',content:`<p>Wall Street cerró una semana mixta. El S&P 500 acumuló una suba del 0,8% mientras el Nasdaq retrocedió levemente ante la rotación desde tecnología hacia sectores más defensivos.</p><h3>Los 5 factores a seguir</h3><p><strong>1. NFP de marzo:</strong> El mercado laboral sigue siendo el termómetro principal de la Fed.<br><strong>2. Petróleo Brent:</strong> La tensión en Medio Oriente mantiene el crudo por encima de los USD 82.<br><strong>3. Resultados corporativos Q1:</strong> Arrancan las presentaciones de grandes bancos.<br><strong>4. Inflación PCE:</strong> El indicador favorito de la Fed se publica el viernes.<br><strong>5. Dólar index (DXY):</strong> Un dólar fuerte presiona los emergentes y los commodities.</p>`},
+  {id:2,cat:['cripto'],title:'Bitcoin consolida por encima de los USD 77.000: ¿rebote técnico o cambio de tendencia?',excerpt:'BTC recuperó el nivel clave de USD 77.000 tras semanas de presión bajista.',date:'29 de marzo, 2026',read:'4 min',content:`<p>Bitcoin cerró la semana pasada por encima de los USD 77.000, recuperando un nivel técnico relevante que había perdido a principios de marzo.</p><h3>Análisis técnico</h3><p>En el gráfico de 4 horas, el precio realizó un CHoCH alcista desde el soporte de USD 75.800. El siguiente nivel de resistencia relevante se encuentra entre USD 79.000 y USD 80.500.</p><h3>Fundamentos del mercado</h3><p>El interés abierto en futuros sigue elevado, con una concentración importante de posiciones cortas entre USD 78.000 y USD 80.700. Un movimiento que barra esa liquidez podría acelerar el upside de corto plazo.</p>`},
+  {id:3,cat:['local'],title:'Inflación y consumo: el desafío de sostener la actividad económica en 2026',excerpt:'La inflación continúa afectando el consumo real. Datos del INDEC y sus implicancias.',date:'29 de marzo, 2026',read:'3 min',content:`<p>Los últimos datos del INDEC confirman que la desaceleración inflacionaria continúa, aunque a un ritmo más lento de lo proyectado. La inflación núcleo sigue siendo el componente más resistente.</p><h3>Impacto en el consumo</h3><p>Las ventas minoristas cayeron un 3,2% interanual en febrero. Los sectores más afectados son indumentaria y electrónica, mientras que alimentos y bebidas muestran cierta recuperación.</p>`},
+  {id:4,cat:['bonos','local'],title:'Bonos argentinos: señales de recuperación en medio de la incertidumbre fiscal',excerpt:'AL30 y GD30 acumulan ganancias en dólares. El mercado descuenta mejora fiscal.',date:'28 de marzo, 2026',read:'4 min',content:`<p>Los bonos soberanos argentinos en dólares cerraron la semana con ganancias moderadas. El AL30 operó en torno a USD 68,5, acumulando una suba del 12% en lo que va del año.</p><h3>¿Qué descuenta el mercado?</h3><p>El mercado está descontando una mejora gradual en las cuentas fiscales, sostenida por el superávit primario. Sin embargo, la prima de riesgo sigue siendo elevada respecto a comparables regionales.</p>`},
+  {id:5,cat:['wall','cripto'],title:'Semiconductores e inteligencia artificial: el sector que sigue liderando 2026',excerpt:'NVDA, AMD y el ETF SMH marcan nuevos máximos relativos.',date:'27 de marzo, 2026',read:'3 min',content:`<p>El sector de semiconductores sigue siendo el gran ganador de este ciclo alcista. NVIDIA cotiza cerca de sus máximos históricos, impulsada por la demanda sostenida de chips para centros de datos de inteligencia artificial.</p><h3>El ETF SMH como proxy</h3><p>Para quienes quieren exposición al sector sin concentrarse en una sola acción, el SMH (VanEck Semiconductor ETF) es la alternativa más eficiente. Acumula una suba del 18% en lo que va del año.</p>`},
+  {id:6,cat:['local','bonos'],title:'Vaca Muerta y Vista Energy: el activo argentino que mira afuera',excerpt:'VIST sigue siendo el CEDEAR con mejor correlación al crecimiento de Vaca Muerta.',date:'26 de marzo, 2026',read:'3 min',content:`<p>Vista Energy (VIST) se consolida como uno de los CEDEARs más interesantes del mercado local. La empresa opera en Vaca Muerta con foco en petróleo no convencional.</p><h3>Valuación actual</h3><p>A los precios actuales, VIST cotiza a un múltiplo EV/EBITDA de aproximadamente 4,5x, que resulta atractivo comparado con pares internacionales que cotizan entre 6x y 8x.</p>`},
+  {id:7,cat:['cripto'],title:'Ethereum y el debate sobre el staking: oportunidad de yield en contexto volátil',excerpt:'ETH consolida por encima de USD 2.400. El staking ofrece un 4-6% APY en dólares.',date:'25 de marzo, 2026',read:'3 min',content:`<p>Ethereum opera en un rango de consolidación entre USD 2.400 y USD 2.700. A diferencia de Bitcoin, ETH tiene una propuesta de valor adicional: el staking nativo que permite generar un yield del 4-6% anual.</p><h3>Opciones de staking</h3><p>Las principales alternativas son: staking directo en la red (requiere 32 ETH), liquid staking via Lido (stETH, sin mínimo), y plataformas centralizadas como Coinbase o Kraken con rendimientos del 3-5% APY.</p>`},
+];
+
+let visibleCount=6,currentCat='todos',currentSearch='';
+function getCatClass(c){return{local:'cat-local',wall:'cat-wall',cripto:'cat-cripto',bonos:'cat-bonos'}[c]||''}
+function getCatLabel(c){return{local:'Mercado local',wall:'Wall Street',cripto:'Cripto',bonos:'Bonos y acciones'}[c]||c}
+function filteredArticles(){return articles.filter(a=>{if(a.featured)return false;const catOk=currentCat==='todos'||a.cat.includes(currentCat);const searchOk=!currentSearch||a.title.toLowerCase().includes(currentSearch.toLowerCase());return catOk&&searchOk})}
+
+function renderGrid(){
+  const grid=document.getElementById('news-grid');
+  const filtered=filteredArticles();
+  const visible=filtered.slice(0,visibleCount);
+  grid.innerHTML='';
+  visible.forEach((a,i)=>{
+    const div=document.createElement('div');
+    div.className='news-card';
+    div.onclick=()=>openArticle(a.id);
+    const imgIdx=a.id%IMGS.length;
+    div.innerHTML=`
+      <div class="card-img" style="background:${BG[imgIdx]}">
+        <img src="${IMGS[imgIdx]}" alt="${a.title}" loading="lazy" onerror="this.style.display='none'">
+      </div>
+      <div class="card-body">
+        <div class="card-cats">${a.cat.map(c=>`<span class="art-cat ${getCatClass(c)}">${getCatLabel(c)}</span>`).join('')}</div>
+        <div class="card-title">${a.title}</div>
+        <div class="card-excerpt">${a.excerpt}</div>
+        <div class="card-meta">📅 ${a.date} · ⏱ ${a.read} de lectura</div>
+      </div>`;
+    grid.appendChild(div);
+  });
+  document.getElementById('news-count').innerHTML=`Mostrando <strong>${visible.length}</strong> de <strong>${filtered.length}</strong> artículos`;
+  document.getElementById('no-results').style.display=filtered.length===0?'block':'none';
+  document.getElementById('load-more-wrap').style.display=filtered.length>visibleCount?'block':'none';
+  // Popular
+  const pop=document.getElementById('popular-list');pop.innerHTML='';
+  articles.slice(0,5).forEach((a,i)=>{const d=document.createElement('div');d.className='popular-item';d.onclick=()=>openArticle(a.id);d.innerHTML=`<div class="popular-num">${i+1}</div><div class="popular-text">${a.title}</div>`;pop.appendChild(d)});
+}
+
+function filterCat(cat,btn){currentCat=cat;visibleCount=6;document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('featured-section').style.display=cat==='todos'?'block':'none';renderGrid()}
+function searchNews(val){currentSearch=val;visibleCount=6;renderGrid()}
+function loadMore(){visibleCount+=6;renderGrid()}
+
+function openArticle(id){
+  const a=articles.find(x=>x.id===id);if(!a)return;
+  const imgIdx=a.id%IMGS_BIG.length;
+  const wrap=document.getElementById('modal-img-wrap');
+  wrap.style.background=BG[imgIdx];
+  wrap.innerHTML=`<button class="modal-close" onclick="closeArticle()">✕</button><img src="${IMGS_BIG[imgIdx]}" alt="${a.title}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`;
+  document.getElementById('modal-cats').innerHTML=a.cat.map(c=>`<span class="art-cat ${getCatClass(c)}">${getCatLabel(c)}</span>`).join('');
+  document.getElementById('modal-title').textContent=a.title;
+  document.getElementById('modal-meta').textContent=`📅 ${a.date} · ⏱ ${a.read} de lectura`;
+  document.getElementById('modal-content').innerHTML=a.content;
+  document.getElementById('articleModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeArticle(){document.getElementById('articleModal').classList.remove('open');document.body.style.overflow=''}
+function closeIfOverlay(e){if(e.target===document.getElementById('articleModal'))closeArticle()}
+
+async function fetchSidebar(){
+  try{
+    const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true',{headers:{'Accept':'application/json'}});
+    if(!r.ok)return;const d=await r.json();
+    const fmt=n=>'$'+n.toLocaleString('en-US',{maximumFractionDigits:0});
+    const fmtc=n=>(n>0?'+':'')+n.toFixed(2)+'%';
+    document.getElementById('s-btc').textContent=fmt(d.bitcoin.usd);
+    document.getElementById('s-eth').textContent=fmt(d.ethereum.usd);
+    const bc=d.bitcoin.usd_24h_change,ec=d.ethereum.usd_24h_change;
+    const sbc=document.getElementById('s-btc-c');sbc.textContent=fmtc(bc);sbc.className='ticker-chg '+(bc>0?'up':'down');
+    const sec=document.getElementById('s-eth-c');sec.textContent=fmtc(ec);sec.className='ticker-chg '+(ec>0?'up':'down');
+  }catch(e){}
+}
+async function fetchDolarSidebar(){
+  try{
+    const r=await fetch('https://dolarapi.com/v1/dolares');if(!r.ok)return;const d=await r.json();
+    const mep=d.find(x=>x.casa==='bolsa');const blue=d.find(x=>x.casa==='blue');
+    if(mep)document.getElementById('s-mep').textContent='$'+mep.venta;
+    if(blue)document.getElementById('s-blue').textContent='$'+blue.venta;
+  }catch(e){}
+}
+
+renderGrid();fetchSidebar();fetchDolarSidebar();
+setInterval(fetchSidebar,60000);setInterval(fetchDolarSidebar,300000);
+</script>
+</body>
+</html>
