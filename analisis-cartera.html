@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análisis de Portfolio — Valtia Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0D1B2A;--navy2:#152336;--navy3:#1A3A5C;--gold:#B8975A;--gold2:#D4AF6E;--cream:#F5F2EC;--mgray:#6B7C8D;
+  --text-d:#F0EDE8;--sub-d:rgba(240,237,232,.55);--muted-d:rgba(240,237,232,.35);
+  --text-l:#1A2B3C;--sub-l:#4A5A6C;--muted-l:#8A9BAD;
+  --bg-d:#0D1B2A;--bg2-d:#111f2e;--bg3-d:#152336;--bg-l:#F5F2EC;--bg2-l:#FFFFFF;--bg3-l:#EDE9E0;
+  --border-d:rgba(184,151,90,.12);--border-l:rgba(26,58,92,.1);--card-d:#152336;--card-l:#FFFFFF;
+  --green:#4caf50;--yellow:#FF9800;--red:#e57373;--purple:#a78bfa;
+}
+[data-theme="dark"]{--bg:var(--bg-d);--bg2:var(--bg2-d);--bg3:var(--bg3-d);--text:var(--text-d);--sub:var(--sub-d);--muted:var(--muted-d);--border:var(--border-d);--card:var(--card-d)}
+[data-theme="light"]{--bg:var(--bg-l);--bg2:var(--bg2-l);--bg3:var(--bg3-l);--text:var(--text-l);--sub:var(--sub-l);--muted:var(--muted-l);--border:var(--border-l);--card:var(--card-l)}
+html{scroll-behavior:smooth}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;transition:background .3s,color .3s}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px}
+
+/* GATE */
+#gate{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:14px}
+#gate p{color:rgba(255,255,255,.5);font-size:13px;letter-spacing:.04em}
+#gate .spin{width:28px;height:28px;border:2px solid rgba(184,151,90,.25);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#app{display:none}
+
+nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;background:rgba(13,27,42,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+[data-theme="light"] nav{background:rgba(255,255,255,.97)}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:#fff}
+[data-theme="light"] .nav-name{color:var(--navy)}
+.nav-name em{color:var(--gold);font-style:normal}
+.nav-sub{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3)}
+[data-theme="light"] .nav-sub{color:var(--mgray)}
+.nav-right{display:flex;align-items:center;gap:14px}
+.theme-btn{width:36px;height:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:10px;cursor:pointer;position:relative;flex-shrink:0}
+[data-theme="light"] .theme-btn{background:rgba(26,27,42,.08);border-color:rgba(26,27,42,.15)}
+.theme-btn::after{content:'';position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--gold);transition:transform .2s}
+[data-theme="light"] .theme-btn::after{transform:translateX(16px)}
+.nav-back{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);text-decoration:none;border:1px solid rgba(184,151,90,.3);padding:8px 16px;border-radius:3px;transition:all .2s}
+.nav-back:hover{background:rgba(184,151,90,.1)}
+
+.page-hero{background:var(--navy);padding:36px 52px 28px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.page-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:280px;height:280px;background:radial-gradient(circle,rgba(184,151,90,.08),transparent 70%);border-radius:50%}
+.page-hero-inner{position:relative;z-index:1}
+.page-tag{font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,42px);font-weight:400;color:#fff}
+.page-title em{color:var(--gold);font-style:normal}
+.page-desc{font-size:12.5px;color:rgba(255,255,255,.4);margin-top:8px}
+.h-meta{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+.h-chip{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:7px 13px;font-size:.68rem;color:rgba(255,255,255,.5)}
+.h-chip b{color:#fff;display:block;font-size:.82rem;font-weight:600;margin-top:2px}
+
+.summary-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 52px;display:flex;gap:32px;flex-wrap:wrap}
+.sb-item{text-align:center}
+.sb-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.sb-val{font-size:1.25rem;font-weight:700;line-height:1.2;font-family:'Jost',sans-serif}
+.sb-sub{font-size:.65rem;color:var(--muted)}
+
+.tabs{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 52px;display:flex;gap:0;position:sticky;top:64px;z-index:100}
+.tab{padding:13px 22px;font-size:.74rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;letter-spacing:.06em;text-transform:uppercase;transition:all .15s;user-select:none}
+.tab:hover{color:var(--sub)}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+.main{max-width:1180px;margin:0 auto;padding:32px 24px 80px}
+.panel{display:none}
+.panel.active{display:block}
+
+.stock-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.scard{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative;transition:transform .15s,border-color .15s}
+.scard:hover{transform:translateY(-2px);border-color:rgba(184,151,90,.3)}
+.scard-top{padding:16px 18px 12px;border-bottom:1px solid var(--border);position:relative}
+.scard-verdict{position:absolute;top:14px;right:14px;padding:3px 10px;border-radius:20px;font-size:.64rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+.v-strong{background:rgba(76,175,80,.12);color:#4caf50;border:1px solid rgba(76,175,80,.3)}
+.v-hold{background:rgba(184,151,90,.12);color:var(--gold2);border:1px solid rgba(184,151,90,.3)}
+.v-watch{background:rgba(255,152,0,.1);color:var(--yellow);border:1px solid rgba(255,152,0,.3)}
+.v-exit{background:rgba(229,115,115,.12);color:var(--red);border:1px solid rgba(229,115,115,.35)}
+.v-spec{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.3)}
+.v-noentry{background:var(--bg3);color:var(--muted);border:1px solid var(--border)}
+
+.scard-ticker{font-size:1.05rem;font-weight:700;color:var(--text);font-family:'Jost',sans-serif}
+.scard-name{font-size:.7rem;color:var(--muted);margin-top:1px}
+.scard-price{font-size:1.5rem;font-weight:700;color:var(--text);margin-top:6px}
+.scard-chg{font-size:.72rem;padding:2px 7px;border-radius:4px;display:inline-block;margin-left:6px;vertical-align:middle;font-weight:600}
+.chg-pos{background:rgba(76,175,80,.12);color:#4caf50}
+.chg-neg{background:rgba(229,115,115,.12);color:var(--red)}
+
+.pt-section{padding:12px 18px;border-bottom:1px solid var(--border)}
+.pt-label{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;font-size:.7rem;margin-bottom:6px}
+.pt-label span:first-child{color:var(--muted)}
+.pt-bar-bg{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.pt-bar-fill{height:100%;border-radius:3px;transition:width .4s}
+.pt-sub{display:flex;justify-content:space-between;font-size:.65rem;color:var(--muted);margin-top:4px}
+
+.filters-row{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap}
+.filter-badge{padding:3px 9px;border-radius:5px;font-size:.63rem;font-weight:600}
+.fb-pass{background:rgba(76,175,80,.1);color:#4caf50;border:1px solid rgba(76,175,80,.25)}
+.fb-fail{background:rgba(229,115,115,.1);color:var(--red);border:1px solid rgba(229,115,115,.3)}
+.fb-warn{background:rgba(255,152,0,.08);color:var(--yellow);border:1px solid rgba(255,152,0,.25)}
+.fb-na{background:var(--bg3);color:var(--muted);border:1px solid var(--border)}
+
+.metrics-grid{padding:12px 18px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.metric-box{background:var(--bg3);border-radius:8px;padding:8px 10px}
+.metric-box-label{font-size:.58rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.metric-box-val{font-size:.85rem;font-weight:700;margin-top:2px}
+.mv-good{color:#4caf50}.mv-warn{color:var(--yellow)}.mv-bad{color:var(--red)}.mv-neutral{color:var(--text)}
+
+.analysis{padding:12px 18px 14px;border-top:1px solid var(--border)}
+.analysis-title{font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px}
+.analysis-text{font-size:.76rem;color:var(--sub);line-height:1.55}
+.analysis-text strong{color:var(--text)}
+
+.alert-banner{margin-bottom:18px;padding:14px 18px;border-radius:10px;font-size:.8rem;display:flex;gap:10px;align-items:flex-start;line-height:1.55}
+.ab-red{background:rgba(229,115,115,.08);border:1px solid rgba(229,115,115,.3);color:#f4a5a5}
+.ab-yellow{background:rgba(255,152,0,.06);border:1px solid rgba(255,152,0,.25);color:#ffc371}
+.ab-green{background:rgba(76,175,80,.06);border:1px solid rgba(76,175,80,.25);color:#8fd996}
+
+.section-label{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);margin:28px 0 14px;display:flex;align-items:center;gap:10px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+table.ranking{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:16px}
+table.ranking th{padding:10px 12px;text-align:left;font-size:.64rem;color:var(--muted);letter-spacing:.04em;font-weight:600;text-transform:uppercase;background:var(--bg3);border-bottom:1px solid var(--border)}
+table.ranking td{padding:9px 12px;border-bottom:1px solid var(--border)}
+
+footer{background:#040c14;padding:24px 52px;border-top:1px solid rgba(184,151,90,.08);text-align:center;margin-top:50px}
+.footer-copy{font-size:11px;color:rgba(255,255,255,.25);display:block}
+.footer-copy + .footer-copy{margin-top:4px}
+
+@media(max-width:700px){
+  nav,.page-hero,.summary-bar,.tabs{padding-left:18px;padding-right:18px}
+  .main{padding:20px 14px 60px}
+  .stock-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="gate"><div class="spin"></div><p>Verificando acceso de administrador…</p></div>
+
+<div id="app">
+<nav>
+  <a href="index.html" class="nav-brand">
+    <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
+  </a>
+  <div class="nav-right">
+    <button class="theme-btn" onclick="toggleTheme()" title="Cambiar tema"></button>
+    <a href="index.html" class="nav-back">← Volver al portal</a>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <div class="page-hero-inner">
+    <div class="page-tag">📊 Solo administradores · Playbook v2.0</div>
+    <h1 class="page-title">Análisis de Portfolio <em>Completo</em></h1>
+    <p class="page-desc">19 activos analizados · Datos al 29 Jun 2026 · Fuente: FMP API + StockAnalysis</p>
+    <div class="h-meta">
+      <div class="h-chip">Cartera activa<b>13 acciones</b></div>
+      <div class="h-chip">Watchlist<b>6 candidatos</b></div>
+      <div class="h-chip">Pasan todos los filtros<b>6 acciones</b></div>
+      <div class="h-chip">Señal de salida<b style="color:var(--red)">INTC</b></div>
+      <div class="h-chip">Mejor upside<b style="color:var(--gold2)">NVDA +64%</b></div>
+    </div>
+  </div>
+</div>
+
+<div class="summary-bar">
+  <div class="sb-item"><div class="sb-label">Pasan Filtro 1</div><div class="sb-val" style="color:#4caf50">14/19</div><div class="sb-sub">Upside &gt; 15%</div></div>
+  <div class="sb-item"><div class="sb-label">Señal SALIR</div><div class="sb-val" style="color:var(--red)">INTC</div><div class="sb-sub">-26% según analistas</div></div>
+  <div class="sb-item"><div class="sb-label">Top Conviction</div><div class="sb-val" style="color:var(--gold2)">NVDA</div><div class="sb-sub">+64.2% upside</div></div>
+  <div class="sb-item"><div class="sb-label">Rotar capital de</div><div class="sb-val" style="color:var(--yellow)">KO · JPM</div><div class="sb-sub">Sin upside significativo</div></div>
+  <div class="sb-item"><div class="sb-label">Watch destacado</div><div class="sb-val" style="color:var(--purple)">NU · SOFI</div><div class="sb-sub">Mayor upside potencial</div></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('cartera',this)">📈 Mi Cartera (13)</div>
+  <div class="tab" onclick="showTab('watchlist',this)">👁 Watchlist (6)</div>
+  <div class="tab" onclick="showTab('ranking',this)">🏆 Ranking por Upside</div>
+</div>
+
+<div class="main">
+
+<div class="panel active" id="cartera">
+  <div class="alert-banner ab-red">
+    <span>🚨</span>
+    <span><strong>Alerta crítica — INTC:</strong> Los analistas ven un precio objetivo de $94 vs precio actual de $127.82 = <strong>-26.4% de downside</strong>. Márgenes negativos, FCF negativo y EPS negativo. El stock subió 573% desde su mínimo anual ($18.97) posiblemente por rumores de M&A — los fundamentales no justifican este precio.</span>
+  </div>
+  <div class="alert-banner ab-yellow">
+    <span>⚠️</span>
+    <span><strong>KO sin recorrido:</strong> Upside +4.6% a $86.50 — no pasa el Filtro 1. Cerca del máximo de 52 semanas ($84.04). Capital estancado sin catalizador. Candidato a rotación hacia posiciones con mayor upside.</span>
+  </div>
+
+  <div class="section-label">⭐ Alta convicción — Pasan todos los filtros</div>
+  <div class="stock-grid">
+
+    <div class="scard">
+      <div class="scard-top">
+        <div class="scard-verdict v-strong">⭐ Top Pick</div>
+        <div class="scard-ticker">NVDA <span style="font-size:.66rem;color:var(--muted)">NASDAQ</span></div>
+        <div class="scard-name">NVIDIA Corporation · Semiconductores IA</div>
+        <div><span class="scard-price">$192.96</span><span class="scard-chg chg-pos">+0.22%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:#4caf50;font-weight:600">PT $316.79 → <strong>+64.2%</strong> ✅</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:61%;background:linear-gradient(90deg,#2e7d32,#4caf50)"></div></div>
+        <div class="pt-sub"><span>$192.96</span><span>Máx 52s: $236.54</span><span>PT: $316.79</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-pass">✅ Upside +64%</span>
+        <span class="filter-badge fb-pass">✅ Rating A-</span>
+        <span class="filter-badge fb-pass">✅ EPS creciendo</span>
+        <span class="filter-badge fb-pass">✅ Revenue ↑</span>
+        <span class="filter-badge fb-pass">✅ Beta 2.1</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">Margen Bruto</div><div class="metric-box-val mv-good">74.1%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Margen Neto</div><div class="metric-box-val mv-good">62.9%</div></div>
+        <div class="metric-box"><div class="metric-box-label">P/E TTM</div><div class="metric-box-val mv-good">29.4x</div></div>
+        <div class="metric-box"><div class="metric-box-label">EV/EBITDA</div><div class="metric-box-val mv-good">24.3x</div></div>
+        <div class="metric-box"><div class="metric-box-label">Deuda/Equity</div><div class="metric-box-val mv-good">0.07x</div></div>
+        <div class="metric-box"><div class="metric-box-label">Market Cap</div><div class="metric-box-val mv-neutral">$4.67T</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">El activo más sólido del portfolio. <strong>Líder absoluto en chips de IA</strong> — H100/H200/GB200 sin competidor real. Márgenes brutos del 74% son excepcionales para semiconductores. EPS creciendo a ritmo de +3x año a año. Beta 2.1 = alta volatilidad, pero el crecimiento justifica el riesgo. Precio actual está <strong>18% por debajo del máximo</strong> de 52 semanas — potencial punto de acumulación.</div>
+      </div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-top">
+        <div class="scard-verdict v-strong">🟢 Mantener</div>
+        <div class="scard-ticker">NFLX <span style="font-size:.66rem;color:var(--muted)">NASDAQ</span></div>
+        <div class="scard-name">Netflix, Inc. · Streaming</div>
+        <div><span class="scard-price">$74.70</span><span class="scard-chg chg-pos">+1.21%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:#4caf50;font-weight:600">PT $111.83 → <strong>+49.7%</strong> ✅</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:56%;background:linear-gradient(90deg,#2e7d32,#4caf50)"></div></div>
+        <div class="pt-sub"><span>$74.70</span><span>Máx 52s: $134.12</span><span>PT: $111.83</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-pass">✅ Upside +49.7%</span>
+        <span class="filter-badge fb-pass">✅ Strong Buy</span>
+        <span class="filter-badge fb-pass">✅ EPS ↑</span>
+        <span class="filter-badge fb-pass">✅ Revenue ↑</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">Margen Bruto</div><div class="metric-box-val mv-good">49.0%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Margen Neto</div><div class="metric-box-val mv-good">28.5%</div></div>
+        <div class="metric-box"><div class="metric-box-label">P/E TTM</div><div class="metric-box-val mv-good">23.6x</div></div>
+        <div class="metric-box"><div class="metric-box-label">P/FCF</div><div class="metric-box-val mv-good">26.4x</div></div>
+        <div class="metric-box"><div class="metric-box-label">Deuda/Equity</div><div class="metric-box-val mv-warn">0.54x</div></div>
+        <div class="metric-box"><div class="metric-box-label">Market Cap</div><div class="metric-box-val mv-neutral">$314.5B</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">P/E de 23.6x para Netflix es <strong>históricamente barato</strong>. Publicidad, live events y password sharing crackdown generan revenue incremental sin grandes costos adicionales. Margen neto del 28.5% es el más alto de su historia. <strong>Upside sólido con fundamentos reales.</strong></div>
+      </div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-top">
+        <div class="scard-verdict v-strong">🟢 Mantener</div>
+        <div class="scard-ticker">MSFT <span style="font-size:.66rem;color:var(--muted)">NASDAQ</span></div>
+        <div class="scard-name">Microsoft Corporation · Cloud / IA</div>
+        <div><span class="scard-price">$368.09</span><span class="scard-chg chg-neg">-1.31%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:#4caf50;font-weight:600">PT $551.33 → <strong>+49.8%</strong> ✅</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:66%;background:linear-gradient(90deg,#2e7d32,#4caf50)"></div></div>
+        <div class="pt-sub"><span>$368.09</span><span>Máx 52s: $555.45</span><span>PT: $551.33</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-pass">✅ Upside +49.8%</span>
+        <span class="filter-badge fb-pass">✅ Strong Buy</span>
+        <span class="filter-badge fb-pass">✅ EPS ↑</span>
+        <span class="filter-badge fb-pass">✅ Revenue ↑</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">Margen Bruto</div><div class="metric-box-val mv-good">68.3%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Margen Neto</div><div class="metric-box-val mv-good">39.3%</div></div>
+        <div class="metric-box"><div class="metric-box-label">P/E TTM</div><div class="metric-box-val mv-good">21.8x</div></div>
+        <div class="metric-box"><div class="metric-box-label">EV/EBITDA</div><div class="metric-box-val mv-good">13.7x</div></div>
+        <div class="metric-box"><div class="metric-box-label">Deuda/Equity</div><div class="metric-box-val mv-good">0.14x</div></div>
+        <div class="metric-box"><div class="metric-box-label">Market Cap</div><div class="metric-box-val mv-neutral">$2.73T</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">A P/E de 21.8x, <strong>Microsoft está en zona de acumulación histórica</strong>. Cayó 34% desde su máximo de $555. Azure crece &gt;30% trimestral, Copilot monetizando. Margen neto del 39.3% — el más eficiente entre las grandes tech. <strong>Considerar acumular en esta corrección.</strong></div>
+      </div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-top">
+        <div class="scard-verdict v-strong">🟢 Mantener</div>
+        <div class="scard-ticker">META <span style="font-size:.66rem;color:var(--muted)">NASDAQ</span></div>
+        <div class="scard-name">Meta Platforms, Inc. · Social / IA / AR</div>
+        <div><span class="scard-price">$564.18</span><span class="scard-chg chg-pos">+2.53%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:#4caf50;font-weight:600">PT $827.50 → <strong>+46.7%</strong> ✅</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:68%;background:linear-gradient(90deg,#2e7d32,#4caf50)"></div></div>
+        <div class="pt-sub"><span>$564.18</span><span>Máx 52s: $796.25</span><span>PT: $827.50</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-pass">✅ Upside +46.7%</span>
+        <span class="filter-badge fb-pass">✅ Rating B+</span>
+        <span class="filter-badge fb-pass">✅ EPS ↑</span>
+        <span class="filter-badge fb-pass">✅ Revenue ↑</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">ROE TTM</div><div class="metric-box-val mv-good">33.2%</div></div>
+        <div class="metric-box"><div class="metric-box-label">ROA TTM</div><div class="metric-box-val mv-good">17.9%</div></div>
+        <div class="metric-box"><div class="metric-box-label">EV/EBITDA</div><div class="metric-box-val mv-good">13.2x</div></div>
+        <div class="metric-box"><div class="metric-box-label">ROIC TTM</div><div class="metric-box-val mv-good">20.0%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Deuda/Equity</div><div class="metric-box-val mv-good">bajo</div></div>
+        <div class="metric-box"><div class="metric-box-label">Market Cap</div><div class="metric-box-val mv-neutral">$1.43T</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">EV/EBITDA de 13.2x para Meta es <strong>sorprendentemente barato</strong> para este crecimiento. ROE 33.2%, ROA 17.9%, ROIC 20% — métricas de primer nivel. Meta AI con 1B+ usuarios. <strong>Alta convicción para mantener y potencialmente acumular.</strong></div>
+      </div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-top">
+        <div class="scard-verdict v-strong">🟢 Mantener</div>
+        <div class="scard-ticker">MU <span style="font-size:.66rem;color:var(--muted)">NASDAQ</span></div>
+        <div class="scard-name">Micron Technology · Memoria IA (HBM)</div>
+        <div><span class="scard-price">$1,114.63</span><span class="scard-chg chg-neg">-1.56%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:#4caf50;font-weight:600">PT ~$1,400 → <strong>est. +25.6%</strong> ✅</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:79%;background:linear-gradient(90deg,#2e7d32,#4caf50)"></div></div>
+        <div class="pt-sub"><span>$1,114</span><span>Máx 52s: $1,255</span><span>PT est: ~$1,400</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-pass">✅ Upside est. +25%</span>
+        <span class="filter-badge fb-pass">✅ Strong Buy</span>
+        <span class="filter-badge fb-pass">✅ EPS +94% (est)</span>
+        <span class="filter-badge fb-pass">✅ Revenue ↑</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">HBM Share</div><div class="metric-box-val mv-good">Alto</div></div>
+        <div class="metric-box"><div class="metric-box-label">EPS 2027 est</div><div class="metric-box-val mv-good">+94%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Ciclo</div><div class="metric-box-val mv-good">Alcista</div></div>
+        <div class="metric-box"><div class="metric-box-label">Precio vs Máx</div><div class="metric-box-val mv-warn">-11.2%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Market Cap</div><div class="metric-box-val mv-neutral">$1.26T</div></div>
+        <div class="metric-box"><div class="metric-box-label">PT fuente</div><div class="metric-box-val mv-neutral" style="font-size:.68rem">StockAnalysis</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">Micron es el principal fabricante occidental de memoria HBM3 para chips IA de NVIDIA. <strong>El ciclo de memoria está en fase alcista</strong> impulsado por demanda de data centers IA. EPS estimado 2027 crece ~94% vs 2026. Confirmar PT en StockAnalysis ya que la API bloqueó este ticker.</div>
+      </div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-top">
+        <div class="scard-verdict v-hold">🔵 Mantener</div>
+        <div class="scard-ticker">MELI <span style="font-size:.66rem;color:var(--muted)">NASDAQ</span></div>
+        <div class="scard-name">MercadoLibre · eCommerce + Fintech LATAM</div>
+        <div><span class="scard-price">$1,695.61</span><span class="scard-chg chg-pos">+1.22%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:#4caf50;font-weight:600">PT est. ~$2,300 → <strong>est. +35.7%</strong> ✅</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:64%;background:linear-gradient(90deg,#1A3A5C,#B8975A)"></div></div>
+        <div class="pt-sub"><span>$1,695</span><span>Máx 52s: $2,645</span><span>PT est: ~$2,300</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-pass">✅ Upside est. +36%</span>
+        <span class="filter-badge fb-pass">✅ Strong Buy</span>
+        <span class="filter-badge fb-pass">✅ Revenue ↑↑</span>
+        <span class="filter-badge fb-warn">⚠️ PT estimado</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">vs Máximo Anual</div><div class="metric-box-val mv-bad">-35.9%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Mercado</div><div class="metric-box-val mv-good">LATAM</div></div>
+        <div class="metric-box"><div class="metric-box-label">Fintech</div><div class="metric-box-val mv-good">Mercado Pago</div></div>
+        <div class="metric-box"><div class="metric-box-label">Market Cap</div><div class="metric-box-val mv-neutral">$86B</div></div>
+        <div class="metric-box"><div class="metric-box-label">Crecimiento</div><div class="metric-box-val mv-good">Alto</div></div>
+        <div class="metric-box"><div class="metric-box-label">PT fuente</div><div class="metric-box-val mv-neutral" style="font-size:.68rem">StockAnalysis est.</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">MELI cayó 35.9% desde su máximo anual. Doble negocio: e-commerce líder en Brasil/México + Mercado Pago (55M usuarios activos). <strong>Caída reciente puede ser oportunidad</strong> — revisar si hubo evento específico o es corrección macro.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="section-label">🟡 Posiciones a vigilar</div>
+  <div class="stock-grid">
+
+    <div class="scard">
+      <div class="scard-top">
+        <div class="scard-verdict v-hold">🔵 Mantener</div>
+        <div class="scard-ticker">GOOGL <span style="font-size:.66rem;color:var(--muted)">NASDAQ</span></div>
+        <div class="scard-name">Alphabet Inc. · Search + Cloud + IA</div>
+        <div><span class="scard-price">$351.21</span><span class="scard-chg chg-pos">+4.10%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:var(--yellow);font-weight:600">PT $411.80 → <strong>+17.2%</strong> ✅</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:85%;background:linear-gradient(90deg,#b45309,#fbbf24)"></div></div>
+        <div class="pt-sub"><span>$351.21</span><span>Máx 52s: $408.61</span><span>PT: $411.80</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-pass">✅ Upside +17.2%</span>
+        <span class="filter-badge fb-pass">✅ Strong Buy</span>
+        <span class="filter-badge fb-pass">✅ EPS ↑</span>
+        <span class="filter-badge fb-pass">✅ Revenue ↑</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">Margen Bruto</div><div class="metric-box-val mv-good">60.4%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Margen Neto</div><div class="metric-box-val mv-good">37.9%</div></div>
+        <div class="metric-box"><div class="metric-box-label">P/E TTM</div><div class="metric-box-val mv-good">26.5x</div></div>
+        <div class="metric-box"><div class="metric-box-label">EV/EBITDA</div><div class="metric-box-val mv-good">19.6x</div></div>
+        <div class="metric-box"><div class="metric-box-label">Market Cap</div><div class="metric-box-val mv-neutral">$4.25T</div></div>
+        <div class="metric-box"><div class="metric-box-label">Deuda</div><div class="metric-box-val mv-good">Baja</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">Upside limitado (+17.2%) para ser la segunda empresa más grande del portfolio por capitalización. <strong>El PT del consenso casi coincide con el máximo de 52 semanas.</strong> Mantener, no prioridad para acumular vs MSFT/NVDA.</div>
+      </div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-top">
+        <div class="scard-verdict v-hold">🔵 Mantener</div>
+        <div class="scard-ticker">MA <span style="font-size:.66rem;color:var(--muted)">NYSE</span></div>
+        <div class="scard-name">Mastercard · Pagos Digitales</div>
+        <div><span class="scard-price">$510.65</span><span class="scard-chg chg-pos">+2.33%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:var(--yellow);font-weight:600">PT est. ~$620 → <strong>est. +21.4%</strong> ✅</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:82%;background:linear-gradient(90deg,#1A3A5C,#B8975A)"></div></div>
+        <div class="pt-sub"><span>$510.65</span><span>Máx 52s: $601.77</span><span>PT est: ~$620</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-pass">✅ Upside est. +21%</span>
+        <span class="filter-badge fb-pass">✅ Strong Buy</span>
+        <span class="filter-badge fb-pass">✅ EPS ↑</span>
+        <span class="filter-badge fb-warn">⚠️ PT estimado</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">Modelo Negocio</div><div class="metric-box-val mv-good">Asset-Light</div></div>
+        <div class="metric-box"><div class="metric-box-label">Márgenes</div><div class="metric-box-val mv-good">Premium</div></div>
+        <div class="metric-box"><div class="metric-box-label">vs Máximo</div><div class="metric-box-val mv-warn">-15.1%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Moat</div><div class="metric-box-val mv-good">Muy alto</div></div>
+        <div class="metric-box"><div class="metric-box-label">Market Cap</div><div class="metric-box-val mv-neutral">$451B</div></div>
+        <div class="metric-box"><div class="metric-box-label">PT fuente</div><div class="metric-box-val mv-neutral" style="font-size:.68rem">StockAnalysis est.</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">Negocio de peaje — cobra por transacción sin riesgo de crédito. Está 15% por debajo del máximo de 52 semanas. <strong>Upside moderado pero muy confiable.</strong> No prioridad para rotar capital.</div>
+      </div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-top">
+        <div class="scard-verdict v-hold">🔵 Mantener</div>
+        <div class="scard-ticker">MCD <span style="font-size:.66rem;color:var(--muted)">NYSE</span></div>
+        <div class="scard-name">McDonald's Corp. · Fast Food / Franquicias</div>
+        <div><span class="scard-price">$266.41</span><span class="scard-chg chg-neg">-1.24%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:var(--yellow);font-weight:600">PT est. ~$320 → <strong>est. +20.1%</strong> ✅</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:83%;background:linear-gradient(90deg,#1A3A5C,#B8975A)"></div></div>
+        <div class="pt-sub"><span>$266.41</span><span>Máx 52s: $341.75</span><span>PT est: ~$320</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-pass">✅ Upside est. +20%</span>
+        <span class="filter-badge fb-pass">✅ Buy</span>
+        <span class="filter-badge fb-warn">⚠️ Revenue presionado</span>
+        <span class="filter-badge fb-warn">⚠️ PT estimado</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">Modelo</div><div class="metric-box-val mv-good">Franquicias</div></div>
+        <div class="metric-box"><div class="metric-box-label">Dividendo</div><div class="metric-box-val mv-good">~2.2%</div></div>
+        <div class="metric-box"><div class="metric-box-label">vs Máximo</div><div class="metric-box-val mv-bad">-22%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Defensivo</div><div class="metric-box-val mv-good">Sí</div></div>
+        <div class="metric-box"><div class="metric-box-label">Market Cap</div><div class="metric-box-val mv-neutral">$189B</div></div>
+        <div class="metric-box"><div class="metric-box-label">PT fuente</div><div class="metric-box-val mv-neutral" style="font-size:.68rem">StockAnalysis est.</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">Cayó 22% desde máximos por consumidor cauteloso y competencia de delivery. El modelo de franquicias es muy resistente. <strong>Dividendo creciente y 22,000+ locales = cash flow predecible.</strong> Defensiva, no prioritaria en portfolio growth.</div>
+      </div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-top">
+        <div class="scard-verdict v-watch">🟡 Vigilar</div>
+        <div class="scard-ticker">NKE <span style="font-size:.66rem;color:var(--muted)">NYSE</span></div>
+        <div class="scard-name">NIKE, Inc. · Calzado / Turnaround</div>
+        <div><span class="scard-price">$41.155</span><span class="scard-chg chg-pos">+1.01%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:var(--yellow);font-weight:600">PT $55.93 → <strong>+35.9%</strong> ✅</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:51%;background:linear-gradient(90deg,#b45309,#fbbf24)"></div></div>
+        <div class="pt-sub"><span>$41.155</span><span>Máx 52s: $80.17</span><span>PT: $55.93</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-pass">✅ Upside +35.9%</span>
+        <span class="filter-badge fb-warn">⚠️ Revenue ↓</span>
+        <span class="filter-badge fb-warn">⚠️ EPS bajo</span>
+        <span class="filter-badge fb-warn">⚠️ Turnaround</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">Margen Bruto</div><div class="metric-box-val mv-good">40.8%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Margen Neto</div><div class="metric-box-val mv-warn">4.8%</div></div>
+        <div class="metric-box"><div class="metric-box-label">P/E TTM</div><div class="metric-box-val mv-warn">27x</div></div>
+        <div class="metric-box"><div class="metric-box-label">vs Máximo</div><div class="metric-box-val mv-bad">-48.7%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Market Cap</div><div class="metric-box-val mv-neutral">$60.8B</div></div>
+        <div class="metric-box"><div class="metric-box-label">Dividendo</div><div class="metric-box-val mv-good">3.96%</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">Cayó 48.7% desde su máximo anual. Nuevo CEO (Elliott Hill) con plan de turnaround. Margen bruto del 40.8% sigue sólido — el problema es de distribución y revenue. <strong>Alto upside si el turnaround funciona, pero riesgo genuino si no.</strong></div>
+      </div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-top">
+        <div class="scard-verdict v-hold">🔵 ETF Defensivo</div>
+        <div class="scard-ticker">XLE <span style="font-size:.66rem;color:var(--muted)">AMEX</span></div>
+        <div class="scard-name">Energy Select Sector SPDR · ETF Energía</div>
+        <div><span class="scard-price">$54.01</span><span class="scard-chg chg-pos">+0.32%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:var(--muted);font-weight:600">ETF — sin PT de analistas</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:85%;background:linear-gradient(90deg,#475569,#6B7C8D)"></div></div>
+        <div class="pt-sub"><span>$54.01</span><span>Máx 52s: $63.46</span><span>Min 52s: $42.05</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-na">— ETF: no aplica filtros</span>
+        <span class="filter-badge fb-na">— Diversificación energía</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">vs Máximo</div><div class="metric-box-val mv-warn">-14.9%</div></div>
+        <div class="metric-box"><div class="metric-box-label">vs Mínimo</div><div class="metric-box-val mv-good">+28.4%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Tipo</div><div class="metric-box-val mv-neutral">ETF</div></div>
+        <div class="metric-box"><div class="metric-box-label">Sector</div><div class="metric-box-val mv-neutral">Energía</div></div>
+        <div class="metric-box"><div class="metric-box-label">Market Cap</div><div class="metric-box-val mv-neutral">$36.4B</div></div>
+        <div class="metric-box"><div class="metric-box-label">Dividendo</div><div class="metric-box-val mv-good">~3.5%</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">No aplica el playbook fundamental individual. Funciona como <strong>cobertura ante inflación y suba de commodities</strong>. Exposición diversificada a XOM, CVX, SLB. Evaluar reemplazar por un candidato con PT claro si la tesis es de puro growth.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="section-label">🔴 Acción requerida</div>
+  <div class="stock-grid">
+
+    <div class="scard" style="border-color:rgba(229,115,115,.4)">
+      <div class="scard-top" style="background:rgba(229,115,115,.06)">
+        <div class="scard-verdict v-exit">🚨 SALIR</div>
+        <div class="scard-ticker">INTC <span style="font-size:.66rem;color:var(--muted)">NASDAQ</span></div>
+        <div class="scard-name">Intel Corp. · Semiconductores (en crisis)</div>
+        <div><span class="scard-price">$127.82</span><span class="scard-chg chg-neg">-0.39%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:var(--red);font-weight:600">PT $94.04 → <strong>-26.4% DOWNSIDE</strong> ❌❌❌</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:100%;background:linear-gradient(90deg,#991b1b,#e57373)"></div></div>
+        <div class="pt-sub"><span style="color:var(--red)">PRECIO SOBRE PT</span><span>Min 52s: $18.97</span><span>PT: $94.04</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-fail">❌ -26.4% downside</span>
+        <span class="filter-badge fb-fail">❌ Pérdidas netas</span>
+        <span class="filter-badge fb-fail">❌ FCF negativo</span>
+        <span class="filter-badge fb-fail">❌ Revenue ↓</span>
+        <span class="filter-badge fb-fail">❌ EBIT negativo</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">Margen Neto</div><div class="metric-box-val mv-bad">-5.9%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Margen Op.</div><div class="metric-box-val mv-bad">-9.4%</div></div>
+        <div class="metric-box"><div class="metric-box-label">P/E TTM</div><div class="metric-box-val mv-bad">-206x</div></div>
+        <div class="metric-box"><div class="metric-box-label">FCF</div><div class="metric-box-val mv-bad">Negativo</div></div>
+        <div class="metric-box"><div class="metric-box-label">Rally desde min</div><div class="metric-box-val mv-warn">+573%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Upside analistas</div><div class="metric-box-val mv-bad">-26.4%</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">⚠️ Análisis crítico</div>
+        <div class="analysis-text">INTC <strong>falla todos los filtros del playbook</strong>. Pierde dinero, FCF negativo, revenue cayendo. El stock subió 573% desde el mínimo de 52 semanas — posiblemente por rumores de M&A, NO por fundamentos. Los analistas ven precio justo 26% por debajo del actual. <strong>Si hay ganancia, este es el momento de salir y rotar a NVDA, MSFT o MU.</strong></div>
+      </div>
+    </div>
+
+    <div class="scard" style="border-color:rgba(255,152,0,.4)">
+      <div class="scard-top" style="background:rgba(255,152,0,.06)">
+        <div class="scard-verdict v-watch">🔄 Rotar</div>
+        <div class="scard-ticker">KO <span style="font-size:.66rem;color:var(--muted)">NYSE</span></div>
+        <div class="scard-name">The Coca-Cola Company · Defensivo</div>
+        <div><span class="scard-price">$82.72</span><span class="scard-chg chg-pos">+0.11%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:var(--red);font-weight:600">PT $86.50 → <strong>+4.6%</strong> ❌ No pasa Filtro 1</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:96%;background:linear-gradient(90deg,#92400e,#fbbf24)"></div></div>
+        <div class="pt-sub"><span>$82.72</span><span>Máx 52s: $84.04</span><span>PT: $86.50</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-fail">❌ Upside solo +4.6%</span>
+        <span class="filter-badge fb-pass">✅ Márgenes OK</span>
+        <span class="filter-badge fb-pass">✅ Dividendo 2.5%</span>
+        <span class="filter-badge fb-warn">⚠️ Deuda/Equity 1.3x</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">Margen Bruto</div><div class="metric-box-val mv-good">61.7%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Margen Neto</div><div class="metric-box-val mv-good">27.8%</div></div>
+        <div class="metric-box"><div class="metric-box-label">P/E TTM</div><div class="metric-box-val mv-warn">25.9x</div></div>
+        <div class="metric-box"><div class="metric-box-label">Dividendo</div><div class="metric-box-val mv-good">2.52%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Deuda/Equity</div><div class="metric-box-val mv-bad">1.30x</div></div>
+        <div class="metric-box"><div class="metric-box-label">vs Máx 52s</div><div class="metric-box-val mv-bad">-1.6%</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">Cerca de su máximo de 52 semanas y el PT solo implica 4.6% más. <strong>No pasa el Filtro 1.</strong> Empresa excelente y defensiva, pero sin recorrido como activo de crecimiento. Evaluar rotar hacia NKE, NU o SOFI.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="panel" id="watchlist">
+  <div class="alert-banner ab-green">
+    <span>✅</span>
+    <span><strong>NU y SOFI</strong> son los candidatos más interesantes de la watchlist en upside potencial. NU tiene fundamentos sólidos como fintech de Brasil; SOFI acaba de alcanzar rentabilidad. <strong>ANIP y LFST son demasiado pequeñas</strong> para el Pilar 1 del Playbook (Market Cap &gt; $10B).</span>
+  </div>
+
+  <div class="stock-grid">
+
+    <div class="scard">
+      <div class="scard-top">
+        <div class="scard-verdict v-strong">🟢 Candidato</div>
+        <div class="scard-ticker">NU <span style="font-size:.66rem;color:var(--muted)">NYSE</span></div>
+        <div class="scard-name">Nu Holdings · Fintech Brasil / LATAM</div>
+        <div><span class="scard-price">$13.01</span><span class="scard-chg chg-neg">-1.21%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:#4caf50;font-weight:600">PT est. ~$17.50 → <strong>est. +34.5%</strong> ✅</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:69%;background:linear-gradient(90deg,#2e7d32,#4caf50)"></div></div>
+        <div class="pt-sub"><span>$13.01</span><span>Máx 52s: $18.98</span><span>PT est: ~$17.50</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-pass">✅ Upside est. +34%</span>
+        <span class="filter-badge fb-pass">✅ Revenue ↑↑</span>
+        <span class="filter-badge fb-pass">✅ Market Cap $63B</span>
+        <span class="filter-badge fb-warn">⚠️ PT estimado</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">Market Cap</div><div class="metric-box-val mv-good">$63B</div></div>
+        <div class="metric-box"><div class="metric-box-label">vs Máximo</div><div class="metric-box-val mv-bad">-31.4%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Usuarios</div><div class="metric-box-val mv-good">100M+</div></div>
+        <div class="metric-box"><div class="metric-box-label">Rentable</div><div class="metric-box-val mv-good">Sí</div></div>
+        <div class="metric-box"><div class="metric-box-label">Mercado</div><div class="metric-box-val mv-good">LATAM</div></div>
+        <div class="metric-box"><div class="metric-box-label">PT fuente</div><div class="metric-box-val mv-neutral" style="font-size:.68rem">StockAnalysis est.</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">El banco digital más grande de América Latina con 100M+ clientes y ya rentable. Brasil, México y Colombia — mercados subbancarizados = runway enorme. <strong>Cayó 31% desde el máximo anual — posible punto de entrada.</strong></div>
+      </div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-top">
+        <div class="scard-verdict v-spec">⚠️ Especulativo</div>
+        <div class="scard-ticker">SOFI <span style="font-size:.66rem;color:var(--muted)">NASDAQ</span></div>
+        <div class="scard-name">SoFi Technologies · Fintech USA</div>
+        <div><span class="scard-price">$17.94</span><span class="scard-chg chg-pos">+0.36%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:#4caf50;font-weight:600">PT $21.40 → <strong>+19.3%</strong> ✅</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:55%;background:linear-gradient(90deg,#5b21b6,#a78bfa)"></div></div>
+        <div class="pt-sub"><span>$17.94</span><span>Máx 52s: $32.73</span><span>PT: $21.40</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-pass">✅ Upside +19.3%</span>
+        <span class="filter-badge fb-pass">✅ Revenue ↑</span>
+        <span class="filter-badge fb-warn">⚠️ FCF negativo</span>
+        <span class="filter-badge fb-pass">✅ Rentable (neto)</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">Margen Bruto</div><div class="metric-box-val mv-good">76.0%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Margen Neto</div><div class="metric-box-val mv-warn">11.2%</div></div>
+        <div class="metric-box"><div class="metric-box-label">P/E TTM</div><div class="metric-box-val mv-warn">37.5x</div></div>
+        <div class="metric-box"><div class="metric-box-label">FCF</div><div class="metric-box-val mv-bad">Negativo</div></div>
+        <div class="metric-box"><div class="metric-box-label">vs Máximo</div><div class="metric-box-val mv-bad">-45.2%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Market Cap</div><div class="metric-box-val mv-neutral">$23B</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">Acaba de alcanzar rentabilidad neta (11.2%) con margen bruto del 76%. Pero el <strong>FCF sigue negativo</strong> — señal de alerta del Playbook. Cayó 45% desde máximos. <strong>Posición pequeña, especulativa, con stop definido.</strong></div>
+      </div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-top">
+        <div class="scard-verdict v-noentry">⛔ No entrar ahora</div>
+        <div class="scard-ticker">JPM <span style="font-size:.66rem;color:var(--muted)">NYSE</span></div>
+        <div class="scard-name">JPMorgan Chase · Banca / Financiero</div>
+        <div><span class="scard-price">$332.07</span><span class="scard-chg chg-pos">+0.92%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:var(--red);font-weight:600">PT $341.25 → <strong>+2.8%</strong> ❌ No pasa Filtro 1</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:97%;background:linear-gradient(90deg,#92400e,#fbbf24)"></div></div>
+        <div class="pt-sub"><span>$332.07</span><span>Máx 52s: $343.45</span><span>PT: $341.25</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-fail">❌ Upside solo +2.8%</span>
+        <span class="filter-badge fb-pass">✅ P/E 15.9x</span>
+        <span class="filter-badge fb-pass">✅ Banco #1 USA</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">P/E TTM</div><div class="metric-box-val mv-good">15.9x</div></div>
+        <div class="metric-box"><div class="metric-box-label">Margen Neto</div><div class="metric-box-val mv-good">20.7%</div></div>
+        <div class="metric-box"><div class="metric-box-label">vs Máx 52s</div><div class="metric-box-val mv-bad">-3.3%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Dividendo</div><div class="metric-box-val mv-good">1.78%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Market Cap</div><div class="metric-box-val mv-neutral">$889B</div></div>
+        <div class="metric-box"><div class="metric-box-label">CEO</div><div class="metric-box-val mv-neutral">Dimon</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">El mejor banco del mundo a P/E barato (15.9x), pero <strong>a 3.3% del máximo de 52 semanas y el PT solo implica +2.8%</strong>. No pasa el Filtro 1. Esperar corrección hacia $290-300 para tener upside suficiente.</div>
+      </div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-top">
+        <div class="scard-verdict v-watch">🟡 Esperar</div>
+        <div class="scard-ticker">AXP <span style="font-size:.66rem;color:var(--muted)">NYSE</span></div>
+        <div class="scard-name">American Express · Pagos Premium</div>
+        <div><span class="scard-price">$340.54</span><span class="scard-chg chg-pos">+0.05%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:var(--yellow);font-weight:600">PT est. ~$380-400 → <strong>est. +11-17%</strong> ⚠️</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:85%;background:linear-gradient(90deg,#b45309,#fbbf24)"></div></div>
+        <div class="pt-sub"><span>$340.54</span><span>Máx 52s: $387.49</span><span>PT est: ~$385</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-warn">⚠️ Upside borderline ~13%</span>
+        <span class="filter-badge fb-pass">✅ Premium brand</span>
+        <span class="filter-badge fb-warn">⚠️ PT estimado</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">Marca</div><div class="metric-box-val mv-good">Premium</div></div>
+        <div class="metric-box"><div class="metric-box-label">vs Máximo</div><div class="metric-box-val mv-warn">-12.1%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Dividendo</div><div class="metric-box-val mv-good">~1.3%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Market Cap</div><div class="metric-box-val mv-neutral">$232B</div></div>
+        <div class="metric-box"><div class="metric-box-label">Modelo</div><div class="metric-box-val mv-good">Closed-loop</div></div>
+        <div class="metric-box"><div class="metric-box-label">PT fuente</div><div class="metric-box-val mv-neutral" style="font-size:.68rem">StockAnalysis est.</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">Modelo superior a Visa/Mastercard (posee el riesgo de crédito y los datos). Cliente premium = menos morosidad en recesión. <strong>Upside borderline, en el límite del Filtro 1.</strong> Buen activo si el precio cae a $300-310.</div>
+      </div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-top">
+        <div class="scard-verdict v-spec">⚠️ Muy pequeña</div>
+        <div class="scard-ticker">ANIP <span style="font-size:.66rem;color:var(--muted)">NASDAQ</span></div>
+        <div class="scard-name">ANI Pharmaceuticals · Pharma Small Cap</div>
+        <div><span class="scard-price">$84.34</span><span class="scard-chg chg-neg">-0.19%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:#4caf50;font-weight:600">PT est. ~$115 → <strong>est. +36.4%</strong> ✅</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:73%;background:linear-gradient(90deg,#5b21b6,#a78bfa)"></div></div>
+        <div class="pt-sub"><span>$84.34</span><span>Máx 52s: $99.50</span><span>PT est: ~$115</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-pass">✅ Upside est. +36%</span>
+        <span class="filter-badge fb-fail">❌ Market Cap $1.9B</span>
+        <span class="filter-badge fb-warn">⚠️ Pilar 1 falla</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">Market Cap</div><div class="metric-box-val mv-bad">$1.92B ❌</div></div>
+        <div class="metric-box"><div class="metric-box-label">vs Máximo</div><div class="metric-box-val mv-warn">-15.2%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Sector</div><div class="metric-box-val mv-neutral">Pharma</div></div>
+        <div class="metric-box"><div class="metric-box-label">Riesgo</div><div class="metric-box-val mv-warn">Alto</div></div>
+        <div class="metric-box"><div class="metric-box-label">Upside</div><div class="metric-box-val mv-good">+36%</div></div>
+        <div class="metric-box"><div class="metric-box-label">PT fuente</div><div class="metric-box-val mv-neutral" style="font-size:.68rem">StockAnalysis est.</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">Upside atractivo (+36%) pero <strong>falla el Pilar 1: Market Cap de solo $1.92B</strong> vs el umbral de $10B. Pharma pequeña = riesgo de pipeline y regulatorio. <strong>Solo para capital que se puede perder completamente.</strong></div>
+      </div>
+    </div>
+
+    <div class="scard">
+      <div class="scard-top">
+        <div class="scard-verdict v-noentry">⛔ No cumple criterios</div>
+        <div class="scard-ticker">LFST <span style="font-size:.66rem;color:var(--muted)">NASDAQ</span></div>
+        <div class="scard-name">LifeStance Health · Salud Mental</div>
+        <div><span class="scard-price">$10.54</span><span class="scard-chg chg-pos">+2.48%</span></div>
+      </div>
+      <div class="pt-section">
+        <div class="pt-label"><span>Precio actual</span><span style="color:var(--red);font-weight:600">PT est. ~$12 → <strong>est. +13.9%</strong> ❌ bajo 15%</span></div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill" style="width:88%;background:linear-gradient(90deg,#5b21b6,#a78bfa)"></div></div>
+        <div class="pt-sub"><span>$10.54</span><span>Máx 52s: $10.63</span><span>PT est: ~$12</span></div>
+      </div>
+      <div class="filters-row">
+        <span class="filter-badge fb-fail">❌ Upside est. +13.9%</span>
+        <span class="filter-badge fb-fail">❌ Market Cap $4.1B</span>
+        <span class="filter-badge fb-fail">❌ 2 filtros fallan</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-box-label">Market Cap</div><div class="metric-box-val mv-bad">$4.09B ❌</div></div>
+        <div class="metric-box"><div class="metric-box-label">vs Máx 52s</div><div class="metric-box-val mv-bad">-0.8%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Rentable</div><div class="metric-box-val mv-warn">No</div></div>
+        <div class="metric-box"><div class="metric-box-label">Upside</div><div class="metric-box-val mv-warn">~13.9%</div></div>
+        <div class="metric-box"><div class="metric-box-label">Sector</div><div class="metric-box-val mv-neutral">Salud Mental</div></div>
+        <div class="metric-box"><div class="metric-box-label">PT fuente</div><div class="metric-box-val mv-neutral" style="font-size:.68rem">StockAnalysis est.</div></div>
+      </div>
+      <div class="analysis">
+        <div class="analysis-title">Análisis</div>
+        <div class="analysis-text">Virtualmente en su máximo de 52 semanas. Falla dos filtros: upside de solo +13.9% (bajo el 15% mínimo) y Market Cap de $4.09B (bajo $10B del Pilar 1). <strong>No cumple los criterios del Playbook por ahora.</strong></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="panel" id="ranking">
+  <div class="alert-banner ab-yellow">
+    <span>📌</span><span><strong>Nota:</strong> Los PT marcados con * son estimaciones de sesiones anteriores (StockAnalysis). Los sin asterisco son datos en tiempo real de la API FMP. Para decisiones importantes, verificar siempre en StockAnalysis.com o Investing.com antes de operar.</span>
+  </div>
+
+  <table class="ranking">
+    <thead>
+      <tr>
+        <th>RANK</th><th>TICKER</th><th>PRECIO</th><th>PT CONSENSO</th><th>UPSIDE</th><th>FILTRO 1</th><th>VEREDICTO</th>
+      </tr>
+    </thead>
+    <tbody id="ranking-body"></tbody>
+  </table>
+</div>
+
+</div><!-- end main -->
+
+<footer>
+  <span class="footer-copy">© 2026 Valtia Analytics · valtia.tech · Análisis generado el 29 Jun 2026 · Datos: FMP API (tiempo real) + StockAnalysis (*)</span>
+  <span class="footer-copy">Documento interno de uso exclusivo del equipo Valtia. No constituye asesoramiento financiero para terceros.</span>
+</footer>
+</div><!-- end #app -->
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw",
+    authDomain: "valtia-analytics.firebaseapp.com",
+    databaseURL: "https://valtia-analytics-default-rtdb.firebaseio.com",
+    projectId: "valtia-analytics",
+    storageBucket: "valtia-analytics.firebasestorage.app",
+    messagingSenderId: "132662487977",
+    appId: "1:132662487977:web:37345b5f718736523772b8",
+    measurementId: "G-3VVV4R6JKY"
+  };
+  const ADMIN_EMAIL = 'valtyaanalytics@gmail.com';
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  onAuthStateChanged(auth, (user) => {
+    if (user && user.email === ADMIN_EMAIL) {
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+    } else {
+      window.location.href = 'index.html';
+    }
+  });
+</script>
+
+<script>
+function toggleTheme(){
+  const h=document.documentElement;
+  h.dataset.theme=h.dataset.theme==='dark'?'light':'dark';
+  localStorage.setItem('valtia-theme',h.dataset.theme);
+}
+const t=localStorage.getItem('valtia-theme');if(t)document.documentElement.dataset.theme=t;
+
+function showTab(id, el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+}
+
+const rankingData = [
+  {r:1, t:'NVDA', cat:'Cartera', price:'$192.96', pt:'$316.79', upside:64.2, pass:true, verdict:'⭐ Top Pick', vc:'#4caf50'},
+  {r:2, t:'MSFT', cat:'Cartera', price:'$368.09', pt:'$551.33', upside:49.8, pass:true, verdict:'🟢 Mantener', vc:'#4caf50'},
+  {r:3, t:'NFLX', cat:'Cartera', price:'$74.70', pt:'$111.83', upside:49.7, pass:true, verdict:'🟢 Mantener', vc:'#4caf50'},
+  {r:4, t:'META', cat:'Cartera', price:'$564.18', pt:'$827.50', upside:46.7, pass:true, verdict:'🟢 Mantener', vc:'#4caf50'},
+  {r:5, t:'MELI*', cat:'Cartera', price:'$1,695.61', pt:'~$2,300', upside:35.7, pass:true, verdict:'🟢 Mantener', vc:'#4caf50'},
+  {r:6, t:'NKE', cat:'Cartera', price:'$41.155', pt:'$55.93', upside:35.9, pass:true, verdict:'🟡 Vigilar', vc:'#FF9800'},
+  {r:7, t:'NU*', cat:'Watchlist', price:'$13.01', pt:'~$17.50', upside:34.5, pass:true, verdict:'🟢 Candidato', vc:'#4caf50'},
+  {r:8, t:'ANIP*', cat:'Watchlist', price:'$84.34', pt:'~$115', upside:36.4, pass:true, verdict:'⚠️ Cap. pequeña', vc:'#a78bfa'},
+  {r:9, t:'MU*', cat:'Cartera', price:'$1,114.63', pt:'~$1,400', upside:25.6, pass:true, verdict:'🟢 Mantener', vc:'#4caf50'},
+  {r:10, t:'MA*', cat:'Cartera', price:'$510.65', pt:'~$620', upside:21.4, pass:true, verdict:'🔵 Mantener', vc:'#B8975A'},
+  {r:11, t:'MCD*', cat:'Cartera', price:'$266.41', pt:'~$320', upside:20.1, pass:true, verdict:'🔵 Mantener', vc:'#B8975A'},
+  {r:12, t:'SOFI', cat:'Watchlist', price:'$17.94', pt:'$21.40', upside:19.3, pass:true, verdict:'⚠️ Especulativo', vc:'#a78bfa'},
+  {r:13, t:'GOOGL', cat:'Cartera', price:'$351.21', pt:'$411.80', upside:17.2, pass:true, verdict:'🔵 Mantener', vc:'#B8975A'},
+  {r:14, t:'AXP*', cat:'Watchlist', price:'$340.54', pt:'~$385', upside:13.1, pass:false, verdict:'🟡 Esperar', vc:'#FF9800'},
+  {r:15, t:'LFST*', cat:'Watchlist', price:'$10.54', pt:'~$12', upside:13.9, pass:false, verdict:'⛔ No cumple', vc:'#6B7C8D'},
+  {r:16, t:'KO', cat:'Cartera', price:'$82.72', pt:'$86.50', upside:4.6, pass:false, verdict:'🔄 Rotar', vc:'#FF9800'},
+  {r:17, t:'JPM', cat:'Watchlist', price:'$332.07', pt:'$341.25', upside:2.8, pass:false, verdict:'⛔ No entrar', vc:'#6B7C8D'},
+  {r:18, t:'XLE', cat:'Cartera', price:'$54.01', pt:'ETF', upside:null, pass:false, verdict:'🔵 ETF', vc:'#B8975A'},
+  {r:19, t:'INTC', cat:'Cartera', price:'$127.82', pt:'$94.04', upside:-26.4, pass:false, verdict:'🚨 SALIR', vc:'#e57373'},
+];
+
+const tbody = document.getElementById('ranking-body');
+rankingData.forEach(d=>{
+  const upColor = d.upside===null ? '#6B7C8D' : d.upside > 30 ? '#4caf50' : d.upside > 15 ? '#FF9800' : '#e57373';
+  const upText = d.upside === null ? '—' : d.upside.toFixed(1)+'%';
+  const passText = d.upside === null ? '—' : d.pass ? '<span style="color:#4caf50;font-weight:700">✅</span>' : '<span style="color:#e57373;font-weight:700">❌</span>';
+  const catColor = d.cat === 'Cartera' ? '#B8975A' : '#a78bfa';
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td style="color:var(--muted);font-weight:600">#${d.r}</td>
+    <td style="font-weight:700;color:var(--text)">${d.t} <span style="font-size:.63rem;color:${catColor}">${d.cat}</span></td>
+    <td style="color:var(--sub)">${d.price}</td>
+    <td style="color:var(--gold)">${d.pt}</td>
+    <td style="font-weight:700;color:${upColor}">${upText}</td>
+    <td>${passText}</td>
+    <td style="color:${d.vc};font-weight:600;font-size:.74rem">${d.verdict}</td>`;
+  tbody.appendChild(row);
+});
+</script>
+</body>
+</html>

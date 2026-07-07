@@ -850,6 +850,7 @@ function switchFondo(perfil){
     <a href="#" onclick="portalTab(event,'herramientas-p')">Herramientas</a>
 
     <a href="#" id="admin-tab" onclick="portalTab(event,'admin')" style="display:none">Admin ⚙️</a>
+    <a href="#" id="analisis-tab" onclick="portalTab(event,'analisis')" style="display:none">Análisis 📊</a>
     <span style="flex:1"></span>
     <span style="font-size:12px;color:var(--muted);margin-right:16px" id="portal-user-name">—</span>
     <button onclick="logout()" style="font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:none;border:none;cursor:pointer;padding:4px 0">Salir</button>
@@ -893,6 +894,11 @@ function switchFondo(perfil){
     <div id="tab-admin" style="display:none">
       <div class="portal-title">Panel de administrador</div>
       <p style="color:var(--sub);font-size:14px">Cargando datos...</p>
+    </div>
+    <div id="tab-analisis" style="display:none">
+      <div class="portal-title">Análisis de portfolio</div>
+      <p style="color:var(--sub);font-size:14px;margin-bottom:20px">Análisis fundamental completo de los 19 activos del playbook — cartera, watchlist y ranking por upside.</p>
+      <a href="analisis-cartera.html" class="btn-primary">📊 Ver análisis completo →</a>
     </div>
   </div>
 </div>
@@ -958,7 +964,7 @@ function portalTab(e,tab){
   e.preventDefault();
   document.querySelectorAll('.portal-nav a').forEach(a=>a.classList.remove('active'));
   e.target.classList.add('active');
-  ['dashboard','rendimientos','movimientos','informes','herramientas-p','admin'].forEach(t=>{
+  ['dashboard','rendimientos','movimientos','informes','herramientas-p','admin','analisis'].forEach(t=>{
     const el=document.getElementById('tab-'+t);
     if(el)el.style.display=t===tab?'block':'none';
   });
@@ -1214,6 +1220,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 
     const adminTab = document.getElementById('admin-tab');
     if (adminTab) adminTab.style.display = 'none';
+    const analisisTab = document.getElementById('analisis-tab');
+    if (analisisTab) analisisTab.style.display = 'none';
 
   }
 
@@ -1228,6 +1236,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 
     const adminTab = document.getElementById('admin-tab');
     if (adminTab) adminTab.style.display = 'inline';
+    const analisisTab = document.getElementById('analisis-tab');
+    if (analisisTab) analisisTab.style.display = 'inline';
 
     renderClientsTable(data.clientes || []);
   }

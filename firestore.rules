@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Admin email helper
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'valtyaanalytics@gmail.com';
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // ── INVERSORES ──
+    // Solo el admin puede leer todos los documentos.
+    // Cada cliente solo puede leer y actualizar su propio documento.
+    match /inversores/{email} {
+      allow read: if isAdmin() || (isAuthenticated() && request.auth.token.email == email);
+      allow write: if isAdmin();
+    }
+
+    // ── SOLICITUDES ──
+    // Clientes autenticados pueden crear solicitudes propias y leer las suyas.
+    // Solo el admin puede leer todas, actualizar estado (aprobar/rechazar).
+    match /solicitudes/{solicitudId} {
+      allow create: if isAuthenticated()
+                    && request.resource.data.email == request.auth.token.email
+                    && request.resource.data.tipo in ['deposito', 'rescate']
+                    && request.resource.data.monto is number
+                    && request.resource.data.monto > 0
+                    && request.resource.data.estado == 'pendiente';
+
+      allow read: if isAdmin()
+                  || (isAuthenticated() && resource.data.email == request.auth.token.email);
+
+      allow update: if isAdmin()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado'])
+                    && request.resource.data.estado in ['aprobado', 'rechazado'];
+
+      allow delete: if isAdmin();
+    }
+
+    // ── FONDO SYNC ──
+    // Snapshot diario del fondo (IOL + Binance) escrito por fondo_sync.py
+    // via Admin SDK (la escritura no pasa por estas reglas).
+    match /fondoSync/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // ── NOTICIAS DEL FONDO ──
+    // Briefings diarios generados por la tarea de Cowork, copiados por
+    // fondo_sync.py via Admin SDK. Solo el admin las ve.
+    match /noticiasFondo/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+  }
+}
