@@ -165,6 +165,16 @@ const firebaseConfig = {
 // modo dev local: ?dev en localhost usa dev-data/*.json y saltea el login
 const DEV = new URLSearchParams(location.search).has('dev') &&
             ['localhost','127.0.0.1'].includes(location.hostname);
+// modo embebido: corriendo dentro del portal (iframe) — sin chrome redundante
+const EMBED = window.self !== window.top || new URLSearchParams(location.search).has('embed');
+if (EMBED) {
+  document.documentElement.style.setProperty('color-scheme','dark');
+  addEventListener('DOMContentLoaded', () => {
+    document.body.style.padding = '10px 12px 30px';
+    ['btnSalir'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+    document.querySelectorAll('.hbtn').forEach(b => { b.style.display = 'none'; });
+  });
+}
 
 const $ = id => document.getElementById(id);
 const fmtARS = n => "$" + Math.round(n).toLocaleString("es-AR");
@@ -514,6 +524,9 @@ if (DEV) {
     } else if (user) {
       document.querySelector('.auth-msg').textContent = 'Acceso denegado — no sos admin';
       fbSignOut(auth);
+    } else if (EMBED) {
+      // dentro del portal: sin popups ni redirecciones — el login lo maneja el portal
+      document.querySelector('.auth-msg').textContent = 'Sesión no detectada — recargá el portal.';
     } else {
       document.querySelector('.auth-msg').textContent = 'Iniciando sesión…';
       const provider = new GoogleAuthProvider();

@@ -851,7 +851,7 @@ function switchFondo(perfil){
 
     <a href="#" id="admin-tab" onclick="portalTab(event,'admin')" style="display:none">Admin ⚙️</a>
     <a href="#" id="analisis-tab" onclick="portalTab(event,'analisis')" style="display:none">Análisis 📊</a>
-    <a href="fondo.html" id="fondo-tab" style="display:none">Fondo Live 🛰️</a>
+    <a href="#" id="fondo-tab" onclick="portalTab(event,'fondo')" style="display:none">Fondo Live 🛰️</a>
     <span style="flex:1"></span>
     <span style="font-size:12px;color:var(--muted);margin-right:16px" id="portal-user-name">—</span>
     <button onclick="logout()" style="font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:none;border:none;cursor:pointer;padding:4px 0">Salir</button>
@@ -895,6 +895,10 @@ function switchFondo(perfil){
     <div id="tab-admin" style="display:none">
       <div class="portal-title">Panel de administrador</div>
       <p style="color:var(--sub);font-size:14px">Cargando datos...</p>
+    </div>
+    <div id="tab-fondo" style="display:none">
+      <iframe id="fondo-frame" title="Centro de Comando — Fondo Lautaro"
+        style="width:100%;height:calc(100vh - 220px);min-height:680px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:#0a0f1c"></iframe>
     </div>
     <div id="tab-analisis" style="display:none">
       <div class="portal-title">Análisis de portfolio</div>
@@ -965,7 +969,7 @@ function portalTab(e,tab){
   e.preventDefault();
   document.querySelectorAll('.portal-nav a').forEach(a=>a.classList.remove('active'));
   e.target.classList.add('active');
-  ['dashboard','rendimientos','movimientos','informes','herramientas-p','admin','analisis'].forEach(t=>{
+  ['dashboard','rendimientos','movimientos','informes','herramientas-p','admin','analisis','fondo'].forEach(t=>{
     const el=document.getElementById('tab-'+t);
     if(el)el.style.display=t===tab?'block':'none';
   });
@@ -1278,6 +1282,10 @@ document.addEventListener('DOMContentLoaded',()=>{
     if (analisisTab) analisisTab.style.display = 'inline';
     const fondoTab = document.getElementById('fondo-tab');
     if (fondoTab) fondoTab.style.display = 'inline';
+    // cargar el Centro de Comando embebido (solo admin) y abrirlo directo
+    const frame = document.getElementById('fondo-frame');
+    if (frame && !frame.src) frame.src = 'fondo.html?embed';
+    if (fondoTab) portalTab({ preventDefault(){}, target: fondoTab }, 'fondo');
 
     renderClientsTable(data.clientes || []);
   }
