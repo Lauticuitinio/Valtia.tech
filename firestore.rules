@@ -48,6 +48,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── METADATA DEL FONDO (Google Sheet: clientes, fee, historial) ──
+    // Escrito por fondo_sync.py via Admin SDK. Solo el admin lo lee.
+    match /fondoMeta/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     // ── NOTICIAS DEL FONDO ──
     // Briefings diarios generados por la tarea de Cowork, copiados por
     // fondo_sync.py via Admin SDK. Solo el admin las ve.
