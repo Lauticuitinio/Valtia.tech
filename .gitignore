@@ -2,3 +2,4 @@ config.json
 serviceAccountKey.json
 node_modules/
 dev-data/
+dev-portal.html
