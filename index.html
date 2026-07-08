@@ -851,6 +851,7 @@ function switchFondo(perfil){
 
     <a href="#" id="admin-tab" onclick="portalTab(event,'admin')" style="display:none">Admin ⚙️</a>
     <a href="#" id="analisis-tab" onclick="portalTab(event,'analisis')" style="display:none">Análisis 📊</a>
+    <a href="fondo.html" id="fondo-tab" style="display:none">Fondo Live 🛰️</a>
     <span style="flex:1"></span>
     <span style="font-size:12px;color:var(--muted);margin-right:16px" id="portal-user-name">—</span>
     <button onclick="logout()" style="font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:none;border:none;cursor:pointer;padding:4px 0">Salir</button>
@@ -1222,12 +1223,49 @@ document.addEventListener('DOMContentLoaded',()=>{
     if (adminTab) adminTab.style.display = 'none';
     const analisisTab = document.getElementById('analisis-tab');
     if (analisisTab) analisisTab.style.display = 'none';
+    const fondoTab = document.getElementById('fondo-tab');
+    if (fondoTab) fondoTab.style.display = 'none';
 
   }
 
   // ── ADMIN DASHBOARD ──
+  // Total real del fondo a partir del snapshot del sync (misma lógica que fondo.html)
+  function fondoTotalesLive(d) {
+    const ec = (d.iol||{}).estado_cuenta || {};
+    const activos = (((d.iol||{}).portafolio_argentina)||{}).activos || [];
+    const sumV = activos.reduce((s,a)=>s+(Number(a.valorizado)||0),0);
+    const cu = ec.cuentas || [];
+    const ars = cu.filter(c=>c.moneda==='peso_Argentino').reduce((s,c)=>s+(Number(c.saldo)||0),0);
+    const usd = cu.filter(c=>c.moneda==='dolar_Estadounidense').reduce((s,c)=>s+(Number(c.saldo)||0),0);
+    let fx = 1400;
+    if (Math.abs(usd) > 0.01 && ec.totalEnPesos) {
+      const f = (Number(ec.totalEnPesos)-sumV-ars)/usd;
+      if (f>500 && f<20000) fx = f;
+    }
+    const iolTotal = Number(ec.totalEnPesos)||0;
+    const bin = d.binance||{};
+    const ST = ['USDT','USDC','BUSD','FDUSD','TUSD'];
+    const fb = (bin.futures_balance||[]).filter(b=>ST.includes(b.asset));
+    let usdTot = fb.reduce((s,b)=>s+(Number(b.balance)||0)+(Number(b.crossUnPnl)||0),0);
+    const marks = {};
+    (bin.positions||[]).forEach(p=>{marks[p.symbol]=Number(p.markPrice)||0;});
+    (bin.positions||[]).filter(p=>p.isolated&&Math.abs(Number(p.positionAmt)||0)>0)
+      .forEach(p=>{usdTot+=Number(p.unRealizedProfit)||0;});
+    ((bin.earn_flexible||{}).rows||[]).concat((bin.earn_locked||{}).rows||[]).forEach(r=>{
+      const amt=Number(r.totalAmount)||0;
+      if (ST.includes(r.asset)) usdTot+=amt;
+      else usdTot+=amt*(marks[r.asset+'USDT']||0);
+    });
+    return { total: iolTotal + usdTot*fx };
+  }
+
   function renderAdminDashboard(data) {
     document.getElementById('pkpi-capital').textContent = '$19.208.485';
+    getDoc(doc(db, 'fondoSync', 'latest')).then(snap => {
+      if (!snap.exists()) return;
+      const t = fondoTotalesLive(JSON.parse(snap.data().json));
+      document.getElementById('pkpi-capital').textContent = '$' + Math.round(t.total).toLocaleString('es-AR');
+    }).catch(()=>{});
     document.getElementById('pkpi-cp').textContent = '19.208,49';
     document.getElementById('pkpi-pnl').textContent = '+$3.400.000';
     document.getElementById('pkpi-pnl').className = 'pkpi-value pos';
@@ -1238,6 +1276,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     if (adminTab) adminTab.style.display = 'inline';
     const analisisTab = document.getElementById('analisis-tab');
     if (analisisTab) analisisTab.style.display = 'inline';
+    const fondoTab = document.getElementById('fondo-tab');
+    if (fondoTab) fondoTab.style.display = 'inline';
 
     renderClientsTable(data.clientes || []);
   }
