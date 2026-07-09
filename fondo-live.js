@@ -1,8 +1,8 @@
 // fondo-live.js — Fondo Lautaro en las secciones nativas del portal (solo admin).
-// Puebla: #tab-dashboard (KPIs + bloques + briefing), #tab-rendimientos (historial),
-// #tab-movimientos → "Posiciones" (IOL + Binance) y #tab-admin (clientes del fondo).
-// Usa los tokens de marca del portal (--card/--border/--text/--gold...) y se
-// re-renderiza cuando cambia el tema claro/oscuro.
+// Modelo contable v2 (sheet 08/07/2026): fee inicial 10% sobre aportes, fee 2%
+// mensual sobre ganancias, ganancia de clientes contra CAPITAL NETO (aportes
+// - fee inicial - devoluciones), repartida por capital ponderado por dias.
+// Datos: Firestore fondoSync/latest (telemetria IOL+Binance) + fondoMeta/sheet.
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, getDoc, collection, query, orderBy, limit, getDocs }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -67,12 +67,12 @@ const CSS = `
 .fl-foot { padding:10px 16px; font-size:11px; color:var(--muted); border-top:1px solid var(--border); line-height:1.6; }
 `;
 
-/* ── paleta categórica por bloque (identidad fija) ── */
-const BLOCKS = [
-  { key:"pasivo",   nombre:"Pasivo / Conservador", hex:"#2a78d6" },
-  { key:"moderado", nombre:"Moderado / Cobertura", hex:"#1baf7a" },
-  { key:"agresivo", nombre:"Agresivo",             hex:"#4a3aa7" },
-  { key:"crypto",   nombre:"Crypto (Binance)",     hex:"#B8975A" },
+/* ── bloques: mapeo por palabra clave, color categórico fijo ── */
+const BLOCK_DEFS = [
+  { key:"pasivo",   match:/cauci|liquidez|letra/i, hex:"#2a78d6", fallback:"Caución / liquidez" },
+  { key:"moderado", match:/bono|hard/i,            hex:"#1baf7a", fallback:"Bonos hard dollar" },
+  { key:"agresivo", match:/cedear|accion/i,        hex:"#4a3aa7", fallback:"CEDEARs / Acciones AR" },
+  { key:"crypto",   match:/crypto|binance/i,       hex:"#B8975A", fallback:"Crypto (Binance)" },
 ];
 const STABLE = new Set(["USDT","USDC","BUSD","FDUSD","TUSD"]);
 
@@ -82,6 +82,7 @@ const fmtPct = n => (n>=0?"+":"") + n.toFixed(2) + "%";
 const cls = n => n>0.004?"fl-pos":n<-0.004?"fl-neg":"fl-mut";
 const pill = (n, txt) => `<span class="fl-pill ${n>0.004?"p":n<-0.004?"n":"m"}">${n>0.004?"▲":n<-0.004?"▼":"—"} ${txt}</span>`;
 const tok = name => getComputedStyle(document.body).getPropertyValue(name).trim() || "#888";
+const rKey = (obj, part) => { const k = Object.keys(obj||{}).find(x => x.toLowerCase().includes(part)); return k ? obj[k] : null; };
 
 function blockOf(tipo) {
   const t = String(tipo || "").toUpperCase();
@@ -158,41 +159,41 @@ function renderAll(d, sheet, news) {
   const c = compute(d);
   const sh = sheet || {};
   const clientes = sh.clientes || [];
-  const aportes = clientes.reduce((s,x) => s + (Number(x.aporte_ars)||0), 0);
-  const im = sh.input_mensual || {};
-  const hist = sh.historial || [];
-  const feeRate = Number((sh.params||{})["Fee mensual sobre ganancias"]) || 0.2;
-  const pnlFutMes = Number(im["P&L Neto Futures (mes)"]) || 0;
-  const feeMes = Math.max(0, pnlFutMes * feeRate);
-  const diasOp = Number(im["Días operados"]) || 0, diasG = Number(im["Días ganadores"]) || 0;
-  const winRate = diasOp ? diasG / diasOp * 100 : null;
-  const lastH = hist.length ? hist[hist.length-1] : null;
-  const pnlFondo = aportes ? c.total - aportes : null;
-  const pnlIol = c.activos.reduce((s,a) => s + a.pnl, 0);
-  const costoIol = c.activos.reduce((s,a) => s + (a.val - a.pnl), 0);
+  const resumen = sh.resumen || {};
+  const snaps = sh.snapshots || [];
+  const movs = sh.movimientos || [];
   const ts = c.ts ? new Date(c.ts) : null;
   const ageH = ts ? (Date.now() - ts.getTime()) / 36e5 : null;
   const fresh = ageH != null && ageH <= 48;
 
-  const tgt = { pasivo:.2, moderado:.1, agresivo:.3, crypto:.4 };
-  (sh.bloques||[]).forEach(b => {
-    const n = String(b.nombre||"").toLowerCase();
-    if (n.includes("pasivo")) tgt.pasivo = b.pct;
-    else if (n.includes("moderado")) tgt.moderado = b.pct;
-    else if (n.includes("agresivo")) tgt.agresivo = b.pct;
-    else if (n.includes("crypto")) tgt.crypto = b.pct;
+  // ── modelo v2: ganancia de clientes contra capital neto, con AUM en vivo ──
+  const capNetoTot = rKey(resumen, "capital neto de clientes") ||
+                     clientes.reduce((s,x) => s + (Number(x.capital_neto)||0), 0);
+  const feePend = rKey(resumen, "fee gestor pendiente") || 0;
+  const patrimonioLive = c.total - feePend;
+  const ganLive = capNetoTot ? patrimonioLive - capNetoTot : null;
+  const rendLive = capNetoTot ? ganLive / capNetoTot : null;
+  const cclSheet = rKey(sh.params||{}, "ccl");
+  const corte = String((sh.params||{})["Fecha de corte"] || "").slice(0,10);
+  const ganCorte = rKey(resumen, "ganancia de clientes");
+  const rendCorte = rKey(resumen, "rendimiento clientes");
+
+  // targets de bloque desde el sheet
+  const blocks = BLOCK_DEFS.map(def => {
+    const row = (sh.bloques||[]).find(b => def.match.test(String(b.nombre||"")));
+    return { ...def, nombre: row ? row.nombre : def.fallback, tgt: row ? Number(row.pct) : 0 };
   });
 
   /* ── DASHBOARD ── */
-  const maxPct = Math.max(...BLOCKS.map(b => Math.max(c.blk[b.key]/c.total, tgt[b.key]))) * 1.15;
-  const bloquesHtml = BLOCKS.map(b => {
-    const real = c.blk[b.key], rp = real / c.total, dev = rp - tgt[b.key];
+  const maxPct = Math.max(...blocks.map(b => Math.max(c.blk[b.key]/c.total, b.tgt))) * 1.15;
+  const bloquesHtml = blocks.map(b => {
+    const real = c.blk[b.key], rp = real / c.total, dev = rp - b.tgt;
     return `<div class="fl-blk" style="--flc:${b.hex}">
       <div class="fl-blk-head"><span class="nm"><span class="fl-chip"></span>${b.nombre}</span>
         <span class="amt">${fmtARS(real)} · <b>${(rp*100).toFixed(1)}%</b>
-        ${pill(dev, (dev>=0?"+":"") + (dev*100).toFixed(1) + " vs " + (tgt[b.key]*100).toFixed(0) + "%")}</span></div>
+        ${pill(dev, (dev>=0?"+":"") + (dev*100).toFixed(1) + " vs " + (b.tgt*100).toFixed(0) + "%")}</span></div>
       <div class="fl-track"><div class="fl-fill" style="width:${(rp/maxPct*100).toFixed(1)}%"></div>
-        <div class="fl-target" title="objetivo ${(tgt[b.key]*100).toFixed(0)}%" style="left:${(tgt[b.key]/maxPct*100).toFixed(1)}%"></div></div></div>`;
+        <div class="fl-target" title="objetivo ${(b.tgt*100).toFixed(0)}%" style="left:${(b.tgt/maxPct*100).toFixed(1)}%"></div></div></div>`;
   }).join("");
 
   const newsHtml = news.length ? news.map(n => {
@@ -207,58 +208,57 @@ function renderAll(d, sheet, news) {
       <div class="portal-title" style="margin-bottom:0">Fondo Lautaro</div>
       <span class="fl-status"><span class="fl-dot${fresh?"":" warn"}"></span>${fresh ? "Telemetría al día" : "Datos desactualizados"}</span>
     </div>
-    <div class="fl-meta">Sync ${ts ? ts.toLocaleString("es-AR") : "—"} · FX implícito ${c.fx.toLocaleString("es-AR")}${im.ccl ? " · CCL " + Number(im.ccl).toLocaleString("es-AR") : ""} · IOL + Binance</div>
+    <div class="fl-meta">Sync ${ts ? ts.toLocaleString("es-AR") : "—"} · FX implícito ${c.fx.toLocaleString("es-AR")}${cclSheet ? " · CCL ref. " + Number(cclSheet).toLocaleString("es-AR") : ""}${corte ? " · corte contable " + corte : ""}</div>
     ${!fresh && ts ? `<div class="fl-strip warn"><b>Datos viejos:</b> el último sync es de hace ${Math.round(ageH/24)} días. Revisá la tarea programada de la PC (fondo_sync.py).</div>` : ""}
     <div class="fl-kpis">
-      <div class="fl-kpi"><div class="l">AUM total</div>
+      <div class="fl-kpi"><div class="l">Valor total del fondo</div>
         <div class="v">${fmtARS(c.total)}</div><div class="s">${fmtUSD(c.total/c.fx)} @ FX ${c.fx.toLocaleString("es-AR")}</div></div>
-      ${aportes ? `<div class="fl-kpi"><div class="l">Resultado vs aportes</div>
-        <div class="v ${cls(pnlFondo)}">${pnlFondo>=0?"+":""}${fmtARS(pnlFondo)}</div>
-        <div class="s">${pill(pnlFondo, fmtPct(pnlFondo/aportes*100))} sobre ${fmtARS(aportes)}</div></div>` : ""}
+      ${ganLive != null ? `<div class="fl-kpi"><div class="l">Ganancia clientes · mark-to-market</div>
+        <div class="v ${cls(ganLive)}">${ganLive>=0?"+":""}${fmtARS(ganLive)}</div>
+        <div class="s">${pill(rendLive*100, fmtPct(rendLive*100))} s/capital neto${ganCorte!=null?`<br>Al corte ${corte} (sheet): <span class="${cls(ganCorte)}">${ganCorte>=0?"+":""}${fmtARS(ganCorte)}${rendCorte!=null?" ("+fmtPct(rendCorte*100)+")":""}</span>`:""}</div></div>` : ""}
       <div class="fl-kpi"><div class="l">IOL · Argentina</div>
         <div class="v">${fmtARS(c.iolTotal)}</div>
-        <div class="s">${(c.iolTotal/c.total*100).toFixed(1)}% del AUM · ${pill(pnlIol, fmtPct(costoIol?pnlIol/costoIol*100:0))} sobre costo</div></div>
+        <div class="s">${(c.iolTotal/c.total*100).toFixed(1)}% del fondo</div></div>
       <div class="fl-kpi"><div class="l">Binance · Crypto</div>
         <div class="v">${fmtUSD(c.binTotalUSD)}</div>
-        <div class="s">${fmtARS(c.binTotal)} · ${(c.binTotal/c.total*100).toFixed(1)}% del AUM</div></div>
+        <div class="s">${fmtARS(c.binTotal)} · ${(c.binTotal/c.total*100).toFixed(1)}% del fondo</div></div>
       <div class="fl-kpi"><div class="l">uPnL futuros · live</div>
         <div class="v ${cls(c.upnl)}">${fmtUSD(c.upnl)}</div>
         <div class="s">${c.open.length} posición${c.open.length===1?"":"es"} abierta${c.open.length===1?"":"s"}</div></div>
-      ${pnlFutMes ? `<div class="fl-kpi"><div class="l">Cierre ${im.mes || "mes"}</div>
-        <div class="v ${cls(pnlFutMes)}">${fmtUSD(pnlFutMes)}</div>
-        <div class="s">Fee gestor ${fmtUSD(feeMes)}${winRate!=null?" · win "+winRate.toFixed(0)+"%":""}${lastH&&lastH.profit_factor?" · PF "+Number(lastH.profit_factor).toFixed(2):""}</div></div>` : ""}
+      ${feePend ? `<div class="fl-kpi"><div class="l">Fee gestor pendiente</div>
+        <div class="v">${fmtARS(feePend)}</div>
+        <div class="s">10% inicial s/aportes + 2% mensual s/ganancia</div></div>` : ""}
     </div>
-    ${sh.notas_mes ? `<div class="fl-strip"><b>Notas del mes (${im.mes || "—"}):</b> ${sh.notas_mes}</div>` : ""}
-    <div class="fl-sec">Distribución por bloques · real vs modelo</div>
+    <div class="fl-sec">Distribución por bloques · real vs objetivo</div>
     <div class="fl-grid2">
       <div class="fl-panel" style="min-width:0">${bloquesHtml}</div>
-      <div class="fl-chart"><h4>Composición real del AUM</h4><div class="inner"><canvas id="flChSplit"></canvas></div></div>
+      <div class="fl-chart"><h4>Composición real del fondo</h4><div class="inner"><canvas id="flChSplit"></canvas></div></div>
     </div>
     <div class="fl-sec">Briefing del día · Cowork</div>
     <div class="fl-news">${newsHtml}</div>`;
 
-  /* ── RENDIMIENTOS ── */
-  const histRows = hist.map(h => `<tr><td><b>${h.periodo}</b></td>
-    <td class="fl-num">${h.aum_usd?fmtUSD(h.aum_usd):"—"}</td>
-    <td class="fl-num">${h.retorno_usd_pct!=null?pill(Number(h.retorno_usd_pct), fmtPct(Number(h.retorno_usd_pct)*100)):"—"}</td>
-    <td class="fl-num ${cls(Number(h.pnl_futures_usd)||0)}">${h.pnl_futures_usd!=null?fmtUSD(h.pnl_futures_usd):"—"}</td>
-    <td class="fl-num">${h.fee_usd!=null?fmtUSD(Math.abs(Number(h.fee_usd))):"—"}</td>
-    <td class="fl-num">${h.win_rate!=null?(Number(h.win_rate)*100).toFixed(0)+"%":"—"}</td>
-    <td class="fl-num">${h.profit_factor!=null?Number(h.profit_factor).toFixed(2):"—"}</td>
-    <td style="font-size:11.5px;color:var(--sub)">${h.notas||""}</td></tr>`).join("");
+  /* ── RENDIMIENTOS: cierres mensuales (SNAPSHOTS) ── */
+  const snapRows = snaps.map(s => `<tr><td><b>${s.cierre}</b></td>
+    <td class="fl-num">${s.total_ars?fmtARS(s.total_ars):"—"}</td>
+    <td class="fl-num ${cls(Number(s.ganancia_mes)||0)}">${s.ganancia_mes!=null?fmtARS(s.ganancia_mes):"—"}</td>
+    <td class="fl-num">${s.fee?fmtARS(s.fee):"—"}</td>
+    <td class="fl-num">${s.iol_ars?fmtARS(s.iol_ars):"—"}</td>
+    <td class="fl-num">${s.binance_usd?fmtUSD(s.binance_usd):"—"}</td>
+    <td class="fl-num">${s.ccl?Number(s.ccl).toLocaleString("es-AR"):"—"}</td></tr>`).join("");
   document.getElementById("tab-rendimientos").innerHTML = `
     <div class="portal-title">Rendimientos del fondo</div>
-    <div class="fl-meta">Un registro por mes cerrado · fuente: hoja Historial del sheet de gestión</div>
+    <div class="fl-meta">Cierres de mes (hoja SNAPSHOTS) · base del fee 2% sobre ganancia${ganLive!=null?` · ganancia actual de clientes ${fmtPct(rendLive*100)}`:""}</div>
     <div class="fl-grid2">
       <div class="fl-panel"><table>
-        <thead><tr><th>Período</th><th class="fl-num">AUM USD</th><th class="fl-num">Retorno</th><th class="fl-num">P&L Fut.</th><th class="fl-num">Fee</th><th class="fl-num">Win</th><th class="fl-num">PF</th><th>Notas</th></tr></thead>
-        <tbody>${histRows || '<tr><td colspan="8" class="fl-mut" style="text-align:center">Sin meses cerrados todavía</td></tr>'}</tbody></table></div>
-      <div class="fl-chart"><h4>AUM del fondo (USD) por mes</h4><div class="inner"><canvas id="flChHist"></canvas></div></div>
+        <thead><tr><th>Cierre</th><th class="fl-num">Total ARS</th><th class="fl-num">Ganancia mes</th><th class="fl-num">Fee 2%</th><th class="fl-num">IOL ARS</th><th class="fl-num">Binance USD</th><th class="fl-num">CCL</th></tr></thead>
+        <tbody>${snapRows || '<tr><td colspan="7" class="fl-mut" style="text-align:center">Sin cierres cargados todavía</td></tr>'}</tbody></table>
+        <div class="fl-foot">La ganancia mensual es provisoria hasta completar las valuaciones IOL de 31/05 y 30/06 en el sheet (celdas amarillas de SNAPSHOTS).</div></div>
+      <div class="fl-chart"><h4>Valor del fondo (ARS) por cierre</h4><div class="inner"><canvas id="flChHist"></canvas></div></div>
     </div>`;
 
   /* ── POSICIONES (tab movimientos) ── */
   const rows = c.activos.map(a => {
-    const b = BLOCKS.find(x => x.key === a.blk);
+    const b = blocks.find(x => x.key === a.blk);
     return `<tr><td><b>${a.sim}</b></td>
       <td><span class="fl-chip" style="--flc:${b.hex}"></span><span class="fl-tag">${a.tipo}</span></td>
       <td class="fl-num">${a.cant || "—"}</td><td class="fl-num">${a.ppc ? fmtARS(a.ppc) : "—"}</td>
@@ -276,6 +276,11 @@ function renderAll(d, sheet, news) {
       <td class="fl-num ${liqWarn?"fl-neg":""}">${fmtUSD(liq)}${dLiq!=null?` <span class="fl-pill ${liqWarn?"n":"m"}">${liqWarn?"⚠ ":""}${dLiq.toFixed(1)}%</span>`:""}</td>
       <td class="fl-num" style="color:var(--sub)">${p.marginType||""}</td></tr>`;
   }).join("") : `<tr><td colspan="7" class="fl-mut" style="text-align:center">Sin posiciones abiertas de futuros</td></tr>`;
+  const movRows = movs.slice().reverse().map(m => `<tr>
+    <td style="white-space:nowrap">${m.fecha}</td><td><span class="fl-tag">${m.tipo}</span></td>
+    <td style="color:var(--sub)">${m.detalle||""}</td>
+    <td class="fl-num ${m.ars!=null?cls(m.ars):""}">${m.ars!=null?(m.ars>=0?"+":"")+fmtARS(m.ars):"—"}</td>
+    <td class="fl-num">${m.usd!=null?fmtUSD(m.usd):"—"}</td></tr>`).join("");
   document.getElementById("tab-movimientos").innerHTML = `
     <div class="portal-title">Posiciones</div>
     <div class="fl-meta">IOL + Binance al último sync · ${ts ? ts.toLocaleString("es-AR") : "—"}</div>
@@ -298,31 +303,43 @@ function renderAll(d, sheet, news) {
         <tr class="tot"><td>Total Binance</td><td class="fl-num">${fmtUSD(c.binTotalUSD)}</td><td class="fl-num">${fmtARS(c.binTotal)}</td></tr>
         </tbody></table></div>
       <div class="fl-chart"><h4>Composición Binance (USD)</h4><div class="inner"><canvas id="flChBin"></canvas></div></div>
-    </div>`;
+    </div>
+    ${movRows ? `<div class="fl-sec">Últimos movimientos del fondo</div>
+    <div class="fl-panel"><table>
+      <thead><tr><th>Fecha</th><th>Tipo</th><th>Detalle</th><th class="fl-num">ARS</th><th class="fl-num">USD</th></tr></thead>
+      <tbody>${movRows}</tbody></table>
+      <div class="fl-foot">Registro de la hoja MOVIMIENTOS del sheet (últimos ${movs.length}).</div></div>` : ""}`;
 
   /* ── ADMIN: clientes del fondo ── */
   if (clientes.length) {
     const cliRows = clientes.map(x => {
-      const pct = Number(x.pct) || 0, cap = pct * c.total, pnl = cap - (Number(x.aporte_ars)||0);
-      const ret = x.aporte_ars ? pnl / x.aporte_ars * 100 : 0;
-      return `<tr><td><b>${x.nombre}</b>${x.notas?` <span class="fl-tag">${x.notas}</span>`:""}</td>
-        <td class="fl-num">${fmtARS(x.aporte_ars)}</td><td class="fl-num">${(pct*100).toFixed(1)}%</td>
-        <td class="fl-num">${fmtARS(cap)}</td>
-        <td class="fl-num ${cls(pnl)}">${pnl>=0?"+":""}${fmtARS(pnl)}</td>
+      const neto = Number(x.capital_neto)||0, pct = Number(x.pct)||0;
+      const gan = ganLive != null ? ganLive * pct : (Number(x.ganancia)||0);
+      const valor = neto + gan;
+      const ret = neto ? gan / neto * 100 : 0;
+      return `<tr><td><b>${x.nombre}</b>${x.devoluciones?` <span class="fl-tag">Devol. ${fmtARS(x.devoluciones)}</span>`:""}</td>
+        <td class="fl-num">${fmtARS((sh.aportes_brutos||{})[x.nombre]||0)}</td>
+        <td class="fl-num">${fmtARS(neto)}</td>
+        <td class="fl-num">${(pct*100).toFixed(1)}%</td>
+        <td class="fl-num">${fmtARS(valor)}</td>
+        <td class="fl-num ${cls(gan)}">${gan>=0?"+":""}${fmtARS(gan)}</td>
         <td class="fl-num">${pill(ret, fmtPct(ret))}</td></tr>`;
     }).join("");
     const adminTab = document.getElementById("tab-admin");
     const old = adminTab.querySelector("#fl-clientes");
     if (old) old.remove();
     adminTab.insertAdjacentHTML("afterbegin", `<div id="fl-clientes">
-      <div class="fl-sec" style="margin-top:6px">Clientes del fondo · participación y P&L en vivo</div>
+      <div class="fl-sec" style="margin-top:6px">Clientes del fondo · valor y ganancia en vivo</div>
       <div class="fl-panel" style="margin-bottom:26px"><table>
-        <thead><tr><th>Cliente</th><th class="fl-num">Aporte</th><th class="fl-num">% Fondo</th><th class="fl-num">Capital hoy</th><th class="fl-num">P&L</th><th class="fl-num">Retorno</th></tr></thead>
+        <thead><tr><th>Cliente</th><th class="fl-num">Aporte bruto</th><th class="fl-num">Capital neto</th><th class="fl-num">Partic.</th><th class="fl-num">Valor hoy</th><th class="fl-num">Ganancia</th><th class="fl-num">Rendimiento</th></tr></thead>
         <tbody>${cliRows}
-        <tr class="tot"><td>TOTAL</td><td class="fl-num">${fmtARS(aportes)}</td><td class="fl-num">100%</td>
-          <td class="fl-num">${fmtARS(c.total)}</td><td class="fl-num ${cls(pnlFondo)}">${pnlFondo>=0?"+":""}${fmtARS(pnlFondo)}</td>
-          <td class="fl-num">${pill(pnlFondo, fmtPct(pnlFondo/aportes*100))}</td></tr></tbody></table>
-        <div class="fl-foot">Capital hoy = participación (sheet ⚙️ Config) × AUM en vivo. El P&L compara contra el aporte nominal del sheet.</div>
+        <tr class="tot"><td>TOTAL</td>
+          <td class="fl-num">${fmtARS(Object.values(sh.aportes_brutos||{}).reduce((s,v)=>s+v,0))}</td>
+          <td class="fl-num">${fmtARS(capNetoTot)}</td><td class="fl-num">100%</td>
+          <td class="fl-num">${fmtARS(patrimonioLive)}</td>
+          <td class="fl-num ${cls(ganLive)}">${ganLive>=0?"+":""}${fmtARS(ganLive)}</td>
+          <td class="fl-num">${pill(rendLive*100, fmtPct(rendLive*100))}</td></tr></tbody></table>
+        <div class="fl-foot">Capital neto = aportes − fee inicial 10% − devoluciones. Ganancia en vivo = (valor del fondo − fee gestor pendiente) − capital neto, repartida por participación (capital × días). <b>Mark-to-market:</b> incluye el uPnL de los futuros abiertos y usa FX implícito de IOL — por eso puede diferir del balance del sheet (que valúa Binance por wallet y CCL ${cclSheet ? Number(cclSheet).toLocaleString("es-AR") : "de referencia"}).${ganCorte!=null?` Al corte ${corte}: ${ganCorte>=0?"+":""}${fmtARS(ganCorte)} (${rendCorte!=null?fmtPct(rendCorte*100):"—"}).`:""} ${sh.nota_clientes||""}</div>
       </div></div>`);
   }
 
@@ -332,22 +349,23 @@ function renderAll(d, sheet, news) {
   Chart.defaults.font.family = "'Jost', sans-serif";
   const legend = { position:"bottom", labels:{ boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle:"circle", font:{size:10.5}, color:subC, padding:14 } };
   chart("flChSplit", { type:"doughnut",
-    data:{ labels: BLOCKS.map(b=>b.nombre), datasets:[{ data: BLOCKS.map(b=>c.blk[b.key]),
-      backgroundColor: BLOCKS.map(b=>b.hex), borderColor:cardBg, borderWidth:2 }] },
+    data:{ labels: blocks.map(b=>b.nombre), datasets:[{ data: blocks.map(b=>c.blk[b.key]),
+      backgroundColor: blocks.map(b=>b.hex), borderColor:cardBg, borderWidth:2 }] },
     options:{ responsive:true, maintainAspectRatio:false, cutout:"68%", plugins:{ legend } } });
   chart("flChBin", { type:"doughnut",
     data:{ labels:["Futuros","PnL no real.","Earn BTC","Earn USDT"],
       datasets:[{ data:[c.fut,c.upnl,c.ebtcUsd,c.eusdt].map(v=>Math.abs(v)),
       backgroundColor:["#2a78d6","#1baf7a","#B8975A","#4a3aa7"], borderColor:cardBg, borderWidth:2 }] },
     options:{ responsive:true, maintainAspectRatio:false, cutout:"68%", plugins:{ legend } } });
-  if (hist.length) {
+  const snapPts = snaps.filter(s => Number(s.total_ars) > 0);
+  if (snapPts.length) {
     chart("flChHist", { type:"line",
-      data:{ labels: hist.map(h=>h.periodo),
-        datasets:[{ data: hist.map(h=>Number(h.aum_usd)||null), borderColor:"#B8975A",
+      data:{ labels: snapPts.map(s=>s.cierre),
+        datasets:[{ data: snapPts.map(s=>Number(s.total_ars)), borderColor:"#B8975A",
           backgroundColor:"rgba(184,151,90,.12)", fill:true, borderWidth:2,
           pointRadius:4, pointBackgroundColor:"#B8975A", tension:.3 }] },
       options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } },
-        scales:{ y:{ grid:{ color:borderC }, ticks:{ color:subC, font:{size:10.5}, callback:v=>"US$"+Number(v).toLocaleString("es-AR") } },
+        scales:{ y:{ grid:{ color:borderC }, ticks:{ color:subC, font:{size:10.5}, callback:v=>"$"+(Number(v)/1e6).toLocaleString("es-AR")+"M" } },
                  x:{ grid:{ display:false }, ticks:{ color:subC, font:{size:10.5} } } } } });
   }
 
