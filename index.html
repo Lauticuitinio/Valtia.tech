@@ -916,21 +916,24 @@ function switchFondo(perfil){
     </div>
     <div class="modal-title">Acceso Valtia</div>
     <div class="modal-sub">Ingresá con tu cuenta para acceder al portal</div>
-    <button class="btn-google" onclick="loginWithGoogle()">
+    <button class="btn-google" id="btn-google" onclick="loginWithGoogle()">
       <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
       Continuar con Google
     </button>
     <div class="login-divider">o</div>
     <div class="form-group">
       <label>Email</label>
-      <input type="email" id="login-email" placeholder="tu@email.com">
+      <input type="email" id="login-email" placeholder="tu@email.com" autocomplete="email" inputmode="email">
     </div>
     <div class="form-group">
       <label>Contraseña</label>
-      <input type="password" id="login-pass" placeholder="••••••••">
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <div style="text-align:right;margin:-4px 0 14px">
+      <a href="#" onclick="resetPassword(event)" style="font-size:12px;color:var(--gold);text-decoration:none">¿Olvidaste tu contraseña?</a>
     </div>
     <button class="btn-login" onclick="loginWithEmail()">Ingresar</button>
-    <div class="login-2fa">🔐 Verificación en 2 pasos disponible · Google Authenticator / SMS / Email</div>
+    <div class="login-2fa">🔒 Conexión cifrada · Firebase Authentication de Google</div>
     <div class="login-signup">¿No tenés cuenta? <a href="#" onclick="openContacto()">Contactanos</a></div>
   </div>
 </div>
@@ -1061,7 +1064,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider,
-           onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+           onAuthStateChanged, signOut, sendPasswordResetEmail,
+           signInWithRedirect, getRedirectResult } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
   import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc,
            query, where, orderBy, updateDoc, serverTimestamp, onSnapshot }
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -1129,37 +1133,79 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
   }
 
+  // si el login con Google fue por redirect (popup bloqueado en móvil), resolverlo
+  getRedirectResult(auth).catch(() => {});
+
+  const AUTH_MSGS = {
+    'auth/user-not-found': 'No existe una cuenta con ese email.',
+    'auth/wrong-password': 'Contraseña incorrecta.',
+    'auth/invalid-email': 'Email inválido.',
+    'auth/too-many-requests': 'Demasiados intentos. Esperá unos minutos y probá de nuevo.',
+    'auth/invalid-credential': 'Email o contraseña incorrectos.',
+    'auth/network-request-failed': 'Sin conexión — revisá tu internet e intentá de nuevo.',
+    'auth/user-disabled': 'Esta cuenta está deshabilitada. Escribinos por WhatsApp.',
+  };
+
   // ── LOGIN WITH GOOGLE ──
   window.loginWithGoogle = async function() {
+    clearLoginMsg();
+    const btn = document.getElementById('btn-google');
+    if (btn) { btn.disabled = true; btn.style.opacity = '.65'; }
     try {
-      showLoginLoading(true);
       await signInWithPopup(auth, googleProvider);
     } catch(e) {
-      showLoginLoading(false);
-      showLoginError('Error al iniciar sesión con Google. Intentá de nuevo.');
+      if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+      // el usuario cerró el popup: no es un error
+      if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') return;
+      // popup bloqueado (móvil / bloqueador): seguir por redirect en la misma pestaña
+      if (e.code === 'auth/popup-blocked') {
+        try { await signInWithRedirect(auth, googleProvider); return; } catch(e2) {}
+      }
+      showLoginMsg(AUTH_MSGS[e.code] || 'No se pudo iniciar sesión con Google. Probá de nuevo.', 'error');
     }
   };
 
   // ── LOGIN WITH EMAIL ──
   window.loginWithEmail = async function() {
+    clearLoginMsg();
     const email = document.getElementById('login-email').value.trim();
     const pass = document.getElementById('login-pass').value;
-    if (!email || !pass) { showLoginError('Completá email y contraseña.'); return; }
+    if (!email) { showLoginMsg('Completá tu email.', 'error'); document.getElementById('login-email').focus(); return; }
+    if (!pass) { showLoginMsg('Completá tu contraseña.', 'error'); document.getElementById('login-pass').focus(); return; }
     try {
       showLoginLoading(true);
       await signInWithEmailAndPassword(auth, email, pass);
     } catch(e) {
       showLoginLoading(false);
-      const msgs = {
-        'auth/user-not-found': 'No existe una cuenta con ese email.',
-        'auth/wrong-password': 'Contraseña incorrecta.',
-        'auth/invalid-email': 'Email inválido.',
-        'auth/too-many-requests': 'Demasiados intentos. Esperá unos minutos.',
-        'auth/invalid-credential': 'Email o contraseña incorrectos.'
-      };
-      showLoginError(msgs[e.code] || 'Error al iniciar sesión.');
+      showLoginMsg(AUTH_MSGS[e.code] || 'Error al iniciar sesión.', 'error');
     }
   };
+
+  // ── RESET DE CONTRASEÑA ──
+  window.resetPassword = async function(e) {
+    if (e) e.preventDefault();
+    clearLoginMsg();
+    const email = document.getElementById('login-email').value.trim();
+    if (!email) {
+      showLoginMsg('Escribí tu email en el campo de arriba y volvé a tocar "¿Olvidaste tu contraseña?".', 'error');
+      document.getElementById('login-email').focus();
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showLoginMsg('Listo — te enviamos un mail a ' + email + ' para restablecer la contraseña. Revisá también spam.', 'ok');
+    } catch(err) {
+      showLoginMsg(AUTH_MSGS[err.code] || 'No se pudo enviar el mail de recuperación.', 'error');
+    }
+  };
+
+  // Enter envía el formulario; escribir limpia el mensaje de error
+  ['login-email','login-pass'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('keydown', ev => { if (ev.key === 'Enter') window.loginWithEmail(); });
+    el.addEventListener('input', clearLoginMsg);
+  });
 
   // ── LOGOUT ──
   window.logout = async function() {
@@ -1169,18 +1215,25 @@ document.addEventListener('DOMContentLoaded',()=>{
   // ── UI HELPERS ──
   function showLoginLoading(show) {
     const btn = document.querySelector('.btn-login');
-    if (btn) btn.textContent = show ? 'Ingresando...' : 'Ingresar';
+    if (btn) { btn.textContent = show ? 'Ingresando…' : 'Ingresar'; btn.disabled = show; btn.style.opacity = show ? '.65' : '1'; }
   }
 
-  function showLoginError(msg) {
-    let err = document.getElementById('login-error');
-    if (!err) {
-      err = document.createElement('div');
-      err.id = 'login-error';
-      err.style.cssText = 'background:rgba(198,40,40,.1);border:1px solid rgba(198,40,40,.3);border-radius:6px;padding:10px 12px;font-size:13px;color:#ef5350;margin-top:10px;text-align:center';
-      document.querySelector('.btn-login').after(err);
+  function showLoginMsg(msg, kind) {
+    let box = document.getElementById('login-error');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'login-error';
+      document.querySelector('.btn-login').after(box);
     }
-    err.textContent = msg;
+    box.style.cssText = kind === 'ok'
+      ? 'background:rgba(46,125,50,.1);border:1px solid rgba(46,125,50,.3);border-radius:6px;padding:10px 12px;font-size:13px;color:#2E7D32;margin-top:10px;text-align:center;line-height:1.5'
+      : 'background:rgba(198,40,40,.1);border:1px solid rgba(198,40,40,.3);border-radius:6px;padding:10px 12px;font-size:13px;color:#ef5350;margin-top:10px;text-align:center;line-height:1.5';
+    box.textContent = msg;
+  }
+
+  function clearLoginMsg() {
+    const box = document.getElementById('login-error');
+    if (box) box.remove();
   }
 
   // ── ENTER PORTAL ──
@@ -1289,7 +1342,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Expose to global scope for onclick handlers
   window.showHome = showHome;
 </script>
-<script type="module" src="fondo-live.js"></script>
+<script type="module" src="fondo-live.js?v=2"></script>
 
 </body>
 </html>
