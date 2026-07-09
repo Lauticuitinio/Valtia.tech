@@ -55,6 +55,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── EVENTOS DEL FONDO (aportes/retiros anotados desde el panel admin) ──
+    // El admin los crea desde la web; fondo_sync.py los consolida en el
+    // Google Sheet y los marca como aplicados (via Admin SDK).
+    match /fondoEventos/{docId} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
     // ── NOTICIAS DEL FONDO ──
     // Briefings diarios generados por la tarea de Cowork, copiados por
     // fondo_sync.py via Admin SDK. Solo el admin las ve.

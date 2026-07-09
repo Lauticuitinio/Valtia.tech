@@ -4,7 +4,8 @@
 // - fee inicial - devoluciones), repartida por capital ponderado por dias.
 // Datos: Firestore fondoSync/latest (telemetria IOL+Binance) + fondoMeta/sheet.
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, getDoc, collection, query, orderBy, limit, getDocs }
+import { getFirestore, doc, getDoc, collection, query, orderBy, limit, getDocs,
+         addDoc, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const DEV = new URLSearchParams(location.search).has('dev') &&
@@ -65,6 +66,14 @@ const CSS = `
 .fl-news .m { font-family:'Jost',sans-serif; font-size:9.5px; letter-spacing:.14em; color:var(--gold); margin-bottom:7px; text-transform:uppercase; font-weight:600; }
 .fl-news p { font-size:13px; color:var(--sub); line-height:1.75; white-space:pre-wrap; }
 .fl-foot { padding:10px 16px; font-size:11px; color:var(--muted); border-top:1px solid var(--border); line-height:1.6; }
+.fl-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; align-items:end; padding:16px 20px; }
+.fl-form .fg label { display:block; font-family:'Jost',sans-serif; font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; font-weight:600; }
+.fl-input { width:100%; background:transparent; border:1px solid var(--border); border-radius:6px; padding:9px 11px; color:var(--text); font-family:'Jost',sans-serif; font-size:13.5px; box-sizing:border-box; color-scheme:inherit; }
+.fl-input:focus { outline:none; border-color:var(--gold); }
+.fl-btn { font-family:'Jost',sans-serif; font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:#0D1B2A; background:var(--gold); border:none; border-radius:4px; padding:11px 22px; cursor:pointer; transition:background .2s; }
+.fl-btn:hover { background:var(--gold2,#D4AF6E); }
+.fl-btn:disabled { opacity:.55; cursor:default; }
+.fl-ev-msg { padding:0 20px 14px; font-size:12.5px; line-height:1.6; }
 `;
 
 /* ── bloques: mapeo por palabra clave, color categórico fijo ── */
@@ -340,7 +349,33 @@ function renderAll(d, sheet, news) {
           <td class="fl-num ${cls(ganLive)}">${ganLive>=0?"+":""}${fmtARS(ganLive)}</td>
           <td class="fl-num">${pill(rendLive*100, fmtPct(rendLive*100))}</td></tr></tbody></table>
         <div class="fl-foot">Capital neto = aportes − fee inicial 10% − devoluciones. Ganancia en vivo = (valor del fondo − fee gestor pendiente) − capital neto, repartida por participación (capital × días). <b>Mark-to-market:</b> incluye el uPnL de los futuros abiertos y usa FX implícito de IOL — por eso puede diferir del balance del sheet (que valúa Binance por wallet y CCL ${cclSheet ? Number(cclSheet).toLocaleString("es-AR") : "de referencia"}).${ganCorte!=null?` Al corte ${corte}: ${ganCorte>=0?"+":""}${fmtARS(ganCorte)} (${rendCorte!=null?fmtPct(rendCorte*100):"—"}).`:""} ${sh.nota_clientes||""}</div>
-      </div></div>`);
+      </div>
+      <div class="fl-sec">Registrar aporte / retiro</div>
+      <div class="fl-panel" style="margin-bottom:26px;overflow:visible">
+        <div class="fl-form">
+          <div class="fg"><label>Tipo</label>
+            <select id="fl-ev-tipo" class="fl-input">
+              <option>Aporte</option>
+              <option>Retiro / Devolución</option>
+            </select></div>
+          <div class="fg"><label>Cliente</label>
+            <input id="fl-ev-cliente" class="fl-input" list="fl-ev-clientes" placeholder="Nombre">
+            <datalist id="fl-ev-clientes">${clientes.map(x=>`<option value="${x.nombre}">`).join("")}</datalist></div>
+          <div class="fg"><label>Monto ARS</label>
+            <input id="fl-ev-monto" class="fl-input" type="number" min="1" step="any" placeholder="0"></div>
+          <div class="fg"><label>Fecha</label>
+            <input id="fl-ev-fecha" class="fl-input" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+          <div class="fg"><label>Nota (opcional)</label>
+            <input id="fl-ev-nota" class="fl-input" placeholder="Ej. transferencia Galicia"></div>
+          <div class="fg"><button class="fl-btn" id="fl-ev-btn" onclick="flRegistrarEvento()">Registrar</button></div>
+        </div>
+        <div class="fl-ev-msg" id="fl-ev-msg"></div>
+        <div class="fl-foot">El evento queda <b>pendiente</b> y el sync diario (9:00, o corré <code>run_sync.bat</code>) lo consolida en el sheet: los aportes entran como fila nueva en CLIENTES (fee 10% y participación se calculan solos) y todo queda logueado en MOVIMIENTOS.</div>
+      </div>
+      <div class="fl-sec">Eventos registrados</div>
+      <div class="fl-panel" id="fl-eventos" style="margin-bottom:26px"><div class="fl-foot" style="border-top:none">Cargando…</div></div>
+      </div>`);
+    flLoadEventos();
   }
 
   /* ── charts (colores resueltos del tema activo) ── */
@@ -374,6 +409,64 @@ function renderAll(d, sheet, news) {
   if (movLink) movLink.textContent = "Posiciones";
 }
 
+/* ── eventos: registrar y listar aportes/retiros ── */
+let _db = null;
+const EV_ESTADOS = { pendiente:["m","Pendiente de sync"], aplicado:["p","Aplicado al sheet"],
+                     revisar_manual:["n","Revisar en el sheet"], error:["n","Error al aplicar"] };
+
+window.flRegistrarEvento = async function() {
+  const msg = document.getElementById("fl-ev-msg");
+  const btn = document.getElementById("fl-ev-btn");
+  const tipo = document.getElementById("fl-ev-tipo").value;
+  const cliente = document.getElementById("fl-ev-cliente").value.trim();
+  const monto = Number(document.getElementById("fl-ev-monto").value);
+  const fecha = document.getElementById("fl-ev-fecha").value;
+  const nota = document.getElementById("fl-ev-nota").value.trim();
+  const say = (t, ok) => { msg.innerHTML = `<span class="${ok?"fl-pos":"fl-neg"}">${t}</span>`; };
+  if (!cliente) return say("Completá el nombre del cliente.");
+  if (!monto || monto <= 0) return say("El monto tiene que ser mayor a cero.");
+  if (!fecha) return say("Elegí la fecha del movimiento.");
+  if (!_db) return say("Modo dev: el registro solo funciona en producción.");
+  btn.disabled = true;
+  try {
+    await addDoc(collection(_db, "fondoEventos"), {
+      tipo, cliente, monto_ars: monto, fecha, nota,
+      estado: "pendiente", creado: serverTimestamp() });
+    say(`✓ ${tipo} de ${fmtARS(monto)} para ${cliente} registrado. Se consolida en el sheet en el próximo sync.`, true);
+    document.getElementById("fl-ev-monto").value = "";
+    document.getElementById("fl-ev-nota").value = "";
+    flLoadEventos();
+  } catch (e) {
+    say("No se pudo guardar: " + String(e).slice(0, 140));
+  }
+  btn.disabled = false;
+};
+
+window.flLoadEventos = async function() {
+  const box = document.getElementById("fl-eventos");
+  if (!box) return;
+  if (!_db) { box.innerHTML = `<div class="fl-foot" style="border-top:none">Modo dev — sin eventos.</div>`; return; }
+  try {
+    const snap = await getDocs(query(collection(_db, "fondoEventos"), orderBy("creado", "desc"), limit(10)));
+    if (snap.empty) {
+      box.innerHTML = `<div class="fl-foot" style="border-top:none">Sin eventos registrados todavía.</div>`;
+      return;
+    }
+    const rows = snap.docs.map(d => {
+      const e = d.data();
+      const [k, label] = EV_ESTADOS[e.estado] || ["m", e.estado];
+      const esAporte = String(e.tipo||"").toLowerCase().startsWith("aporte");
+      return `<tr><td style="white-space:nowrap">${e.fecha||""}</td>
+        <td><span class="fl-tag">${e.tipo||""}</span></td><td><b>${e.cliente||""}</b>${e.nota?` <span style="color:var(--sub);font-size:11.5px">· ${e.nota}</span>`:""}</td>
+        <td class="fl-num ${esAporte?"fl-pos":"fl-neg"}">${esAporte?"+":"−"}${fmtARS(e.monto_ars||0)}</td>
+        <td class="fl-num"><span class="fl-pill ${k}">${label}</span></td></tr>`;
+    }).join("");
+    box.innerHTML = `<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Cliente</th><th class="fl-num">Monto</th><th class="fl-num">Estado</th></tr></thead><tbody>${rows}</tbody></table>`;
+  } catch (e) {
+    box.innerHTML = `<div class="fl-foot" style="border-top:none">No se pudieron cargar los eventos (${String(e).slice(0,100)}).</div>`;
+  }
+};
+
 async function fetchAll() {
   if (DEV) {
     const j = async f => { const r = await fetch(f); return r.ok ? await r.json() : null; };
@@ -381,6 +474,7 @@ async function fetchAll() {
       news: [{ titulo:"Briefing demo", fecha:"08/07/2026", fuente:"cowork", contenido:"Briefing de ejemplo (modo dev)." }] };
   }
   const db = getFirestore(getApp());
+  _db = db;
   const [syncSnap, sheetSnap, newsSnap] = await Promise.all([
     getDoc(doc(db, "fondoSync", "latest")),
     getDoc(doc(db, "fondoMeta", "sheet")),
