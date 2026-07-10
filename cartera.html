@@ -1,0 +1,322 @@
+﻿<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carteras — Valtia Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#0D1B2A;--navy2:#152336;--gold:#B8975A;--gold2:#D4AF6E;
+  --text-d:#F0EDE8;--sub-d:rgba(240,237,232,.55);--muted-d:rgba(240,237,232,.35);
+  --text-l:#1A2B3C;--sub-l:#4A5A6C;--muted-l:#8A9BAD;
+  --bg-d:#0D1B2A;--bg3-d:#152336;--bg-l:#F5F2EC;--bg3-l:#EDE9E0;
+  --border-d:rgba(184,151,90,.14);--border-l:rgba(26,58,92,.12);
+  --card-d:#101F31;--card-l:#FFFFFF;--green:#2E7D32;--red:#C62828;
+}
+[data-theme="dark"]{--bg:var(--bg-d);--bg3:var(--bg3-d);--text:var(--text-d);--sub:var(--sub-d);--muted:var(--muted-d);--border:var(--border-d);--card:var(--card-d);--greenTx:#4caf50;--redTx:#ef5350}
+[data-theme="light"]{--bg:var(--bg-l);--bg3:var(--bg3-l);--text:var(--text-l);--sub:var(--sub-l);--muted:var(--muted-l);--border:var(--border-l);--card:var(--card-l);--greenTx:#2E7D32;--redTx:#C62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;min-height:100vh}
+a{color:inherit}
+nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px clamp(16px,4vw,52px);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:50}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand-name{font-family:'Cormorant Garamond',serif;font-size:19px;letter-spacing:.14em;text-transform:uppercase}
+.brand-name em{color:var(--gold);font-style:normal}
+.nav-links{display:flex;gap:20px;align-items:center;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.nav-links a{text-decoration:none;color:var(--sub)}
+.nav-links a:hover{color:var(--gold)}
+.theme-btn{width:36px;height:20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;position:relative;flex-shrink:0}
+.theme-btn::after{content:'';position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--gold);transition:transform .2s}
+[data-theme="light"] .theme-btn::after{transform:translateX(16px)}
+main{max-width:1240px;margin:0 auto;padding:34px clamp(16px,3vw,40px) 70px}
+.eye{font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.eye::before{content:'';display:block;width:32px;height:1px;background:var(--gold);opacity:.6}
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,4.5vw,46px);font-weight:400;line-height:1.1;margin-bottom:12px}
+h1 em{font-style:italic;color:var(--gold2)}
+.sub{color:var(--sub);font-size:15px;line-height:1.75;max-width:720px;margin-bottom:8px}
+.honest{display:inline-flex;align-items:center;gap:8px;margin:14px 0 0;border:1px solid var(--border);border-left:3px solid var(--gold);background:var(--card);border-radius:8px;padding:9px 14px;font-size:12.5px;color:var(--sub);line-height:1.5}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:18px;margin-top:32px}
+.ccard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:12px;transition:transform .15s,border-color .2s;position:relative}
+.ccard:hover{transform:translateY(-3px);border-color:var(--gold)}
+.ccard .top{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.badge{font-size:9.5px;font-weight:600;letter-spacing:.12em;background:var(--gold);color:#0D1B2A;border-radius:4px;padding:3px 9px;text-transform:uppercase}
+.tagx{font-size:9px;letter-spacing:.12em;border:1px solid var(--border);border-radius:4px;padding:2.5px 8px;color:var(--sub);text-transform:uppercase;font-weight:600}
+.ccard h3{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500}
+.ccard p{font-size:13px;color:var(--sub);line-height:1.65;flex:1}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mini .mi{border:1px solid var(--border);border-radius:9px;padding:9px 12px}
+.mini .l{font-size:8.5px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase;font-weight:600;margin-bottom:4px}
+.mini .v{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
+.spark{height:56px;position:relative}
+.cta{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.cta .go{color:var(--gold);font-weight:600;text-decoration:none}
+.cta .meta{color:var(--muted);font-size:10px}
+.pos{color:var(--greenTx)!important}.neg{color:var(--redTx)!important}.mut{color:var(--muted)!important}
+/* detalle */
+.crumb{font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:22px}
+.crumb a{color:var(--sub);text-decoration:none}
+.crumb a:hover{color:var(--gold)}
+.dhead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+.dmeta{font-size:11px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin:10px 0 26px;line-height:2}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:13px;margin:0 0 24px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:16px 18px;position:relative}
+.kpi::before{content:'';position:absolute;top:0;left:18px;width:24px;height:2px;background:var(--gold)}
+.kpi .l{font-size:9px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;font-weight:600;margin-bottom:8px}
+.kpi .v{font-family:'Cormorant Garamond',serif;font-size:clamp(22px,2vw,29px);font-weight:500;font-variant-numeric:tabular-nums;line-height:1}
+.kpi .s{font-size:11px;color:var(--sub);margin-top:7px}
+.sec{display:flex;align-items:center;gap:12px;margin:32px 0 14px;font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+.sec::before{content:'';display:block;width:32px;height:1px;background:var(--gold);opacity:.6}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.chart-box{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:18px 20px;height:340px;position:relative}
+.chart-box .inner{position:absolute;inset:52px 18px 16px}
+.chart-box .leg{display:flex;gap:18px;font-size:11.5px;color:var(--sub)}
+.leg b{font-variant-numeric:tabular-nums}
+.dotl{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:baseline}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}
+th{text-align:left;font-size:9.5px;letter-spacing:.15em;color:var(--muted);padding:12px 16px;border-bottom:1px solid var(--border);text-transform:uppercase;font-weight:600}
+td{padding:11px 16px;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--bg3)}
+.num{text-align:right}
+.pill{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:600;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.pill.p{color:var(--greenTx);background:rgba(46,125,50,.12)}
+.pill.n{color:var(--redTx);background:rgba(198,40,40,.12)}
+.pill.m{color:var(--sub);background:var(--bg3)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.chip{border:1px solid var(--border);background:var(--card);border-radius:8px;padding:6px 12px;font-size:12px;display:inline-flex;gap:8px;align-items:center}
+.chip b{letter-spacing:.03em}
+.razon{color:var(--sub);font-size:12px;line-height:1.6;max-width:520px}
+.razon b{color:var(--text);display:block;font-size:12.5px;margin-bottom:2px}
+.tesis-row{color:var(--sub);font-size:12px;line-height:1.55;max-width:340px}
+footer{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;font-size:11px;color:var(--muted);line-height:1.9;max-width:900px}
+.state{border:1px dashed var(--border);border-radius:14px;text-align:center;padding:60px 20px;color:var(--sub);margin-top:30px}
+@media(max-width:760px){.chart-box{height:280px}}
+</style>
+</head>
+<body>
+<nav>
+  <a class="brand" href="index.html">
+    <svg width="30" height="30" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <span class="brand-name">VAL<em>T</em>IA</span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Inicio</a>
+    <a href="cartera.html">Carteras</a>
+    <a href="noticias.html">Noticias</a>
+    <a href="herramientas.html">Herramientas</a>
+    <button class="theme-btn" onclick="tg()" title="Cambiar tema"></button>
+  </div>
+</nav>
+<main id="main">
+  <div class="state">Cargando carteras…</div>
+</main>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy, where }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
+  authDomain: 'valtia-analytics.firebaseapp.com',
+  projectId: 'valtia-analytics',
+});
+const db = getFirestore(app);
+
+/* tema persistente compartido con el sitio */
+const saved = localStorage.getItem('valtia-theme');
+if (saved) document.documentElement.dataset.theme = saved;
+window.tg = () => {
+  const h = document.documentElement;
+  h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('valtia-theme', h.dataset.theme);
+  render();
+};
+
+const $ = s => document.querySelector(s);
+const fmtUSD = n => "US$" + Number(n).toLocaleString("es-AR", {maximumFractionDigits: 2});
+const fmtPct = n => (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
+const cls = n => n > 0.004 ? "pos" : n < -0.004 ? "neg" : "mut";
+const pill = (n, t) => `<span class="pill ${n>0.004?"p":n<-0.004?"n":"m"}">${n>0.004?"▲":n<-0.004?"▼":"—"} ${t}</span>`;
+const tok = name => getComputedStyle(document.body).getPropertyValue(name).trim();
+const RIESGO = { conservador: "Riesgo bajo", moderado: "Riesgo medio", agresivo: "Riesgo alto" };
+// fechas: acepta string ISO o Timestamp de Firestore
+const fdate = v => !v ? "—" : (v.toDate ? v.toDate().toISOString().slice(0,10) : String(v).slice(0,10));
+
+let charts = [];
+let cache = null;
+
+async function loadAll() {
+  if (cache) return cache;
+  // sin login solo se pueden listar las públicas (la regla exige el filtro)
+  const cartSnap = await getDocs(query(collection(db, "carterasModelo"),
+                                       where("visibilidad", "==", "publico")));
+  const carteras = [];
+  for (const d of cartSnap.docs) {
+    const c = { id: d.id, ...d.data() };
+    if (c.estado !== "activa") continue;
+    const [posSnap, valSnap, histSnap] = await Promise.all([
+      getDocs(collection(db, "carterasModelo", d.id, "posiciones")),
+      getDocs(query(collection(db, "carterasModelo", d.id, "valores"), orderBy("fecha"))),
+      getDocs(query(collection(db, "carterasModelo", d.id, "historial"), orderBy("fecha", "desc"))),
+    ]);
+    c.posiciones = posSnap.docs.map(p => p.data()).filter(p => p.estado === "activa")
+      .sort((a, b) => (b.mcapEntrada || 0) - (a.mcapEntrada || 0));
+    c.valores = valSnap.docs.map(v => v.data());
+    c.historial = histSnap.docs.map(h => h.data());
+    carteras.push(c);
+  }
+  cache = carteras;
+  return carteras;
+}
+
+function retorno(c) {
+  const last = c.valores[c.valores.length - 1];
+  return last ? last.indice - 100 : null;
+}
+function retornoBench(c) {
+  const last = c.valores[c.valores.length - 1];
+  return last && last.benchmark != null ? last.benchmark - 100 : null;
+}
+
+/* ── catálogo ── */
+function renderCatalogo(carteras) {
+  const cards = carteras.map(c => {
+    const r = retorno(c), rb = retornoBench(c);
+    return `
+    <div class="ccard">
+      <div class="top"><span class="badge">${c.codigo || c.slug}</span>
+        <span class="tagx">${RIESGO[c.nivelRiesgo] || c.nivelRiesgo || ""}</span>
+        <span class="tagx">Rebalanceo ${c.rebalanceo || "mensual"}</span></div>
+      <h3>${c.nombre}</h3>
+      <p>${c.descripcionCorta || ((c.tesis || "").slice(0, 150) + ((c.tesis||"").length > 150 ? "…" : ""))}</p>
+      <div class="mini">
+        <div class="mi"><div class="l">Desde inicio (${fdate(c.fechaInicio)})</div><div class="v ${r!=null?cls(r):"mut"}">${r!=null?fmtPct(r):"—"}</div></div>
+        <div class="mi"><div class="l">${rb != null ? "Benchmark " + c.benchmark : "Posiciones"}</div><div class="v">${rb != null ? `<span class="${cls(rb)}">${fmtPct(rb)}</span>` : c.posiciones.length}</div></div>
+      </div>
+      <div class="spark"><canvas id="sp-${c.id}"></canvas></div>
+      <div class="cta"><span class="meta">${c.posiciones.length} posiciones · track record real, sin backtest</span>
+        <a class="go" href="cartera.html?c=${c.id}" target="_blank" rel="noopener">Ver cartera →</a></div>
+    </div>`;
+  }).join("");
+  $("#main").innerHTML = `
+    <div class="eye">Carteras vivas · seguimiento verificable</div>
+    <h1>Carteras que se <em>gestionan</em>,<br>no listas que se olvidan</h1>
+    <p class="sub">Cada cartera es una página viva: posiciones con tesis, precio de entrada registrado el día que entra, y cada rotación fechada con su razonamiento. El rendimiento se mide desde el lanzamiento — nunca con backtests.</p>
+    <div class="honest">🔎 <span><b>Transparencia primero:</b> el historial se construye día a día con precios reales. Lo que ves es lo que fue.</span></div>
+    <div class="grid">${cards || '<div class="state">Sin carteras activas todavía.</div>'}</div>
+    <footer>Valtia Analytics no brinda asesoramiento financiero personalizado a través de estas carteras. La información es de carácter general y educativo; los rendimientos pasados no garantizan resultados futuros. Invertir en renta variable implica riesgo de pérdida del capital.</footer>`;
+  charts.forEach(ch => ch.destroy()); charts = [];
+  carteras.forEach(c => {
+    const el = document.getElementById("sp-" + c.id);
+    if (!el || c.valores.length < 2) return;
+    charts.push(new Chart(el, { type: "line",
+      data: { labels: c.valores.map(v => v.fecha),
+        datasets: [{ data: c.valores.map(v => v.indice), borderColor: "#B8975A",
+          backgroundColor: "rgba(184,151,90,.12)", fill: true, borderWidth: 2, pointRadius: 0, tension: .3 }] },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        scales: { x: { display: false }, y: { display: false } } } }));
+  });
+}
+
+/* ── detalle ── */
+function renderDetalle(c) {
+  document.title = c.nombre + " — Valtia Analytics";
+  const r = retorno(c), rb = retornoBench(c);
+  const dif = rb != null && r != null ? r - rb : null;
+  const inicio = fdate(c.fechaInicio);
+  const posRows = c.posiciones.map(p => {
+    const ret = p.precioEntrada ? (p.precioActual / p.precioEntrada - 1) * 100 : 0;
+    return `<tr><td><b>${p.ticker}</b><div style="font-size:11px;color:var(--sub)">${p.empresa || ""}</div></td>
+      <td class="num">${((p.pesoObjetivo || 0) * 100).toFixed(0)}%</td>
+      <td class="num">${fmtUSD(p.precioEntrada)}<div style="font-size:10px;color:var(--muted)">${fdate(p.fechaIncorporacion)}</div></td>
+      <td class="num">${fmtUSD(p.precioActual)}</td>
+      <td class="num">${pill(ret, fmtPct(ret))}</td>
+      <td class="tesis-row">${p.tesisPosicion || ""}</td></tr>`;
+  }).join("");
+  const destacadas = c.posiciones.map(p => ({ t: p.ticker, r: p.precioEntrada ? (p.precioActual / p.precioEntrada - 1) * 100 : 0 }))
+    .sort((a, b) => b.r - a.r).slice(0, 6)
+    .map(x => `<span class="chip"><b>${x.t}</b> <span class="${cls(x.r)}">${fmtPct(x.r)}</span></span>`).join("");
+  const histRows = c.historial.map(h => {
+    const added = String(h.accion || "").includes("añad");
+    return `<tr><td style="white-space:nowrap">${h.fecha}</td>
+      <td><b>${h.ticker}</b><div style="font-size:11px;color:var(--sub)">${h.empresa || ""}</div></td>
+      <td>${added ? '<span class="pill p">Añadido</span>' : '<span class="pill n">Eliminado</span>'}</td>
+      <td class="num">${h.precio != null ? fmtUSD(h.precio) : "—"}</td>
+      <td class="num">${h.retornoSalida != null ? `<span class="${cls(h.retornoSalida)}">${fmtPct(h.retornoSalida)}</span>` : "—"}</td>
+      <td class="razon">${h.razonamiento || ""}</td></tr>`;
+  }).join("");
+
+  $("#main").innerHTML = `
+    <div class="crumb"><a href="cartera.html">← Todas las carteras</a></div>
+    <div class="dhead">
+      <div><div class="eye" style="margin-bottom:10px"><span class="badge">${c.codigo || c.slug}</span> ${RIESGO[c.nivelRiesgo] || ""}</div>
+        <h1 style="margin-bottom:6px">${c.nombre}</h1></div>
+    </div>
+    <div class="dmeta">Lanzada ${inicio} · Rebalanceo ${c.rebalanceo || "mensual"} · ${c.modo === "automatico" ? "Reglas automáticas" : "Curada por el equipo"} · Benchmark ${c.benchmark || "—"}<br>${c.criterio || ""}</div>
+    <div class="kpis">
+      <div class="kpi"><div class="l">Retorno desde inicio</div><div class="v ${r!=null?cls(r):"mut"}">${r!=null?fmtPct(r):"—"}</div><div class="s">desde ${inicio}</div></div>
+      ${rb != null ? `<div class="kpi"><div class="l">${c.benchmark} en igual período</div><div class="v ${cls(rb)}">${fmtPct(rb)}</div><div class="s">misma ventana temporal</div></div>` : ""}
+      ${dif != null ? `<div class="kpi"><div class="l">Diferencia vs benchmark</div><div class="v ${cls(dif)}">${fmtPct(dif)}</div><div class="s">alpha desde lanzamiento</div></div>` : ""}
+      <div class="kpi"><div class="l">Posiciones</div><div class="v">${c.posiciones.length}</div><div class="s">${c.rebalanceo || "mensual"} · pesos equitativos</div></div>
+    </div>
+    <div class="sec">Evolución · base 100 al lanzamiento</div>
+    <div class="chart-box">
+      <div class="leg"><span><span class="dotl" style="background:#B8975A"></span>${c.nombre} <b class="${cls(r)}">${fmtPct(r)}</b></span>
+      ${rb != null ? `<span><span class="dotl" style="background:#8A9BAD"></span>${c.benchmark} <b class="${cls(rb)}">${fmtPct(rb)}</b></span>` : ""}</div>
+      <div class="inner"><canvas id="chEvo"></canvas></div>
+    </div>
+    <div class="sec">Tesis</div>
+    <p class="sub" style="max-width:860px">${c.tesis || ""}</p>
+    <div class="sec">Acciones destacadas · retorno desde entrada</div>
+    <div class="chips">${destacadas}</div>
+    <div class="sec">Composición actual</div>
+    <div class="panel"><table>
+      <thead><tr><th>Activo</th><th class="num">Peso</th><th class="num">Entrada</th><th class="num">Último</th><th class="num">Retorno</th><th>Tesis</th></tr></thead>
+      <tbody>${posRows}</tbody></table></div>
+    <div class="sec">Historial de selecciones · cada decisión, fechada</div>
+    <div class="panel"><table>
+      <thead><tr><th>Fecha</th><th>Activo</th><th>Acción</th><th class="num">Precio</th><th class="num">Ret. a la salida</th><th>Razonamiento</th></tr></thead>
+      <tbody>${histRows || '<tr><td colspan="6" class="mut" style="text-align:center">Sin rotaciones todavía</td></tr>'}</tbody></table></div>
+    <footer><b>Metodología:</b> el índice de la cartera arranca en base 100 el día del lanzamiento (${inicio}) y se actualiza a diario con precios de mercado. No usamos backtests: todo el track record es posterior al lanzamiento y cada rotación queda registrada con fecha, precio y razonamiento. Esta información es de carácter general y no constituye asesoramiento financiero personalizado. Los rendimientos pasados no garantizan resultados futuros.</footer>`;
+
+  charts.forEach(ch => ch.destroy()); charts = [];
+  const subC = tok("--sub"), borderC = tok("--border");
+  const dsets = [{ label: c.nombre, data: c.valores.map(v => v.indice), borderColor: "#B8975A",
+    backgroundColor: "rgba(184,151,90,.10)", fill: true, borderWidth: 2.2, pointRadius: c.valores.length < 25 ? 3.5 : 0,
+    pointBackgroundColor: "#B8975A", tension: .3 }];
+  if (c.valores.some(v => v.benchmark != null)) {
+    dsets.push({ label: c.benchmark, data: c.valores.map(v => v.benchmark ?? null), borderColor: "#8A9BAD",
+      borderWidth: 1.8, pointRadius: 0, tension: .3, fill: false });
+  }
+  charts.push(new Chart(document.getElementById("chEvo"), { type: "line",
+    data: { labels: c.valores.map(v => v.fecha), datasets: dsets },
+    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
+      plugins: { legend: { display: false } },
+      scales: { y: { grid: { color: borderC }, ticks: { color: subC, font: { size: 11 }, callback: v => Number(v).toFixed(1) } },
+                x: { grid: { display: false }, ticks: { color: subC, font: { size: 10.5 }, maxTicksLimit: 10 } } } } }));
+}
+
+async function render() {
+  try {
+    const carteras = await loadAll();
+    const slug = new URLSearchParams(location.search).get("c");
+    if (slug) {
+      const c = carteras.find(x => x.id === slug || x.slug === slug);
+      if (c) return renderDetalle(c);
+      $("#main").innerHTML = `<div class="state">No encontramos esa cartera. <a href="cartera.html" style="color:var(--gold)">Ver todas →</a></div>`;
+      return;
+    }
+    renderCatalogo(carteras);
+  } catch (e) {
+    $("#main").innerHTML = `<div class="state">No se pudieron cargar las carteras (${String(e).slice(0, 140)})</div>`;
+  }
+}
+render();
+</script>
+</body>
+</html>

@@ -62,6 +62,17 @@ service cloud.firestore {
       allow read, create, update, delete: if isAdmin();
     }
 
+    // ── CARTERAS MODELO (producto: carteras vivas) ──
+    // Escritas por el admin / fondo_sync (Admin SDK). Las de visibilidad
+    // "publico" las ve cualquiera; el resto requiere login (PRO a futuro).
+    match /carterasModelo/{id} {
+      allow read: if resource.data.visibilidad == 'publico' || isAuthenticated();
+      allow write: if isAdmin();
+      match /posiciones/{p} { allow read: if true; allow write: if isAdmin(); }
+      match /historial/{h}  { allow read: if true; allow write: if isAdmin(); }
+      match /valores/{v}    { allow read: if true; allow write: if isAdmin(); }
+    }
+
     // ── NOTICIAS DEL FONDO ──
     // Briefings diarios generados por la tarea de Cowork, copiados por
     // fondo_sync.py via Admin SDK. Solo el admin las ve.

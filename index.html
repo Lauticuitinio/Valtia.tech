@@ -69,6 +69,28 @@ nav{position:sticky;top:0;z-index:200;height:68px;display:flex;align-items:cente
 [data-theme="light"] .theme-btn::after{transform:translateX(16px)}
 .nav-cta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--navy);background:var(--gold);padding:9px 22px;border-radius:2px;text-decoration:none;transition:background .2s,transform .15s}
 .nav-cta:hover{background:var(--gold2);transform:translateY(-1px)}
+/* chip de usuario (post-login) */
+.nav-user{position:relative}
+.nav-user-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:99px;padding:5px 13px 5px 6px;color:#fff;cursor:pointer;font-family:'Jost',sans-serif;font-size:12.5px;letter-spacing:.04em}
+[data-theme="light"] .nav-user-btn{background:rgba(26,58,92,.06);border-color:rgba(26,58,92,.18);color:var(--navy)}
+.nav-avatar{width:24px;height:24px;border-radius:50%;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-weight:600;font-size:12px}
+.nav-user-menu{position:absolute;right:0;top:calc(100% + 10px);min-width:220px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:6px;display:none;z-index:300;box-shadow:0 14px 36px rgba(0,0,0,.3)}
+.nav-user-menu.open{display:block}
+.nav-user-mail{font-size:11px;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--border);margin-bottom:4px;word-break:break-all}
+.nav-user-menu a{display:block;padding:9px 10px;font-size:13px;color:var(--text);text-decoration:none;border-radius:6px;letter-spacing:.02em}
+.nav-user-menu a:hover{background:var(--bg3)}
+.nav-user-menu a.danger{color:var(--red)}
+/* chip de usuario logueado (estilo exchange) */
+.nav-user{position:relative}
+.nav-user-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:99px;padding:5px 14px 5px 6px;color:#fff;cursor:pointer;font-family:'Jost',sans-serif;font-size:12.5px;letter-spacing:.04em}
+[data-theme="light"] .nav-user-btn{background:rgba(26,58,92,.06);border-color:rgba(26,58,92,.18);color:var(--navy)}
+.nav-avatar{width:24px;height:24px;border-radius:50%;background:var(--gold);color:var(--navy);display:grid;place-items:center;font-weight:600;font-size:12px}
+.nav-user-menu{position:absolute;right:0;top:calc(100% + 10px);min-width:220px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:6px;display:none;z-index:300;box-shadow:0 12px 32px rgba(0,0,0,.28)}
+.nav-user-menu.open{display:block}
+.nav-user-mail{font-size:11px;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--border);margin-bottom:4px;word-break:break-all}
+.nav-user-menu a{display:block;padding:9px 10px;font-size:13px;color:var(--text);text-decoration:none;border-radius:6px}
+.nav-user-menu a:hover{background:var(--bg3)}
+.nav-user-menu a.danger{color:var(--red)}
 
 /* ── HERO ── */
 .hero{min-height:100vh;background:var(--navy);display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;padding:0 52px}
@@ -330,6 +352,7 @@ footer{background:#040c14;padding:48px 52px;border-top:1px solid rgba(184,151,90
     </div>
   </a>
   <div class="nav-links">
+    <a href="cartera.html">Carteras</a>
     <a href="noticias.html">Noticias</a>
     <a href="#servicios">¿Qué hacemos?</a>
     <a href="informes.html">Informes</a>
@@ -339,7 +362,18 @@ footer{background:#040c14;padding:48px 52px;border-top:1px solid rgba(184,151,90
   </div>
   <div class="nav-right">
     <button class="theme-btn" onclick="toggleTheme()" title="Cambiar tema"></button>
-    <a href="#" class="nav-cta" onclick="openLogin(event)">Acceso Cliente</a>
+    <a href="#" class="nav-cta" id="nav-cta" onclick="openLogin(event)">Acceso Cliente</a>
+    <div class="nav-user" id="nav-user" style="display:none">
+      <button class="nav-user-btn" onclick="toggleUserMenu(event)">
+        <span class="nav-avatar" id="nav-avatar">U</span><span id="nav-username">usuario</span><span style="font-size:9px;opacity:.7">▾</span>
+      </button>
+      <div class="nav-user-menu" id="nav-user-menu">
+        <div class="nav-user-mail" id="nav-user-mail"></div>
+        <a href="#" id="nav-user-portal" onclick="goPortal(event)">Mi portal</a>
+        <a href="#" onclick="navChangePass(event)">Cambiar contraseña</a>
+        <a href="#" class="danger" onclick="logout()">Cerrar sesión</a>
+      </div>
+    </div>
   </div>
 </nav>
 
@@ -960,6 +994,28 @@ function openLogin(e){if(e)e.preventDefault();document.getElementById('loginModa
 function closeLogin(){document.getElementById('loginModal').classList.remove('open')}
 document.getElementById('loginModal').addEventListener('click',function(e){if(e.target===this)closeLogin()})
 function openContacto(){closeLogin();document.getElementById('contacto')?.scrollIntoView({behavior:'smooth'})}
+
+// ── CHIP DE USUARIO (nav) ──
+function toggleUserMenu(e){e.preventDefault();e.stopPropagation();document.getElementById('nav-user-menu').classList.toggle('open')}
+document.addEventListener('click',()=>{const m=document.getElementById('nav-user-menu');if(m)m.classList.remove('open')});
+function goPortal(e){
+  if(e)e.preventDefault();
+  document.getElementById('home-view').style.display='none';
+  document.getElementById('portal-view').style.display='block';
+  window.scrollTo(0,0);
+}
+function updateNavUser(user,isAdmin){
+  const cta=document.getElementById('nav-cta'),box=document.getElementById('nav-user');
+  if(!cta||!box)return;
+  if(user){
+    cta.style.display='none';box.style.display='block';
+    const name=user.displayName||user.email.split('@')[0];
+    document.getElementById('nav-username').textContent=name.split(' ')[0];
+    document.getElementById('nav-avatar').textContent=(name[0]||'U').toUpperCase();
+    document.getElementById('nav-user-mail').textContent=user.email;
+    document.getElementById('nav-user-portal').textContent=isAdmin?'Panel de gestión':'Mi portal';
+  }else{cta.style.display='';box.style.display='none';}
+}
 // loginWithGoogle, loginWithEmail, logout, showHome handled by Firebase module
 
 // ── PORTAL TABS ──
@@ -1102,9 +1158,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       const isAdmin = user.email === ADMIN_EMAIL;
+      updateNavUser(user, isAdmin);
       const userData = await getUserData(user.email, isAdmin);
       enterPortal(user, userData, isAdmin);
     } else {
+      updateNavUser(null, false);
       showHome();
     }
   });
@@ -1199,6 +1257,19 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
   };
 
+  // ── CAMBIO DE CONTRASEÑA (chip de usuario) ──
+  window.navChangePass = async function(e) {
+    if (e) e.preventDefault();
+    const u = auth.currentUser;
+    if (!u || !u.email) return;
+    try {
+      await sendPasswordResetEmail(auth, u.email);
+      alert('Te enviamos un mail a ' + u.email + ' para cambiar la contraseña. Revisá también spam.');
+    } catch (err) {
+      alert('No se pudo enviar el mail (si entrás con Google, la contraseña se gestiona en tu cuenta de Google).');
+    }
+  };
+
   // Enter envía el formulario; escribir limpia el mensaje de error
   ['login-email','login-pass'].forEach(id => {
     const el = document.getElementById(id);
@@ -1253,8 +1324,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       renderAdminDashboard(data);
     } else {
       renderClientDashboard(data, displayName);
+      initPortalChart(data);
     }
-    initPortalChart(data);
   }
 
   // ── CLIENT DASHBOARD ──
@@ -1280,15 +1351,16 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
 
   // ── ADMIN DASHBOARD ──
-  // Los KPIs de abajo son placeholder: fondo-live.js reemplaza las secciones
-  // del portal con los datos reales del fondo apenas carga.
   function renderAdminDashboard(data) {
-    document.getElementById('pkpi-capital').textContent = '$19.208.485';
-    document.getElementById('pkpi-cp').textContent = '19.208,49';
-    document.getElementById('pkpi-pnl').textContent = '+$3.400.000';
-    document.getElementById('pkpi-pnl').className = 'pkpi-value pos';
-    document.getElementById('pkpi-roi').textContent = '+21,5%';
-    document.getElementById('pkpi-roi').className = 'pkpi-value pos';
+    // skeleton inmediato: evita el flash del dashboard viejo hasta que
+    // fondo-live.js renderiza las secciones reales
+    document.getElementById('tab-dashboard').innerHTML = `
+      <style>.fl-skel{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:16px 0 20px}
+      .fl-skel div{height:98px;border-radius:10px;background:var(--bg3);animation:flpulse 1.2s ease-in-out infinite}
+      @keyframes flpulse{50%{opacity:.45}}</style>
+      <div class="portal-title">Fondo Lautaro</div>
+      <div class="fl-skel"><div></div><div></div><div></div><div></div><div></div><div></div></div>
+      <p style="color:var(--muted);font-size:11px;letter-spacing:.14em;text-transform:uppercase">Cargando telemetría del fondo…</p>`;
 
     const adminTab = document.getElementById('admin-tab');
     if (adminTab) adminTab.style.display = 'inline';
