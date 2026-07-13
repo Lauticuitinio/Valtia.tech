@@ -215,7 +215,10 @@ function renderAll(d, sheet, news) {
   document.getElementById("tab-dashboard").innerHTML = `
     <div class="fl-head">
       <div class="portal-title" style="margin-bottom:0">Fondo Lautaro</div>
-      <span class="fl-status"><span class="fl-dot${fresh?"":" warn"}"></span>${fresh ? "Telemetría al día" : "Datos desactualizados"}</span>
+      <span style="display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <a class="fl-status" style="text-decoration:none;cursor:pointer" href="fondo.html" target="_blank" rel="noopener">🛰️ Centro de Comando</a>
+        <span class="fl-status"><span class="fl-dot${fresh?"":" warn"}"></span>${fresh ? "Telemetría al día" : "Datos desactualizados"}</span>
+      </span>
     </div>
     <div class="fl-meta">Sync ${ts ? ts.toLocaleString("es-AR") : "—"} · FX implícito ${c.fx.toLocaleString("es-AR")}${cclSheet ? " · CCL ref. " + Number(cclSheet).toLocaleString("es-AR") : ""}${corte ? " · corte contable " + corte : ""}</div>
     ${!fresh && ts ? `<div class="fl-strip warn"><b>Datos viejos:</b> el último sync es de hace ${Math.round(ageH/24)} días. Revisá la tarea programada de la PC (fondo_sync.py).</div>` : ""}
