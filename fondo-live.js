@@ -86,6 +86,70 @@ const CSS = `
 .fl-btn:hover { background:var(--flGoldDeep); }
 .fl-btn:disabled { opacity:.55; cursor:default; }
 .fl-ev-msg { padding:0 16px 12px; font-size:12px; line-height:1.6; }
+
+/* ── shell 2a: sidebar navy (diseño "Ejecutivo+") ── */
+.fl-layout { display:flex; align-items:stretch; gap:0; }
+.fl-layout .portal-nav { flex-direction:column; align-items:stretch; width:216px; flex:none;
+  background:#14213D !important; border:none; border-radius:14px; padding:18px 12px !important;
+  position:sticky; top:76px; align-self:flex-start; max-height:calc(100vh - 96px); overflow:auto; }
+.fl-layout .portal-nav a { display:block !important; padding:10px 12px !important; margin:0 0 2px !important; border-radius:8px;
+  color:rgba(255,255,255,.62) !important; font:500 11px 'IBM Plex Sans',sans-serif !important; letter-spacing:.12em !important;
+  text-transform:uppercase; text-decoration:none; border-bottom:none !important; }
+.fl-layout .portal-nav a:hover { background:rgba(255,255,255,.06); color:#fff !important; }
+.fl-layout .portal-nav a.active { background:rgba(176,138,62,.18); color:#E8CE96 !important; border-left:2px solid #B08A3E; font-weight:600 !important; }
+.fl-layout .portal-nav #portal-user-name { color:rgba(255,255,255,.85); font:600 11px 'IBM Plex Sans',sans-serif; padding:12px 12px 2px; margin:0 !important; border-top:1px solid rgba(255,255,255,.1); }
+.fl-layout .portal-nav button { color:#B08A3E !important; text-align:left; padding:4px 12px 0 !important; font:600 10px 'IBM Plex Sans',sans-serif !important; letter-spacing:.12em !important; }
+.fl-sbbrand { display:flex; align-items:center; gap:10px; padding:2px 10px 20px; }
+.fl-sbbrand .lg { width:30px; height:30px; border:1.5px solid #B08A3E; border-radius:6px; display:flex; align-items:center; justify-content:center; flex:none; }
+.fl-sbbrand .nm { font:500 15px 'Playfair Display',serif; letter-spacing:.18em; color:#fff; }
+.fl-sbbrand .sb { font:500 7.5px 'IBM Plex Sans',sans-serif; letter-spacing:.3em; color:#B08A3E; }
+.fl-layout .portal-content { flex:1; min-width:0; padding-left:22px; }
+@media (max-width:920px) {
+  .fl-layout { flex-direction:column; }
+  .fl-layout .portal-nav { width:100%; flex-direction:row; flex-wrap:wrap; position:static; max-height:none; align-items:center; gap:2px; }
+  .fl-sbbrand { padding:2px 10px; }
+  .fl-layout .portal-nav a { display:inline-block !important; }
+  .fl-layout .portal-content { padding:18px 0 0; }
+}
+
+/* ── dashboard 2a: filas, moneda, donut, objetivos, flujo ── */
+.fl-cur { display:inline-flex; gap:3px; background:var(--flTrack); border-radius:8px; padding:3px; }
+.fl-cur button { border:none; padding:5px 14px; border-radius:6px; cursor:pointer; font:600 11px 'IBM Plex Sans',sans-serif; color:var(--flInk2); background:transparent; }
+.fl-cur button.on { background:#14213D; color:#E8CE96; }
+.fl-dashrow { display:grid; grid-template-columns:1.55fr 340px; gap:13px; margin-bottom:14px; }
+.fl-dashrow2 { display:grid; grid-template-columns:1.5fr 1fr; gap:13px; }
+@media (max-width:1000px) { .fl-dashrow, .fl-dashrow2 { grid-template-columns:1fr; } }
+.fl-pad { padding:16px 18px; overflow:visible; }
+.fl-h4 { font-size:9.5px; letter-spacing:.16em; color:var(--flMut); text-transform:uppercase; font-weight:700; margin:0 0 4px; }
+.fl-evohead { display:flex; align-items:baseline; gap:12px; margin-top:2px; }
+.fl-evohead .big { font:500 22px 'Playfair Display',serif; color:var(--flInk); font-variant-numeric:tabular-nums; }
+.fl-evochart { position:relative; height:212px; margin-top:10px; }
+.fl-donutwrap { position:relative; height:176px; margin:6px 0 2px; }
+.fl-dcenter { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
+.fl-dcenter .big { font:500 20px 'Playfair Display',serif; color:var(--flInk); }
+.fl-dcenter .sm { font-size:9.5px; color:var(--flMut); }
+.fl-leg { display:flex; flex-direction:column; gap:7px; margin-top:10px; }
+.fl-leg .row { display:flex; justify-content:space-between; align-items:center; font-size:11px; }
+.fl-leg .nm { display:flex; gap:7px; align-items:center; color:var(--flInk2); font-weight:500; }
+.fl-leg .sq { width:8px; height:8px; border-radius:3px; background:var(--flc); }
+.fl-leg .pc { font-weight:600; color:var(--flInk); font-variant-numeric:tabular-nums; }
+.fl-objs { margin-top:13px; padding-top:11px; border-top:1px solid var(--flLine); display:flex; flex-direction:column; gap:9px; }
+.fl-obj .hd { display:flex; justify-content:space-between; margin-bottom:4px; font-size:10.5px; }
+.fl-obj .hd .n { color:var(--flInk2); font-weight:500; }
+.fl-obj .hd .n i { color:var(--flMut); font-style:normal; }
+.fl-obj .bar { position:relative; height:6px; background:var(--flTrack); border-radius:99px; }
+.fl-obj .fill { position:absolute; left:0; top:0; bottom:0; background:var(--flc); border-radius:99px; }
+.fl-obj .tick { position:absolute; top:-2px; height:10px; width:2px; background:var(--flInk); }
+.fl-mini-tbl { width:100%; border-collapse:collapse; font-size:11.5px; min-width:0 !important; }
+.fl-mini-tbl th { padding:7px 10px; background:var(--flPanel2); border-bottom:none; border-radius:0; font-size:9px; }
+.fl-mini-tbl td { padding:9px 10px; border-bottom:1px solid var(--flLine); }
+.fl-flowbars { display:flex; align-items:flex-end; gap:6px; height:112px; margin-top:8px; }
+.fl-fbar { flex:1; border-radius:3px 3px 0 0; min-height:3px; }
+.fl-fxlbl { display:flex; justify-content:space-between; margin-top:5px; font-size:8.5px; color:var(--flMut); }
+.fl-flowfoot { display:flex; justify-content:space-between; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid var(--flLine); }
+.fl-flowfoot .l { font-size:8.5px; letter-spacing:.12em; color:var(--flMut); font-weight:700; text-transform:uppercase; }
+.fl-flowfoot .v { font:500 15px 'Playfair Display',serif; }
+.fl-link { font-size:10.5px; font-weight:700; color:var(--flGoldDeep); cursor:pointer; letter-spacing:.04em; }
 `;
 
 /* ── bloques: mapeo por palabra clave (nombres del sheet v2) ── */
@@ -114,6 +178,57 @@ function blockOf(tipo) {
   if (t.includes("CAUCION") || t.includes("LETRA")) return "pasivo";
   if (t.includes("TITULOSPUBLICOS")) return "moderado";
   return "agresivo";
+}
+
+/* ── helpers del dashboard 2a ── */
+const fmtM = n => "$" + (n/1e6).toLocaleString("es-AR", {maximumFractionDigits:1}) + " M";
+const curCur = () => localStorage.getItem("fl-cur") === "USD" ? "USD" : "ARS";
+window.flSetCur = cur => {
+  localStorage.setItem("fl-cur", cur);
+  if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news);
+};
+// cambiar de pestaña por código (para "Ver todas →")
+window.flGo = tab => {
+  const l = [...document.querySelectorAll(".portal-nav a")]
+    .find(a => (a.getAttribute("onclick")||"").includes("'" + tab + "'"));
+  if (l) l.click();
+};
+
+// flujo mensual desde la hoja MOVIMIENTOS: aportes (+) vs devoluciones/fees (−)
+function flujoMensual(movs) {
+  const map = {};
+  const MES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  (movs||[]).forEach(m => {
+    const t = String(m.tipo||"").toLowerCase();
+    const externo = t.startsWith("aporte") || t.startsWith("devoluc") || t.startsWith("retiro") || t.startsWith("fee");
+    if (!externo) return; // transferencias internas (A IOL, A Binance, ARS->USD) no son flujo
+    const mm = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/.exec(String(m.fecha||"").trim());
+    if (!mm) return;
+    const y = mm[3].length === 2 ? "20" + mm[3] : mm[3];
+    const key = y + "-" + String(mm[2]).padStart(2, "0");
+    const o = map[key] || (map[key] = { a: 0, r: 0 });
+    const ars = Math.abs(Number(m.ars) || 0);
+    if (t.startsWith("aporte")) o.a += ars; else o.r += ars;
+  });
+  return Object.keys(map).sort().slice(-12).map(k => ({
+    key: k, label: MES[Number(k.slice(5)) - 1] || k.slice(5),
+    a: map[k].a, r: map[k].r, net: map[k].a - map[k].r }));
+}
+
+// shell 2a: convierte la nav del portal en el sidebar navy del diseño
+function installShell() {
+  if (document.querySelector(".fl-layout")) return;
+  const nav = document.querySelector(".portal-nav");
+  const content = document.querySelector(".portal-content");
+  if (!nav || !content || nav.parentElement !== content.parentElement) return;
+  const wrap = document.createElement("div");
+  wrap.className = "fl-layout";
+  nav.parentElement.insertBefore(wrap, nav);
+  wrap.appendChild(nav);
+  wrap.appendChild(content);
+  nav.insertAdjacentHTML("afterbegin", `<div class="fl-sbbrand">
+    <div class="lg"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M1 12 L5 6 L8 9 L12 3 L15 6" fill="none" stroke="#B08A3E" stroke-width="1.5"/></svg></div>
+    <div><div class="nm">VALTIA</div><div class="sb">ANALYTICS</div></div></div>`);
 }
 
 function compute(d) {
@@ -210,17 +325,36 @@ function renderAll(d, sheet, news) {
     return { ...def, nombre: row ? row.nombre : def.fallback, tgt: row ? Number(row.pct) : 0 };
   });
 
-  /* ── DASHBOARD ── */
-  const maxPct = Math.max(...blocks.map(b => Math.max(c.blk[b.key]/c.total, b.tgt))) * 1.15;
-  const bloquesHtml = blocks.map(b => {
-    const real = c.blk[b.key], rp = real / c.total, dev = rp - b.tgt;
-    return `<div class="fl-blk" style="--flc:var(${b.slot})">
-      <div class="fl-blk-head"><span class="nm"><span class="fl-chip"></span>${b.nombre}</span>
-        <span class="amt">${fmtARS(real)} · <b>${(rp*100).toFixed(1)}%</b>
-        ${pill(dev, (dev>=0?"+":"") + (dev*100).toFixed(1) + " vs " + (b.tgt*100).toFixed(0) + "%")}</span></div>
-      <div class="fl-track"><div class="fl-fill" style="width:${(rp/maxPct*100).toFixed(1)}%"></div>
-        <div class="fl-target" title="objetivo ${(b.tgt*100).toFixed(0)}%" style="left:${(b.tgt/maxPct*100).toFixed(1)}%"></div></div></div>`;
-  }).join("");
+  /* ── DASHBOARD 2a: datos derivados ── */
+  const cur = curCur();
+  const mny = n => cur === "USD" ? fmtUSD(n / c.fx) : fmtARS(n);
+  // evolución: cierres del sheet (cada uno a su CCL) + valuación en vivo de hoy
+  const snapPtsE = snaps.filter(s => Number(s.total_ars) > 0);
+  const evoPts = snapPtsE.map(s => ({ label: s.cierre,
+      v: cur === "USD" ? Number(s.total_ars) / (Number(s.ccl) || c.fx) : Number(s.total_ars) }))
+    .concat([{ label: "hoy", v: cur === "USD" ? c.total / c.fx : c.total }]);
+  const evoDelta = evoPts.length > 1 ? (evoPts[evoPts.length - 1].v / evoPts[0].v - 1) * 100 : null;
+  // principales posiciones: IOL + agregados de Binance, ordenadas por valor
+  const topPos = c.activos.map(a => {
+      const b = blocks.find(x => x.key === a.blk) || {};
+      return { sim: a.sim, bloque: b.nombre || "", slot: b.slot || "--flS1",
+        cant: a.cant ? a.cant.toLocaleString("es-AR") : "—",
+        ult: a.ult ? fmtARS(a.ult) : "—", val: a.val, pnl: a.pnlPct };
+    })
+    .concat([
+      { sim: "BTC · Earn", bloque: "Crypto (Binance)", slot: "--flS3",
+        cant: c.ebtcQty ? c.ebtcQty.toFixed(6) : "—", ult: c.btcP ? fmtUSD(c.btcP) : "—",
+        val: c.ebtcUsd * c.fx, pnl: null },
+      { sim: "USDT · Futuros + Earn", bloque: "Crypto (Binance)", slot: "--flS3",
+        cant: "—", ult: "US$1,00", val: (c.fut + c.eusdt + c.upnl) * c.fx, pnl: null },
+    ])
+    .sort((a, b) => b.val - a.val).slice(0, 6);
+  // flujo mensual (aportes vs devoluciones/fees) desde MOVIMIENTOS
+  const flujo = flujoMensual(movs);
+  const flMax = Math.max(...flujo.map(f => Math.abs(f.net)), 1);
+  const apTot = flujo.reduce((s, f) => s + f.a, 0), reTot = flujo.reduce((s, f) => s + f.r, 0);
+  // objetivos por bloque (composición card)
+  const objMax = Math.max(...blocks.map(b => Math.max(c.blk[b.key] / c.total, b.tgt))) * 1.15;
 
   const newsHtml = news.length ? news.map(n => {
     const f = n.fecha && n.fecha.toDate ? n.fecha.toDate().toLocaleString("es-AR") : (n.fecha || "");
@@ -231,20 +365,29 @@ function renderAll(d, sheet, news) {
 
   document.getElementById("tab-dashboard").innerHTML = `<div class="flx">
     <div class="fl-head">
-      <div class="portal-title" style="margin-bottom:0">Fondo Lautaro</div>
-      <span class="fl-status"><span class="fl-dot${fresh?"":" warn"}"></span>${fresh ? "Telemetría al día" : "Datos desactualizados"}</span>
+      <div>
+        <div class="portal-title" style="margin-bottom:0">Fondo Lautaro</div>
+        <div class="fl-meta" style="margin:6px 0 0">Sync ${ts ? ts.toLocaleString("es-AR") : "—"} · FX implícito ${c.fx.toLocaleString("es-AR")}${cclSheet ? " · CCL ref. " + Number(cclSheet).toLocaleString("es-AR") : ""}${corte ? " · corte contable " + corte : ""}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span class="fl-status"><span class="fl-dot${fresh?"":" warn"}"></span>${fresh ? "Telemetría al día" : "Datos desactualizados"}</span>
+        <span class="fl-cur">
+          <button class="${cur==="ARS"?"on":""}" onclick="flSetCur('ARS')">ARS</button>
+          <button class="${cur==="USD"?"on":""}" onclick="flSetCur('USD')">USD</button>
+        </span>
+      </div>
     </div>
-    <div class="fl-meta">Sync ${ts ? ts.toLocaleString("es-AR") : "—"} · FX implícito ${c.fx.toLocaleString("es-AR")}${cclSheet ? " · CCL ref. " + Number(cclSheet).toLocaleString("es-AR") : ""}${corte ? " · corte contable " + corte : ""}</div>
+    <div style="height:14px"></div>
     ${!fresh && ts ? `<div class="fl-strip"><b>Datos viejos:</b> el último sync es de hace ${Math.round(ageH/24)} días. Revisá la tarea programada de la PC (fondo_sync.py).</div>` : ""}
     <div class="fl-kpis">
       <div class="fl-kpi" style="--fla:var(--flGold)"><div class="l">Valor total del fondo</div>
-        <div class="v mono">${fmtARS(c.total)}</div><div class="s mono">${fmtUSD(c.total/c.fx)} @ FX ${c.fx.toLocaleString("es-AR")}</div></div>
+        <div class="v mono">${mny(c.total)}</div><div class="s mono">${cur==="USD"?fmtARS(c.total):fmtUSD(c.total/c.fx)} @ FX ${c.fx.toLocaleString("es-AR")}</div></div>
       ${ganLive != null ? `<div class="fl-kpi" style="--fla:${ganLive>=0?"var(--flGood)":"var(--flCrit)"}"><div class="l">Ganancia clientes · MTM</div>
-        <div class="v mono ${cls(ganLive)}">${ganLive>=0?"+":""}${fmtARS(ganLive)}</div>
-        <div class="s mono">${pill(rendLive*100, fmtPct(rendLive*100))} s/capital neto${ganCorte!=null?`<br>Al corte ${corte}: <span class="${cls(ganCorte)}">${ganCorte>=0?"+":""}${fmtARS(ganCorte)}${rendCorte!=null?" ("+fmtPct(rendCorte*100)+")":""}</span>`:""}</div></div>` : ""}
+        <div class="v mono ${cls(ganLive)}">${ganLive>=0?"+":""}${mny(ganLive)}</div>
+        <div class="s mono">${pill(rendLive*100, fmtPct(rendLive*100))} s/capital neto${ganCorte!=null?`<br>Al corte ${corte}: <span class="${cls(ganCorte)}">${ganCorte>=0?"+":""}${mny(ganCorte)}${rendCorte!=null?" ("+fmtPct(rendCorte*100)+")":""}</span>`:""}</div></div>` : ""}
       <div class="fl-kpi" style="--fla:var(--flS1)"><div class="l">IOL · Argentina</div>
-        <div class="v mono">${fmtARS(c.iolTotal)}</div>
-        <div class="s mono">${(c.iolTotal/c.total*100).toFixed(1)}% del fondo · P&L pos. <span class="${cls(pnlIol)}">${pnlIol>=0?"+":""}${fmtARS(pnlIol)} (${fmtPct(costoIol?pnlIol/costoIol*100:0)})</span></div></div>
+        <div class="v mono">${mny(c.iolTotal)}</div>
+        <div class="s mono">${(c.iolTotal/c.total*100).toFixed(1)}% del fondo · P&L pos. <span class="${cls(pnlIol)}">${pnlIol>=0?"+":""}${mny(pnlIol)} (${fmtPct(costoIol?pnlIol/costoIol*100:0)})</span></div></div>
       <div class="fl-kpi" style="--fla:var(--flS3)"><div class="l">Binance · Crypto</div>
         <div class="v mono">${fmtUSD(c.binTotalUSD)}</div>
         <div class="s mono">${fmtARS(c.binTotal)} · ${(c.binTotal/c.total*100).toFixed(1)}% del fondo</div></div>
@@ -252,14 +395,68 @@ function renderAll(d, sheet, news) {
         <div class="v mono ${cls(c.upnl)}">${fmtUSD(c.upnl)}</div>
         <div class="s mono">${c.open.length} posición${c.open.length===1?"":"es"} abierta${c.open.length===1?"":"s"}</div></div>
       ${feePend ? `<div class="fl-kpi" style="--fla:var(--flS2)"><div class="l">Fee gestor pendiente</div>
-        <div class="v mono">${fmtARS(feePend)}</div>
+        <div class="v mono">${mny(feePend)}</div>
         <div class="s">10% inicial s/aportes + 2% mensual s/ganancia</div></div>` : ""}
     </div>
-    <div class="fl-sec">Distribución por bloques · real vs objetivo</div>
-    <div class="fl-grid2">
-      <div class="fl-panel" style="min-width:0">${bloquesHtml}</div>
-      <div class="fl-chart"><h4>Composición real del fondo</h4><div class="inner"><canvas id="flChSplit"></canvas></div></div>
+
+    <div class="fl-dashrow">
+      <div class="fl-panel fl-pad" style="min-width:0">
+        <h4 class="fl-h4">Evolución del valor del fondo</h4>
+        <div class="fl-evohead"><span class="big">${mny(c.total)}</span>${evoDelta!=null?pill(evoDelta, fmtPct(evoDelta) + " desde el primer cierre"):""}</div>
+        <div class="fl-evochart"><canvas id="flChEvo"></canvas></div>
+        <div class="fl-foot" style="border-top:none;padding:8px 0 0">Cierres mensuales del sheet + valuación en vivo de hoy. La curva se densifica con cada sync diario.</div>
+      </div>
+      <div class="fl-panel fl-pad" style="min-width:0">
+        <h4 class="fl-h4">Composición real del fondo</h4>
+        <div class="fl-donutwrap"><canvas id="flChSplit"></canvas>
+          <div class="fl-dcenter"><div class="big">${cur==="USD"?fmtUSD(c.total/c.fx):fmtM(c.total)}</div><div class="sm">${blocks.length} bloques</div></div></div>
+        <div class="fl-leg">${blocks.map(b => `<div class="row" style="--flc:var(${b.slot})">
+          <span class="nm"><span class="sq"></span>${b.nombre}</span>
+          <span class="pc">${(c.blk[b.key]/c.total*100).toFixed(1)}%</span></div>`).join("")}</div>
+        <div class="fl-objs">${blocks.map(b => {
+          const rp = c.blk[b.key]/c.total, dev = (rp - b.tgt) * 100;
+          return `<div class="fl-obj" style="--flc:var(${b.slot})">
+            <div class="hd"><span class="n">${b.nombre.split("/")[0].trim()} <i>· obj ${(b.tgt*100).toFixed(0)}%</i></span>
+              <span class="${cls(dev)}" style="font-weight:600;font-size:10px">${dev>=0?"▲":"▼"} ${Math.abs(dev).toFixed(1)}</span></div>
+            <div class="bar"><div class="fill" style="width:${(rp/objMax*100).toFixed(1)}%"></div>
+              <div class="tick" style="left:${(b.tgt/objMax*100).toFixed(1)}%"></div></div></div>`;
+        }).join("")}</div>
+      </div>
     </div>
+
+    <div class="fl-dashrow2">
+      <div class="fl-panel fl-pad" style="min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <h4 class="fl-h4" style="margin:0">Principales posiciones</h4>
+          <span class="fl-link" onclick="flGo('movimientos')">Ver todas →</span>
+        </div>
+        <table class="fl-mini-tbl">
+          <thead><tr><th>Activo</th><th>Bloque</th><th class="fl-num">Cant.</th><th class="fl-num">Último</th><th class="fl-num">Valor</th><th class="fl-num">P&L</th></tr></thead>
+          <tbody>${topPos.map(p => `<tr>
+            <td style="font-weight:600">${p.sim}</td>
+            <td style="color:var(--flMut)"><span class="fl-chip" style="--flc:var(${p.slot})"></span>${p.bloque.split("/")[0].trim()}</td>
+            <td class="fl-num">${p.cant}</td><td class="fl-num">${p.ult}</td>
+            <td class="fl-num" style="font-weight:600">${mny(p.val)}</td>
+            <td class="fl-num ${p.pnl!=null?cls(p.pnl):"fl-mut"}" style="font-weight:600">${p.pnl!=null?fmtPct(p.pnl):"—"}</td></tr>`).join("")}</tbody>
+        </table>
+      </div>
+      <div class="fl-panel fl-pad" style="min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h4 class="fl-h4" style="margin:0">Flujo neto mensual</h4>
+          <span class="${cls(apTot-reTot)}" style="font-weight:600;font-size:11px">${apTot-reTot>=0?"+":""}${fmtM(apTot-reTot)}</span>
+        </div>
+        ${flujo.length ? `<div class="fl-flowbars">${flujo.map(f => `<div class="fl-fbar" title="${f.label}: ${f.net>=0?"+":""}${fmtM(f.net)}"
+            style="height:${Math.max(4, Math.abs(f.net)/flMax*100).toFixed(0)}%;background:var(${f.net>=0?"--flGold":"--flS6"});opacity:${f.net>=0?".9":".75"}"></div>`).join("")}</div>
+        <div class="fl-fxlbl">${flujo.map(f => `<span>${f.label}</span>`).join("")}</div>` :
+        `<div class="fl-foot" style="border-top:none;padding:20px 0">Sin movimientos externos registrados todavía.</div>`}
+        <div class="fl-flowfoot">
+          <div><div class="l">Aportes</div><div class="v fl-pos">+${fmtM(apTot)}</div></div>
+          <div><div class="l">Salidas · fees</div><div class="v fl-neg">−${fmtM(reTot)}</div></div>
+          <div><div class="l">Flujo neto</div><div class="v" style="color:var(--flInk)">${apTot-reTot>=0?"+":""}${fmtM(apTot-reTot)}</div></div>
+        </div>
+      </div>
+    </div>
+
     <div class="fl-sec">Briefing del día · Cowork</div>
     <div class="fl-news">${newsHtml}</div></div>`;
 
@@ -403,10 +600,25 @@ function renderAll(d, sheet, news) {
   Chart.defaults.color = inkSub;
   Chart.defaults.font.family = "'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif";
   const legend = { position:"bottom", labels:{ boxWidth:10, boxHeight:10, font:{size:10}, color:inkSub, padding:12 } };
+  // donut de composición (leyenda propia en la card, centro con el total)
   chart("flChSplit", { type:"doughnut",
     data:{ labels: blocks.map(b=>b.nombre), datasets:[{ data: blocks.map(b=>c.blk[b.key]),
       backgroundColor: blockColors, borderColor:panelBg, borderWidth:2 }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend } } });
+    options:{ responsive:true, maintainAspectRatio:false, cutout:"66%", plugins:{ legend:{ display:false } } } });
+  // evolución del valor del fondo (cierres + hoy)
+  if (evoPts.length && document.getElementById("flChEvo")) {
+    chart("flChEvo", { type:"line",
+      data:{ labels: evoPts.map(p=>p.label),
+        datasets:[{ label:"Fondo", data: evoPts.map(p=>p.v), borderColor:gold,
+          backgroundColor:"rgba(176,138,62,.13)", fill:true, borderWidth:2,
+          pointRadius: evoPts.length < 20 ? 4 : 0, pointBackgroundColor:gold, tension:.3 }] },
+      options:{ responsive:true, maintainAspectRatio:false,
+        interaction:{ mode:"index", intersect:false },
+        plugins:{ legend:{ display:false } },
+        scales:{ y:{ grid:{ color:lineC }, ticks:{ color:inkSub, font:{size:10},
+                  callback:v => cur==="USD" ? "US$"+(Number(v)/1e3).toLocaleString("es-AR")+"k" : "$"+(Number(v)/1e6).toLocaleString("es-AR")+"M" } },
+                 x:{ grid:{ display:false }, ticks:{ color:inkSub, font:{size:10} } } } } });
+  }
   chart("flChBin", { type:"doughnut",
     data:{ labels:["Futuros","PnL no real.","Earn BTC","Earn USDT"],
       datasets:[{ data:[c.fut,c.upnl,c.ebtcUsd,c.eusdt].map(v=>Math.abs(v)),
@@ -515,6 +727,7 @@ window.initFondoAdmin = async function initFondoAdmin() {
   const style = document.createElement("style");
   style.textContent = CSS;
   document.head.appendChild(style);
+  installShell(); // sidebar navy (diseño 2a "Ejecutivo+")
   // tipografías del diseño (Playfair Display + IBM Plex Sans)
   if (!document.querySelector('link[href*="Playfair"]')) {
     const l = document.createElement("link");
