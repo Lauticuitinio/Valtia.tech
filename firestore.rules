@@ -81,6 +81,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── NOTICIAS PÚBLICAS (sección Noticias del sitio) ──
+    // Solo las publicadas son visibles (query con filtro estado). El admin
+    // gestiona borradores vía Admin SDK / consola.
+    match /noticias/{docId} {
+      allow read: if resource.data.estado == 'publicado' || isAdmin();
+      allow write: if isAdmin();
+    }
+
     // ── INFORMES DE RESEARCH ──
     // Los "publico" los ve cualquiera; los "clientes" requieren login.
     // Escritos por el admin / seed via Admin SDK.

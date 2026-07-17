@@ -170,18 +170,18 @@ footer{background:#040c14;padding:28px 52px;border-top:1px solid rgba(184,151,90
   <div>
     <div class="featured-wrap" id="featured-section">
       <div class="featured-label">Destacado</div>
-      <div class="featured-card" onclick="openArticle(0)">
+      <div class="featured-card" id="featured-card" onclick="openFeatured()">
         <div class="featured-img">
           <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=700&q=80&auto=format&fit=crop" alt="Mercado financiero" onerror="this.parentNode.innerHTML='<div class=featured-img-fallback style=background:linear-gradient(135deg,#0D1B2A,#1A3A5C)>🌍</div>'">
         </div>
         <div class="featured-body">
           <div>
-            <div class="featured-cats"><span class="art-cat cat-local">Mercado local</span><span class="art-cat cat-bonos">Bonos</span></div>
-            <div class="featured-title">Dólar y tasas: el mercado argentino frente a un nuevo ciclo de ajuste</div>
-            <div class="featured-excerpt">El equilibrio cambiario vuelve a estar bajo presión. Analizamos los factores macro que están moviendo el tipo de cambio implícito y qué esperar en los próximos 30 días para posiciones en renta fija local.</div>
+            <div class="featured-cats" id="feat-cats"></div>
+            <div class="featured-title" id="feat-title">Cargando análisis…</div>
+            <div class="featured-excerpt" id="feat-excerpt"></div>
           </div>
           <div>
-            <div class="featured-meta"><span>📅 30 de marzo, 2026</span><span>⏱ 5 min de lectura</span></div>
+            <div class="featured-meta" id="feat-meta"></div>
             <div class="read-more">Leer análisis →</div>
           </div>
         </div>
@@ -274,16 +274,7 @@ const BG=[
   'linear-gradient(135deg,#0d0d1a,#1a1a3e)',
 ];
 
-const articles=[
-  {id:0,cat:['local','bonos'],title:'Dólar y tasas: el mercado argentino frente a un nuevo ciclo de ajuste',excerpt:'El equilibrio cambiario vuelve a estar bajo presión. Analizamos los factores que mueven el tipo de cambio implícito.',date:'30 de marzo, 2026',read:'5 min',featured:true,content:`<p>El mercado argentino atraviesa una etapa de recalibración. La convergencia entre la tasa de política monetaria y la inflación esperada está generando movimientos en el tramo corto de la curva de rendimientos, con implicancias directas para quienes tienen posiciones en LECAPs y bonos CER.</p><h3>El tipo de cambio implícito</h3><p>El dólar MEP cerró la semana en torno a los $1.180, mientras el CCL operó con una brecha mínima respecto al financiero. Esta compresión de spreads refleja un mercado con escasa volatilidad cambiaria en el corto plazo.</p><h3>¿Qué hacer con la renta fija local?</h3><p>Para posiciones en pesos, la estrategia más conservadora sigue siendo el tramo corto: cauciones de 30 a 60 días y LECAPs con vencimiento antes de junio. El riesgo de extensión de duration en este contexto no está suficientemente compensado por el spread adicional.</p>`},
-  {id:1,cat:['wall'],title:'Geopolítica, petróleo y empleo: 5 factores que mueven Wall Street esta semana',excerpt:'Los principales índices norteamericanos operan con volatilidad ante datos macro mixtos.',date:'30 de marzo, 2026',read:'4 min',content:`<p>Wall Street cerró una semana mixta. El S&P 500 acumuló una suba del 0,8% mientras el Nasdaq retrocedió levemente ante la rotación desde tecnología hacia sectores más defensivos.</p><h3>Los 5 factores a seguir</h3><p><strong>1. NFP de marzo:</strong> El mercado laboral sigue siendo el termómetro principal de la Fed.<br><strong>2. Petróleo Brent:</strong> La tensión en Medio Oriente mantiene el crudo por encima de los USD 82.<br><strong>3. Resultados corporativos Q1:</strong> Arrancan las presentaciones de grandes bancos.<br><strong>4. Inflación PCE:</strong> El indicador favorito de la Fed se publica el viernes.<br><strong>5. Dólar index (DXY):</strong> Un dólar fuerte presiona los emergentes y los commodities.</p>`},
-  {id:2,cat:['cripto'],title:'Bitcoin consolida por encima de los USD 77.000: ¿rebote técnico o cambio de tendencia?',excerpt:'BTC recuperó el nivel clave de USD 77.000 tras semanas de presión bajista.',date:'29 de marzo, 2026',read:'4 min',content:`<p>Bitcoin cerró la semana pasada por encima de los USD 77.000, recuperando un nivel técnico relevante que había perdido a principios de marzo.</p><h3>Análisis técnico</h3><p>En el gráfico de 4 horas, el precio realizó un CHoCH alcista desde el soporte de USD 75.800. El siguiente nivel de resistencia relevante se encuentra entre USD 79.000 y USD 80.500.</p><h3>Fundamentos del mercado</h3><p>El interés abierto en futuros sigue elevado, con una concentración importante de posiciones cortas entre USD 78.000 y USD 80.700. Un movimiento que barra esa liquidez podría acelerar el upside de corto plazo.</p>`},
-  {id:3,cat:['local'],title:'Inflación y consumo: el desafío de sostener la actividad económica en 2026',excerpt:'La inflación continúa afectando el consumo real. Datos del INDEC y sus implicancias.',date:'29 de marzo, 2026',read:'3 min',content:`<p>Los últimos datos del INDEC confirman que la desaceleración inflacionaria continúa, aunque a un ritmo más lento de lo proyectado. La inflación núcleo sigue siendo el componente más resistente.</p><h3>Impacto en el consumo</h3><p>Las ventas minoristas cayeron un 3,2% interanual en febrero. Los sectores más afectados son indumentaria y electrónica, mientras que alimentos y bebidas muestran cierta recuperación.</p>`},
-  {id:4,cat:['bonos','local'],title:'Bonos argentinos: señales de recuperación en medio de la incertidumbre fiscal',excerpt:'AL30 y GD30 acumulan ganancias en dólares. El mercado descuenta mejora fiscal.',date:'28 de marzo, 2026',read:'4 min',content:`<p>Los bonos soberanos argentinos en dólares cerraron la semana con ganancias moderadas. El AL30 operó en torno a USD 68,5, acumulando una suba del 12% en lo que va del año.</p><h3>¿Qué descuenta el mercado?</h3><p>El mercado está descontando una mejora gradual en las cuentas fiscales, sostenida por el superávit primario. Sin embargo, la prima de riesgo sigue siendo elevada respecto a comparables regionales.</p>`},
-  {id:5,cat:['wall','cripto'],title:'Semiconductores e inteligencia artificial: el sector que sigue liderando 2026',excerpt:'NVDA, AMD y el ETF SMH marcan nuevos máximos relativos.',date:'27 de marzo, 2026',read:'3 min',content:`<p>El sector de semiconductores sigue siendo el gran ganador de este ciclo alcista. NVIDIA cotiza cerca de sus máximos históricos, impulsada por la demanda sostenida de chips para centros de datos de inteligencia artificial.</p><h3>El ETF SMH como proxy</h3><p>Para quienes quieren exposición al sector sin concentrarse en una sola acción, el SMH (VanEck Semiconductor ETF) es la alternativa más eficiente. Acumula una suba del 18% en lo que va del año.</p>`},
-  {id:6,cat:['local','bonos'],title:'Vaca Muerta y Vista Energy: el activo argentino que mira afuera',excerpt:'VIST sigue siendo el CEDEAR con mejor correlación al crecimiento de Vaca Muerta.',date:'26 de marzo, 2026',read:'3 min',content:`<p>Vista Energy (VIST) se consolida como uno de los CEDEARs más interesantes del mercado local. La empresa opera en Vaca Muerta con foco en petróleo no convencional.</p><h3>Valuación actual</h3><p>A los precios actuales, VIST cotiza a un múltiplo EV/EBITDA de aproximadamente 4,5x, que resulta atractivo comparado con pares internacionales que cotizan entre 6x y 8x.</p>`},
-  {id:7,cat:['cripto'],title:'Ethereum y el debate sobre el staking: oportunidad de yield en contexto volátil',excerpt:'ETH consolida por encima de USD 2.400. El staking ofrece un 4-6% APY en dólares.',date:'25 de marzo, 2026',read:'3 min',content:`<p>Ethereum opera en un rango de consolidación entre USD 2.400 y USD 2.700. A diferencia de Bitcoin, ETH tiene una propuesta de valor adicional: el staking nativo que permite generar un yield del 4-6% anual.</p><h3>Opciones de staking</h3><p>Las principales alternativas son: staking directo en la red (requiere 32 ETH), liquid staking via Lido (stETH, sin mínimo), y plataformas centralizadas como Coinbase o Kraken con rendimientos del 3-5% APY.</p>`},
-];
+let articles=[]; // se cargan desde Firestore (coleccion noticias)
 
 let visibleCount=6,currentCat='todos',currentSearch='';
 function getCatClass(c){return{local:'cat-local',wall:'cat-wall',cripto:'cat-cripto',bonos:'cat-bonos'}[c]||''}
@@ -364,6 +355,51 @@ async function fetchDolarSidebar(){
 
 renderGrid();fetchSidebar();fetchDolarSidebar();
 setInterval(fetchSidebar,60000);setInterval(fetchDolarSidebar,300000);
+</script>
+<script type="module">
+/* ── Noticias desde Firestore (coleccion noticias, solo publicadas) ── */
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = getApps().length ? getApp() : initializeApp({
+  apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
+  authDomain: 'valtia-analytics.firebaseapp.com',
+  projectId: 'valtia-analytics',
+});
+const db = getFirestore(app);
+const MES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const fdate = s => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s||"")); return m ? `${Number(m[3])} de ${MES[Number(m[2])-1]}, ${m[1]}` : String(s||""); };
+
+window.openFeatured = () => { if (window.__featId != null) openArticle(window.__featId); };
+
+try {
+  const snap = await getDocs(query(collection(db, "noticias"), where("estado", "==", "publicado")));
+  const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+  articles = docs.map((d, i) => ({
+    id: i,
+    cat: (d.categorias && d.categorias.length) ? d.categorias : ["local"],
+    title: d.titulo, excerpt: d.resumen || "", date: fdate(d.fecha),
+    read: Math.max(2, Math.round(String(d.contenido || "").split(/\s+/).length / 200)) + " min",
+    featured: !!d.destacado, content: d.contenido || "" }));
+  if (articles.length && !articles.some(a => a.featured)) articles[0].featured = true;
+  const feat = articles.find(a => a.featured);
+  if (feat) {
+    window.__featId = feat.id;
+    document.getElementById("feat-cats").innerHTML = feat.cat.map(c => `<span class="art-cat ${getCatClass(c)}">${getCatLabel(c)}</span>`).join("");
+    document.getElementById("feat-title").textContent = feat.title;
+    document.getElementById("feat-excerpt").textContent = feat.excerpt;
+    document.getElementById("feat-meta").innerHTML = `<span>📅 ${feat.date}</span><span>⏱ ${feat.read} de lectura</span>`;
+  } else {
+    document.getElementById("featured-section").style.display = "none";
+  }
+  renderGrid();
+} catch (e) {
+  document.getElementById("featured-section").style.display = "none";
+  const nr = document.getElementById("no-results");
+  nr.textContent = "Estamos preparando nuevos análisis. Volvé pronto.";
+  nr.style.display = "block";
+}
 </script>
 <script type="module" src="nav-auth.js?v=2"></script>
 </body>
