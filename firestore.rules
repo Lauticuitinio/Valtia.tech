@@ -73,6 +73,14 @@ service cloud.firestore {
       match /valores/{v}    { allow read: if true; allow write: if isAdmin(); }
     }
 
+    // ── SEÑALES Y RÉGIMEN DE MERCADO (sistema de rotación) ──
+    // Calculado a diario por fondo_sync.py. Privado del gestor por ahora
+    // (a futuro: producto PRO con visibilidad por plan).
+    match /mercado/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     // ── NOTICIAS DEL FONDO ──
     // Briefings diarios generados por la tarea de Cowork, copiados por
     // fondo_sync.py via Admin SDK. Solo el admin las ve.

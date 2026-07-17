@@ -1,4 +1,4 @@
-// fondo-live.js — Fondo Lautaro integrado en las secciones nativas del portal.
+﻿// fondo-live.js — Fondo Lautaro integrado en las secciones nativas del portal.
 // Diseño: estética de Lauti (crema / navy / dorado, Playfair Display + IBM Plex
 // Sans) en tema claro, con variante para el modo oscuro del sitio.
 // Modelo contable v2: fee inicial 10% s/aportes, fee 2% mensual s/ganancia,
@@ -44,6 +44,7 @@ const CSS = `
 .fl-pill.p { color:var(--flGood); background:rgba(31,122,77,.1); }
 .fl-pill.n { color:var(--flCrit); background:rgba(178,58,58,.09); }
 .fl-pill.m { color:var(--flInk2); background:var(--flPanel2); }
+.fl-pill.w { color:#C06A3A; background:rgba(192,106,58,.12); }
 .fl-pos { color:var(--flGood) !important; } .fl-neg { color:var(--flCrit) !important; } .fl-mut { color:var(--flMut) !important; }
 .fl-sec { display:flex; align-items:center; gap:10px; margin:24px 0 10px; font-size:10.5px; font-weight:700; letter-spacing:.28em; text-transform:uppercase; color:var(--flGoldDeep); }
 .fl-sec::after { content:''; flex:1; height:1px; background:var(--flLine2); }
@@ -188,7 +189,7 @@ const fmtM = n => "$" + (n/1e6).toLocaleString("es-AR", {maximumFractionDigits:1
 const curCur = () => localStorage.getItem("fl-cur") === "USD" ? "USD" : "ARS";
 window.flSetCur = cur => {
   localStorage.setItem("fl-cur", cur);
-  if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news);
+  if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news, lastPayload.mercado);
 };
 // cambiar de pestaña por código (para "Ver todas →")
 window.flGo = tab => {
@@ -298,7 +299,7 @@ window.flResizeCharts = () => {
   });
 };
 
-function renderAll(d, sheet, news) {
+function renderAll(d, sheet, news, mercado) {
   const c = compute(d);
   const sh = sheet || {};
   const clientes = sh.clientes || [];
@@ -374,6 +375,9 @@ function renderAll(d, sheet, news) {
       </div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span class="fl-status"><span class="fl-dot${fresh?"":" warn"}"></span>${fresh ? "Telemetría al día" : "Datos desactualizados"}</span>
+        ${mercado && mercado.regimen ? `<span class="fl-status" style="cursor:pointer" onclick="flGo('senales')" title="Ver señales del sistema">
+          <span class="fl-dot" style="background:${mercado.regimen.estado==="RISK ON"?"#4ade80":mercado.regimen.estado==="NEUTRAL"?"#facc15":"#f87171"};box-shadow:none"></span>
+          ${mercado.regimen.estado} · cash ${(mercado.regimen.cash_recomendado*100).toFixed(0)}%</span>` : ""}
         <span class="fl-cur">
           <button class="${cur==="ARS"?"on":""}" onclick="flSetCur('ARS')">ARS</button>
           <button class="${cur==="USD"?"on":""}" onclick="flSetCur('USD')">USD</button>
@@ -535,6 +539,65 @@ function renderAll(d, sheet, news) {
       <thead><tr><th>Fecha</th><th>Tipo</th><th>Detalle</th><th class="fl-num">ARS</th><th class="fl-num">USD</th></tr></thead>
       <tbody>${movRows}</tbody></table>
       <div class="fl-foot">Registro de la hoja MOVIMIENTOS del sheet (últimos ${movs.length}).</div></div>` : ""}</div>`;
+
+  /* ── SEÑALES: sistema dinámico de rotación ── */
+  const tabSen = document.getElementById("tab-senales");
+  if (tabSen && mercado && mercado.senales) {
+    const rg = mercado.regimen || {};
+    const senCls = s => s.includes("FUERTE") || s.includes("🟡") ? "p" : s.includes("MANTENER") ? "m" : s.includes("REVISAR") ? "w" : "n";
+    const dotRg = rg.estado === "RISK ON" ? "#4ade80" : rg.estado === "NEUTRAL" ? "#facc15" : "#f87171";
+    const senRows = mercado.senales.map(s => `<tr>
+      <td class="fl-num" style="color:var(--flMut)">${s.ranking}</td>
+      <td><b>${s.tk}</b> <span style="color:var(--flMut);font-size:11px">${s.nombre||""}</span><div><span class="fl-tag">${s.cedear||""}</span></div></td>
+      <td style="color:var(--flInk2)">${s.sector||""}</td>
+      <td style="text-align:center">${s.en_cartera ? "✓" : "—"}</td>
+      <td class="fl-num">${s.score_tec ?? "—"}</td>
+      <td class="fl-num">${s.score_fund ?? "—"}</td>
+      <td class="fl-num" style="font-weight:700;font-size:14px">${s.score ?? "—"}</td>
+      <td><span class="fl-pill ${senCls(s.senal||"")}">${s.senal||""}</span></td>
+      <td style="color:var(--flInk2);font-size:11.5px">${s.rotar_hacia||"—"}</td>
+      <td class="fl-num ${s.mom3m!=null?cls(s.mom3m*100):""}">${s.mom3m!=null?fmtPct(s.mom3m*100):"—"}</td></tr>`).join("");
+    tabSen.innerHTML = `<div class="flx">
+      <div class="fl-head">
+        <div>
+          <div class="portal-title" style="margin-bottom:0">Señales</div>
+          <div class="fl-meta" style="margin:6px 0 0">Sistema dinámico de rotación · recalculado a diario · ${String(mercado.actualizado||"").slice(0,10)}</div>
+        </div>
+      </div>
+      <div style="height:14px"></div>
+      <div class="fl-dashrow2" style="margin-bottom:14px">
+        <div class="fl-panel fl-pad">
+          <h4 class="fl-h4">Régimen de mercado</h4>
+          <div style="display:flex;align-items:center;gap:10px;margin:8px 0 10px">
+            <span style="width:12px;height:12px;border-radius:50%;background:${dotRg}"></span>
+            <span style="font:500 26px 'Playfair Display',serif;color:var(--flInk)">${rg.estado||"—"}</span>
+          </div>
+          <div style="font-size:12px;color:var(--flInk2);margin-bottom:10px">Cash recomendado: <b style="color:var(--flInk)">${rg.cash_recomendado!=null?(rg.cash_recomendado*100).toFixed(0)+"%":"—"}</b></div>
+          ${(rg.indicadores||[]).map(i => `<div style="display:flex;gap:8px;font-size:12px;color:var(--flInk2);margin-bottom:5px">
+            <span class="${i.ok?"fl-pos":"fl-neg"}" style="font-weight:700">${i.ok?"✓":"✗"}</span>
+            <span><b style="color:var(--flInk)">${i.nombre}</b> · ${i.detalle||""}</span></div>`).join("")}
+        </div>
+        <div class="fl-panel fl-pad">
+          <h4 class="fl-h4">Escala de señales</h4>
+          <div style="display:flex;flex-direction:column;gap:7px;margin-top:8px;font-size:12px;color:var(--flInk2)">
+            <div><span class="fl-pill p">≥ 75</span> Comprar fuerte</div>
+            <div><span class="fl-pill p">60–74</span> Comprar</div>
+            <div><span class="fl-pill m">45–59</span> Mantener</div>
+            <div><span class="fl-pill w">30–44</span> Revisar</div>
+            <div><span class="fl-pill n">&lt; 30</span> Reducir / salir</div>
+          </div>
+        </div>
+      </div>
+      <div class="fl-panel"><table style="min-width:820px">
+        <thead><tr><th class="fl-num">#</th><th>Activo</th><th>Sector</th><th style="text-align:center">Cartera</th>
+          <th class="fl-num">Técnico</th><th class="fl-num">Fundam.</th><th class="fl-num">Score</th><th>Señal</th><th>Rotar hacia</th><th class="fl-num">Mom 3M</th></tr></thead>
+        <tbody>${senRows}</tbody></table>
+        <div class="fl-foot">Metodología del Fondo_Tracker: score compuesto = técnico 55% (momentum 3M 35%, tendencia EMA50/200 25%, fuerza relativa vs SPY 20%, momentum 6M 10%, volatilidad inversa 10%) + fundamental 45% (PEG 30%, upside al price target 25%, margen operativo 20%, rating de analistas 15%, FCF yield 10%). Scores en percentiles dentro del universo. Datos: Yahoo Finance vía el sync diario. Uso interno — no constituye recomendación de inversión.</div>
+      </div></div>`;
+  } else if (tabSen) {
+    tabSen.innerHTML = `<div class="flx"><div class="portal-title">Señales</div>
+      <div class="fl-strip">Sin datos del sistema de rotación todavía — corré el sync (run_sync.bat) para calcular el primer ranking.</div></div>`;
+  }
 
   /* ── ADMIN: clientes del fondo + registro de eventos ── */
   if (clientes.length) {
@@ -707,19 +770,22 @@ async function fetchAll() {
   if (DEV) {
     const j = async f => { const r = await fetch(f); return r.ok ? await r.json() : null; };
     return { sync: await j("dev-data/sync_latest.json"), sheet: await j("dev-data/sheet_meta.json"),
+      mercado: await j("dev-data/mercado.json"),
       news: [{ titulo:"Briefing demo", fecha:"09/07/2026", fuente:"cowork", contenido:"Briefing de ejemplo (modo dev)." }] };
   }
   const db = getFirestore(getApp());
   _db = db;
-  const [syncSnap, sheetSnap, newsSnap] = await Promise.all([
+  const [syncSnap, sheetSnap, newsSnap, mercadoSnap] = await Promise.all([
     getDoc(doc(db, "fondoSync", "latest")),
     getDoc(doc(db, "fondoMeta", "sheet")),
     getDocs(query(collection(db, "noticiasFondo"), orderBy("fecha", "desc"), limit(5))).catch(() => null),
+    getDoc(doc(db, "mercado", "latest")).catch(() => null),
   ]);
   return {
     sync: syncSnap.exists() ? JSON.parse(syncSnap.data().json) : null,
     sheet: sheetSnap.exists() ? JSON.parse(sheetSnap.data().json) : null,
     news: newsSnap ? newsSnap.docs.map(d => d.data()) : [],
+    mercado: mercadoSnap && mercadoSnap.exists() ? JSON.parse(mercadoSnap.data().json) : null,
   };
 }
 
@@ -739,16 +805,16 @@ window.initFondoAdmin = async function initFondoAdmin() {
     document.head.appendChild(l);
   }
   try {
-    const { sync, sheet, news } = await fetchAll();
+    const { sync, sheet, news, mercado } = await fetchAll();
     if (!sync) {
       document.getElementById("tab-dashboard").insertAdjacentHTML("afterbegin",
         `<div class="flx"><div class="fl-strip"><b>Sin snapshot</b> <code>fondoSync/latest</code> en Firestore — corré fondo_sync.py o esperá la corrida de las 9:00.</div></div>`);
       return;
     }
-    lastPayload = { sync, sheet, news };
-    renderAll(sync, sheet, news);
+    lastPayload = { sync, sheet, news, mercado };
+    renderAll(sync, sheet, news, mercado);
     // el toggle claro/oscuro del portal cambia data-theme: re-renderizar con los tokens nuevos
-    new MutationObserver(() => { if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news); })
+    new MutationObserver(() => { if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news, lastPayload.mercado); })
       .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   } catch (e) {
     document.getElementById("tab-dashboard").insertAdjacentHTML("afterbegin",

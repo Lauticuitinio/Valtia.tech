@@ -883,6 +883,7 @@ function switchFondo(perfil){
     <a href="#" onclick="portalTab(event,'informes')">Informes</a>
     <a href="#" onclick="portalTab(event,'herramientas-p')">Herramientas</a>
 
+    <a href="#" id="senales-tab" onclick="portalTab(event,'senales')" style="display:none">Señales</a>
     <a href="#" id="admin-tab" onclick="portalTab(event,'admin')" style="display:none">Admin ⚙️</a>
     <a href="#" id="analisis-tab" onclick="portalTab(event,'analisis')" style="display:none">Análisis 📊</a>
     <span style="flex:1"></span>
@@ -929,6 +930,7 @@ function switchFondo(perfil){
       <div class="portal-title">Panel de administrador</div>
       <p style="color:var(--sub);font-size:14px">Cargando datos...</p>
     </div>
+    <div id="tab-senales" style="display:none"></div>
     <div id="tab-analisis" style="display:none">
       <div class="portal-title">Análisis de portfolio</div>
       <p style="color:var(--sub);font-size:14px;margin-bottom:20px">Análisis fundamental completo de los 19 activos del playbook — cartera, watchlist y ranking por upside.</p>
@@ -1038,7 +1040,7 @@ function portalTab(e,tab){
   e.preventDefault();
   document.querySelectorAll('.portal-nav a').forEach(a=>a.classList.remove('active'));
   e.target.classList.add('active');
-  ['dashboard','rendimientos','movimientos','informes','herramientas-p','admin','analisis'].forEach(t=>{
+  ['dashboard','rendimientos','movimientos','informes','herramientas-p','admin','analisis','senales'].forEach(t=>{
     const el=document.getElementById('tab-'+t);
     if(el)el.style.display=t===tab?'block':'none';
   });
@@ -1362,6 +1364,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     if (adminTab) adminTab.style.display = 'none';
     const analisisTab = document.getElementById('analisis-tab');
     if (analisisTab) analisisTab.style.display = 'none';
+    const senalesTab = document.getElementById('senales-tab');
+    if (senalesTab) senalesTab.style.display = 'none';
 
   }
 
@@ -1381,6 +1385,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     if (adminTab) adminTab.style.display = 'inline';
     const analisisTab = document.getElementById('analisis-tab');
     if (analisisTab) analisisTab.style.display = 'inline';
+    const senalesTab = document.getElementById('senales-tab');
+    if (senalesTab) senalesTab.style.display = 'inline';
     // poblar las secciones del portal con el fondo en vivo (fondo-live.js)
     if (window.initFondoAdmin) window.initFondoAdmin();
     else window.__fondoAdminPending = true;
@@ -1429,7 +1435,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Expose to global scope for onclick handlers
   window.showHome = showHome;
 </script>
-<script type="module" src="fondo-live.js?v=8"></script>
+<script type="module" src="fondo-live.js?v=9"></script>
 
 </body>
 </html>
