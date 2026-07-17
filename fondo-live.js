@@ -88,27 +88,35 @@ const CSS = `
 .fl-btn:disabled { opacity:.55; cursor:default; }
 .fl-ev-msg { padding:0 16px 12px; font-size:12px; line-height:1.6; }
 
-/* ── shell 2a: sidebar navy (diseño "Ejecutivo+") ── */
-.fl-layout { display:flex; align-items:stretch; gap:0; }
-.fl-layout .portal-nav { flex-direction:column; align-items:stretch; width:216px; flex:none;
-  height:auto !important; gap:2px !important; border-bottom:none !important;
-  background:#14213D !important; border:none; border-radius:14px; padding:18px 12px !important;
-  position:sticky; top:76px; align-self:flex-start; max-height:calc(100vh - 96px); overflow:auto; }
+/* ── shell 2a: MODO APP — el panel toma toda la pantalla ── */
+body.fl-app-on .ticker-bar { display:none !important; }
+body.fl-app-on nav:not(.portal-nav) { display:none !important; }
+body.fl-app-on #portal-view { padding:0 !important; margin:0 !important; }
+.fl-layout { display:flex; align-items:stretch; gap:0; min-height:100vh; }
+.fl-layout .portal-nav { flex-direction:column; align-items:stretch; width:216px; flex:none; box-sizing:border-box;
+  height:100vh !important; gap:2px !important; border-bottom:none !important;
+  background:#14213D !important; border:none; border-radius:0; padding:18px 12px !important;
+  position:sticky; top:0; align-self:flex-start; max-height:100vh; overflow:auto; }
 .fl-layout .portal-nav a { display:block !important; padding:10px 12px !important; margin:0 0 2px !important; border-radius:8px;
   color:rgba(255,255,255,.62) !important; font:500 11px 'IBM Plex Sans',sans-serif !important; letter-spacing:.12em !important;
   text-transform:uppercase; text-decoration:none; border-bottom:none !important; }
 .fl-layout .portal-nav a:hover { background:rgba(255,255,255,.06); color:#fff !important; }
 .fl-layout .portal-nav a.active { background:rgba(176,138,62,.18); color:#E8CE96 !important; border-left:2px solid #B08A3E; font-weight:600 !important; }
-.fl-layout .portal-nav #portal-user-name { color:rgba(255,255,255,.85); font:600 11px 'IBM Plex Sans',sans-serif; padding:12px 12px 2px; margin:0 !important; border-top:1px solid rgba(255,255,255,.1); }
-.fl-layout .portal-nav button { color:#B08A3E !important; text-align:left; padding:4px 12px 0 !important; font:600 10px 'IBM Plex Sans',sans-serif !important; letter-spacing:.12em !important; }
+.fl-layout .portal-nav #portal-user-name { color:rgba(255,255,255,.85); font:600 11px 'IBM Plex Sans',sans-serif; padding:14px 12px 3px; margin:0 !important; border-top:1px solid rgba(255,255,255,.12); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fl-layout .portal-nav #portal-user-name::after { content:'Gestor · Admin'; display:block; font:400 9px 'IBM Plex Sans',sans-serif; color:rgba(255,255,255,.45); letter-spacing:.06em; margin-top:2px; }
+.fl-layout .portal-nav button { color:#B08A3E !important; text-align:left; padding:6px 12px 2px !important; font:600 10px 'IBM Plex Sans',sans-serif !important; letter-spacing:.12em !important; }
+.fl-exit { display:block; padding:9px 12px; margin-top:6px !important; border-top:1px solid rgba(255,255,255,.12);
+  color:rgba(255,255,255,.5) !important; font:500 10px 'IBM Plex Sans',sans-serif !important;
+  letter-spacing:.12em !important; text-transform:uppercase; text-decoration:none; cursor:pointer; }
+.fl-exit:hover { color:#fff !important; background:none !important; }
 .fl-sbbrand { display:flex; align-items:center; gap:10px; padding:2px 10px 20px; }
 .fl-sbbrand .lg { width:30px; height:30px; border:1.5px solid #B08A3E; border-radius:6px; display:flex; align-items:center; justify-content:center; flex:none; }
 .fl-sbbrand .nm { font:500 15px 'Playfair Display',serif; letter-spacing:.18em; color:#fff; }
 .fl-sbbrand .sb { font:500 7.5px 'IBM Plex Sans',sans-serif; letter-spacing:.3em; color:#B08A3E; }
 .fl-layout .portal-content { flex:1; min-width:0; padding-left:22px; }
 @media (max-width:920px) {
-  .fl-layout { flex-direction:column; }
-  .fl-layout .portal-nav { width:100%; flex-direction:row; flex-wrap:wrap; position:static; max-height:none; align-items:center; gap:2px; }
+  .fl-layout { flex-direction:column; min-height:0; }
+  .fl-layout .portal-nav { width:100%; flex-direction:row; flex-wrap:wrap; position:static; height:auto !important; max-height:none; align-items:center; gap:2px; border-radius:0; }
   .fl-sbbrand { padding:2px 10px; }
   .fl-layout .portal-nav a { display:inline-block !important; }
   .fl-layout .portal-content { padding:18px 0 0; }
@@ -221,7 +229,7 @@ function flujoMensual(movs) {
 
 // shell 2a: convierte la nav del portal en el sidebar navy del diseño
 function installShell() {
-  if (document.querySelector(".fl-layout")) return;
+  if (document.querySelector(".fl-layout")) { document.body.classList.add("fl-app-on"); return; }
   const nav = document.querySelector(".portal-nav");
   const content = document.querySelector(".portal-content");
   if (!nav || !content || nav.parentElement !== content.parentElement) return;
@@ -233,7 +241,21 @@ function installShell() {
   nav.insertAdjacentHTML("afterbegin", `<div class="fl-sbbrand">
     <div class="lg"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M1 12 L5 6 L8 9 L12 3 L15 6" fill="none" stroke="#B08A3E" stroke-width="1.5"/></svg></div>
     <div><div class="nm">VALTIA</div><div class="sb">ANALYTICS</div></div></div>`);
+  // salida del modo app: vuelve al sitio público restaurando nav + ticker
+  nav.insertAdjacentHTML("beforeend",
+    `<a class="fl-exit" onclick="flExitApp(event)">← Volver al sitio</a>`);
+  document.body.classList.add("fl-app-on");
+  // si vuelve al panel desde el sitio (Mi Panel / chip), reactivar el modo app
+  const og = window.goPortal;
+  window.goPortal = e => { if (og) og(e); document.body.classList.add("fl-app-on"); };
 }
+
+window.flExitApp = e => {
+  if (e) e.preventDefault();
+  document.body.classList.remove("fl-app-on");
+  if (window.showHome) window.showHome();
+  window.scrollTo(0, 0);
+};
 
 function compute(d) {
   const iol = d.iol || {}, ec = iol.estado_cuenta || {}, pa = iol.portafolio_argentina || {};
