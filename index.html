@@ -1007,14 +1007,29 @@ function goPortal(e){
 function updateNavUser(user,isAdmin){
   const cta=document.getElementById('nav-cta'),box=document.getElementById('nav-user');
   if(!cta||!box)return;
+  // links comerciales: se ocultan cuando ya sos cliente (foco en el uso)
+  const mkt=[...document.querySelectorAll('.nav-links a')].filter(a=>{
+    const h=a.getAttribute('href')||'';
+    return h.includes('#servicios')||h.includes('#planes')||h.includes('#contacto');
+  });
   if(user){
-    cta.style.display='none';box.style.display='block';
+    box.style.display='block';
+    cta.style.display='';
+    cta.textContent='Mi Panel';
+    cta.setAttribute('onclick','goPortal(event)');
+    mkt.forEach(a=>a.style.display='none');
     const name=user.displayName||user.email.split('@')[0];
     document.getElementById('nav-username').textContent=name.split(' ')[0];
     document.getElementById('nav-avatar').textContent=(name[0]||'U').toUpperCase();
     document.getElementById('nav-user-mail').textContent=user.email;
     document.getElementById('nav-user-portal').textContent=isAdmin?'Panel de gestión':'Mi portal';
-  }else{cta.style.display='';box.style.display='none';}
+  }else{
+    cta.style.display='';
+    cta.textContent='Acceso Cliente';
+    cta.setAttribute('onclick','openLogin(event)');
+    box.style.display='none';
+    mkt.forEach(a=>a.style.display='');
+  }
 }
 // loginWithGoogle, loginWithEmail, logout, showHome handled by Firebase module
 
@@ -1414,7 +1429,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Expose to global scope for onclick handlers
   window.showHome = showHome;
 </script>
-<script type="module" src="fondo-live.js?v=7"></script>
+<script type="module" src="fondo-live.js?v=8"></script>
 
 </body>
 </html>

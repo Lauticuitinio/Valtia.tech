@@ -90,6 +90,7 @@ const CSS = `
 /* ── shell 2a: sidebar navy (diseño "Ejecutivo+") ── */
 .fl-layout { display:flex; align-items:stretch; gap:0; }
 .fl-layout .portal-nav { flex-direction:column; align-items:stretch; width:216px; flex:none;
+  height:auto !important; gap:2px !important; border-bottom:none !important;
   background:#14213D !important; border:none; border-radius:14px; padding:18px 12px !important;
   position:sticky; top:76px; align-self:flex-start; max-height:calc(100vh - 96px); overflow:auto; }
 .fl-layout .portal-nav a { display:block !important; padding:10px 12px !important; margin:0 0 2px !important; border-radius:8px;
@@ -143,8 +144,10 @@ const CSS = `
 .fl-mini-tbl { width:100%; border-collapse:collapse; font-size:11.5px; min-width:0 !important; }
 .fl-mini-tbl th { padding:7px 10px; background:var(--flPanel2); border-bottom:none; border-radius:0; font-size:9px; }
 .fl-mini-tbl td { padding:9px 10px; border-bottom:1px solid var(--flLine); }
-.fl-flowbars { display:flex; align-items:flex-end; gap:6px; height:112px; margin-top:8px; }
-.fl-fbar { flex:1; border-radius:3px 3px 0 0; min-height:3px; }
+.fl-flowbars { display:flex; align-items:flex-end; justify-content:center; gap:8px; height:112px; margin-top:8px; }
+.fl-fbar { flex:1; max-width:46px; border-radius:3px 3px 0 0; min-height:3px; }
+.fl-fxlbl span { flex:1; max-width:46px; text-align:center; }
+.fl-fxlbl { justify-content:center; gap:8px; }
 .fl-fxlbl { display:flex; justify-content:space-between; margin-top:5px; font-size:8.5px; color:var(--flMut); }
 .fl-flowfoot { display:flex; justify-content:space-between; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid var(--flLine); }
 .fl-flowfoot .l { font-size:8.5px; letter-spacing:.12em; color:var(--flMut); font-weight:700; text-transform:uppercase; }
@@ -450,8 +453,8 @@ function renderAll(d, sheet, news) {
         <div class="fl-fxlbl">${flujo.map(f => `<span>${f.label}</span>`).join("")}</div>` :
         `<div class="fl-foot" style="border-top:none;padding:20px 0">Sin movimientos externos registrados todavía.</div>`}
         <div class="fl-flowfoot">
-          <div><div class="l">Aportes</div><div class="v fl-pos">+${fmtM(apTot)}</div></div>
-          <div><div class="l">Salidas · fees</div><div class="v fl-neg">−${fmtM(reTot)}</div></div>
+          <div><div class="l">Aportes</div><div class="v ${apTot?"fl-pos":"fl-mut"}">${apTot?"+"+fmtM(apTot):"$0"}</div></div>
+          <div><div class="l">Salidas · fees</div><div class="v ${reTot?"fl-neg":"fl-mut"}">${reTot?"−"+fmtM(reTot):"$0"}</div></div>
           <div><div class="l">Flujo neto</div><div class="v" style="color:var(--flInk)">${apTot-reTot>=0?"+":""}${fmtM(apTot-reTot)}</div></div>
         </div>
       </div>
