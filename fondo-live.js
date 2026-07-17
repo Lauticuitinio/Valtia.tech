@@ -87,12 +87,37 @@ const CSS = `
 .fl-btn:hover { background:var(--flGoldDeep); }
 .fl-btn:disabled { opacity:.55; cursor:default; }
 .fl-ev-msg { padding:0 16px 12px; font-size:12px; line-height:1.6; }
+/* lector de informes dentro del portal */
+.fl-reader { background:var(--flPanel); border:1px solid var(--flLine); border-radius:14px; padding:clamp(20px,3.5vw,42px); box-shadow:var(--flShadow); }
+.fl-reader .rh { border-bottom:2px solid var(--flGold); padding-bottom:18px; margin-bottom:6px; }
+.fl-reader .rh h1 { font:500 clamp(24px,3.2vw,34px)/1.2 'Playfair Display',serif; color:var(--flInk); }
+.fl-reader .rh .meta { font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--flMut); margin-top:9px; font-weight:600; }
+.fl-reader h2 { font:500 24px 'Playfair Display',serif; margin:38px 0 12px; padding-top:22px; border-top:1px solid var(--flLine); color:var(--flInk); }
+.fl-reader h3 { font-size:15px; font-weight:600; margin:22px 0 8px; color:var(--flInk); }
+.fl-reader p { margin:10px 0; font-size:14px; line-height:1.85; color:var(--flInk2); }
+.fl-reader p strong, .fl-reader li strong, .fl-reader td strong { color:var(--flInk); font-weight:600; }
+.fl-reader ul { margin:10px 0 10px 22px; }
+.fl-reader li { margin:7px 0; font-size:13.5px; line-height:1.8; color:var(--flInk2); }
+.fl-reader .kicker { color:var(--flMut); font-style:italic; }
+.fl-reader .tag { display:inline-block; font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:#fff; background:var(--flGold); border-radius:4px; padding:3px 9px; margin:16px 0 4px; font-weight:700; }
+.fl-reader .tag.bull { background:var(--flGood); }
+.fl-reader .tag.bear { background:var(--flCrit); }
+.fl-reader .tag.neutral { background:#C08A1E; }
+.fl-reader .fecha { font-size:10.5px; color:var(--flMut); text-transform:uppercase; letter-spacing:.08em; }
+.fl-reader table { width:100%; border-collapse:collapse; margin:14px 0; font-size:12.5px; display:block; overflow-x:auto; }
+.fl-reader th { text-align:left; background:var(--flPanel2); color:var(--flInk); padding:9px 12px; font-weight:700; font-size:10px; letter-spacing:.1em; text-transform:uppercase; border-bottom:1px solid var(--flLine2); }
+.fl-reader td { padding:9px 12px; border-bottom:1px solid var(--flLine); color:var(--flInk2); vertical-align:top; line-height:1.7; min-width:120px; }
+.fl-reader .card { background:var(--flPanel2); border:1px solid var(--flLine); border-left:3px solid var(--flGold); border-radius:8px; padding:14px 18px; margin:16px 0; font-size:13px; line-height:1.8; color:var(--flInk2); }
+.fl-reader .card.warn { border-left-color:#C08A1E; }
+.fl-reader .card.risk { border-left-color:var(--flCrit); }
+.fl-reader .card.ok { border-left-color:var(--flGood); }
+.fl-reader .disclaimer { margin-top:40px; padding:16px 20px; background:var(--flPanel2); border-radius:8px; font-size:11px; color:var(--flMut); line-height:1.7; }
+.fl-back { display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--flGoldDeep); cursor:pointer; margin-bottom:14px; }
 
-/* ── shell 2a: MODO APP — el panel toma toda la pantalla ── */
-body.fl-app-on .ticker-bar { display:none !important; }
+/* ── shell 2a: MODO APP — el panel toma la pantalla, la barra de precios queda ── */
 body.fl-app-on nav:not(.portal-nav) { display:none !important; }
 body.fl-app-on #portal-view { padding:0 !important; margin:0 !important; }
-.fl-layout { display:flex; align-items:stretch; gap:0; min-height:100vh; }
+.fl-layout { display:flex; align-items:stretch; gap:0; min-height:calc(100vh - 34px); }
 .fl-layout .portal-nav { flex-direction:column; align-items:stretch; width:216px; flex:none; box-sizing:border-box;
   height:100vh !important; gap:2px !important; border-bottom:none !important;
   background:#14213D !important; border:none; border-radius:0; padding:18px 12px !important;
@@ -621,25 +646,9 @@ function renderAll(d, sheet, news, mercado, informes) {
       <div class="fl-strip">Sin datos del sistema de rotación todavía — corré el sync (run_sync.bat) para calcular el primer ranking.</div></div>`;
   }
 
-  /* ── INFORMES: lista para el admin ── */
-  const tabInf = document.getElementById("tab-informes");
-  if (tabInf && informes && informes.length) {
-    const infSorted = informes.slice().sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
-    tabInf.innerHTML = `<div class="flx">
-      <div class="portal-title">Informes</div>
-      <div class="fl-meta">Research publicado · se lee en pestaña nueva · gestioná el contenido desde Firestore (colección informes)</div>
-      ${infSorted.map(i => `<div class="fl-panel fl-pad" style="margin-bottom:12px">
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-          <span class="fl-tag">${i.tipo || "Informe"}</span><span class="fl-tag">${String(i.fecha||"").slice(0,10)}</span>
-          <span class="fl-tag">${i.visibilidad === "publico" ? "Público" : "Clientes"}</span></div>
-        <div style="font:500 21px 'Playfair Display',serif;color:var(--flInk);margin-bottom:6px">${i.titulo}</div>
-        <div style="font-size:12.5px;color:var(--flInk2);line-height:1.7;margin-bottom:10px">${i.resumen || ""}</div>
-        <a href="informes.html?i=${i.slug || i.id}" target="_blank" rel="noopener" style="font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--flGoldDeep);text-decoration:none">Leer informe →</a>
-      </div>`).join("")}</div>`;
-  } else if (tabInf && informes) {
-    tabInf.innerHTML = `<div class="flx"><div class="portal-title">Informes</div>
-      <div class="fl-strip">Sin informes publicados todavía.</div></div>`;
-  }
+  /* ── INFORMES: lista + lector, todo dentro del portal ── */
+  _informes = informes || [];
+  flRenderInformesList();
 
   /* ── ADMIN: clientes del fondo + registro de eventos ── */
   if (clientes.length) {
@@ -749,6 +758,58 @@ function renderAll(d, sheet, news, mercado, informes) {
   const movLink = [...document.querySelectorAll(".portal-nav a")].find(a => a.textContent.trim() === "Movimientos");
   if (movLink) movLink.textContent = "Posiciones";
 }
+
+/* ── informes: lista + lector dentro del portal ── */
+let _informes = [];
+
+window.flRenderInformesList = function() {
+  const tabInf = document.getElementById("tab-informes");
+  if (!tabInf) return;
+  if (!_informes.length) {
+    tabInf.innerHTML = `<div class="flx"><div class="portal-title">Informes</div>
+      <div class="fl-strip">Sin informes publicados todavía.</div></div>`;
+    return;
+  }
+  const infSorted = _informes.slice().sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+  tabInf.innerHTML = `<div class="flx">
+    <div class="portal-title">Informes</div>
+    <div class="fl-meta">Research publicado · se lee acá mismo · gestioná el contenido desde Firestore (colección informes)</div>
+    ${infSorted.map(i => `<div class="fl-panel fl-pad" style="margin-bottom:12px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+        <span class="fl-tag">${i.tipo || "Informe"}</span><span class="fl-tag">${String(i.fecha||"").slice(0,10)}</span>
+        <span class="fl-tag">${i.visibilidad === "publico" ? "Público" : "Clientes"}</span></div>
+      <div style="font:500 21px 'Playfair Display',serif;color:var(--flInk);margin-bottom:6px">${i.titulo}</div>
+      <div style="font-size:12.5px;color:var(--flInk2);line-height:1.7;margin-bottom:10px">${i.resumen || ""}</div>
+      <span class="fl-back" style="margin:0" onclick="flLeerInforme('${i.id}')">Leer informe →</span>
+    </div>`).join("")}</div>`;
+};
+
+window.flLeerInforme = async function(id) {
+  const tabInf = document.getElementById("tab-informes");
+  if (!tabInf || !_db) return;
+  tabInf.innerHTML = `<div class="flx"><div class="fl-strip" style="display:block">Cargando informe…</div></div>`;
+  try {
+    const snap = await getDoc(doc(_db, "informes", id));
+    if (!snap.exists()) throw new Error("no existe");
+    const d = snap.data();
+    const meta = _informes.find(x => x.id === id) || {};
+    tabInf.innerHTML = `<div class="flx">
+      <span class="fl-back" onclick="flRenderInformesList()">← Todos los informes</span>
+      <div class="fl-reader">
+        <div class="rh">
+          <div style="display:flex;gap:8px;margin-bottom:10px"><span class="fl-tag">${d.tipo || meta.tipo || "Informe"}</span>${d.categorias ? `<span class="fl-tag">${d.categorias}</span>` : ""}</div>
+          <h1>${d.titulo}</h1>
+          <div class="meta">${String(d.fecha||"").slice(0,10)} · ${d.autor || "Valtia Analytics"}</div>
+        </div>
+        ${d.contenido_html || "<p>Sin contenido.</p>"}
+      </div></div>`;
+    tabInf.scrollIntoView({ block: "start" });
+  } catch (e) {
+    tabInf.innerHTML = `<div class="flx">
+      <span class="fl-back" onclick="flRenderInformesList()">← Todos los informes</span>
+      <div class="fl-strip" style="display:block">No se pudo cargar el informe (${String(e).slice(0,120)}).</div></div>`;
+  }
+};
 
 /* ── eventos: registrar y listar aportes/retiros ── */
 let _db = null;

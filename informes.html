@@ -467,8 +467,8 @@ async function catalogo(user) {
       <h3>${d.titulo}</h3>
       <p>${d.resumen || ""}</p>
       <div class="fsr-foot">
-        <span class="lock">${d.visibilidad === "publico" ? "Acceso libre" : "Exclusivo clientes"}</span>
-        <a class="go" href="informes.html?i=${d.slug || d.id}" target="_blank" rel="noopener">Leer informe →</a>
+        <span class="lock">${d.visibilidad === "publico" ? "Acceso libre" : (user ? "✓ Acceso habilitado" : "🔒 Exclusivo clientes")}</span>
+        <a class="go" href="informes.html?i=${d.slug || d.id}">Leer informe →</a>
       </div>
     </div>`).join("");
   const html = `<div class="section-label">Registros de análisis</div>

@@ -32,6 +32,8 @@ onAuthStateChanged(getAuth(app), user => {
       }
     }
     mkt.forEach(a => { a.style.display = 'none'; });
+    // con sesión activa se abren los candados PRO (a futuro: gating por plan pago)
+    document.querySelectorAll('.pro-overlay').forEach(o => { o.style.display = 'none'; });
   } else {
     if (cta) {
       cta.textContent = 'Acceso Cliente';
@@ -40,5 +42,6 @@ onAuthStateChanged(getAuth(app), user => {
     const extra = document.getElementById('nav-mipanel');
     if (extra) extra.remove();
     mkt.forEach(a => { a.style.display = ''; });
+    document.querySelectorAll('.pro-overlay').forEach(o => { o.style.display = ''; });
   }
 });
