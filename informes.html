@@ -388,6 +388,129 @@ function sendMsg(){
   },1200);
 }
 </script>
+<script type="module">
+/* ── Registros de análisis (Firestore) + lector integrado ── */
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, getDocs, doc, getDoc, query, where }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = getApps().length ? getApp() : initializeApp({
+  apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
+  authDomain: 'valtia-analytics.firebaseapp.com',
+  projectId: 'valtia-analytics',
+});
+const db = getFirestore(app);
+
+const css = document.createElement('style');
+css.textContent = `
+.fsr-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px 26px;margin-bottom:14px;transition:border-color .2s}
+.fsr-card:hover{border-color:var(--gold)}
+.fsr-top{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.fsr-badge{font-family:'Jost',sans-serif;font-size:9.5px;font-weight:600;letter-spacing:.12em;background:var(--gold);color:#0D1B2A;border-radius:4px;padding:3px 9px;text-transform:uppercase}
+.fsr-tag{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:.12em;border:1px solid var(--border);border-radius:4px;padding:2.5px 8px;color:var(--sub);text-transform:uppercase;font-weight:600}
+.fsr-card h3{font-family:'Cormorant Garamond',serif;font-size:25px;font-weight:500;margin-bottom:8px;color:var(--text)}
+.fsr-card p{font-size:13.5px;color:var(--sub);line-height:1.7;font-family:'Jost',sans-serif}
+.fsr-foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.fsr-foot .go{color:var(--gold);font-weight:600;text-decoration:none}
+.fsr-foot .lock{color:var(--muted)}
+.fsr-state{border:1px dashed var(--border);border-radius:14px;text-align:center;padding:44px 20px;color:var(--sub);line-height:1.9;font-family:'Jost',sans-serif}
+.fsr-state a{color:var(--gold)}
+.fsr-crumb{font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:22px}
+.fsr-crumb a{color:var(--sub);text-decoration:none}
+.fsr-crumb a:hover{color:var(--gold)}
+.fsr-reader{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:clamp(22px,4vw,46px)}
+.fsr-rhead{border-bottom:2px solid var(--gold);padding-bottom:20px;margin-bottom:6px}
+.fsr-rhead h1{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,40px);font-weight:500;line-height:1.15;color:var(--text)}
+.fsr-rhead .meta{font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:10px}
+.fsr-reader h2{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;margin:42px 0 14px;padding-top:26px;border-top:1px solid var(--border);color:var(--text)}
+.fsr-reader h3{font-family:'Jost',sans-serif;font-size:15.5px;font-weight:600;margin:24px 0 8px;color:var(--text)}
+.fsr-reader p{margin:11px 0;font-size:14.5px;line-height:1.85;color:var(--sub);font-family:'Jost',sans-serif}
+.fsr-reader p strong,.fsr-reader li strong{color:var(--text);font-weight:600}
+.fsr-reader ul{margin:10px 0 10px 22px}
+.fsr-reader li{margin:7px 0;font-size:14px;line-height:1.8;color:var(--sub);font-family:'Jost',sans-serif}
+.fsr-reader .kicker{color:var(--muted);font-style:italic}
+.fsr-reader .tag{display:inline-block;font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#0D1B2A;background:var(--gold2);border-radius:4px;padding:3px 9px;margin:18px 0 4px;font-weight:600}
+.fsr-reader .tag.bull{background:#2E7D32;color:#fff}
+.fsr-reader .tag.bear{background:#C62828;color:#fff}
+.fsr-reader .tag.neutral{background:#b7791f;color:#fff}
+.fsr-reader .fecha{font-family:'Jost',sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.fsr-reader table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;font-family:'Jost',sans-serif;display:block;overflow-x:auto}
+.fsr-reader th{text-align:left;background:var(--bg3);color:var(--text);padding:10px 12px;font-weight:600;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.fsr-reader td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--sub);vertical-align:top;line-height:1.7;min-width:130px}
+.fsr-reader td strong{color:var(--text)}
+.fsr-reader .card{background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:8px;padding:16px 20px;margin:18px 0;font-size:13.5px;line-height:1.8;color:var(--sub);font-family:'Jost',sans-serif}
+.fsr-reader .card.warn{border-left-color:#b7791f}
+.fsr-reader .card.risk{border-left-color:#C62828}
+.fsr-reader .card.ok{border-left-color:#2E7D32}
+.fsr-reader .card strong{color:var(--text)}
+.fsr-reader .disclaimer{margin-top:44px;padding:18px 22px;background:var(--bg3);border-radius:8px;font-size:11.5px;color:var(--muted);line-height:1.7;font-family:'Jost',sans-serif}`;
+document.head.appendChild(css);
+
+const slug = new URLSearchParams(location.search).get('i');
+const content = document.querySelector('.content');
+const fdate = v => v && v.toDate ? v.toDate().toISOString().slice(0,10) : String(v||"").slice(0,10);
+
+async function catalogo(user) {
+  let docs = [];
+  try {
+    const q = user ? collection(db, "informes")
+                   : query(collection(db, "informes"), where("visibilidad", "==", "publico"));
+    docs = (await getDocs(q)).docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) {}
+  docs.sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+  const cards = docs.map(d => `
+    <div class="fsr-card">
+      <div class="fsr-top"><span class="fsr-badge">${d.tipo || "Informe"}</span>
+        <span class="fsr-tag">${fdate(d.fecha)}</span>
+        ${d.categorias ? `<span class="fsr-tag">${d.categorias}</span>` : ""}</div>
+      <h3>${d.titulo}</h3>
+      <p>${d.resumen || ""}</p>
+      <div class="fsr-foot">
+        <span class="lock">${d.visibilidad === "publico" ? "Acceso libre" : "Exclusivo clientes"}</span>
+        <a class="go" href="informes.html?i=${d.slug || d.id}" target="_blank" rel="noopener">Leer informe →</a>
+      </div>
+    </div>`).join("");
+  const html = `<div class="section-label">Registros de análisis</div>
+    ${cards || `<div class="fsr-state">Los registros de análisis completos son exclusivos para clientes.<br>
+      <a href="index.html">Ingresá con tu cuenta</a> para leerlos.</div>`}
+    <div class="gold-divider"></div>`;
+  const holder = document.createElement("div");
+  holder.id = "fsr-holder";
+  holder.innerHTML = html;
+  const old = document.getElementById("fsr-holder");
+  if (old) old.replaceWith(holder); else content.prepend(holder);
+}
+
+async function lector() {
+  try {
+    const snap = await getDoc(doc(db, "informes", slug));
+    if (!snap.exists()) throw new Error("no existe");
+    const d = snap.data();
+    document.title = d.titulo + " — Valtia Analytics";
+    content.innerHTML = `
+      <div class="fsr-crumb"><a href="informes.html">← Todos los informes</a></div>
+      <div class="fsr-reader">
+        <div class="fsr-rhead">
+          <div style="display:flex;gap:9px;margin-bottom:12px"><span class="fsr-badge">${d.tipo || "Informe"}</span>${d.categorias ? `<span class="fsr-tag">${d.categorias}</span>` : ""}</div>
+          <h1>${d.titulo}</h1>
+          <div class="meta">${fdate(d.fecha)} · ${d.autor || "Valtia Analytics"}</div>
+        </div>
+        ${d.contenido_html || "<p>Sin contenido.</p>"}
+      </div>`;
+  } catch (e) {
+    content.innerHTML = `
+      <div class="fsr-crumb"><a href="informes.html">← Todos los informes</a></div>
+      <div class="fsr-state">Este informe es exclusivo para clientes de Valtia.<br>
+        <a href="index.html">Ingresá con tu cuenta</a> para leerlo — o conocé los <a href="index.html#planes">planes</a>.</div>`;
+  }
+}
+
+onAuthStateChanged(getAuth(app), user => {
+  if (slug) lector();
+  else catalogo(user);
+});
+</script>
 <script type="module" src="nav-auth.js?v=1"></script>
 </body>
 </html>

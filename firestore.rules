@@ -81,6 +81,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── INFORMES DE RESEARCH ──
+    // Los "publico" los ve cualquiera; los "clientes" requieren login.
+    // Escritos por el admin / seed via Admin SDK.
+    match /informes/{docId} {
+      allow read: if resource.data.visibilidad == 'publico' || isAuthenticated();
+      allow write: if isAdmin();
+    }
+
     // ── NOTICIAS DEL FONDO ──
     // Briefings diarios generados por la tarea de Cowork, copiados por
     // fondo_sync.py via Admin SDK. Solo el admin las ve.

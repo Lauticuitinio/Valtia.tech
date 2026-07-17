@@ -189,7 +189,7 @@ const fmtM = n => "$" + (n/1e6).toLocaleString("es-AR", {maximumFractionDigits:1
 const curCur = () => localStorage.getItem("fl-cur") === "USD" ? "USD" : "ARS";
 window.flSetCur = cur => {
   localStorage.setItem("fl-cur", cur);
-  if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news, lastPayload.mercado);
+  if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news, lastPayload.mercado, lastPayload.informes);
 };
 // cambiar de pestaña por código (para "Ver todas →")
 window.flGo = tab => {
@@ -299,7 +299,7 @@ window.flResizeCharts = () => {
   });
 };
 
-function renderAll(d, sheet, news, mercado) {
+function renderAll(d, sheet, news, mercado, informes) {
   const c = compute(d);
   const sh = sheet || {};
   const clientes = sh.clientes || [];
@@ -599,6 +599,26 @@ function renderAll(d, sheet, news, mercado) {
       <div class="fl-strip">Sin datos del sistema de rotación todavía — corré el sync (run_sync.bat) para calcular el primer ranking.</div></div>`;
   }
 
+  /* ── INFORMES: lista para el admin ── */
+  const tabInf = document.getElementById("tab-informes");
+  if (tabInf && informes && informes.length) {
+    const infSorted = informes.slice().sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+    tabInf.innerHTML = `<div class="flx">
+      <div class="portal-title">Informes</div>
+      <div class="fl-meta">Research publicado · se lee en pestaña nueva · gestioná el contenido desde Firestore (colección informes)</div>
+      ${infSorted.map(i => `<div class="fl-panel fl-pad" style="margin-bottom:12px">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+          <span class="fl-tag">${i.tipo || "Informe"}</span><span class="fl-tag">${String(i.fecha||"").slice(0,10)}</span>
+          <span class="fl-tag">${i.visibilidad === "publico" ? "Público" : "Clientes"}</span></div>
+        <div style="font:500 21px 'Playfair Display',serif;color:var(--flInk);margin-bottom:6px">${i.titulo}</div>
+        <div style="font-size:12.5px;color:var(--flInk2);line-height:1.7;margin-bottom:10px">${i.resumen || ""}</div>
+        <a href="informes.html?i=${i.slug || i.id}" target="_blank" rel="noopener" style="font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--flGoldDeep);text-decoration:none">Leer informe →</a>
+      </div>`).join("")}</div>`;
+  } else if (tabInf && informes) {
+    tabInf.innerHTML = `<div class="flx"><div class="portal-title">Informes</div>
+      <div class="fl-strip">Sin informes publicados todavía.</div></div>`;
+  }
+
   /* ── ADMIN: clientes del fondo + registro de eventos ── */
   if (clientes.length) {
     const cliRows = clientes.map(x => {
@@ -770,22 +790,26 @@ async function fetchAll() {
   if (DEV) {
     const j = async f => { const r = await fetch(f); return r.ok ? await r.json() : null; };
     return { sync: await j("dev-data/sync_latest.json"), sheet: await j("dev-data/sheet_meta.json"),
-      mercado: await j("dev-data/mercado.json"),
+      mercado: await j("dev-data/mercado.json"), informes: [],
       news: [{ titulo:"Briefing demo", fecha:"09/07/2026", fuente:"cowork", contenido:"Briefing de ejemplo (modo dev)." }] };
   }
   const db = getFirestore(getApp());
   _db = db;
-  const [syncSnap, sheetSnap, newsSnap, mercadoSnap] = await Promise.all([
+  const [syncSnap, sheetSnap, newsSnap, mercadoSnap, informesSnap] = await Promise.all([
     getDoc(doc(db, "fondoSync", "latest")),
     getDoc(doc(db, "fondoMeta", "sheet")),
     getDocs(query(collection(db, "noticiasFondo"), orderBy("fecha", "desc"), limit(5))).catch(() => null),
     getDoc(doc(db, "mercado", "latest")).catch(() => null),
+    getDocs(collection(db, "informes")).catch(() => null),
   ]);
   return {
     sync: syncSnap.exists() ? JSON.parse(syncSnap.data().json) : null,
     sheet: sheetSnap.exists() ? JSON.parse(sheetSnap.data().json) : null,
     news: newsSnap ? newsSnap.docs.map(d => d.data()) : [],
     mercado: mercadoSnap && mercadoSnap.exists() ? JSON.parse(mercadoSnap.data().json) : null,
+    informes: informesSnap ? informesSnap.docs.map(d => ({ id: d.id, titulo: d.data().titulo,
+      fecha: d.data().fecha, tipo: d.data().tipo, resumen: d.data().resumen,
+      slug: d.data().slug, visibilidad: d.data().visibilidad })) : [],
   };
 }
 
@@ -805,16 +829,16 @@ window.initFondoAdmin = async function initFondoAdmin() {
     document.head.appendChild(l);
   }
   try {
-    const { sync, sheet, news, mercado } = await fetchAll();
+    const { sync, sheet, news, mercado, informes } = await fetchAll();
     if (!sync) {
       document.getElementById("tab-dashboard").insertAdjacentHTML("afterbegin",
         `<div class="flx"><div class="fl-strip"><b>Sin snapshot</b> <code>fondoSync/latest</code> en Firestore — corré fondo_sync.py o esperá la corrida de las 9:00.</div></div>`);
       return;
     }
-    lastPayload = { sync, sheet, news, mercado };
-    renderAll(sync, sheet, news, mercado);
+    lastPayload = { sync, sheet, news, mercado, informes };
+    renderAll(sync, sheet, news, mercado, informes);
     // el toggle claro/oscuro del portal cambia data-theme: re-renderizar con los tokens nuevos
-    new MutationObserver(() => { if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news, lastPayload.mercado); })
+    new MutationObserver(() => { if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news, lastPayload.mercado, lastPayload.informes); })
       .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   } catch (e) {
     document.getElementById("tab-dashboard").insertAdjacentHTML("afterbegin",
