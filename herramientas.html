@@ -193,12 +193,12 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
 <!-- TOOL TABS -->
 <div class="tools-nav">
   <button class="tool-tab active" onclick="switchTool('heatmap',this)">Mapa de calor <span class="badge-f">GRATIS</span></button>
-  <button class="tool-tab" onclick="switchTool('cauciones',this)">Calc. cauciones <span class="badge-f">GRATIS</span></button>
-  <button class="tool-tab" onclick="switchTool('dolar',this)">Dólar histórico <span class="badge-f">GRATIS</span></button>
-  <button class="tool-tab" onclick="switchTool('bonos',this)">Bonos y letras <span class="badge-p">PRO</span></button>
   <button class="tool-tab" onclick="switchTool('acciones',this)">Acciones ARG/EEUU <span class="badge-p">PRO</span></button>
-  <button class="tool-tab" onclick="switchTool('calendario',this)">Calendario económico <span class="badge-f">GRATIS</span></button>
+  <button class="tool-tab" onclick="switchTool('bonos',this)">Bonos soberanos <span class="badge-p">PRO</span></button>
   <button class="tool-tab" onclick="switchTool('ratios',this)">Ratios CEDEARs <span class="badge-p">PRO</span></button>
+  <button class="tool-tab" onclick="switchTool('calendario',this)">Calendario económico <span class="badge-f">GRATIS</span></button>
+  <button class="tool-tab" onclick="switchTool('dolar',this)">Dólar histórico <span class="badge-f">GRATIS</span></button>
+  <button class="tool-tab" onclick="switchTool('cauciones',this)">Calc. cauciones <span class="badge-f">GRATIS</span></button>
 </div>
 
 <!-- MAPA DE CALOR -->
@@ -302,50 +302,40 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
 
 <!-- BONOS Y LETRAS PRO -->
 <div class="tool-content" id="tool-bonos">
-  <div class="tool-title">Bonos soberanos y letras</div>
-  <p class="tool-desc">AL30, GD30, LECAPs y principales instrumentos de renta fija argentina con TIR, vencimiento y precio actualizado.</p>
+  <div class="tool-title">Bonos soberanos en dólares</div>
+  <p class="tool-desc">La curva soberana argentina con precios en vivo de TradingView, y la guía para leerla de cara al ciclo electoral.</p>
   <div style="position:relative">
-    <!-- Preview visible (3 rows) -->
+    <!-- Preview visible: 3 bonos en vivo -->
     <div class="widget-box">
-      <div class="widget-header"><span class="widget-title">Bonos soberanos en USD</span><span class="widget-source">Precios orientativos · Actualización diaria</span></div>
-      <table class="bonos-table">
-        <thead><tr><th>Ticker</th><th>Nombre</th><th>Jurisdicción</th><th>TIR estimada</th><th>Precio USD</th><th>Cupón</th><th>Vto.</th><th>Señal</th></tr></thead>
-        <tbody>
-          <tr><td><strong>AL30</strong></td><td>Bono Soberano 2030</td><td>🇦🇷 Local</td><td class="up">11.8%</td><td>~$68</td><td>Semestral</td><td>Jul 2030</td><td><span class="tag-hold">HOLD</span></td></tr>
-          <tr><td><strong>GD30</strong></td><td>Global 2030</td><td>🇺🇸 NY</td><td class="up">10.9%</td><td>~$71</td><td>Semestral</td><td>Jul 2030</td><td><span class="tag-buy">COMPRA</span></td></tr>
-          <tr><td><strong>AE38</strong></td><td>Bono Soberano 2038</td><td>🇦🇷 Local</td><td class="up">13.2%</td><td>~$55</td><td>Semestral</td><td>Ene 2038</td><td><span class="tag-buy">COMPRA</span></td></tr>
-        </tbody>
-      </table>
+      <div class="widget-header"><span class="widget-title">Referencias de la curva</span><span class="widget-source">TradingView · BYMA · Tiempo real</span></div>
+      <div class="tradingview-widget-container">
+        <div class="tradingview-widget-container__widget"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>{"width":"100%","height":260,"symbolsGroups":[{"name":"Soberanos USD","symbols":[{"name":"BCBA:AL30","displayName":"AL30 — Bonar 2030 (ley local)"},{"name":"BCBA:GD30","displayName":"GD30 — Global 2030 (ley NY)"},{"name":"BCBA:AE38","displayName":"AE38 — Bonar 2038 (ley local)"}]}],"showSymbolLogo":false,"colorTheme":"dark","isTransparent":false,"locale":"es"}</script>
+      </div>
     </div>
-    <!-- PRO LOCK -->
+    <!-- PRO: curva completa + guía -->
     <div style="position:relative">
       <div class="preview-blur">
         <div class="widget-box" style="margin-top:0">
-          <div class="widget-header"><span class="widget-title">LECAPs — Letras del Tesoro</span><span class="widget-source">Tasas vigentes</span></div>
-          <table class="bonos-table">
-            <thead><tr><th>Ticker</th><th>Vencimiento</th><th>Días</th><th>Precio</th><th>TNA</th><th>TEM</th><th>TEA</th></tr></thead>
-            <tbody>
-              <tr><td>T30J6</td><td>30/06/2026</td><td>32</td><td>$140</td><td>37.5%</td><td>3.18%</td><td>44.6%</td></tr>
-              <tr><td>S31L6</td><td>31/07/2026</td><td>63</td><td>$115</td><td>14.3%</td><td>1.18%</td><td>15.1%</td></tr>
-              <tr><td>S31G6</td><td>31/08/2026</td><td>94</td><td>$121</td><td>19.8%</td><td>1.63%</td><td>21.3%</td></tr>
-            </tbody>
-          </table>
+          <div class="widget-header"><span class="widget-title">Curva completa — ley local vs ley Nueva York</span><span class="widget-source">TradingView · BYMA · Tiempo real</span></div>
+          <div class="tradingview-widget-container">
+            <div class="tradingview-widget-container__widget"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>{"width":"100%","height":440,"symbolsGroups":[{"name":"Ley local (Bonares)","symbols":[{"name":"BCBA:AL29","displayName":"AL29 — Bonar 2029"},{"name":"BCBA:AL30","displayName":"AL30 — Bonar 2030"},{"name":"BCBA:AL35","displayName":"AL35 — Bonar 2035"},{"name":"BCBA:AE38","displayName":"AE38 — Bonar 2038"},{"name":"BCBA:AL41","displayName":"AL41 — Bonar 2041"}]},{"name":"Ley Nueva York (Globales)","symbols":[{"name":"BCBA:GD29","displayName":"GD29 — Global 2029"},{"name":"BCBA:GD30","displayName":"GD30 — Global 2030"},{"name":"BCBA:GD35","displayName":"GD35 — Global 2035"},{"name":"BCBA:GD38","displayName":"GD38 — Global 2038"},{"name":"BCBA:GD41","displayName":"GD41 — Global 2041"},{"name":"BCBA:GD46","displayName":"GD46 — Global 2046"}]}],"showSymbolLogo":false,"colorTheme":"dark","isTransparent":false,"locale":"es"}</script>
+          </div>
         </div>
         <div class="widget-box" style="margin-top:16px">
-          <div class="widget-header"><span class="widget-title">Cauciones bursátiles — Tasas vigentes</span></div>
-          <table class="bonos-table">
-            <thead><tr><th>Plazo</th><th>Vencimiento</th><th>Tasa</th><th>TNA equiv.</th></tr></thead>
-            <tbody>
-              <tr><td>3 días</td><td>01/06/2026</td><td>11.20%</td><td>~1.36%</td></tr>
-              <tr><td>7 días</td><td>05/06/2026</td><td>10.00%</td><td>~0.19%</td></tr>
-            </tbody>
-          </table>
+          <div class="widget-header"><span class="widget-title">Cómo leer la curva — guía Valtia</span></div>
+          <div style="padding:18px 20px;font-size:13px;line-height:1.8;color:var(--sub)">
+            <p style="margin-bottom:10px"><strong style="color:var(--text)">El eje no es solo la duración: es el calendario electoral.</strong> Los bonos que amortizan antes o durante 2027 (AL29, AL30, GD29, GD30) cobran la mayor parte de su flujo antes del evento político. Los largos (AL35, AE38, GD35 en adelante) concentran el flujo después — más torque si el riesgo país comprime, más golpe si no.</p>
+            <p style="margin-bottom:10px"><strong style="color:var(--text)">Ley local vs ley Nueva York:</strong> a igual vencimiento, el Global (ley NY) cotiza con premio por la protección jurídica; el Bonar (ley local) paga más rendimiento. El spread entre ambos es el precio del paraguas legal.</p>
+            <p><strong style="color:var(--text)">El tramo medio como punto dulce:</strong> los 2029/2030 combinan carry razonable con devolución de capital pre-electoral. El análisis completo de posicionamiento está en los informes para clientes.</p>
+          </div>
         </div>
       </div>
       <div class="pro-overlay">
         <div class="pro-lock-icon">🔒</div>
         <h4>Contenido PRO</h4>
-        <p>Accedé a LECAPs, cauciones actualizadas, bonos CER y análisis completo con tu suscripción.</p>
+        <p>Curva soberana completa en vivo (ley local y ley NY) y la guía Valtia para leerla.</p>
         <a href="index.html#planes" class="btn">Ver planes →</a>
       </div>
     </div>
@@ -409,15 +399,15 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
   <p class="tool-desc">Cuántas acciones equivale cada CEDEAR. Indispensable para comparar precios con el mercado exterior.</p>
   <div style="position:relative">
     <div class="widget-box">
-      <div class="widget-header"><span class="widget-title">CEDEARs de acciones — Ratios</span><span class="widget-source">Actualización semanal</span></div>
+      <div class="widget-header"><span class="widget-title">CEDEARs de acciones — Ratios</span><span class="widget-source">Referencia · Confirmá el ratio vigente con tu broker</span></div>
       <table class="ratios-table">
         <thead><tr><th>CEDEAR</th><th>Empresa</th><th>Ratio</th><th>Equivalencia</th><th>Sector</th></tr></thead>
         <tbody>
-          <tr><td><span class="ticker-badge">AAPL</span></td><td>Apple Inc.</td><td>10:1</td><td>10 CEDEAR = 1 acción</td><td>Tecnología</td></tr>
-          <tr><td><span class="ticker-badge">MSFT</span></td><td>Microsoft</td><td>10:1</td><td>10 CEDEAR = 1 acción</td><td>Tecnología</td></tr>
-          <tr><td><span class="ticker-badge">GOOGL</span></td><td>Alphabet</td><td>10:1</td><td>10 CEDEAR = 1 acción</td><td>Tecnología</td></tr>
-          <tr><td><span class="ticker-badge">META</span></td><td>Meta Platforms</td><td>5:1</td><td>5 CEDEAR = 1 acción</td><td>Tecnología</td></tr>
-          <tr><td><span class="ticker-badge">NVDA</span></td><td>NVIDIA</td><td>10:1</td><td>10 CEDEAR = 1 acción</td><td>Semiconductores</td></tr>
+          <tr><td><span class="ticker-badge">AAPL</span></td><td>Apple Inc.</td><td>20:1</td><td>20 CEDEAR = 1 acción</td><td>Tecnología</td></tr>
+          <tr><td><span class="ticker-badge">MSFT</span></td><td>Microsoft</td><td>30:1</td><td>30 CEDEAR = 1 acción</td><td>Tecnología</td></tr>
+          <tr><td><span class="ticker-badge">GOOGL</span></td><td>Alphabet</td><td>58:1</td><td>58 CEDEAR = 1 acción</td><td>Tecnología</td></tr>
+          <tr><td><span class="ticker-badge">NVDA</span></td><td>NVIDIA</td><td>24:1</td><td>24 CEDEAR = 1 acción</td><td>Semiconductores</td></tr>
+          <tr><td><span class="ticker-badge">KO</span></td><td>Coca-Cola</td><td>5:1</td><td>5 CEDEAR = 1 acción</td><td>Consumo</td></tr>
         </tbody>
       </table>
     </div>
@@ -428,10 +418,10 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
           <table class="ratios-table">
             <thead><tr><th>CEDEAR</th><th>Empresa</th><th>Ratio</th><th>Equivalencia</th><th>Sector</th></tr></thead>
             <tbody>
-              <tr><td><span class="ticker-badge">TSLA</span></td><td>Tesla</td><td>10:1</td><td>10 CEDEAR = 1 acción</td><td>Automotriz/EV</td></tr>
-              <tr><td><span class="ticker-badge">MELI</span></td><td>MercadoLibre</td><td>20:1</td><td>20 CEDEAR = 1 acción</td><td>eCommerce LatAm</td></tr>
+              <tr><td><span class="ticker-badge">TSLA</span></td><td>Tesla</td><td>15:1</td><td>15 CEDEAR = 1 acción</td><td>Automotriz/EV</td></tr>
+              <tr><td><span class="ticker-badge">MELI</span></td><td>MercadoLibre</td><td>120:1</td><td>120 CEDEAR = 1 acción</td><td>eCommerce LatAm</td></tr>
+              <tr><td><span class="ticker-badge">META</span></td><td>Meta Platforms</td><td>24:1</td><td>24 CEDEAR = 1 acción</td><td>Tecnología</td></tr>
               <tr><td><span class="ticker-badge">SPY</span></td><td>SPDR S&P 500 ETF</td><td>20:1</td><td>20 CEDEAR = 1 unidad</td><td>ETF Índice</td></tr>
-              <tr><td><span class="ticker-badge">SMH</span></td><td>VanEck Semiconductor</td><td>50:1</td><td>50 CEDEAR = 1 unidad</td><td>ETF Semiconductores</td></tr>
             </tbody>
           </table>
         </div>
@@ -606,6 +596,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   setInterval(fetchDolarBar,300000);
 });
 </script>
-<script type="module" src="nav-auth.js?v=2"></script>
+<script type="module" src="nav-auth.js?v=3"></script>
 </body>
 </html>

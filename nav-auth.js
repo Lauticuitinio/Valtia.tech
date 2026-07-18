@@ -34,6 +34,10 @@ onAuthStateChanged(getAuth(app), user => {
     mkt.forEach(a => { a.style.display = 'none'; });
     // con sesión activa se abren los candados PRO (a futuro: gating por plan pago)
     document.querySelectorAll('.pro-overlay').forEach(o => { o.style.display = 'none'; });
+    document.querySelectorAll('.preview-blur').forEach(b => {
+      b.style.filter = 'none'; b.style.pointerEvents = ''; b.style.userSelect = '';
+    });
+    document.querySelectorAll('.badge-p').forEach(b => { b.textContent = 'PRO ✓'; });
   } else {
     if (cta) {
       cta.textContent = 'Acceso Cliente';
@@ -43,5 +47,9 @@ onAuthStateChanged(getAuth(app), user => {
     if (extra) extra.remove();
     mkt.forEach(a => { a.style.display = ''; });
     document.querySelectorAll('.pro-overlay').forEach(o => { o.style.display = ''; });
+    document.querySelectorAll('.preview-blur').forEach(b => {
+      b.style.filter = ''; b.style.pointerEvents = ''; b.style.userSelect = '';
+    });
+    document.querySelectorAll('.badge-p').forEach(b => { b.textContent = 'PRO'; });
   }
 });
