@@ -83,7 +83,7 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .dolar-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--sub);cursor:pointer;transition:opacity .2s}
 .dolar-legend-item:hover{opacity:.75}
 .dolar-dot{width:10px;height:10px;border-radius:50%}
-#dolarChart{width:100%;height:340px}
+.dolar-canvas-box{position:relative;height:340px}
 .dolar-current{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:16px}
 .dolar-card{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;text-align:center}
 .dolar-card-name{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
@@ -207,51 +207,21 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
   <p class="tool-desc">Visualizá en tiempo real qué sectores y activos están subiendo o bajando. Verde = sube, rojo = baja.</p>
   <div class="sector-tabs">
     <button class="sector-tab active" onclick="switchSector('sp500',this)">S&P 500 — Sectores</button>
+    <button class="sector-tab" onclick="switchSector('nasdaq',this)">Nasdaq 100</button>
     <button class="sector-tab" onclick="switchSector('arg',this)">Mercado argentino</button>
     <button class="sector-tab" onclick="switchSector('cripto',this)">Cripto</button>
     <button class="sector-tab" onclick="switchSector('etf',this)">ETFs</button>
-    <button class="sector-tab" onclick="switchSector('latam',this)">LATAM</button>
   </div>
-  <div id="heatmap-sp500" class="widget-box">
-    <div style="height:600px">
-      <div class="tradingview-widget-container" style="height:100%">
-        <div class="tradingview-widget-container__widget" style="height:100%"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>{"exchanges":[],"dataSource":"SPX500","grouping":"sector","blockSize":"market_cap_basic","blockColor":"change","locale":"es","colorTheme":"dark","hasTopBar":true,"isDataSetEnabled":true,"isZoomEnabled":true,"hasSymbolTooltip":true,"isMonoSize":false,"width":"100%","height":"600"}</script>
-      </div>
-    </div>
-  </div>
+  <!-- Los widgets se inyectan recién cuando el panel se abre (lazy): TradingView
+       no renderiza dentro de contenedores ocultos con ancho 0. -->
+  <div id="heatmap-sp500" class="widget-box"><div class="hm-slot" style="height:600px"></div></div>
+  <div id="heatmap-nasdaq" class="widget-box" style="display:none"><div class="hm-slot" style="height:600px"></div></div>
   <div id="heatmap-arg" class="widget-box" style="display:none">
-    <div style="height:500px">
-      <div class="tradingview-widget-container" style="height:100%">
-        <div class="tradingview-widget-container__widget" style="height:100%"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>{"exchanges":["BCBA"],"dataSource":"BCBA","grouping":"sector","blockSize":"market_cap_basic","blockColor":"change","locale":"es","colorTheme":"dark","hasTopBar":true,"isDataSetEnabled":false,"isZoomEnabled":true,"hasSymbolTooltip":true,"isMonoSize":false,"width":"100%","height":"500"}</script>
-      </div>
-    </div>
+    <div class="widget-header"><span class="widget-title">Acciones del panel BYMA</span><span class="widget-source">TradingView · Screener completo del mercado argentino</span></div>
+    <div class="hm-slot" style="height:600px"></div>
   </div>
-  <div id="heatmap-cripto" class="widget-box" style="display:none">
-    <div style="height:500px">
-      <div class="tradingview-widget-container" style="height:100%">
-        <div class="tradingview-widget-container__widget" style="height:100%"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>{"exchanges":[],"dataSource":"Crypto","grouping":"no_group","blockSize":"market_cap_basic","blockColor":"change","locale":"es","colorTheme":"dark","hasTopBar":true,"isDataSetEnabled":false,"isZoomEnabled":true,"hasSymbolTooltip":true,"isMonoSize":false,"width":"100%","height":"500"}</script>
-      </div>
-    </div>
-  </div>
-  <div id="heatmap-etf" class="widget-box" style="display:none">
-    <div style="height:500px">
-      <div class="tradingview-widget-container" style="height:100%">
-        <div class="tradingview-widget-container__widget" style="height:100%"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>{"exchanges":[],"dataSource":"AllUSEtf","grouping":"asset_class","blockSize":"volume","blockColor":"change","locale":"es","colorTheme":"dark","hasTopBar":true,"isDataSetEnabled":false,"isZoomEnabled":true,"hasSymbolTooltip":true,"isMonoSize":false,"width":"100%","height":"500"}</script>
-      </div>
-    </div>
-  </div>
-  <div id="heatmap-latam" class="widget-box" style="display:none">
-    <div style="height:500px">
-      <div class="tradingview-widget-container" style="height:100%">
-        <div class="tradingview-widget-container__widget" style="height:100%"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>{"exchanges":["BMFBOVESPA","BVL","BCS","BVC"],"dataSource":"BMFBOVESPA","grouping":"sector","blockSize":"market_cap_basic","blockColor":"change","locale":"es","colorTheme":"dark","hasTopBar":true,"isDataSetEnabled":false,"isZoomEnabled":true,"hasSymbolTooltip":true,"isMonoSize":false,"width":"100%","height":"500"}</script>
-      </div>
-    </div>
-  </div>
+  <div id="heatmap-cripto" class="widget-box" style="display:none"><div class="hm-slot" style="height:600px"></div></div>
+  <div id="heatmap-etf" class="widget-box" style="display:none"><div class="hm-slot" style="height:600px"></div></div>
 </div>
 
 <!-- CALC CAUCIONES -->
@@ -289,7 +259,7 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
       <div class="dolar-legend-item" onclick="toggleLine('oficial')"><div class="dolar-dot" style="background:#ef5350"></div><span>Oficial</span></div>
       <div class="dolar-legend-item" onclick="toggleLine('cripto')"><div class="dolar-dot" style="background:#9C27B0"></div><span>Cripto</span></div>
     </div>
-    <canvas id="dolarChart"></canvas>
+    <div class="dolar-canvas-box"><canvas id="dolarChart"></canvas></div>
   </div>
   <div class="dolar-current">
     <div class="dolar-card"><div class="dolar-card-name">Blue</div><div class="dolar-card-price" id="dc-blue">$--</div><div class="dolar-card-sub">Informal</div></div>
@@ -458,14 +428,39 @@ function switchTool(name,btn){
   document.querySelectorAll('.tool-tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('tool-'+name).classList.add('active');
   btn.classList.add('active');
+  // El chart se crea con el tab oculto (canvas 0x0): reconstruir al mostrarlo
+  if(name==='dolar'&&dolarData.blue)buildDolarChart();
 }
 
-// SECTOR HEATMAP TABS
+// SECTOR HEATMAP TABS — lazy: cada widget se inyecta al abrir su panel
+const HEATMAPS={
+  sp500:{src:'embed-widget-stock-heatmap.js',cfg:{exchanges:[],dataSource:'SPX500',grouping:'sector',blockSize:'market_cap_basic',blockColor:'change',locale:'es',colorTheme:'dark',hasTopBar:true,isDataSetEnabled:true,isZoomEnabled:true,hasSymbolTooltip:true,isMonoSize:false,width:'100%',height:'600'}},
+  nasdaq:{src:'embed-widget-stock-heatmap.js',cfg:{exchanges:[],dataSource:'NASDAQ100',grouping:'sector',blockSize:'market_cap_basic',blockColor:'change',locale:'es',colorTheme:'dark',hasTopBar:true,isDataSetEnabled:true,isZoomEnabled:true,hasSymbolTooltip:true,isMonoSize:false,width:'100%',height:'600'}},
+  arg:{src:'embed-widget-screener.js',cfg:{width:'100%',height:'600',defaultColumn:'overview',defaultScreen:'most_capitalized',market:'argentina',showToolbar:true,colorTheme:'dark',locale:'es',isTransparent:false}},
+  cripto:{src:'embed-widget-crypto-coins-heatmap.js',cfg:{dataSource:'Crypto',blockSize:'market_cap_calc',blockColor:'24h_close_change|5',locale:'es',colorTheme:'dark',hasTopBar:true,isDataSetEnabled:false,isZoomEnabled:true,hasSymbolTooltip:true,isMonoSize:false,width:'100%',height:'600'}},
+  etf:{src:'embed-widget-etf-heatmap.js',cfg:{dataSource:'AllUSEtf',grouping:'asset_class',blockSize:'aum',blockColor:'change',locale:'es',colorTheme:'dark',hasTopBar:true,isDataSetEnabled:false,isZoomEnabled:true,hasSymbolTooltip:true,isMonoSize:false,width:'100%',height:'600'}}
+};
+const hmLoaded={};
+function initHeatmap(name){
+  if(hmLoaded[name]||!HEATMAPS[name])return;
+  hmLoaded[name]=true;
+  const slot=document.querySelector('#heatmap-'+name+' .hm-slot');
+  const wrap=document.createElement('div');
+  wrap.className='tradingview-widget-container';wrap.style.height='100%';
+  wrap.innerHTML='<div class="tradingview-widget-container__widget" style="height:100%"></div>';
+  const s=document.createElement('script');
+  s.type='text/javascript';s.async=true;
+  s.src='https://s3.tradingview.com/external-embedding/'+HEATMAPS[name].src;
+  s.text=JSON.stringify(HEATMAPS[name].cfg);
+  wrap.appendChild(s);
+  slot.appendChild(wrap);
+}
 function switchSector(name,btn){
   document.querySelectorAll('[id^="heatmap-"]').forEach(el=>el.style.display='none');
   document.querySelectorAll('.sector-tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('heatmap-'+name).style.display='block';
   btn.classList.add('active');
+  initHeatmap(name);
 }
 
 // CALC CAUCIONES
@@ -491,25 +486,29 @@ let dolarData={};
 let lineVisibility={blue:true,mep:true,ccl:true,oficial:true,cripto:true};
 
 async function loadDolarHistorico(){
+  // ArgentinaDatos: histórico real por casa. casa API -> serie del chart
+  const casas={blue:'blue',bolsa:'mep',contadoconliqui:'ccl',oficial:'oficial',cripto:'cripto'};
   try{
-    const r=await fetch('https://dolarapi.com/v1/historico');
-    if(!r.ok)throw new Error('API');
-    const data=await r.json();
-    // Organize by type
-    const types=['blue','mep','ccl','oficial','cripto'];
-    types.forEach(type=>{dolarData[type]={labels:[],values:[]}});
-    data.slice(-90).forEach(d=>{
-      const fecha=new Date(d.fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'});
-      if(d.blue){dolarData.blue.labels.push(fecha);dolarData.blue.values.push(d.blue)}
-      if(d.mep){dolarData.mep.labels.push(fecha);dolarData.mep.values.push(d.mep)}
-      if(d.ccl){dolarData.ccl.labels.push(fecha);dolarData.ccl.values.push(d.ccl)}
-      if(d.oficial){dolarData.oficial.labels.push(fecha);dolarData.oficial.values.push(d.oficial)}
-      if(d.cripto){dolarData.cripto.labels.push(fecha);dolarData.cripto.values.push(d.cripto)}
+    const res=await Promise.all(Object.keys(casas).map(c=>
+      fetch('https://api.argentinadatos.com/v1/cotizaciones/dolares/'+c).then(r=>{
+        if(!r.ok)throw new Error(c);return r.json();
+      })
+    ));
+    // Alinear por fecha (el blue cotiza fines de semana, el MEP no):
+    // eje = últimas 90 fechas del MEP; cada serie se mapea por fecha.
+    const porCasa={};
+    Object.keys(casas).forEach((c,i)=>{
+      porCasa[casas[c]]=new Map(res[i].map(d=>[d.fecha,d.venta]));
     });
-    buildDolarChart();
+    const fechas=res[Object.keys(casas).indexOf('bolsa')].slice(-90).map(d=>d.fecha);
+    const labels=fechas.map(f=>new Date(f+'T12:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}));
+    Object.values(casas).forEach(t=>{
+      dolarData[t]={labels,values:fechas.map(f=>porCasa[t].get(f)??null)};
+    });
+    if(document.getElementById('tool-dolar').classList.contains('active'))buildDolarChart();
   }catch(e){
-    // Fallback with static data for preview
-    buildDolarChartFallback();
+    const wrap=document.querySelector('.dolar-canvas-box');
+    if(wrap)wrap.innerHTML='<p style="font-size:13px;color:var(--muted);padding:40px 0;text-align:center">No pudimos cargar el histórico en este momento. Las cotizaciones de hoy siguen abajo. Reintentá en unos minutos.</p>';
   }
 }
 
@@ -527,21 +526,7 @@ function buildDolarChart(){
     {label:'CCL',data:dolarData.ccl.values,borderColor:'#4caf50',backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:.4,hidden:!lineVisibility.ccl},
     {label:'Oficial',data:dolarData.oficial.values,borderColor:'#ef5350',backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:.4,hidden:!lineVisibility.oficial},
     {label:'Cripto',data:dolarData.cripto.values,borderColor:'#9C27B0',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:.4,hidden:!lineVisibility.cripto},
-  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(13,27,42,.9)',borderColor:'rgba(184,151,90,.3)',borderWidth:1,titleColor:'rgba(240,237,232,.8)',bodyColor:'rgba(240,237,232,.6)',padding:12}},scales:{x:{grid:{color:gridColor},ticks:{color:textColor,font:{size:10},maxTicksLimit:12}},y:{grid:{color:gridColor},ticks:{color:textColor,font:{size:10},callback:v=>'$'+v.toLocaleString('es-AR')}}}}});
-}
-
-function buildDolarChartFallback(){
-  // Generate fake smooth data for last 90 days as placeholder
-  const labels=[],blue=[],mep=[],ccl=[],oficial=[],cripto=[];
-  let b=1380,m=1370,c=1375,o=1370,cr=1385;
-  for(let i=90;i>=0;i--){
-    const d=new Date();d.setDate(d.getDate()-i);
-    labels.push(d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}));
-    b+=( Math.random()-.48)*8;m+=( Math.random()-.48)*6;c+=( Math.random()-.48)*7;o+=( Math.random()-.49)*3;cr+=( Math.random()-.48)*9;
-    blue.push(Math.round(b));mep.push(Math.round(m));ccl.push(Math.round(c));oficial.push(Math.round(o));cripto.push(Math.round(cr));
-  }
-  dolarData={blue:{labels,values:blue},mep:{labels,values:mep},ccl:{labels,values:ccl},oficial:{labels,values:oficial},cripto:{labels,values:cripto}};
-  buildDolarChart();
+  ]},options:{responsive:true,maintainAspectRatio:false,spanGaps:true,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(13,27,42,.9)',borderColor:'rgba(184,151,90,.3)',borderWidth:1,titleColor:'rgba(240,237,232,.8)',bodyColor:'rgba(240,237,232,.6)',padding:12}},scales:{x:{grid:{color:gridColor},ticks:{color:textColor,font:{size:10},maxTicksLimit:12}},y:{grid:{color:gridColor},ticks:{color:textColor,font:{size:10},callback:v=>'$'+v.toLocaleString('es-AR')}}}}});
 }
 
 function toggleLine(type){
@@ -589,6 +574,7 @@ async function fetchDolarBar(){
 
 // INIT
 document.addEventListener('DOMContentLoaded',()=>{
+  initHeatmap('sp500');
   fetchCryptoBar();
   fetchDolarBar();
   loadDolarHistorico();
