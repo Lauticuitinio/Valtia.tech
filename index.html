@@ -740,32 +740,40 @@ footer{background:#040c14;padding:48px 52px;border-top:1px solid rgba(184,151,90
   </nav>
   <div class="portal-content">
     <div id="tab-dashboard">
-      <div class="portal-title">Tu portfolio</div>
-      <div class="portal-kpis">
-        <div class="pkpi"><div class="pkpi-label">Capital actual</div><div class="pkpi-value" id="pkpi-capital">$--</div><div class="pkpi-sub">ARS</div></div>
-        <div class="pkpi"><div class="pkpi-label">Cuotapartes</div><div class="pkpi-value" id="pkpi-cp">--</div><div class="pkpi-sub">participación en el fondo</div></div>
-        <div class="pkpi"><div class="pkpi-label">Ganancia neta</div><div class="pkpi-value pos" id="pkpi-pnl">$--</div><div class="pkpi-sub">desde el inicio</div></div>
-        <div class="pkpi"><div class="pkpi-label">ROI</div><div class="pkpi-value pos" id="pkpi-roi">--%</div><div class="pkpi-sub">acumulado</div></div>
+      <div class="portal-title">Tu posición</div>
+      <!-- estado honesto mientras no está cargada la posición del cliente -->
+      <div id="cli-empty" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:26px 28px;max-width:760px">
+        <div style="font-size:15px;color:var(--text);margin-bottom:6px">Estamos preparando tu posición</div>
+        <p style="font-size:13px;color:var(--sub);line-height:1.7">Tu resumen de capital, valor actual y rendimiento va a aparecer acá en cuanto quede vinculada tu cuenta. Si ya sos cliente y no ves tus datos, escribinos a <a href="mailto:valtyaanalytics@gmail.com" style="color:var(--gold)">valtyaanalytics@gmail.com</a>.</p>
       </div>
-      <div class="chart-box" style="max-width:700px">
-        <div class="chart-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:#B8975A"></div>Tu capital</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#4A90D9"></div>Valor cuotaparte</div>
+      <div id="cli-dash">
+        <div class="portal-kpis">
+          <div class="pkpi"><div class="pkpi-label">Valor actual</div><div class="pkpi-value" id="cli-valor">$--</div><div class="pkpi-sub">a precios de mercado</div></div>
+          <div class="pkpi"><div class="pkpi-label">Capital neto</div><div class="pkpi-value" id="cli-neto">$--</div><div class="pkpi-sub">aportes − fee − retiros</div></div>
+          <div class="pkpi"><div class="pkpi-label">Ganancia</div><div class="pkpi-value pos" id="cli-ganancia">$--</div><div class="pkpi-sub">sobre tu capital neto</div></div>
+          <div class="pkpi"><div class="pkpi-label">Rendimiento</div><div class="pkpi-value pos" id="cli-rend">--%</div><div class="pkpi-sub" id="cli-pct">participación --%</div></div>
         </div>
-        <canvas id="portalChart" height="90"></canvas>
+        <div class="chart-box" style="max-width:760px">
+          <div class="chart-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#B8975A"></div>Valor de tu posición (ARS)</div>
+          </div>
+          <div style="position:relative;height:230px"><canvas id="portalChart"></canvas></div>
+        </div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-top:16px;max-width:760px">El <b style="color:var(--sub)">valor actual</b> está calculado a precios de mercado (mark-to-market). La <b style="color:var(--sub)">ganancia</b> se mide sobre tu capital neto —aportes menos el fee y menos los retiros—, repartida por capital y días. Última actualización: <span id="cli-fecha">—</span>.</p>
       </div>
     </div>
     <div id="tab-rendimientos" style="display:none">
-      <div class="portal-title">Rendimientos históricos</div>
-      <p style="color:var(--sub);font-size:14px">Historial mensual de rendimiento de tu participación en el fondo. Próximamente con datos en tiempo real.</p>
+      <div class="portal-title">Rendimientos</div>
+      <div id="cli-rend-body"><p style="color:var(--sub);font-size:14px">Cargando tu rendimiento…</p></div>
     </div>
     <div id="tab-movimientos" style="display:none">
       <div class="portal-title">Movimientos</div>
-      <p style="color:var(--sub);font-size:14px">Historial de depósitos, retiros y cuotapartes asignadas. Próximamente con datos reales de Firebase.</p>
+      <p style="color:var(--sub);font-size:14px;line-height:1.7;max-width:640px">Acá vas a ver el detalle de tus aportes y retiros. Si necesitás el detalle completo de tu cuenta, escribinos a <a href="mailto:valtyaanalytics@gmail.com" style="color:var(--gold)">valtyaanalytics@gmail.com</a> y te lo pasamos.</p>
     </div>
     <div id="tab-informes" style="display:none">
-      <div class="portal-title">Informes del fondo</div>
-      <p style="color:var(--sub);font-size:14px">Reportes mensuales exclusivos para clientes del fondo. Próximamente disponibles aquí.</p>
+      <div class="portal-title">Informes de research</div>
+      <p style="color:var(--sub);font-size:14px;line-height:1.7;max-width:640px;margin-bottom:18px">Como cliente tenés acceso completo a los informes de Valtia y a los registros de análisis con las decisiones y rotaciones.</p>
+      <a href="informes.html" class="btn-primary">Ver todos los informes →</a>
     </div>
     <div id="tab-herramientas-p" style="display:none">
       <div class="portal-title">Herramientas</div>
@@ -921,14 +929,14 @@ function initRendChart(){
   ]},options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(13,27,42,.9)',borderColor:'rgba(184,151,90,.3)',borderWidth:1,titleColor:'rgba(240,237,232,.8)',bodyColor:'rgba(240,237,232,.6)',padding:12,callbacks:{label:function(ctx){return` ${ctx.dataset.label}: +${ctx.parsed.y.toFixed(1)}%`}}}},scales:{x:{grid:{color:c.grid},ticks:{color:c.text,font:{family:"'Jost'",size:11}}},y:{grid:{color:c.grid},ticks:{color:c.text,font:{family:"'Jost'",size:11},callback:v=>'+'+v+'%'}}}}});
 }
 
-function initPortalChart(){
+function renderClientChart(labels,values){
   const ctx=document.getElementById('portalChart');
-  if(!ctx||portalChart)return;
+  if(!ctx)return;
   const c=getChartColors();
-  const capital=[3800000,3850000,3920000,3880000,3950000,3990000,4050000,4000000,4100000,4180000,4250000,4350000,4000000];
-  portalChart=new Chart(ctx,{type:'line',data:{labels:months,datasets:[
-    {label:'Tu capital',data:capital,borderColor:'#B8975A',backgroundColor:'rgba(184,151,90,.1)',borderWidth:2.5,pointRadius:3,pointBackgroundColor:'#B8975A',tension:.4,fill:true}
-  ]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:c.grid},ticks:{color:c.text,font:{size:11}}},y:{grid:{color:c.grid},ticks:{color:c.text,font:{size:11},callback:v=>'$'+(v/1000000).toFixed(1)+'M'}}}}});
+  if(portalChart)portalChart.destroy();
+  portalChart=new Chart(ctx,{type:'line',data:{labels,datasets:[
+    {label:'Valor de tu posición',data:values,borderColor:'#B8975A',backgroundColor:'rgba(184,151,90,.1)',borderWidth:2.5,pointRadius:3,pointBackgroundColor:'#B8975A',tension:.35,fill:true}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(13,27,42,.9)',borderColor:'rgba(184,151,90,.3)',borderWidth:1,titleColor:'rgba(240,237,232,.8)',bodyColor:'rgba(240,237,232,.7)',padding:12,callbacks:{label:x=>' $'+Math.round(x.parsed.y).toLocaleString('es-AR')}}},scales:{x:{grid:{color:c.grid},ticks:{color:c.text,font:{size:11}}},y:{grid:{color:c.grid},ticks:{color:c.text,font:{size:11},callback:v=>'$'+(v/1e6).toFixed(2)+'M'}}}}});
 }
 
 function updateChartTheme(){
@@ -1047,9 +1055,9 @@ document.addEventListener('DOMContentLoaded',()=>{
       try {
         const snap = await getDoc(doc(db, 'inversores', email));
         if (snap.exists()) return { isAdmin: false, ...snap.data() };
-        return { isAdmin: false, nombre: email.split('@')[0], capital: 0, cuotapartes: 0, pnl: 0 };
+        return { isAdmin: false, nombre: email.split('@')[0] };
       } catch(e) {
-        return { isAdmin: false, nombre: email.split('@')[0], capital: 0, cuotapartes: 0, pnl: 0 };
+        return { isAdmin: false, nombre: email.split('@')[0] };
       }
     }
   }
@@ -1187,32 +1195,69 @@ document.addEventListener('DOMContentLoaded',()=>{
       renderAdminDashboard(data);
     } else {
       renderClientDashboard(data, displayName);
-      initPortalChart(data);
     }
   }
 
   // ── CLIENT DASHBOARD ──
   function renderClientDashboard(data, name) {
     const fmt = n => '$' + Math.round(n || 0).toLocaleString('es-AR');
-    const pnl = data.pnl || 0;
-    const pnlPct = data.capital && data.capitalInicial
-      ? ((data.capital - data.capitalInicial) / data.capitalInicial * 100).toFixed(2)
-      : '0.00';
+    ['admin-tab','analisis-tab','senales-tab'].forEach(id => {
+      const t = document.getElementById(id); if (t) t.style.display = 'none';
+    });
 
-    document.getElementById('pkpi-capital').textContent = fmt(data.capital || 0);
-    document.getElementById('pkpi-cp').textContent = (data.cuotapartes || 0).toLocaleString('es-AR', {maximumFractionDigits:2});
-    document.getElementById('pkpi-pnl').textContent = (pnl >= 0 ? '+' : '') + fmt(pnl);
-    document.getElementById('pkpi-pnl').className = 'pkpi-value ' + (pnl >= 0 ? 'pos' : 'neg');
-    document.getElementById('pkpi-roi').textContent = (pnlPct >= 0 ? '+' : '') + pnlPct + '%';
-    document.getElementById('pkpi-roi').className = 'pkpi-value ' + (pnlPct >= 0 ? 'pos' : 'neg');
+    const dash = document.getElementById('cli-dash');
+    const empty = document.getElementById('cli-empty');
+    const rendBody = document.getElementById('cli-rend-body');
+    const hasPos = data.valorActual != null || data.capitalNeto != null;
 
-    const adminTab = document.getElementById('admin-tab');
-    if (adminTab) adminTab.style.display = 'none';
-    const analisisTab = document.getElementById('analisis-tab');
-    if (analisisTab) analisisTab.style.display = 'none';
-    const senalesTab = document.getElementById('senales-tab');
-    if (senalesTab) senalesTab.style.display = 'none';
+    if (!hasPos) {
+      if (dash) dash.style.display = 'none';
+      if (empty) empty.style.display = 'block';
+      if (rendBody) rendBody.innerHTML = '<p style="color:var(--sub);font-size:14px">Tu rendimiento va a aparecer acá en cuanto quede vinculada tu cuenta.</p>';
+      return;
+    }
+    if (dash) dash.style.display = 'block';
+    if (empty) empty.style.display = 'none';
 
+    const neto = Number(data.capitalNeto) || 0;
+    const gan = Number(data.ganancia) || 0;
+    const valor = data.valorActual != null ? Number(data.valorActual) : neto + gan;
+    const ret = neto ? gan / neto * 100 : 0;
+    const pct = (Number(data.pct) || 0) * 100;
+
+    document.getElementById('cli-valor').textContent = fmt(valor);
+    document.getElementById('cli-neto').textContent = fmt(neto);
+    const gEl = document.getElementById('cli-ganancia');
+    gEl.textContent = (gan >= 0 ? '+' : '') + fmt(gan);
+    gEl.className = 'pkpi-value ' + (gan >= 0 ? 'pos' : 'neg');
+    const rEl = document.getElementById('cli-rend');
+    rEl.textContent = (ret >= 0 ? '+' : '') + ret.toFixed(2) + '%';
+    rEl.className = 'pkpi-value ' + (ret >= 0 ? 'pos' : 'neg');
+    document.getElementById('cli-pct').textContent = 'participación ' + pct.toFixed(1) + '%';
+
+    const fEl = document.getElementById('cli-fecha');
+    if (fEl && data.actualizado_utc) {
+      try {
+        const t = data.actualizado_utc.seconds ? data.actualizado_utc.seconds * 1000 : data.actualizado_utc;
+        fEl.textContent = new Date(t).toLocaleDateString('es-AR');
+      } catch (e) {}
+    }
+
+    let evol = [];
+    try { evol = JSON.parse(data.evolucion || '[]'); } catch (e) {}
+    const labels = evol.map(p => p.fecha), values = evol.map(p => Number(p.valor));
+    labels.push('Hoy'); values.push(Math.round(valor));
+    renderClientChart(labels, values);
+
+    if (rendBody) {
+      rendBody.innerHTML = `
+        <div class="portal-kpis" style="margin-bottom:18px">
+          <div class="pkpi"><div class="pkpi-label">Ganancia acumulada</div><div class="pkpi-value ${gan>=0?'pos':'neg'}">${gan>=0?'+':''}${fmt(gan)}</div><div class="pkpi-sub">sobre tu capital neto</div></div>
+          <div class="pkpi"><div class="pkpi-label">Rendimiento</div><div class="pkpi-value ${ret>=0?'pos':'neg'}">${ret>=0?'+':''}${ret.toFixed(2)}%</div><div class="pkpi-sub">desde tu ingreso</div></div>
+          <div class="pkpi"><div class="pkpi-label">Tu participación</div><div class="pkpi-value">${pct.toFixed(1)}%</div><div class="pkpi-sub">del fondo</div></div>
+        </div>
+        <p style="color:var(--muted);font-size:12px;line-height:1.7;max-width:640px">El rendimiento se mide sobre tu capital neto (aportes − fee − retiros) y se reparte por capital y días. La ganancia a precios de mercado puede diferir del último balance de corte por posiciones abiertas y tipo de cambio.</p>`;
+    }
   }
 
   // ── ADMIN DASHBOARD ──
