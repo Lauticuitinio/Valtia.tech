@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0D1B2A"/><stop offset="1" stop-color="#152336"/>
+    </linearGradient>
+    <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D4AF6E" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#D4AF6E" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.22" cy="0.28" r="0.8">
+      <stop offset="0" stop-color="#D4AF6E" stop-opacity=".14"/>
+      <stop offset="1" stop-color="#D4AF6E" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <line x1="0" y1="90" x2="1200" y2="90" stroke="rgba(245,242,236,.04)"/><line x1="0" y1="180" x2="1200" y2="180" stroke="rgba(245,242,236,.04)"/><line x1="0" y1="270" x2="1200" y2="270" stroke="rgba(245,242,236,.04)"/><line x1="0" y1="360" x2="1200" y2="360" stroke="rgba(245,242,236,.04)"/><line x1="0" y1="450" x2="1200" y2="450" stroke="rgba(245,242,236,.04)"/><line x1="0" y1="540" x2="1200" y2="540" stroke="rgba(245,242,236,.04)"/>
+  <path d="M 0,504 Q 0,504 24,504 Q 48,504 72,507 Q 96,511 120,507 Q 144,504 168,501 Q 192,499 216,496 Q 240,493 264,493 Q 288,492 312,490 Q 336,487 360,482 Q 384,478 408,475 Q 432,472 456,473 Q 480,473 504,469 Q 528,464 552,465 Q 576,466 600,469 Q 624,472 648,473 Q 672,475 696,474 Q 720,473 744,469 Q 768,464 792,465 Q 816,466 840,463 Q 864,461 888,462 Q 912,463 936,467 Q 960,471 984,465 Q 1008,460 1032,458 Q 1056,456 1080,456 Q 1104,455 1128,453 Q 1152,450 1176,453 L 1200,580 L 0,580 Z" fill="url(#area)"/>
+  <path d="M 0,504 Q 0,504 24,504 Q 48,504 72,507 Q 96,511 120,507 Q 144,504 168,501 Q 192,499 216,496 Q 240,493 264,493 Q 288,492 312,490 Q 336,487 360,482 Q 384,478 408,475 Q 432,472 456,473 Q 480,473 504,469 Q 528,464 552,465 Q 576,466 600,469 Q 624,472 648,473 Q 672,475 696,474 Q 720,473 744,469 Q 768,464 792,465 Q 816,466 840,463 Q 864,461 888,462 Q 912,463 936,467 Q 960,471 984,465 Q 1008,460 1032,458 Q 1056,456 1080,456 Q 1104,455 1128,453 Q 1152,450 1176,453" fill="none" stroke="#D4AF6E" stroke-width="2.5" opacity=".85"/>
+  <!-- marca -->
+  <g transform="translate(72,74)">
+    <circle cx="7" cy="-6" r="7" fill="#B8975A"/>
+    <text x="26" y="0" font-family="Georgia, 'Times New Roman', serif" font-size="26" letter-spacing="6" fill="#F5F2EC">VALTIA</text>
+    <text x="26" y="24" font-family="Helvetica, Arial, sans-serif" font-size="12" letter-spacing="4" fill="rgba(245,242,236,.45)">ANALYTICS</text>
+  </g>
+  <!-- kicker -->
+  <text x="72" y="188" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="4" fill="#D4AF6E">REGISTRO DE ANÁLISIS</text>
+  <!-- título -->
+  <text x="70" y="256" font-family="Georgia, 'Times New Roman', serif" font-size="72" fill="#F5F2EC">Julio 2026</text>
+  <text x="72" y="252" font-family="Helvetica, Arial, sans-serif" font-size="22" fill="rgba(245,242,236,.6)">Decisiones, rotaciones y razonamiento</text>
+  
+  <!-- fecha / pie -->
+  <line x1="72" y1="556" x2="180" y2="556" stroke="#B8975A" stroke-width="2"/>
+  <text x="72" y="592" font-family="Helvetica, Arial, sans-serif" font-size="20" letter-spacing="2" fill="rgba(245,242,236,.7)">EXCLUSIVO CLIENTES</text>
+  <text x="1128" y="592" text-anchor="end" font-family="Helvetica, Arial, sans-serif" font-size="16" letter-spacing="1" fill="rgba(245,242,236,.4)">valtia.tech</text>
+</svg>

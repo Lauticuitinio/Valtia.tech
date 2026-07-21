@@ -209,13 +209,13 @@ footer{background:#040c14;padding:28px 52px;border-top:1px solid rgba(184,151,90
 
   <div class="gold-divider"></div>
 
-  <!-- INFORMES POR EMPRESA -->
-  <div class="section-label">Análisis por empresa</div>
+  <!-- INFORMES DE RESEARCH -->
+  <div class="section-label">Análisis por empresa y sector</div>
   <div class="informe-grid">
     <div class="informe-card" onclick="openInforme('nvda')">
-      <div class="informe-thumb" style="background:linear-gradient(135deg,#1a1a2e,#2d2d5e)">
-        <span>🟢</span>
-        <span class="informe-badge badge-free">GRATIS</span>
+      <div class="informe-thumb" style="position:relative;padding:0">
+        <img src="img/informe-nvda.svg" alt="NVIDIA" style="width:100%;height:100%;object-fit:cover">
+        <span class="informe-badge badge-free" style="position:absolute;top:10px;right:10px">GRATIS</span>
       </div>
       <div class="informe-body">
         <div class="informe-sector">Semiconductores</div>
@@ -225,9 +225,9 @@ footer{background:#040c14;padding:28px 52px;border-top:1px solid rgba(184,151,90
       </div>
     </div>
     <div class="informe-card" onclick="openInforme('meli')">
-      <div class="informe-thumb" style="background:linear-gradient(135deg,#1a2e0a,#2d5e1a)">
-        <span>🛒</span>
-        <span class="informe-badge badge-free">GRATIS</span>
+      <div class="informe-thumb" style="position:relative;padding:0">
+        <img src="img/informe-meli.svg" alt="MercadoLibre" style="width:100%;height:100%;object-fit:cover">
+        <span class="informe-badge badge-free" style="position:absolute;top:10px;right:10px">GRATIS</span>
       </div>
       <div class="informe-body">
         <div class="informe-sector">eCommerce LatAm</div>
@@ -236,46 +236,10 @@ footer{background:#040c14;padding:28px 52px;border-top:1px solid rgba(184,151,90
         <div class="informe-meta"><span>📅 Abril 2026</span><span class="informe-download">Leer →</span></div>
       </div>
     </div>
-    <div class="informe-card locked" onclick="openInforme('ypf')">
-      <div class="informe-thumb" style="background:linear-gradient(135deg,#2e1a0a,#5e3a1a);position:relative">
-        <span class="lock-icon">🔒</span>
-        <span class="informe-badge badge-pro">PRO</span>
-      </div>
-      <div class="informe-body">
-        <div class="informe-sector">Energía · Argentina</div>
-        <div class="informe-title">YPF + Vista Energy — Vaca Muerta 2026</div>
-        <div class="informe-desc">Análisis comparativo de los dos principales jugadores de Vaca Muerta.</div>
-        <div class="informe-meta"><span>📅 Mayo 2026</span><span class="informe-download">🔒 PRO</span></div>
-      </div>
-    </div>
-    <div class="informe-card locked" onclick="openInforme('aapl')">
-      <div class="informe-thumb" style="background:linear-gradient(135deg,#1a1a1a,#3a3a3a);position:relative">
-        <span class="lock-icon">🔒</span>
-        <span class="informe-badge badge-pro">PRO</span>
-      </div>
-      <div class="informe-body">
-        <div class="informe-sector">Tecnología</div>
-        <div class="informe-title">Apple — Ciclo de iPhone y servicios</div>
-        <div class="informe-desc">Análisis de márgenes, recompras y el potencial de la división de servicios.</div>
-        <div class="informe-meta"><span>📅 Abril 2026</span><span class="informe-download">🔒 PRO</span></div>
-      </div>
-    </div>
-    <div class="informe-card locked" onclick="openInforme('bonos-arg')">
-      <div class="informe-thumb" style="background:linear-gradient(135deg,#0a1628,#1A3A5C);position:relative">
-        <span class="lock-icon">🔒</span>
-        <span class="informe-badge badge-pro">PRO</span>
-      </div>
-      <div class="informe-body">
-        <div class="informe-sector">Renta fija · Argentina</div>
-        <div class="informe-title">Bonos soberanos ARG — Estrategia H2 2026</div>
-        <div class="informe-desc">Hoja de ruta para posicionamiento en AL30, GD30 y bonos CER.</div>
-        <div class="informe-meta"><span>📅 Mayo 2026</span><span class="informe-download">🔒 PRO</span></div>
-      </div>
-    </div>
     <div class="informe-card" onclick="openInforme('macro-arg')">
-      <div class="informe-thumb" style="background:linear-gradient(135deg,#0D1B2A,#1A3A5C)">
-        <span>🇦🇷</span>
-        <span class="informe-badge badge-new">NUEVO</span>
+      <div class="informe-thumb" style="position:relative;padding:0">
+        <img src="img/informe-macro-arg.svg" alt="Argentina macro" style="width:100%;height:100%;object-fit:cover">
+        <span class="informe-badge badge-new" style="position:absolute;top:10px;right:10px">NUEVO</span>
       </div>
       <div class="informe-body">
         <div class="informe-sector">Macroeconomía</div>
@@ -284,46 +248,16 @@ footer{background:#040c14;padding:28px 52px;border-top:1px solid rgba(184,151,90
         <div class="informe-meta"><span>📅 Mayo 2026</span><span class="informe-download">Leer →</span></div>
       </div>
     </div>
-  </div>
-
-  <!-- INFORMES POR SECTOR -->
-  <div class="gold-divider"></div>
-  <div class="section-label">Análisis sectorial</div>
-  <div class="informe-grid">
     <div class="informe-card" onclick="openInforme('tech-sector')">
-      <div class="informe-thumb" style="background:linear-gradient(135deg,#0a0a2e,#1a1a5e)">
-        <span>💻</span>
-        <span class="informe-badge badge-free">GRATIS</span>
+      <div class="informe-thumb" style="position:relative;padding:0">
+        <img src="img/informe-tech-sector.svg" alt="Tecnología global" style="width:100%;height:100%;object-fit:cover">
+        <span class="informe-badge badge-free" style="position:absolute;top:10px;right:10px">GRATIS</span>
       </div>
       <div class="informe-body">
         <div class="informe-sector">Sector</div>
         <div class="informe-title">Tecnología global — Ciclo de IA e inversión</div>
         <div class="informe-desc">Capex de los grandes tech, infraestructura de IA y oportunidades en semiconductores.</div>
         <div class="informe-meta"><span>📅 Mayo 2026</span><span class="informe-download">Leer →</span></div>
-      </div>
-    </div>
-    <div class="informe-card locked" onclick="openInforme('energy-sector')">
-      <div class="informe-thumb" style="background:linear-gradient(135deg,#1a0a00,#3d1a00);position:relative">
-        <span class="lock-icon">🔒</span>
-        <span class="informe-badge badge-pro">PRO</span>
-      </div>
-      <div class="informe-body">
-        <div class="informe-sector">Sector</div>
-        <div class="informe-title">Energía y commodities — Petróleo, gas y uranio</div>
-        <div class="informe-desc">Outlook de petróleo Brent, gas natural y el renacimiento nuclear global.</div>
-        <div class="informe-meta"><span>📅 Abril 2026</span><span class="informe-download">🔒 PRO</span></div>
-      </div>
-    </div>
-    <div class="informe-card locked" onclick="openInforme('cripto-sector')">
-      <div class="informe-thumb" style="background:linear-gradient(135deg,#0a0a1a,#1a1a3e);position:relative">
-        <span class="lock-icon">🔒</span>
-        <span class="informe-badge badge-pro">PRO</span>
-      </div>
-      <div class="informe-body">
-        <div class="informe-sector">Sector</div>
-        <div class="informe-title">Cripto — Ciclo post-halving y altcoins</div>
-        <div class="informe-desc">Análisis de ciclo, dominancia de BTC y selección de altcoins para el H2 2026.</div>
-        <div class="informe-meta"><span>📅 Mayo 2026</span><span class="informe-download">🔒 PRO</span></div>
       </div>
     </div>
   </div>
