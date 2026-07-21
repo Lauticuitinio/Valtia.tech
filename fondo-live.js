@@ -346,7 +346,7 @@ window.flResizeCharts = () => {
   });
 };
 
-function renderAll(d, sheet, news, mercado, informes) {
+function renderAll(d, sheet, news, mercado, informes, radar) {
   const c = compute(d);
   const sh = sheet || {};
   const clientes = sh.clientes || [];
@@ -646,6 +646,42 @@ function renderAll(d, sheet, news, mercado, informes) {
       <div class="fl-strip">Sin datos del sistema de rotación todavía — corré el sync (run_sync.bat) para calcular el primer ranking.</div></div>`;
   }
 
+  /* ── RADAR DE VALUACIÓN: lectura propia sobre la watchlist ── */
+  if (tabSen && radar && Array.isArray(radar.activos)) {
+    const rmoney = p => p == null ? "—" : "$" + Number(p).toLocaleString("es-AR",
+      { minimumFractionDigits: p < 10 ? 2 : 0, maximumFractionDigits: p >= 1000 ? 0 : 2 });
+    const r1 = v => v == null ? "—" : Number(v).toFixed(1);
+    const verCls = v => v === "Infravalorada" ? "p" : v === "Estirada" ? "n" : v === "En precio" ? "m" : "";
+    const acts = [...radar.activos].sort((a, b) =>
+      (a.score == null) - (b.score == null) || (b.score || 0) - (a.score || 0));
+    const cnt = v => radar.activos.filter(a => a.veredicto === v).length;
+    const rows = acts.map(a => `<tr>
+      <td><b>${a.sym}</b> ${a.entrada ? '<span style="color:var(--flGold,#B8975A)">◆</span>' : ""}<span style="color:var(--flMut);font-size:11px"> ${a.nombre || ""}</span></td>
+      <td style="color:var(--flInk2)">${a.sector || ""}</td>
+      <td class="fl-num">${rmoney(a.precio)}</td>
+      <td class="fl-num">${r1(a.per)}</td>
+      <td class="fl-num">${r1(a.pb)}</td>
+      <td class="fl-num">${r1(a.ps)}</td>
+      <td class="fl-num" style="font-weight:700">${a.valorScore ?? "—"}</td>
+      <td class="fl-num">${a.calidadScore ?? "—"}</td>
+      <td class="fl-num">${r1(a.rsi)}<span style="color:var(--flMut);font-size:10px"> ${a.rsiZona || ""}</span></td>
+      <td><span class="fl-pill ${verCls(a.veredicto)}">${a.veredicto}</span></td></tr>`).join("");
+    const radarHtml = `<div class="flx" style="margin-top:22px">
+      <div class="fl-head"><div>
+        <div class="portal-title" style="margin-bottom:0">Radar de valuación</div>
+        <div class="fl-meta" style="margin:6px 0 0">Lectura propia sobre la watchlist · ${cnt("Infravalorada")} infravaloradas · ${cnt("Estirada")} estiradas · datos ${String(radar.actualizado || "").slice(0, 10)}</div>
+      </div></div>
+      <div style="height:12px"></div>
+      <div class="fl-panel"><table style="min-width:820px">
+        <thead><tr><th>Activo</th><th>Sector</th><th class="fl-num">Precio</th><th class="fl-num">PER</th>
+          <th class="fl-num">P/L</th><th class="fl-num">P/V</th><th class="fl-num">Valor</th>
+          <th class="fl-num">Calidad</th><th class="fl-num">RSI</th><th>Veredicto</th></tr></thead>
+        <tbody>${rows}</tbody></table>
+        <div class="fl-foot">${radar.metodologia || ""} El puntaje de valor y calidad son percentiles dentro de la watchlist. ◆ = zona de compra (barata + RSI flojo). Refresco diario vía el sync. Uso interno — no es recomendación.</div>
+      </div></div>`;
+    tabSen.insertAdjacentHTML("beforeend", radarHtml);
+  }
+
   /* ── INFORMES: lista + lector, todo dentro del portal ── */
   _informes = informes || [];
   flRenderInformesList();
@@ -873,17 +909,18 @@ async function fetchAll() {
   if (DEV) {
     const j = async f => { const r = await fetch(f); return r.ok ? await r.json() : null; };
     return { sync: await j("dev-data/sync_latest.json"), sheet: await j("dev-data/sheet_meta.json"),
-      mercado: await j("dev-data/mercado.json"), informes: [],
+      mercado: await j("dev-data/mercado.json"), informes: [], radar: await j("dev-data/radar.json"),
       news: [{ titulo:"Briefing demo", fecha:"09/07/2026", fuente:"cowork", contenido:"Briefing de ejemplo (modo dev)." }] };
   }
   const db = getFirestore(getApp());
   _db = db;
-  const [syncSnap, sheetSnap, newsSnap, mercadoSnap, informesSnap] = await Promise.all([
+  const [syncSnap, sheetSnap, newsSnap, mercadoSnap, informesSnap, radarSnap] = await Promise.all([
     getDoc(doc(db, "fondoSync", "latest")),
     getDoc(doc(db, "fondoMeta", "sheet")),
     getDocs(query(collection(db, "noticiasFondo"), orderBy("fecha", "desc"), limit(5))).catch(() => null),
     getDoc(doc(db, "mercado", "latest")).catch(() => null),
     getDocs(collection(db, "informes")).catch(() => null),
+    getDoc(doc(db, "radar", "latest")).catch(() => null),
   ]);
   return {
     sync: syncSnap.exists() ? JSON.parse(syncSnap.data().json) : null,
@@ -893,6 +930,7 @@ async function fetchAll() {
     informes: informesSnap ? informesSnap.docs.map(d => ({ id: d.id, titulo: d.data().titulo,
       fecha: d.data().fecha, tipo: d.data().tipo, resumen: d.data().resumen,
       slug: d.data().slug, visibilidad: d.data().visibilidad })) : [],
+    radar: radarSnap && radarSnap.exists() ? JSON.parse(radarSnap.data().json) : null,
   };
 }
 
@@ -912,16 +950,16 @@ window.initFondoAdmin = async function initFondoAdmin() {
     document.head.appendChild(l);
   }
   try {
-    const { sync, sheet, news, mercado, informes } = await fetchAll();
+    const { sync, sheet, news, mercado, informes, radar } = await fetchAll();
     if (!sync) {
       document.getElementById("tab-dashboard").insertAdjacentHTML("afterbegin",
         `<div class="flx"><div class="fl-strip"><b>Sin snapshot</b> <code>fondoSync/latest</code> en Firestore — corré fondo_sync.py o esperá la corrida de las 9:00.</div></div>`);
       return;
     }
-    lastPayload = { sync, sheet, news, mercado, informes };
-    renderAll(sync, sheet, news, mercado, informes);
+    lastPayload = { sync, sheet, news, mercado, informes, radar };
+    renderAll(sync, sheet, news, mercado, informes, radar);
     // el toggle claro/oscuro del portal cambia data-theme: re-renderizar con los tokens nuevos
-    new MutationObserver(() => { if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news, lastPayload.mercado, lastPayload.informes); })
+    new MutationObserver(() => { if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news, lastPayload.mercado, lastPayload.informes, lastPayload.radar); })
       .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   } catch (e) {
     document.getElementById("tab-dashboard").insertAdjacentHTML("afterbegin",

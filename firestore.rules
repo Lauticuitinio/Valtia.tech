@@ -81,6 +81,15 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── RADAR DE VALUACIÓN (herramienta pública + panel admin) ──
+    // Fundamentals objetivos + lectura propia Valtia. Solo dato de mercado,
+    // sin posiciones ni etiquetas de terceros: lectura pública. Escrito por
+    // seed_radar.py / fondo_sync.py (Admin SDK).
+    match /radar/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ── NOTICIAS PÚBLICAS (sección Noticias del sitio) ──
     // Solo las publicadas son visibles (query con filtro estado). El admin
     // gestiona borradores vía Admin SDK / consola.
