@@ -172,7 +172,7 @@ footer{background:#040c14;padding:28px 52px;border-top:1px solid rgba(184,151,90
       <div class="featured-label">Destacado</div>
       <div class="featured-card" id="featured-card" onclick="openFeatured()">
         <div class="featured-img">
-          <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=700&q=80&auto=format&fit=crop" alt="Mercado financiero" onerror="this.parentNode.innerHTML='<div class=featured-img-fallback style=background:linear-gradient(135deg,#0D1B2A,#1A3A5C)>🌍</div>'">
+          <img id="feat-img" src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=700&q=80&auto=format&fit=crop" alt="Mercado financiero" onerror="this.parentNode.innerHTML='<div class=featured-img-fallback style=background:linear-gradient(135deg,#0D1B2A,#1A3A5C)>🌍</div>'">
         </div>
         <div class="featured-body">
           <div>
@@ -291,9 +291,10 @@ function renderGrid(){
     div.className='news-card';
     div.onclick=()=>openArticle(a.id);
     const imgIdx=a.id%IMGS.length;
+    const src=a.imagen||IMGS[imgIdx];
     div.innerHTML=`
       <div class="card-img" style="background:${BG[imgIdx]}">
-        <img src="${IMGS[imgIdx]}" alt="${a.title}" loading="lazy" onerror="this.style.display='none'">
+        <img src="${src}" alt="${a.title}" loading="lazy" onerror="this.style.display='none'">
       </div>
       <div class="card-body">
         <div class="card-cats">${a.cat.map(c=>`<span class="art-cat ${getCatClass(c)}">${getCatLabel(c)}</span>`).join('')}</div>
@@ -320,7 +321,8 @@ function openArticle(id){
   const imgIdx=a.id%IMGS_BIG.length;
   const wrap=document.getElementById('modal-img-wrap');
   wrap.style.background=BG[imgIdx];
-  wrap.innerHTML=`<button class="modal-close" onclick="closeArticle()">✕</button><img src="${IMGS_BIG[imgIdx]}" alt="${a.title}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`;
+  const bigSrc=a.imagen||IMGS_BIG[imgIdx];
+  wrap.innerHTML=`<button class="modal-close" onclick="closeArticle()">✕</button><img src="${bigSrc}" alt="${a.title}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`;
   document.getElementById('modal-cats').innerHTML=a.cat.map(c=>`<span class="art-cat ${getCatClass(c)}">${getCatLabel(c)}</span>`).join('');
   document.getElementById('modal-title').textContent=a.title;
   document.getElementById('modal-meta').textContent=`📅 ${a.date} · ⏱ ${a.read} de lectura`;
@@ -381,11 +383,12 @@ try {
     cat: (d.categorias && d.categorias.length) ? d.categorias : ["local"],
     title: d.titulo, excerpt: d.resumen || "", date: fdate(d.fecha),
     read: Math.max(2, Math.round(String(d.contenido || "").split(/\s+/).length / 200)) + " min",
-    featured: !!d.destacado, content: d.contenido || "" }));
+    featured: !!d.destacado, content: d.contenido || "", imagen: d.imagen || "" }));
   if (articles.length && !articles.some(a => a.featured)) articles[0].featured = true;
   const feat = articles.find(a => a.featured);
   if (feat) {
     window.__featId = feat.id;
+    if (feat.imagen) { const fi = document.getElementById("feat-img"); if (fi) fi.src = feat.imagen; }
     document.getElementById("feat-cats").innerHTML = feat.cat.map(c => `<span class="art-cat ${getCatClass(c)}">${getCatLabel(c)}</span>`).join("");
     document.getElementById("feat-title").textContent = feat.title;
     document.getElementById("feat-excerpt").textContent = feat.excerpt;

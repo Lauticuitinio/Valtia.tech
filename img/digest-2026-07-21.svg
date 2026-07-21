@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0D1B2A"/><stop offset="1" stop-color="#152336"/>
+    </linearGradient>
+    <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4caf50" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#4caf50" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.22" cy="0.28" r="0.8">
+      <stop offset="0" stop-color="#4caf50" stop-opacity=".14"/>
+      <stop offset="1" stop-color="#4caf50" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <line x1="0" y1="90" x2="1200" y2="90" stroke="rgba(245,242,236,.04)"/><line x1="0" y1="180" x2="1200" y2="180" stroke="rgba(245,242,236,.04)"/><line x1="0" y1="270" x2="1200" y2="270" stroke="rgba(245,242,236,.04)"/><line x1="0" y1="360" x2="1200" y2="360" stroke="rgba(245,242,236,.04)"/><line x1="0" y1="450" x2="1200" y2="450" stroke="rgba(245,242,236,.04)"/><line x1="0" y1="540" x2="1200" y2="540" stroke="rgba(245,242,236,.04)"/>
+  <path d="M 0,510 Q 0,510 24,510 Q 48,510 72,506 Q 96,503 120,504 Q 144,504 168,499 Q 192,493 216,493 Q 240,493 264,493 Q 288,492 312,487 Q 336,482 360,483 Q 384,485 408,489 Q 432,493 456,495 Q 480,497 504,492 Q 528,486 552,483 Q 576,481 600,478 Q 624,475 648,471 Q 672,467 696,466 Q 720,464 744,468 Q 768,471 792,471 Q 816,472 840,468 Q 864,465 888,463 Q 912,462 936,459 Q 960,457 984,461 Q 1008,465 1032,467 Q 1056,470 1080,465 Q 1104,461 1128,456 Q 1152,451 1176,453 L 1200,580 L 0,580 Z" fill="url(#area)"/>
+  <path d="M 0,510 Q 0,510 24,510 Q 48,510 72,506 Q 96,503 120,504 Q 144,504 168,499 Q 192,493 216,493 Q 240,493 264,493 Q 288,492 312,487 Q 336,482 360,483 Q 384,485 408,489 Q 432,493 456,495 Q 480,497 504,492 Q 528,486 552,483 Q 576,481 600,478 Q 624,475 648,471 Q 672,467 696,466 Q 720,464 744,468 Q 768,471 792,471 Q 816,472 840,468 Q 864,465 888,463 Q 912,462 936,459 Q 960,457 984,461 Q 1008,465 1032,467 Q 1056,470 1080,465 Q 1104,461 1128,456 Q 1152,451 1176,453" fill="none" stroke="#4caf50" stroke-width="2.5" opacity=".85"/>
+  <!-- marca -->
+  <g transform="translate(72,74)">
+    <circle cx="7" cy="-6" r="7" fill="#B8975A"/>
+    <text x="26" y="0" font-family="Georgia, 'Times New Roman', serif" font-size="26" letter-spacing="6" fill="#F5F2EC">VALTIA</text>
+    <text x="26" y="24" font-family="Helvetica, Arial, sans-serif" font-size="12" letter-spacing="4" fill="rgba(245,242,236,.45)">ANALYTICS</text>
+  </g>
+  <!-- kicker -->
+  <text x="72" y="188" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="4" fill="#D4AF6E">DIGEST DE MERCADOS</text>
+  <!-- título -->
+  <text x="70" y="256" font-family="Georgia, 'Times New Roman', serif" font-size="72" fill="#F5F2EC">21 de julio, 2026</text>
+  
+  
+  <g transform="translate(72,300)">
+    <rect x="0" y="0" width="300" height="92" rx="10" fill="#0e2033" stroke="rgba(184,151,90,.22)"/>
+    <text x="20" y="34" font-family="Helvetica, Arial, sans-serif" font-size="16" letter-spacing="1.5" fill="rgba(245,242,236,.55)">S&amp;P 500</text>
+    <text x="20" y="70" font-family="Georgia, 'Times New Roman', serif" font-size="30" fill="#F5F2EC">7.482,9</text>
+    <text x="285" y="70" text-anchor="end" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#4caf50">▲ +0,53%</text>
+  </g>
+  <g transform="translate(392,300)">
+    <rect x="0" y="0" width="300" height="92" rx="10" fill="#0e2033" stroke="rgba(184,151,90,.22)"/>
+    <text x="20" y="34" font-family="Helvetica, Arial, sans-serif" font-size="16" letter-spacing="1.5" fill="rgba(245,242,236,.55)">MERVAL</text>
+    <text x="20" y="70" font-family="Georgia, 'Times New Roman', serif" font-size="30" fill="#F5F2EC">3.223.652</text>
+    <text x="285" y="70" text-anchor="end" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#4caf50">▲ +0,74%</text>
+  </g>
+  <g transform="translate(712,300)">
+    <rect x="0" y="0" width="300" height="92" rx="10" fill="#0e2033" stroke="rgba(184,151,90,.22)"/>
+    <text x="20" y="34" font-family="Helvetica, Arial, sans-serif" font-size="16" letter-spacing="1.5" fill="rgba(245,242,236,.55)">BITCOIN</text>
+    <text x="20" y="70" font-family="Georgia, 'Times New Roman', serif" font-size="30" fill="#F5F2EC">US$66.310</text>
+    <text x="285" y="70" text-anchor="end" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#4caf50">▲ +1,7%</text>
+  </g>
+  <!-- fecha / pie -->
+  <line x1="72" y1="556" x2="180" y2="556" stroke="#B8975A" stroke-width="2"/>
+  <text x="72" y="592" font-family="Helvetica, Arial, sans-serif" font-size="20" letter-spacing="2" fill="rgba(245,242,236,.7)">CIERRE DE LA RUEDA · WALL STREET EN VERDE</text>
+  <text x="1128" y="592" text-anchor="end" font-family="Helvetica, Arial, sans-serif" font-size="16" letter-spacing="1" fill="rgba(245,242,236,.4)">valtia.tech</text>
+</svg>
