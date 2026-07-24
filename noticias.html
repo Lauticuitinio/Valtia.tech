@@ -1,129 +1,130 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Noticias — Valtia Analytics</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+/* ── El Briefing Valtia — porteo del diseño "Valtia Noticias v2" (Design).
+     Paleta fija de diario (cream/paper/navy/dorado), sin toggle de tema. ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--navy:#0D1B2A;--navy2:#152336;--navy3:#1A3A5C;--gold:#B8975A;--gold2:#D4AF6E;--cream:#F5F2EC;--mgray:#6B7C8D;--text-d:#F0EDE8;--sub-d:rgba(240,237,232,.55);--muted-d:rgba(240,237,232,.35);--text-l:#1A2B3C;--sub-l:#4A5A6C;--muted-l:#8A9BAD;--bg-d:#0D1B2A;--bg2-d:#111f2e;--bg3-d:#152336;--bg-l:#F5F2EC;--bg2-l:#FFFFFF;--bg3-l:#EDE9E0;--border-d:rgba(184,151,90,.12);--border-l:rgba(26,58,92,.1);--card-d:#152336;--card-l:#FFFFFF;}
-[data-theme="dark"]{--bg:var(--bg-d);--bg2:var(--bg2-d);--bg3:var(--bg3-d);--text:var(--text-d);--sub:var(--sub-d);--muted:var(--muted-d);--border:var(--border-d);--card:var(--card-d)}
-[data-theme="light"]{--bg:var(--bg-l);--bg2:var(--bg2-l);--bg3:var(--bg3-l);--text:var(--text-l);--sub:var(--sub-l);--muted:var(--muted-l);--border:var(--border-l);--card:var(--card-l)}
+:root{--paper:#F6F3EC;--cream:#EDE7DA;--navy:#14213D;--gold:#B08A3E;--gold2:#8A6A2F;--ink:#23201A;--ink2:#4A453B;--sub:#6B6456;--mut:#8B8375}
 html{scroll-behavior:smooth}
-body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;transition:background .3s,color .3s}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px}
-nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;background:rgba(13,27,42,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
-[data-theme="light"] nav{background:rgba(255,255,255,.97);border-bottom:1px solid rgba(26,58,92,.1)}
+body{background:var(--cream);font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink)}
+a{color:var(--gold);text-decoration:none}
+a:hover{color:var(--gold2)}
+
+/* nav global (idéntica al resto del sitio, fija en navy) */
+nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;background:rgba(14,24,48,.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(232,206,150,.14)}
 .nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.nav-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:#fff}
-[data-theme="light"] .nav-name{color:var(--navy)}
-.nav-name em{color:var(--gold);font-style:normal}
-.nav-sub{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);font-family:'Jost',sans-serif}
-[data-theme="light"] .nav-sub{color:var(--mgray)}
-.nav-links{display:flex;align-items:center;gap:28px}
-.nav-links a{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55);text-decoration:none;transition:color .2s}
-[data-theme="light"] .nav-links a{color:var(--sub-l)}
-.nav-links a:hover,.nav-links a.active{color:var(--gold)}
-.nav-right{display:flex;align-items:center;gap:14px}
-.theme-btn{width:36px;height:20px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:10px;cursor:pointer;position:relative;transition:all .2s;flex-shrink:0}
-[data-theme="light"] .theme-btn{background:rgba(26,27,42,.08);border-color:rgba(26,27,42,.15)}
-.theme-btn::after{content:'';position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--gold);transition:transform .2s}
-[data-theme="light"] .theme-btn::after{transform:translateX(16px)}
-.nav-cta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--navy);background:var(--gold);padding:9px 22px;border-radius:2px;text-decoration:none;transition:background .2s}
-.nav-cta:hover{background:var(--gold2)}
-.news-hero{background:var(--navy);padding:48px 52px 40px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
-[data-theme="light"] .news-hero{background:#0D1B2A}
-.news-hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 50% 80% at 100% 50%,rgba(184,151,90,.05) 0%,transparent 60%)}
-.news-hero-inner{position:relative;z-index:1}
-.news-hero-tag{font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
-.news-hero-title{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,4vw,46px);font-weight:400;color:#fff;margin-bottom:8px}
-.news-hero-desc{font-size:13px;font-weight:300;color:rgba(255,255,255,.45);max-width:500px}
-.filters-bar{padding:16px 52px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--bg2)}
-.cats{display:flex;gap:8px;flex-wrap:wrap}
-.cat-btn{font-size:11px;font-weight:500;letter-spacing:.06em;padding:6px 14px;border-radius:20px;border:1px solid var(--border);cursor:pointer;background:transparent;color:var(--sub);font-family:'Jost',sans-serif;transition:all .2s;white-space:nowrap}
-.cat-btn:hover{border-color:var(--gold);color:var(--text)}
-.cat-btn.active{background:var(--gold);color:var(--navy);border-color:var(--gold);font-weight:600}
-.search-wrap{position:relative}
-.search-input{padding:7px 14px 7px 34px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;color:var(--text);font-family:'Jost',sans-serif;font-size:12px;outline:none;width:200px;transition:border-color .2s}
-[data-theme="light"] .search-input{background:var(--bg3)}
-.search-input:focus{border-color:var(--gold)}
-.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px}
-.page-layout{display:grid;grid-template-columns:1fr 260px;gap:0;align-items:start}
-.featured-wrap{padding:36px 52px 0}
-.featured-label{font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
-.featured-card{display:grid;grid-template-columns:1.3fr 1fr;gap:0;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:transform .2s;cursor:pointer;margin-bottom:36px}
-.featured-card:hover{transform:translateY(-2px)}
-.featured-img{height:340px;overflow:hidden;position:relative}
-.featured-img img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
-.featured-card:hover .featured-img img{transform:scale(1.03)}
-.featured-img-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:52px}
-.featured-body{padding:32px 28px;display:flex;flex-direction:column;justify-content:space-between}
-.featured-cats{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
-.art-cat{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:3px}
-.cat-local{background:rgba(74,144,217,.15);color:#4A90D9}
-.cat-wall{background:rgba(76,175,80,.1);color:#4caf50}
-.cat-cripto{background:rgba(255,152,0,.1);color:#FF9800}
-.cat-bonos{background:rgba(184,151,90,.12);color:var(--gold)}
-.featured-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--text);line-height:1.25;margin-bottom:12px}
-.featured-excerpt{font-size:13px;font-weight:300;line-height:1.75;color:var(--sub);margin-bottom:18px}
-.featured-meta{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--muted)}
-.read-more{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-top:12px;transition:gap .2s}
-.read-more:hover{gap:10px}
-.news-section{padding:0 52px 60px}
-.news-count{font-size:12px;color:var(--muted);margin-bottom:18px;padding-top:24px}
-.news-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.news-card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:transform .2s,border-color .2s;cursor:pointer}
-.news-card:hover{transform:translateY(-3px);border-color:rgba(184,151,90,.3)}
-.card-img{height:168px;overflow:hidden;position:relative}
-.card-img img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
-.news-card:hover .card-img img{transform:scale(1.04)}
-.card-img-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px}
-.card-body{padding:18px}
-.card-cats{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
-.card-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--text);line-height:1.3;margin-bottom:8px}
-.card-excerpt{font-size:12px;font-weight:300;line-height:1.65;color:var(--sub);margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.card-meta{font-size:10px;color:var(--muted)}
-.no-results{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
-.sidebar{padding:36px 0 36px 28px;position:sticky;top:80px}
-.sidebar-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:14px}
-.sidebar-title{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
-.ticker-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--border)}
-.ticker-row:last-child{border:none}
-.ticker-name{font-size:11px;font-weight:500;color:var(--text)}
-.ticker-price{font-size:12px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--text)}
-.ticker-chg{font-size:10px;font-weight:500}
-.up{color:#4caf50}.down{color:#ef5350}
-.popular-item{display:flex;gap:8px;align-items:flex-start;padding:9px 0;border-bottom:0.5px solid var(--border);cursor:pointer;transition:opacity .2s}
-.popular-item:hover{opacity:.75}
-.popular-item:last-child{border:none}
-.popular-num{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:var(--gold);line-height:1;min-width:20px}
-.popular-text{font-size:11px;font-weight:400;color:var(--sub);line-height:1.5}
-.load-more-wrap{text-align:center;padding:16px 0 40px}
-.btn-load{font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid rgba(184,151,90,.3);padding:10px 28px;border-radius:4px;cursor:pointer;transition:all .2s}
-.btn-load:hover{background:var(--gold);color:var(--navy)}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:500;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto}
+.nav-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;letter-spacing:.06em;color:#fff}
+.nav-name em{color:#E8CE96;font-style:italic}
+.nav-sub{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4)}
+.nav-links{display:flex;align-items:center;gap:26px}
+.nav-links a{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+.nav-links a:hover,.nav-links a.active{color:#E8CE96}
+.nav-cta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0E1830;background:#E8CE96;padding:9px 22px;border-radius:8px;text-decoration:none}
+.nav-cta:hover{background:#fff;color:#0E1830}
+@media(max-width:880px){.nav-links{display:none}}
+
+/* hoja del diario */
+.sheet-wrap{max-width:1180px;margin:0 auto;padding:34px 24px 64px}
+.sheet{background:var(--paper);border:1px solid rgba(0,0,0,.1);border-radius:16px;box-shadow:0 24px 60px rgba(20,33,61,.14);overflow:hidden}
+.masthead{padding:36px 48px 22px;text-align:center;border-bottom:3px double var(--navy)}
+.mh-top{display:flex;justify-content:space-between;align-items:center;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;color:var(--mut);text-transform:uppercase;margin-bottom:16px}
+.mh-title{font:700 clamp(38px,5vw,52px) 'Playfair Display',serif;color:var(--navy);letter-spacing:.01em;margin-bottom:8px}
+.mh-sub{font:400 12px 'IBM Plex Sans',sans-serif;letter-spacing:.26em;color:var(--gold);text-transform:uppercase}
+
+/* tira de mercado (la barrita, versión diario) */
+.mkt-strip{display:flex;align-items:center;justify-content:center;gap:26px;padding:10px 48px;border-bottom:1px solid rgba(0,0,0,.12);font:500 12px 'IBM Plex Mono',monospace;color:var(--sub);flex-wrap:wrap}
+.mkt-strip b{color:var(--ink);font-weight:600}
+.mkt-up{color:#1F7A4D}.mkt-dn{color:#B23A3A}
+
+/* nav de categorías */
+.cat-nav{display:flex;align-items:center;justify-content:center;gap:26px;padding:14px 48px;background:var(--navy);flex-wrap:wrap}
+.cat-nav div{font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;padding-bottom:3px;border-bottom:2px solid transparent;color:rgba(255,255,255,.72)}
+.cat-nav div:hover{color:#E8CE96}
+.cat-nav div.on{color:#E8CE96;border-bottom-color:var(--gold)}
+
+/* lead + rail */
+.lead-rail{display:grid;grid-template-columns:1.65fr 1fr;gap:0}
+.lead{padding:36px 36px 36px 48px;border-right:1px solid rgba(0,0,0,.12)}
+.lead-cat{font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;margin-bottom:14px}
+.lead h2{font:700 clamp(30px,3.6vw,40px) 'Playfair Display',serif;color:var(--ink);line-height:1.12;margin-bottom:20px;text-wrap:pretty;cursor:pointer}
+.lead h2:hover{color:var(--navy)}
+.lead-img{position:relative;height:260px;border-radius:10px;margin-bottom:20px;box-shadow:0 10px 26px rgba(20,33,61,.18);background:linear-gradient(135deg,#14213D,#B08A3E);background-size:cover;background-position:center;cursor:pointer}
+.lead-sum{font:400 15.5px 'IBM Plex Sans',sans-serif;color:var(--ink2);line-height:1.8;column-count:2;column-gap:30px;margin-bottom:18px;text-wrap:pretty}
+.lead-meta{display:flex;align-items:center;gap:16px}
+.lead-meta .f{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;color:var(--mut);text-transform:uppercase}
+.lead-meta a{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.04em;cursor:pointer}
+.rail{padding:36px 48px 36px 32px}
+.rail-h{font:600 13px 'Playfair Display',serif;color:var(--navy);padding-bottom:11px;border-bottom:2px solid var(--gold);margin-bottom:4px}
+.rail-item{padding:18px 0;border-bottom:1px solid rgba(0,0,0,.1);cursor:pointer}
+.rail-item:hover{opacity:.72}
+.rail-cat{font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px}
+.rail-item h4{font:600 17px 'Playfair Display',serif;color:var(--ink);line-height:1.3;margin-bottom:7px;text-wrap:pretty}
+.rail-f{font:500 10px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;color:var(--mut);text-transform:uppercase}
+
+/* grilla inferior */
+.more{padding:28px 48px 48px;border-top:3px double var(--navy);margin-top:6px}
+.more-h{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+.more-h span{font:600 15px 'Playfair Display',serif;color:var(--ink)}
+.more-h i{flex:1;height:1px;background:rgba(0,0,0,.1)}
+.more-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:26px}
+.mg-item{cursor:pointer}
+.mg-item:hover{opacity:.82}
+.mg-img{height:130px;border-radius:8px;margin-bottom:13px;background:linear-gradient(135deg,#14213D,#2B5FB0);background-size:cover;background-position:center}
+.mg-cat{font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px}
+.mg-item h4{font:600 16px 'Playfair Display',serif;color:var(--ink);line-height:1.3;margin-bottom:9px;text-wrap:pretty}
+.mg-item p{font:400 12.5px 'IBM Plex Sans',sans-serif;color:var(--sub);line-height:1.6;margin-bottom:10px}
+.mg-f{font:500 10px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;color:var(--mut);text-transform:uppercase}
+.more-btn-wrap{text-align:center;margin-top:34px}
+.more-btn{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);background:transparent;border:1px solid rgba(20,33,61,.3);padding:11px 30px;border-radius:8px;cursor:pointer}
+.more-btn:hover{background:var(--navy);color:#fff}
+.empty-state{padding:70px 48px;text-align:center;font:400 15px 'IBM Plex Sans',sans-serif;color:var(--sub)}
+
+/* modal lector */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(14,24,48,.85);z-index:500;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto}
 .modal-overlay.open{display:flex}
-.modal-article{background:var(--bg2);border:1px solid var(--border);border-radius:12px;width:100%;max-width:740px;position:relative;overflow:hidden}
-.modal-img{height:280px;overflow:hidden;position:relative}
-.modal-img img{width:100%;height:100%;object-fit:cover}
-.modal-img-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:64px}
-.modal-close{position:absolute;top:14px;right:14px;width:34px;height:34px;background:rgba(0,0,0,.45);border:none;border-radius:50%;color:#fff;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(4px)}
-.modal-body{padding:32px 36px 40px}
-.modal-cats{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap}
-.modal-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:500;color:var(--text);line-height:1.2;margin-bottom:14px}
-.modal-meta{font-size:11px;color:var(--muted);margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--border)}
-.modal-content{font-size:14px;font-weight:300;line-height:1.85;color:var(--sub)}
+.modal-article{background:var(--paper);border-radius:14px;width:100%;max-width:760px;position:relative;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.modal-img{height:300px;overflow:hidden;position:relative;background:linear-gradient(135deg,#14213D,#B08A3E)}
+.modal-img img{width:100%;height:100%;object-fit:cover;display:block}
+.modal-close{position:absolute;top:14px;right:14px;width:34px;height:34px;background:rgba(20,33,61,.55);border:none;border-radius:50%;color:#fff;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(4px)}
+.modal-body{padding:32px 40px 44px}
+.modal-cats{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.mcat{font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border-radius:4px;background:rgba(20,33,61,.07)}
+.modal-title{font:700 30px 'Playfair Display',serif;color:var(--ink);line-height:1.18;margin-bottom:14px;text-wrap:pretty}
+.modal-meta{font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:var(--mut);text-transform:uppercase;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid rgba(0,0,0,.12)}
+.modal-content{font:400 14.5px 'IBM Plex Sans',sans-serif;line-height:1.85;color:var(--ink2)}
 .modal-content p{margin-bottom:16px}
-.modal-content h3{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--text);margin:24px 0 10px}
-.wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;box-shadow:0 4px 16px rgba(37,211,102,.35);transition:transform .2s;text-decoration:none}
+.modal-content h3{font:600 20px 'Playfair Display',serif;color:var(--navy);margin:26px 0 10px}
+.modal-content strong{color:var(--ink)}
+
+/* footer + mail float */
+footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.footer-copy{font:400 11px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
+.footer-links{display:flex;gap:20px}
+.footer-links a{font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase}
+.wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;transition:transform .2s;text-decoration:none}
 .wa-float:hover{transform:scale(1.1)}
-footer{background:#040c14;padding:28px 52px;border-top:1px solid rgba(184,151,90,.08);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
-.footer-copy{font-size:11px;color:rgba(255,255,255,.2)}
-#no-results{display:none}
+
+@media(max-width:920px){
+  .lead-rail{grid-template-columns:1fr}
+  .lead{border-right:none;border-bottom:1px solid rgba(0,0,0,.12);padding:28px 24px}
+  .rail{padding:28px 24px}
+  .more{padding:24px 24px 40px}
+  .more-grid{grid-template-columns:repeat(2,1fr)}
+  .lead-sum{column-count:1}
+  .masthead{padding:28px 24px 18px}
+  .mkt-strip,.cat-nav{padding-left:24px;padding-right:24px}
+}
+@media(max-width:540px){.more-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
+
 <nav>
   <a href="index.html" class="nav-brand">
     <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
@@ -138,83 +139,47 @@ footer{background:#040c14;padding:28px 52px;border-top:1px solid rgba(184,151,90
     <a href="index.html#contacto">Contacto</a>
   </div>
   <div class="nav-right">
-    <button class="theme-btn" onclick="toggleTheme()"></button>
     <a href="index.html" class="nav-cta">Acceso Cliente</a>
   </div>
 </nav>
 
-<div class="news-hero">
-  <div class="news-hero-bg"></div>
-  <div class="news-hero-inner">
-    <div class="news-hero-tag">Análisis de mercado</div>
-    <h1 class="news-hero-title">Noticias financieras</h1>
-    <p class="news-hero-desc">Análisis del mercado local e internacional, cripto, bonos y acciones. Contenido actualizado por el equipo Valtia.</p>
+<div class="sheet-wrap">
+  <div class="sheet">
+
+    <!-- masthead -->
+    <div class="masthead">
+      <div class="mh-top"><span>Córdoba · Argentina</span><span id="mh-fecha">—</span></div>
+      <div class="mh-title">El Briefing Valtia</div>
+      <div class="mh-sub">Mercados · Economía · Cripto</div>
+    </div>
+
+    <!-- tira de mercado en vivo -->
+    <div class="mkt-strip" id="mkt-strip">
+      <span>BTC <b id="s-btc">$--</b> <span id="s-btc-c"></span></span>
+      <span>ETH <b id="s-eth">$--</b> <span id="s-eth-c"></span></span>
+      <span>MEP <b id="s-mep">$--</b></span>
+      <span>BLUE <b id="s-blue">$--</b></span>
+      <span>CCL <b id="s-ccl">$--</b></span>
+    </div>
+
+    <!-- categorías -->
+    <div class="cat-nav" id="cat-nav">
+      <div class="on" data-cat="todos" onclick="filterCat('todos',this)">Todas</div>
+      <div data-cat="local" onclick="filterCat('local',this)">Mercado local</div>
+      <div data-cat="wall" onclick="filterCat('wall',this)">Wall Street</div>
+      <div data-cat="cripto" onclick="filterCat('cripto',this)">Cripto</div>
+      <div data-cat="bonos" onclick="filterCat('bonos',this)">Bonos y acciones</div>
+    </div>
+
+    <!-- contenido dinámico -->
+    <div id="paper-body">
+      <div class="empty-state">Cargando el briefing…</div>
+    </div>
+
   </div>
 </div>
 
-<div class="filters-bar">
-  <div class="cats">
-    <button class="cat-btn active" onclick="filterCat('todos',this)">Todos</button>
-    <button class="cat-btn" onclick="filterCat('local',this)">Mercado local</button>
-    <button class="cat-btn" onclick="filterCat('wall',this)">Wall Street</button>
-    <button class="cat-btn" onclick="filterCat('cripto',this)">Cripto</button>
-    <button class="cat-btn" onclick="filterCat('bonos',this)">Bonos y acciones</button>
-  </div>
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input type="text" class="search-input" placeholder="Buscar nota..." oninput="searchNews(this.value)">
-  </div>
-</div>
-
-<div class="page-layout">
-  <div>
-    <div class="featured-wrap" id="featured-section">
-      <div class="featured-label">Destacado</div>
-      <div class="featured-card" id="featured-card" onclick="openFeatured()">
-        <div class="featured-img">
-          <img id="feat-img" src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=700&q=80&auto=format&fit=crop" alt="Mercado financiero" onerror="this.parentNode.innerHTML='<div class=featured-img-fallback style=background:linear-gradient(135deg,#0D1B2A,#1A3A5C)>🌍</div>'">
-        </div>
-        <div class="featured-body">
-          <div>
-            <div class="featured-cats" id="feat-cats"></div>
-            <div class="featured-title" id="feat-title">Cargando análisis…</div>
-            <div class="featured-excerpt" id="feat-excerpt"></div>
-          </div>
-          <div>
-            <div class="featured-meta" id="feat-meta"></div>
-            <div class="read-more">Leer análisis →</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="news-section">
-      <div class="news-count" id="news-count">Mostrando <strong>6</strong> artículos</div>
-      <div class="news-grid" id="news-grid"></div>
-      <div id="no-results" class="no-results">No se encontraron artículos para tu búsqueda.</div>
-      <div class="load-more-wrap" id="load-more-wrap"><button class="btn-load" onclick="loadMore()">Ver más artículos</button></div>
-    </div>
-  </div>
-  <div class="sidebar">
-    <div class="sidebar-card">
-      <div class="sidebar-title">Mercado ahora</div>
-      <div class="ticker-row"><span class="ticker-name">BTC</span><span class="ticker-price" id="s-btc">$--</span><span class="ticker-chg up" id="s-btc-c">--%</span></div>
-      <div class="ticker-row"><span class="ticker-name">ETH</span><span class="ticker-price" id="s-eth">$--</span><span class="ticker-chg up" id="s-eth-c">--%</span></div>
-      <div class="ticker-row"><span class="ticker-name">Dólar MEP</span><span class="ticker-price" id="s-mep">$--</span><span class="ticker-chg" style="color:var(--muted)">ARS</span></div>
-      <div class="ticker-row"><span class="ticker-name">Dólar Blue</span><span class="ticker-price" id="s-blue">$--</span><span class="ticker-chg" style="color:var(--muted)">ARS</span></div>
-      <div class="ticker-row"><span class="ticker-name">S&P 500</span><span class="ticker-price" id="s-sp">$--</span><span class="ticker-chg up" id="s-sp-c">--%</span></div>
-    </div>
-    <div class="sidebar-card">
-      <div class="sidebar-title">Lo más leído</div>
-      <div id="popular-list"></div>
-    </div>
-    <div class="sidebar-card" style="background:linear-gradient(135deg,var(--navy3),var(--navy2));border-color:rgba(184,151,90,.2)">
-      <div class="sidebar-title" style="color:rgba(255,255,255,.5)">¿Querés más análisis?</div>
-      <p style="font-size:12px;font-weight:300;color:rgba(255,255,255,.4);line-height:1.65;margin-bottom:12px">Suscribite y recibí informes detallados y reuniones mensuales.</p>
-      <a href="index.html#planes" style="display:block;text-align:center;background:var(--gold);color:var(--navy);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:9px;border-radius:3px;text-decoration:none">Ver planes →</a>
-    </div>
-  </div>
-</div>
-
+<!-- modal lector -->
 <div class="modal-overlay" id="articleModal" onclick="closeIfOverlay(event)">
   <div class="modal-article">
     <div class="modal-img" id="modal-img-wrap">
@@ -229,135 +194,139 @@ footer{background:#040c14;padding:28px 52px;border-top:1px solid rgba(184,151,90
   </div>
 </div>
 
-<a href="mailto:valtyaanalytics@gmail.com?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail" style="background:var(--gold);box-shadow:0 4px 16px rgba(184,151,90,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0D1B2A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
-
 <footer>
-  <span class="footer-copy">© 2026 Valtia Analytics · valtia.tech</span>
-  <span class="footer-copy">Los análisis son de carácter informativo y no constituyen asesoramiento financiero.</span>
+  <div class="footer-copy">© 2026 Valtia Analytics — Análisis de carácter general y educativo. No constituye asesoramiento financiero.</div>
+  <div class="footer-links">
+    <a href="index.html">Inicio</a><a href="cartera.html">Carteras</a><a href="informes.html">Informes</a><a href="herramientas.html">Herramientas</a>
+  </div>
 </footer>
 
+<a href="mailto:valtyaanalytics@gmail.com?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail" style="background:#B08A3E;box-shadow:0 4px 16px rgba(176,138,62,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
+
 <script>
-function toggleTheme(){const h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'light':'dark';localStorage.setItem('valtia-theme',h.dataset.theme)}
-const t=localStorage.getItem('valtia-theme');if(t)document.documentElement.dataset.theme=t;
+/* ── El Briefing: render del diario ── */
+const CATS = {
+  local:  { name:"Mercado local",    color:"#1F7A4D" },
+  wall:   { name:"Wall Street",      color:"#14213D" },
+  cripto: { name:"Cripto",           color:"#2B5FB0" },
+  bonos:  { name:"Bonos y acciones", color:"#B08A3E" },
+};
+const catInfo = c => CATS[c] || { name:c, color:"#8B8375" };
+const GRADS = ["linear-gradient(135deg,#14213D,#B08A3E)","linear-gradient(135deg,#1F7A4D,#14213D)",
+  "linear-gradient(135deg,#2B5FB0,#0c1730)","linear-gradient(135deg,#1B2C55,#5B3FA8)"];
 
-// Images from Unsplash (financial/market themed, free to use)
-const IMGS=[
-  'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&q=75&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=600&q=75&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1640340434855-6084b1f4901c?w=600&q=75&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=600&q=75&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1559526324-593bc073d938?w=600&q=75&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1607944024060-0450380ddd33?w=600&q=75&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?w=600&q=75&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=600&q=75&auto=format&fit=crop',
-];
-const IMGS_BIG=[
-  'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&q=80&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1640340434855-6084b1f4901c?w=800&q=80&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&q=80&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1559526324-593bc073d938?w=800&q=80&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1607944024060-0450380ddd33?w=800&q=80&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?w=800&q=80&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800&q=80&auto=format&fit=crop',
-];
-const BG=[
-  'linear-gradient(135deg,#0D1B2A,#1A3A5C)',
-  'linear-gradient(135deg,#152336,#0D3B6E)',
-  'linear-gradient(135deg,#1a1a2e,#16213e)',
-  'linear-gradient(135deg,#0a1628,#1A3A5C)',
-  'linear-gradient(135deg,#1a0a00,#3d2200)',
-  'linear-gradient(135deg,#0a2818,#1a4d2e)',
-  'linear-gradient(135deg,#1a1500,#3d3200)',
-  'linear-gradient(135deg,#0d0d1a,#1a1a3e)',
-];
+let articles = [];      // se cargan desde Firestore (colección noticias)
+let currentCat = 'todos';
+let gridCount = 8;
 
-let articles=[]; // se cargan desde Firestore (coleccion noticias)
+const esc = s => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const bg = (a,i) => a.imagen ? `background-image:url('${esc(a.imagen)}')` : `background:${GRADS[i % GRADS.length]}`;
+const MESES = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
+function fShort(s){ const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(s||"")); return m?`${m[3]} ${MESES[+m[2]-1]} ${m[1]}`:""; }
 
-let visibleCount=6,currentCat='todos',currentSearch='';
-function getCatClass(c){return{local:'cat-local',wall:'cat-wall',cripto:'cat-cripto',bonos:'cat-bonos'}[c]||''}
-function getCatLabel(c){return{local:'Mercado local',wall:'Wall Street',cripto:'Cripto',bonos:'Bonos y acciones'}[c]||c}
-function filteredArticles(){return articles.filter(a=>{if(a.featured)return false;const catOk=currentCat==='todos'||a.cat.includes(currentCat);const searchOk=!currentSearch||a.title.toLowerCase().includes(currentSearch.toLowerCase());return catOk&&searchOk})}
+function filtered(){ return currentCat==='todos' ? articles : articles.filter(a=>a.cat.includes(currentCat)); }
 
-function renderGrid(){
-  const grid=document.getElementById('news-grid');
-  const filtered=filteredArticles();
-  const visible=filtered.slice(0,visibleCount);
-  grid.innerHTML='';
-  visible.forEach((a,i)=>{
-    const div=document.createElement('div');
-    div.className='news-card';
-    div.onclick=()=>openArticle(a.id);
-    const imgIdx=a.id%IMGS.length;
-    const src=a.imagen||IMGS[imgIdx];
-    div.innerHTML=`
-      <div class="card-img" style="background:${BG[imgIdx]}">
-        <img src="${src}" alt="${a.title}" loading="lazy" onerror="this.style.display='none'">
-      </div>
-      <div class="card-body">
-        <div class="card-cats">${a.cat.map(c=>`<span class="art-cat ${getCatClass(c)}">${getCatLabel(c)}</span>`).join('')}</div>
-        <div class="card-title">${a.title}</div>
-        <div class="card-excerpt">${a.excerpt}</div>
-        <div class="card-meta">📅 ${a.date} · ⏱ ${a.read} de lectura</div>
-      </div>`;
-    grid.appendChild(div);
-  });
-  document.getElementById('news-count').innerHTML=`Mostrando <strong>${visible.length}</strong> de <strong>${filtered.length}</strong> artículos`;
-  document.getElementById('no-results').style.display=filtered.length===0?'block':'none';
-  document.getElementById('load-more-wrap').style.display=filtered.length>visibleCount?'block':'none';
-  // Popular
-  const pop=document.getElementById('popular-list');pop.innerHTML='';
-  articles.slice(0,5).forEach((a,i)=>{const d=document.createElement('div');d.className='popular-item';d.onclick=()=>openArticle(a.id);d.innerHTML=`<div class="popular-num">${i+1}</div><div class="popular-text">${a.title}</div>`;pop.appendChild(d)});
+function renderPaper(){
+  const list = filtered();
+  const body = document.getElementById('paper-body');
+  if(!list.length){
+    body.innerHTML = '<div class="empty-state">Estamos preparando nuevos análisis. Volvé pronto.</div>';
+    return;
+  }
+  const lead = list[0], rail = list.slice(1,5), grid = list.slice(5, 5+gridCount);
+  const c0 = catInfo(lead.cat[0]);
+  let html = `
+  <div class="lead-rail">
+    <div class="lead">
+      <div class="lead-cat" style="color:${c0.color}">${esc(c0.name)} · Nota principal</div>
+      <h2 onclick="openArticle(${lead.id})">${esc(lead.title)}</h2>
+      <div class="lead-img" style="${bg(lead,0)}" onclick="openArticle(${lead.id})"></div>
+      <p class="lead-sum">${esc(lead.excerpt)}</p>
+      <div class="lead-meta"><span class="f">${fShort(lead.fecha)}</span><a onclick="openArticle(${lead.id})">Leer nota completa →</a></div>
+    </div>
+    <div class="rail">
+      <div class="rail-h">Últimas</div>
+      ${rail.map(a=>{const c=catInfo(a.cat[0]);return `
+      <div class="rail-item" onclick="openArticle(${a.id})">
+        <div class="rail-cat" style="color:${c.color}">${esc(c.name)}</div>
+        <h4>${esc(a.title)}</h4>
+        <div class="rail-f">${fShort(a.fecha)}</div>
+      </div>`;}).join("")}
+    </div>
+  </div>`;
+  if(grid.length){
+    html += `
+  <div class="more">
+    <div class="more-h"><span>Más noticias</span><i></i></div>
+    <div class="more-grid">
+      ${grid.map((a,i)=>{const c=catInfo(a.cat[0]);return `
+      <div class="mg-item" onclick="openArticle(${a.id})">
+        <div class="mg-img" style="${bg(a,i+1)}"></div>
+        <div class="mg-cat" style="color:${c.color}">${esc(c.name)}</div>
+        <h4>${esc(a.title)}</h4>
+        <p>${esc(String(a.excerpt).slice(0,140))}${String(a.excerpt).length>140?"…":""}</p>
+        <div class="mg-f">${fShort(a.fecha)}</div>
+      </div>`;}).join("")}
+    </div>
+    ${list.length > 5+gridCount ? '<div class="more-btn-wrap"><button class="more-btn" onclick="gridCount+=8;renderPaper()">Ver más noticias</button></div>' : ''}
+  </div>`;
+  }
+  body.innerHTML = html;
 }
 
-function filterCat(cat,btn){currentCat=cat;visibleCount=6;document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('featured-section').style.display=cat==='todos'?'block':'none';renderGrid()}
-function searchNews(val){currentSearch=val;visibleCount=6;renderGrid()}
-function loadMore(){visibleCount+=6;renderGrid()}
+function filterCat(cat, el){
+  currentCat = cat; gridCount = 8;
+  document.querySelectorAll('#cat-nav div').forEach(d=>d.classList.remove('on'));
+  el.classList.add('on');
+  renderPaper();
+}
 
+/* lector */
 function openArticle(id){
-  const a=articles.find(x=>x.id===id);if(!a)return;
-  const imgIdx=a.id%IMGS_BIG.length;
-  const wrap=document.getElementById('modal-img-wrap');
-  wrap.style.background=BG[imgIdx];
-  const bigSrc=a.imagen||IMGS_BIG[imgIdx];
-  wrap.innerHTML=`<button class="modal-close" onclick="closeArticle()">✕</button><img src="${bigSrc}" alt="${a.title}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`;
-  document.getElementById('modal-cats').innerHTML=a.cat.map(c=>`<span class="art-cat ${getCatClass(c)}">${getCatLabel(c)}</span>`).join('');
-  document.getElementById('modal-title').textContent=a.title;
-  document.getElementById('modal-meta').textContent=`📅 ${a.date} · ⏱ ${a.read} de lectura`;
-  document.getElementById('modal-content').innerHTML=a.content;
+  const a = articles.find(x=>x.id===id); if(!a) return;
+  const wrap = document.getElementById('modal-img-wrap');
+  wrap.innerHTML = `<button class="modal-close" onclick="closeArticle()">✕</button>` +
+    (a.imagen ? `<img src="${esc(a.imagen)}" alt="${esc(a.title)}" onerror="this.remove()">` : "");
+  document.getElementById('modal-cats').innerHTML = a.cat.map(c=>{const ci=catInfo(c);return `<span class="mcat" style="color:${ci.color}">${esc(ci.name)}</span>`;}).join("");
+  document.getElementById('modal-title').textContent = a.title;
+  document.getElementById('modal-meta').textContent = `${fShort(a.fecha)} · ${a.read} de lectura · Valtia Analytics`;
+  document.getElementById('modal-content').innerHTML = a.content;
   document.getElementById('articleModal').classList.add('open');
-  document.body.style.overflow='hidden';
+  document.body.style.overflow = 'hidden';
 }
-function closeArticle(){document.getElementById('articleModal').classList.remove('open');document.body.style.overflow=''}
-function closeIfOverlay(e){if(e.target===document.getElementById('articleModal'))closeArticle()}
+function closeArticle(){ document.getElementById('articleModal').classList.remove('open'); document.body.style.overflow=''; }
+function closeIfOverlay(e){ if(e.target===document.getElementById('articleModal')) closeArticle(); }
 
-async function fetchSidebar(){
+/* fecha del masthead */
+(function(){
+  const DIAS=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+  const MES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  const d=new Date();
+  document.getElementById('mh-fecha').textContent=`${DIAS[d.getDay()]} ${d.getDate()} de ${MES[d.getMonth()]}, ${d.getFullYear()}`;
+})();
+
+/* tira de mercado en vivo */
+async function fetchMkt(){
   try{
-    const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true',{headers:{'Accept':'application/json'}});
-    if(!r.ok)return;const d=await r.json();
-    const fmt=n=>'$'+n.toLocaleString('en-US',{maximumFractionDigits:0});
-    const fmtc=n=>(n>0?'+':'')+n.toFixed(2)+'%';
-    document.getElementById('s-btc').textContent=fmt(d.bitcoin.usd);
-    document.getElementById('s-eth').textContent=fmt(d.ethereum.usd);
-    const bc=d.bitcoin.usd_24h_change,ec=d.ethereum.usd_24h_change;
-    const sbc=document.getElementById('s-btc-c');sbc.textContent=fmtc(bc);sbc.className='ticker-chg '+(bc>0?'up':'down');
-    const sec=document.getElementById('s-eth-c');sec.textContent=fmtc(ec);sec.className='ticker-chg '+(ec>0?'up':'down');
+    const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true');
+    if(r.ok){const d=await r.json();
+      const set=(id,v,cid,ch)=>{const e=document.getElementById(id);if(e)e.textContent='$'+Math.round(v).toLocaleString('en-US');
+        const c=document.getElementById(cid);if(c){c.textContent=(ch>=0?'▲':'▼')+Math.abs(ch).toFixed(1)+'%';c.className=ch>=0?'mkt-up':'mkt-dn';}};
+      set('s-btc',d.bitcoin.usd,'s-btc-c',d.bitcoin.usd_24h_change);
+      set('s-eth',d.ethereum.usd,'s-eth-c',d.ethereum.usd_24h_change);}
+  }catch(e){}
+  try{
+    const r=await fetch('https://dolarapi.com/v1/dolares');
+    if(r.ok){const d=await r.json();
+      const set=(id,casa)=>{const x=d.find(v=>v.casa===casa);const e=document.getElementById(id);if(x&&e)e.textContent='$'+x.venta;};
+      set('s-mep','bolsa');set('s-blue','blue');set('s-ccl','contadoconliqui');}
   }catch(e){}
 }
-async function fetchDolarSidebar(){
-  try{
-    const r=await fetch('https://dolarapi.com/v1/dolares');if(!r.ok)return;const d=await r.json();
-    const mep=d.find(x=>x.casa==='bolsa');const blue=d.find(x=>x.casa==='blue');
-    if(mep)document.getElementById('s-mep').textContent='$'+mep.venta;
-    if(blue)document.getElementById('s-blue').textContent='$'+blue.venta;
-  }catch(e){}
-}
-
-renderGrid();fetchSidebar();fetchDolarSidebar();
-setInterval(fetchSidebar,60000);setInterval(fetchDolarSidebar,300000);
+fetchMkt(); setInterval(fetchMkt, 300000);
 </script>
+
 <script type="module">
-/* ── Noticias desde Firestore (coleccion noticias, solo publicadas) ── */
+/* ── Noticias desde Firestore (colección noticias, solo publicadas) ── */
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
@@ -367,39 +336,28 @@ const app = getApps().length ? getApp() : initializeApp({
   projectId: 'valtia-analytics',
 });
 const db = getFirestore(app);
-const MES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-const fdate = s => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s||"")); return m ? `${Number(m[3])} de ${MES[Number(m[2])-1]}, ${m[1]}` : String(s||""); };
-
-window.openFeatured = () => { if (window.__featId != null) openArticle(window.__featId); };
 
 try {
   const snap = await getDocs(query(collection(db, "noticias"), where("estado", "==", "publicado")));
   const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-    .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+    .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)) ||
+                    Number(!!b.destacado) - Number(!!a.destacado));
+  // el destacado más nuevo primero (nota principal), después el resto por fecha
+  docs.sort((a, b) => {
+    const f = String(b.fecha).localeCompare(String(a.fecha));
+    if (b.destacado !== a.destacado) return Number(!!b.destacado) - Number(!!a.destacado);
+    return f;
+  });
   articles = docs.map((d, i) => ({
     id: i,
     cat: (d.categorias && d.categorias.length) ? d.categorias : ["local"],
-    title: d.titulo, excerpt: d.resumen || "", date: fdate(d.fecha),
+    title: d.titulo, excerpt: d.resumen || "", fecha: d.fecha,
     read: Math.max(2, Math.round(String(d.contenido || "").split(/\s+/).length / 200)) + " min",
-    featured: !!d.destacado, content: d.contenido || "", imagen: d.imagen || "" }));
-  if (articles.length && !articles.some(a => a.featured)) articles[0].featured = true;
-  const feat = articles.find(a => a.featured);
-  if (feat) {
-    window.__featId = feat.id;
-    if (feat.imagen) { const fi = document.getElementById("feat-img"); if (fi) fi.src = feat.imagen; }
-    document.getElementById("feat-cats").innerHTML = feat.cat.map(c => `<span class="art-cat ${getCatClass(c)}">${getCatLabel(c)}</span>`).join("");
-    document.getElementById("feat-title").textContent = feat.title;
-    document.getElementById("feat-excerpt").textContent = feat.excerpt;
-    document.getElementById("feat-meta").innerHTML = `<span>📅 ${feat.date}</span><span>⏱ ${feat.read} de lectura</span>`;
-  } else {
-    document.getElementById("featured-section").style.display = "none";
-  }
-  renderGrid();
+    content: d.contenido || "", imagen: d.imagen || "" }));
+  renderPaper();
 } catch (e) {
-  document.getElementById("featured-section").style.display = "none";
-  const nr = document.getElementById("no-results");
-  nr.textContent = "Estamos preparando nuevos análisis. Volvé pronto.";
-  nr.style.display = "block";
+  document.getElementById('paper-body').innerHTML =
+    '<div class="empty-state">Estamos preparando nuevos análisis. Volvé pronto.</div>';
 }
 </script>
 <script type="module" src="nav-auth.js?v=3"></script>
