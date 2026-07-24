@@ -187,6 +187,57 @@ body.fl-app-on #portal-view { padding:0 !important; margin:0 !important; }
 .fl-flowfoot .l { font-size:8.5px; letter-spacing:.12em; color:var(--flMut); font-weight:700; text-transform:uppercase; }
 .fl-flowfoot .v { font:500 15px 'Playfair Display',serif; }
 .fl-link { font-size:10.5px; font-weight:700; color:var(--flGoldDeep); cursor:pointer; letter-spacing:.04em; }
+
+/* ── Mapa de cartera (solapa Análisis) ── */
+.fl-ana-strip { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:16px; }
+.fl-ana-chip { background:var(--flPanel); border:1px solid var(--flLine); border-radius:10px; padding:12px 14px; box-shadow:var(--flShadow); }
+.fl-ana-chip .l { font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--flMut); font-weight:700; margin-bottom:4px; }
+.fl-ana-chip .v { font:500 19px 'Playfair Display',serif; color:var(--flInk); }
+.fl-ana-ctrl { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:14px; font-size:11px; color:var(--flMut); }
+.fl-fbtn { font:600 11px 'IBM Plex Sans',sans-serif; padding:6px 13px; border-radius:99px; border:1px solid var(--flLine2); background:var(--flPanel); color:var(--flInk2); cursor:pointer; }
+.fl-fbtn.on { background:var(--flGold); border-color:var(--flGold); color:#fff; }
+.fl-ana-sel { font:500 11.5px 'IBM Plex Sans',sans-serif; padding:6px 10px; border-radius:8px; border:1px solid var(--flLine2); background:var(--flPanel); color:var(--flInk); }
+.fl-ana-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:14px; }
+.fl-ana-card { background:var(--flPanel); border:1px solid var(--flLine); border-radius:12px; padding:16px 18px; box-shadow:var(--flShadow); }
+.fl-ana-hd { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:10px; }
+.fl-ana-hd .tk { font:700 15px 'IBM Plex Sans',sans-serif; color:var(--flInk); }
+.fl-ana-hd .nm { font-weight:400; color:var(--flMut); font-size:12px; }
+.fl-ana-hd .sec { font-size:10.5px; color:var(--flMut); margin-top:2px; }
+.fl-ana-px { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+.fl-ana-px .p { font:500 22px 'Playfair Display',serif; color:var(--flInk); }
+.fl-ana-px .y { font-size:11px; color:var(--flInk2); }
+.fl-w52 { position:relative; height:4px; border-radius:2px; background:var(--flTrack); margin:10px 0 5px; }
+.fl-w52 i { position:absolute; top:-3px; width:10px; height:10px; border-radius:50%; background:var(--flGold); transform:translateX(-50%); border:2px solid var(--flPanel); box-sizing:content-box; }
+.fl-w52lbl { display:flex; justify-content:space-between; font-size:9.5px; color:var(--flMut); margin-bottom:10px; }
+.fl-ana-kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:10px; }
+.fl-ana-kpi { background:var(--flPanel2); border-radius:8px; padding:6px 9px; }
+.fl-ana-kpi span { display:block; font-size:8.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--flMut); font-weight:700; }
+.fl-ana-kpi b { font-size:12px; font-weight:600; color:var(--flInk); font-variant-numeric:tabular-nums; }
+.fl-ana-an { display:flex; justify-content:space-between; gap:10px; font-size:11px; color:var(--flInk2); margin-bottom:10px; }
+.fl-ana-an b { color:var(--flInk); }
+.fl-ana-hoy { background:var(--flPanel2); border-left:3px solid var(--flGold); border-radius:0 8px 8px 0; padding:9px 12px; font-size:11.5px; line-height:1.55; color:var(--flInk2); margin-bottom:10px; }
+.fl-ana-hoy b { color:var(--flInk); }
+.fl-ana-tog { width:100%; font:600 11px 'IBM Plex Sans',sans-serif; padding:8px; border-radius:8px; border:1px solid var(--flLine2); background:transparent; color:var(--flInk2); cursor:pointer; }
+.fl-ana-tog:hover { background:var(--flHover); }
+.fl-ana-det { display:none; margin-top:12px; }
+.fl-ana-det.open { display:block; }
+.fl-ana-views { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+.fl-ana-view { background:var(--flPanel2); border-radius:8px; padding:10px 12px; font-size:11.5px; line-height:1.55; color:var(--flInk2); }
+.fl-ana-view .vh { font-size:9px; letter-spacing:.08em; text-transform:uppercase; font-weight:700; color:var(--flGoldDeep); margin-bottom:5px; }
+.fl-ana-bb { display:grid; gap:8px; }
+.fl-ana-case { border:1px solid var(--flLine); border-radius:8px; padding:10px 12px; }
+.fl-ana-case .bh { font-size:9px; letter-spacing:.08em; text-transform:uppercase; font-weight:700; margin-bottom:6px; }
+.fl-ana-case ul { margin:0; padding-left:16px; }
+.fl-ana-case li { font-size:11.5px; line-height:1.6; color:var(--flInk2); margin-bottom:5px; }
+.fl-ana-comp { background:var(--flPanel); border:1px solid var(--flLine); border-radius:12px; padding:14px 16px; box-shadow:var(--flShadow); }
+.fl-ana-comp .hd { display:flex; justify-content:space-between; margin-bottom:8px; }
+.fl-ana-crow { display:flex; justify-content:space-between; gap:10px; padding:7px 9px; border-radius:7px; font-size:11px; color:var(--flInk2); }
+.fl-ana-crow.own { background:var(--flPanel2); border-left:3px solid var(--flGold); }
+.fl-ana-crow .n { font-weight:600; color:var(--flInk); white-space:nowrap; }
+.fl-ana-verd { margin-top:8px; padding-top:8px; border-top:1px solid var(--flLine); font-size:11px; line-height:1.55; color:var(--flInk2); }
+.fl-ana-mc { border-radius:12px; padding:16px 18px; border:1px solid var(--flLine); background:var(--flPanel); box-shadow:var(--flShadow); }
+.fl-ana-mc .flag { font-size:22px; }
+.fl-ana-mc .stance { font-size:9.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:3px 9px; border-radius:99px; }
 `;
 
 /* ── bloques: mapeo por palabra clave (nombres del sheet v2) ── */
@@ -682,21 +733,12 @@ function renderAll(d, sheet, news, mercado, informes, radar, analisis) {
     tabSen.insertAdjacentHTML("beforeend", radarHtml);
   }
 
-  /* ── ANÁLISIS: mapa de cartera (HTML autocontenido, iframe aislado) ── */
+  /* ── ANÁLISIS: mapa de cartera, nativo con los tokens del panel ── */
   const tabAna = document.getElementById("tab-analisis");
-  if (tabAna && analisis && analisis.html && !document.getElementById("fl-ana-frame")) {
-    const anaFecha = analisis.actualizado_utc
-      ? String(analisis.actualizado_utc.seconds ? new Date(analisis.actualizado_utc.seconds * 1000).toISOString() : analisis.actualizado_utc).slice(0, 10) : "";
-    tabAna.innerHTML = `<div class="flx">
-      <div class="fl-head"><div>
-        <div class="portal-title" style="margin-bottom:0">${analisis.titulo || "Análisis de cartera"}</div>
-        <div class="fl-meta" style="margin:6px 0 0">Mapa por posición · bull/bear, mi lectura y la tuya · ${anaFecha}</div>
-      </div></div>
-      <div style="height:12px"></div>
-      <iframe id="fl-ana-frame" title="Mapa de cartera" style="width:100%;height:80vh;border:1px solid rgba(184,151,90,.18);border-radius:12px;background:#0e0e10"></iframe>
-      <div class="fl-foot" style="margin-top:8px">Documento privado del gestor (fondoAnalisis/latest). Se actualiza con seed_analisis.py; los clientes no lo ven.</div></div>`;
-    document.getElementById("fl-ana-frame").srcdoc = analisis.html;
-  } else if (tabAna && !analisis && !document.getElementById("fl-ana-frame")) {
+  if (tabAna && analisis && analisis.json) {
+    try { renderAnalisis(tabAna, JSON.parse(analisis.json)); }
+    catch (e) { tabAna.innerHTML = `<div class="flx"><div class="portal-title">Análisis de cartera</div><div class="fl-strip">No pude leer el mapa: ${String(e).slice(0, 120)}</div></div>`; }
+  } else if (tabAna && !analisis) {
     tabAna.innerHTML = `<div class="flx"><div class="portal-title">Análisis de cartera</div>
       <div class="fl-strip">Sin mapa de cartera cargado — corré <code>python seed_analisis.py</code> con el último Dashboard_Cartera_Fondo.html.</div></div>`;
   }
@@ -923,6 +965,122 @@ window.flLoadEventos = async function() {
     box.innerHTML = `<div class="fl-foot" style="border-top:none">No se pudieron cargar los eventos (${String(e).slice(0,100)}).</div>`;
   }
 };
+
+/* ── Mapa de cartera: render nativo (checklist de integración de Lauti:
+      mismos tokens, tema claro/oscuro, sin iframe ni doble scroll) ── */
+let _anaData = null;
+let _anaState = { sig: "all", sec: "all", sort: "none", open: {} };
+
+const anaPill = s => s === "promediar" ? "p" : s === "mantener" ? "m" : "n";
+
+function anaCards() {
+  const st = _anaState;
+  let list = _anaData.posiciones.filter(p =>
+    (st.sig === "all" || p.sig === st.sig) && (st.sec === "all" || p.sector === st.sec));
+  if (st.sort === "up") list = [...list].sort((a, b) => (b.up ?? -1e9) - (a.up ?? -1e9));
+  if (st.sort === "y1") list = [...list].sort((a, b) => (b.y1 ?? -1e9) - (a.y1 ?? -1e9));
+  if (st.sort === "fpe") list = [...list].sort((a, b) => (a.fpe ?? 1e9) - (b.fpe ?? 1e9));
+  if (!list.length) return `<div class="fl-strip">Nada con esos filtros.</div>`;
+  return `<div class="fl-ana-grid">` + list.map(p => {
+    const i = _anaData.posiciones.indexOf(p);
+    const abierto = !!_anaState.open[p.tk];
+    return `<div class="fl-ana-card">
+      <div class="fl-ana-hd">
+        <div><span class="tk">${p.tk} <span class="nm">${p.nombre || ""}</span></span><div class="sec">${p.sector || ""}</div></div>
+        <span class="fl-pill ${anaPill(p.sig)}">${p.senal || p.sig || ""}</span>
+      </div>
+      <div class="fl-ana-px"><span class="p">${p.px || "—"}</span><span class="y">${p.y1txt || ""}</span></div>
+      ${p.w52pos != null ? `<div class="fl-w52"><i style="left:${p.w52pos}%"></i></div>
+      <div class="fl-w52lbl"><span>${p.w52lo || ""}</span><span>52 sem</span><span>${p.w52hi || ""}</span></div>` : ""}
+      ${p.kpis && p.kpis.length ? `<div class="fl-ana-kpis">${p.kpis.map(k => `<div class="fl-ana-kpi"><span>${k.l}</span><b>${k.v}</b></div>`).join("")}</div>` : ""}
+      <div class="fl-ana-an"><span>Target analistas <b>${p.target || "—"}</b></span><span>Balance <b>${p.balance || "—"}</b></span></div>
+      ${p.hoy ? `<div class="fl-ana-hoy"><b>Hoy:</b> ${p.hoy}</div>` : ""}
+      <button class="fl-ana-tog" onclick="flAnaTog('${p.tk}')">${abierto ? "▲ Cerrar" : "▼ Ver tesis, mi lectura y la tuya"}</button>
+      <div class="fl-ana-det${abierto ? " open" : ""}">
+        <div class="fl-ana-views">
+          <div class="fl-ana-view"><div class="vh">Mi lectura (Claudio)</div>${p.mi || "—"}</div>
+          <div class="fl-ana-view"><div class="vh">Tu lectura</div>${p.tu || "—"}</div>
+        </div>
+        <div class="fl-ana-bb">
+          <div class="fl-ana-case"><div class="bh" style="color:var(--flGood)">▲ Bull case</div><ul>${(p.bull || []).map(x => `<li>${x}</li>`).join("")}</ul></div>
+          <div class="fl-ana-case"><div class="bh" style="color:var(--flCrit)">▼ Bear case</div><ul>${(p.bear || []).map(x => `<li>${x}</li>`).join("")}</ul></div>
+        </div>
+      </div>
+    </div>`;
+  }).join("") + `</div>`;
+}
+
+window.flAnaTog = tk => { _anaState.open[tk] = !_anaState.open[tk]; const g = document.getElementById("fl-ana-cards"); if (g) g.innerHTML = anaCards(); };
+window.flAnaSig = (el, sig) => { _anaState.sig = sig; el.parentElement.querySelectorAll(".fl-fbtn").forEach(b => b.classList.remove("on")); el.classList.add("on"); const g = document.getElementById("fl-ana-cards"); if (g) g.innerHTML = anaCards(); };
+window.flAnaSec = v => { _anaState.sec = v; const g = document.getElementById("fl-ana-cards"); if (g) g.innerHTML = anaCards(); };
+window.flAnaSort = v => { _anaState.sort = v; const g = document.getElementById("fl-ana-cards"); if (g) g.innerHTML = anaCards(); };
+
+function renderAnalisis(tab, data) {
+  _anaData = data;
+  const st = _anaState;
+  const sectores = [...new Set(data.posiciones.map(p => p.sector).filter(Boolean))].sort();
+  const tonoCol = t => t === "success" ? "var(--flGood)" : t === "danger" ? "var(--flCrit)" : "var(--flGold)";
+  tab.innerHTML = `<div class="flx">
+    <div class="fl-head"><div>
+      <div class="portal-title" style="margin-bottom:0">${data.titulo || "Mapa de cartera"}</div>
+      <div class="fl-meta" style="margin:6px 0 0">${data.sub || ""}</div>
+    </div></div>
+    <div style="height:14px"></div>
+    ${data.strip && data.strip.length ? `<div class="fl-ana-strip">${data.strip.map(k => {
+      const verde = /promediar|upside/i.test(k.l), rojo = /rotar/i.test(k.l);
+      return `<div class="fl-ana-chip"><div class="l">${k.l}</div><div class="v" style="${verde ? "color:var(--flGood)" : rojo ? "color:var(--flCrit)" : ""}">${k.v}</div></div>`;
+    }).join("")}</div>` : ""}
+    <div class="fl-ana-ctrl">
+      <span>Señal:</span>
+      <button class="fl-fbtn${st.sig === "all" ? " on" : ""}" onclick="flAnaSig(this,'all')">Todas</button>
+      <button class="fl-fbtn${st.sig === "promediar" ? " on" : ""}" onclick="flAnaSig(this,'promediar')">Promediar</button>
+      <button class="fl-fbtn${st.sig === "mantener" ? " on" : ""}" onclick="flAnaSig(this,'mantener')">Mantener</button>
+      <button class="fl-fbtn${st.sig === "rotar" ? " on" : ""}" onclick="flAnaSig(this,'rotar')">Rotar</button>
+      <select class="fl-ana-sel" onchange="flAnaSec(this.value)">
+        <option value="all">Todos los sectores</option>
+        ${sectores.map(s => `<option value="${s}"${st.sec === s ? " selected" : ""}>${s}</option>`).join("")}
+      </select>
+      <span style="margin-left:6px">Ordenar:</span>
+      <select class="fl-ana-sel" onchange="flAnaSort(this.value)">
+        <option value="none"${st.sort === "none" ? " selected" : ""}>Por defecto</option>
+        <option value="up"${st.sort === "up" ? " selected" : ""}>Upside analistas ↓</option>
+        <option value="y1"${st.sort === "y1" ? " selected" : ""}>Momentum 1 año ↓</option>
+        <option value="fpe"${st.sort === "fpe" ? " selected" : ""}>Fwd P/E ↑ (más barata)</option>
+      </select>
+    </div>
+    <div id="fl-ana-cards">${anaCards()}</div>
+
+    ${data.competencia && data.competencia.length ? `
+    <div style="height:26px"></div>
+    <h4 class="fl-h4">Competencia por sector</h4>
+    <div class="fl-meta" style="margin:4px 0 12px">Cada posición contra sus rivales directos. La fila resaltada es la tuya.</div>
+    <div class="fl-ana-grid">${data.competencia.map(c => `
+      <div class="fl-ana-comp">
+        <div class="hd"><b style="color:var(--flInk)">${c.tk}</b><span class="fl-tag">${c.sector || ""}</span></div>
+        ${(c.rows || []).map(r => `<div class="fl-ana-crow${r.tuya ? " own" : ""}"><span class="n">${r.n}</span><span>${r.nota || ""}</span></div>`).join("")}
+        ${c.veredicto ? `<div class="fl-ana-verd">⚖ ${c.veredicto}</div>` : ""}
+      </div>`).join("")}</div>` : ""}
+
+    ${data.macro && data.macro.length ? `
+    <div style="height:26px"></div>
+    <h4 class="fl-h4">Macro y ponderación por país</h4>
+    <div class="fl-meta" style="margin:4px 0 12px">Dónde conviene estar más y menos ponderado.</div>
+    <div class="fl-ana-grid">${data.macro.map(m => `
+      <div class="fl-ana-mc">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span class="flag">${m.flag || ""}</span>
+          <div><div style="font:500 17px 'Playfair Display',serif;color:var(--flInk)">${m.pais}</div>
+          <span class="stance" style="color:${tonoCol(m.tono)};border:1px solid ${tonoCol(m.tono)}">${m.postura || ""}</span></div>
+        </div>
+        ${(m.kpis || []).length ? `<div class="fl-ana-kpis" style="grid-template-columns:1fr 1fr">${m.kpis.map(k => `<div class="fl-ana-kpi"><span>${k.l}</span><b>${k.v}</b></div>`).join("")}</div>` : ""}
+        ${m.tesis ? `<div style="font-size:11.5px;line-height:1.6;color:var(--flInk2);margin-bottom:8px"><b style="color:var(--flInk)">Tesis:</b> ${m.tesis}</div>` : ""}
+        ${m.riesgo ? `<div style="font-size:11px;line-height:1.55;color:var(--flMut)"><b>⚠ Riesgo:</b> ${m.riesgo}</div>` : ""}
+      </div>`).join("")}</div>
+    ${data.ponderacion ? `<div class="fl-ana-hoy" style="margin-top:14px">${data.ponderacion}</div>` : ""}` : ""}
+
+    <div class="fl-foot" style="margin-top:16px">${data.fuente || ""} Documento privado del gestor (fondoAnalisis/latest) · se actualiza con seed_analisis.py · los clientes no lo ven.</div>
+  </div>`;
+}
 
 async function fetchAll() {
   if (DEV) {
