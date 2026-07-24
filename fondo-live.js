@@ -238,6 +238,12 @@ body.fl-app-on #portal-view { padding:0 !important; margin:0 !important; }
 .fl-ana-mc { border-radius:12px; padding:16px 18px; border:1px solid var(--flLine); background:var(--flPanel); box-shadow:var(--flShadow); }
 .fl-ana-mc .flag { font-size:22px; }
 .fl-ana-mc .stance { font-size:9.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:3px 9px; border-radius:99px; }
+.fl-ana-hold { font-size:11px; color:var(--flInk2); background:var(--flPanel2); border-left:3px solid var(--flS1); border-radius:0 8px 8px 0; padding:7px 11px; margin-bottom:8px; }
+.fl-ana-hold b { color:var(--flInk); font-variant-numeric:tabular-nums; }
+.fl-ana-sys { font-size:11px; color:var(--flInk2); border:1px dashed var(--flLine2); border-radius:8px; padding:6px 11px; margin-bottom:10px; }
+.fl-ana-sys b { color:var(--flInk); }
+.fl-ana-sys.warn { border:1px solid var(--flCrit); }
+.fl-ana-sys.warn .dw { color:var(--flCrit); font-weight:700; }
 `;
 
 /* ── bloques: mapeo por palabra clave (nombres del sheet v2) ── */
@@ -736,7 +742,7 @@ function renderAll(d, sheet, news, mercado, informes, radar, analisis) {
   /* ── ANÁLISIS: mapa de cartera, nativo con los tokens del panel ── */
   const tabAna = document.getElementById("tab-analisis");
   if (tabAna && analisis && analisis.json) {
-    try { renderAnalisis(tabAna, JSON.parse(analisis.json)); }
+    try { renderAnalisis(tabAna, JSON.parse(analisis.json), d, c, mercado); }
     catch (e) { tabAna.innerHTML = `<div class="flx"><div class="portal-title">Análisis de cartera</div><div class="fl-strip">No pude leer el mapa: ${String(e).slice(0, 120)}</div></div>`; }
   } else if (tabAna && !analisis) {
     tabAna.innerHTML = `<div class="flx"><div class="portal-title">Análisis de cartera</div>
@@ -994,6 +1000,8 @@ function anaCards() {
       <div class="fl-w52lbl"><span>${p.w52lo || ""}</span><span>52 sem</span><span>${p.w52hi || ""}</span></div>` : ""}
       ${p.kpis && p.kpis.length ? `<div class="fl-ana-kpis">${p.kpis.map(k => `<div class="fl-ana-kpi"><span>${k.l}</span><b>${k.v}</b></div>`).join("")}</div>` : ""}
       <div class="fl-ana-an"><span>Target analistas <b>${p.target || "—"}</b></span><span>Balance <b>${p.balance || "—"}</b></span></div>
+      ${p._h ? `<div class="fl-ana-hold">En cartera: <b>${Number(p._h.qty).toLocaleString("es-AR")} u.</b>${p._h.pct != null ? ` · <b>${p._h.pct.toFixed(1).replace(".", ",")}%</b> del fondo` : ""}${p._h.val ? ` · ${fmtARS(p._h.val)}` : ""}</div>` : ""}
+      ${p._s ? `<div class="fl-ana-sys${p._s.discrepa ? " warn" : ""}">Sistema de rotación: <b>${p._s.score} pts · ${p._s.senal}</b>${p._s.discrepa ? ` <span class="dw">· ⚠ difiere de tu lectura (${p.sig})</span>` : " · coincide"}</div>` : ""}
       ${p.hoy ? `<div class="fl-ana-hoy"><b>Hoy:</b> ${p.hoy}</div>` : ""}
       <button class="fl-ana-tog" onclick="flAnaTog('${p.tk}')">${abierto ? "▲ Cerrar" : "▼ Ver tesis, mi lectura y la tuya"}</button>
       <div class="fl-ana-det${abierto ? " open" : ""}">
@@ -1015,11 +1023,39 @@ window.flAnaSig = (el, sig) => { _anaState.sig = sig; el.parentElement.querySele
 window.flAnaSec = v => { _anaState.sec = v; const g = document.getElementById("fl-ana-cards"); if (g) g.innerHTML = anaCards(); };
 window.flAnaSort = v => { _anaState.sort = v; const g = document.getElementById("fl-ana-cards"); if (g) g.innerHTML = anaCards(); };
 
-function renderAnalisis(tab, data) {
+function renderAnalisis(tab, data, sync, comp, mercado) {
   _anaData = data;
   const st = _anaState;
   const sectores = [...new Set(data.posiciones.map(p => p.sector).filter(Boolean))].sort();
   const tonoCol = t => t === "success" ? "var(--flGood)" : t === "danger" ? "var(--flCrit)" : "var(--flGold)";
+
+  // ── cruce 1: tenencias reales del sync (IOL) → unidades y % del fondo ──
+  const ALIAS = { YPF: "YPFD", PAMPA: "PAMP" };
+  const byTk = {};
+  ((((sync || {}).iol || {}).portafolio_argentina || {}).activos || []).forEach(a => {
+    const s = a.titulo && a.titulo.simbolo;
+    if (s) byTk[s] = a;
+  });
+  const totalFondo = comp && comp.total;
+  // ── cruce 2: señal del sistema de rotación vs lectura del mapa ──
+  const sys = {};
+  ((mercado || {}).senales || []).forEach(s => { if (s.tk) sys[s.tk] = s; });
+  let discrepancias = 0, conSistema = 0;
+  data.posiciones.forEach(p => {
+    const a = byTk[p.tk] || byTk[ALIAS[p.tk]];
+    p._h = a ? { qty: a.cantidad, val: a.valorizado,
+                 pct: (totalFondo && a.valorizado) ? a.valorizado / totalFondo * 100 : null } : null;
+    const s = sys[p.tk];
+    if (s && s.score != null) {
+      conSistema++;
+      const mapa = p.sig === "promediar" ? 1 : p.sig === "rotar" ? -1 : 0;
+      const sist = s.score >= 60 ? 1 : s.score < 45 ? -1 : 0;
+      p._s = { score: s.score, senal: String(s.senal || "").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, "").trim(),
+               discrepa: mapa * sist === -1 };
+      if (p._s.discrepa) discrepancias++;
+    } else p._s = null;
+  });
+  data._discrepancias = conSistema ? discrepancias : null;
   tab.innerHTML = `<div class="flx">
     <div class="fl-head"><div>
       <div class="portal-title" style="margin-bottom:0">${data.titulo || "Mapa de cartera"}</div>
@@ -1029,7 +1065,7 @@ function renderAnalisis(tab, data) {
     ${data.strip && data.strip.length ? `<div class="fl-ana-strip">${data.strip.map(k => {
       const verde = /promediar|upside/i.test(k.l), rojo = /rotar/i.test(k.l);
       return `<div class="fl-ana-chip"><div class="l">${k.l}</div><div class="v" style="${verde ? "color:var(--flGood)" : rojo ? "color:var(--flCrit)" : ""}">${k.v}</div></div>`;
-    }).join("")}</div>` : ""}
+    }).join("")}${data._discrepancias != null ? `<div class="fl-ana-chip"><div class="l">Mapa vs sistema</div><div class="v" style="color:${data._discrepancias ? "var(--flCrit)" : "var(--flGood)"}">${data._discrepancias ? data._discrepancias + " discrepancia" + (data._discrepancias > 1 ? "s" : "") : "Alineados"}</div></div>` : ""}</div>` : ""}
     <div class="fl-ana-ctrl">
       <span>Señal:</span>
       <button class="fl-fbtn${st.sig === "all" ? " on" : ""}" onclick="flAnaSig(this,'all')">Todas</button>
