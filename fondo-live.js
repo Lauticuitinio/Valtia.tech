@@ -153,6 +153,7 @@ body.fl-app-on #portal-view { padding:0 !important; margin:0 !important; }
 .fl-cur button.on { background:#14213D; color:#E8CE96; }
 .fl-dashrow { display:grid; grid-template-columns:1.55fr 340px; gap:13px; margin-bottom:14px; }
 .fl-dashrow2 { display:grid; grid-template-columns:1.5fr 1fr; gap:13px; }
+.fl-dashrow > *, .fl-dashrow2 > * { min-width:0; }
 @media (max-width:1000px) { .fl-dashrow, .fl-dashrow2 { grid-template-columns:1fr; } }
 .fl-pad { padding:16px 18px; overflow:visible; }
 .fl-h4 { font-size:9.5px; letter-spacing:.16em; color:var(--flMut); text-transform:uppercase; font-weight:700; margin:0 0 4px; }
@@ -392,7 +393,8 @@ window.flResizeCharts = () => {
   charts = charts.map(ch => {
     try {
       const cv = ch.canvas;
-      if (cv && cv.offsetParent !== null && cv.width === 0) {
+      const chico = cv && cv.parentElement && Math.abs(cv.clientWidth - cv.parentElement.clientWidth) > 4;
+      if (cv && cv.offsetParent !== null && (cv.width === 0 || chico)) {
         const cfg = { type: ch.config.type, data: ch.config.data, options: ch.config.options };
         ch.destroy();
         return new Chart(cv, cfg);
@@ -403,7 +405,7 @@ window.flResizeCharts = () => {
   });
 };
 
-function renderAll(d, sheet, news, mercado, informes, radar, analisis) {
+function renderAll(d, sheet, news, mercado, informes, radar, analisis, fondoWeb) {
   const c = compute(d);
   const sh = sheet || {};
   const clientes = sh.clientes || [];
@@ -857,6 +859,19 @@ function renderAll(d, sheet, news, mercado, informes, radar, analisis) {
                  x:{ grid:{ display:false }, ticks:{ color:inkSub, font:{size:10.5} } } } } });
   }
 
+  /* ── FONDO: balance consolidado (fondo_web.json → fondoWeb/latest).
+        Va DESPUÉS de la sección de charts: renderAll destruye todos los
+        charts ahí arriba (línea "charts.forEach(destroy)"), así que crear
+        el del fondo antes lo mataba en silencio. ── */
+  const tabFondo = document.getElementById("tab-fondo");
+  if (tabFondo && fondoWeb && fondoWeb.json) {
+    try { renderFondo(tabFondo, JSON.parse(fondoWeb.json), c); }
+    catch (e) { tabFondo.innerHTML = `<div class="flx"><div class="portal-title">Fondo</div><div class="fl-strip">No pude leer el balance: ${String(e).slice(0, 120)}</div></div>`; }
+  } else if (tabFondo && !fondoWeb) {
+    tabFondo.innerHTML = `<div class="flx"><div class="portal-title">Fondo</div>
+      <div class="fl-strip">Sin balance consolidado — corré <code>python seed_fondo_web.py</code> con el fondo_web.json más nuevo.</div></div>`;
+  }
+
   // pestaña "Movimientos" pasa a llamarse "Posiciones" para el admin
   const movLink = [...document.querySelectorAll(".portal-nav a")].find(a => a.textContent.trim() === "Movimientos");
   if (movLink) movLink.textContent = "Posiciones";
@@ -971,6 +986,87 @@ window.flLoadEventos = async function() {
     box.innerHTML = `<div class="fl-foot" style="border-top:none">No se pudieron cargar los eventos (${String(e).slice(0,100)}).</div>`;
   }
 };
+
+/* ── Fondo: balance consolidado (KPIs, cierres, clientes, gestor) ── */
+function renderFondo(tab, data, comp) {
+  const f = data.fondo || {};
+  const cierres = data.cierres || [];
+  const clientes = data.clientes || [];
+  const g = data.gestor || {};
+  const pctf = v => (v >= 0 ? "+" : "") + Number(v).toFixed(2).replace(".", ",") + "%";
+  const MES = { "01": "Ene", "02": "Feb", "03": "Mar", "04": "Abr", "05": "May", "06": "Jun",
+                "07": "Jul", "08": "Ago", "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dic" };
+  const mesLbl = m => { const p = String(m || "").split("-"); return (MES[p[1]] || p[1]) + " " + (p[0] || "").slice(2); };
+  const mtm = comp && comp.total ? comp.total : null;
+  const difMtm = (mtm && f.valor_total_ars) ? mtm - f.valor_total_ars : null;
+
+  const cliRows = clientes.map(x => {
+    const r = Number(x.rendimiento_pct) || 0;
+    return `<tr><td><b>${x.nombre}</b></td>
+      <td class="fl-num">${fmtARS(x.capital_neto)}</td>
+      <td class="fl-num ${cls(x.ganancia_acum)}">${x.ganancia_acum >= 0 ? "+" : ""}${fmtARS(x.ganancia_acum)}</td>
+      <td class="fl-num" style="font-weight:600">${fmtARS(x.valor_actual)}</td>
+      <td class="fl-num ${cls(r)}" style="font-weight:600">${pctf(r)}</td></tr>`;
+  }).join("");
+
+  tab.innerHTML = `<div class="flx">
+    <div class="fl-head"><div style="min-width:0">
+      <div class="portal-title" style="margin-bottom:0">Fondo</div>
+      <div class="fl-meta" style="margin:6px 0 0">Balance consolidado · actualizado ${data.actualizado || ""} · fee 10% inicial + 2% mensual s/ganancia</div>
+    </div></div>
+    <div style="height:14px"></div>
+    <div class="fl-ana-strip">
+      <div class="fl-ana-chip"><div class="l">Valor total del fondo</div><div class="v">${fmtARS(f.valor_total_ars)}</div></div>
+      <div class="fl-ana-chip"><div class="l">Ganancia clientes</div><div class="v" style="color:${(f.ganancia_total_clientes || 0) >= 0 ? "var(--flGood)" : "var(--flCrit)"}">${(f.ganancia_total_clientes || 0) >= 0 ? "+" : ""}${fmtARS(f.ganancia_total_clientes)}</div></div>
+      <div class="fl-ana-chip"><div class="l">Rendimiento clientes</div><div class="v" style="color:${(f.rendimiento_clientes || 0) >= 0 ? "var(--flGood)" : "var(--flCrit)"}">${pctf(f.rendimiento_clientes || 0)}</div></div>
+      <div class="fl-ana-chip"><div class="l">Saldo gestor pendiente</div><div class="v">${fmtARS(g.saldo)}</div></div>
+      ${difMtm != null ? `<div class="fl-ana-chip"><div class="l">MTM hoy (sync) vs balance</div><div class="v" style="color:${difMtm >= 0 ? "var(--flGood)" : "var(--flCrit)"}">${difMtm >= 0 ? "+" : ""}${fmtARS(difMtm)}</div></div>` : ""}
+    </div>
+    <div class="fl-dashrow2" style="margin-top:4px;margin-bottom:14px">
+      <div class="fl-panel fl-pad">
+        <h4 class="fl-h4">Evolución mensual</h4>
+        <div class="fl-meta" style="margin:2px 0 10px">Cierres del sheet contable${mtm ? " + valuación de hoy a mercado" : ""}</div>
+        <div style="position:relative;height:240px;min-width:0;overflow:hidden"><canvas id="fl-fondo-chart"></canvas></div>
+      </div>
+      <div class="fl-panel fl-pad">
+        <h4 class="fl-h4">Cuenta del gestor</h4>
+        <div class="fl-meta" style="margin:2px 0 12px">Fees devengados vs retirados</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--flInk2)"><span>Devengado (10% aportes + 2% mensual)</span><b class="fl-num" style="color:var(--flInk)">${fmtARS(g.devengado)}</b></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--flInk2)"><span>Ya cobrado / retirado</span><b class="fl-num" style="color:var(--flInk)">${fmtARS(g.cobrado)}</b></div>
+          <div style="border-top:1px solid var(--flLine);padding-top:10px;display:flex;justify-content:space-between;font-size:13px;color:var(--flInk2)"><span><b style="color:var(--flInk)">Saldo pendiente</b></span><b class="fl-num" style="font:500 20px 'Playfair Display',serif;color:var(--flGold)">${fmtARS(g.saldo)}</b></div>
+        </div>
+        ${cierres.length ? `<div class="fl-foot" style="margin-top:14px">Fee 2% del último cierre: ${fmtARS(cierres[cierres.length - 1].fee2 || 0)} (${mesLbl(cierres[cierres.length - 1].mes)})</div>` : ""}
+      </div>
+    </div>
+    <div class="fl-panel">
+      <div style="overflow-x:auto"><table style="min-width:640px">
+        <thead><tr><th>Cliente</th><th class="fl-num">Capital neto</th><th class="fl-num">Ganancia</th><th class="fl-num">Valor actual</th><th class="fl-num">Rendimiento</th></tr></thead>
+        <tbody>${cliRows}</tbody>
+      </table></div>
+      <div class="fl-foot">Ganancia medida sobre el capital neto (aportes − fee − retiros), repartida por capital y días. Documento privado del gestor (fondoWeb/latest) · se actualiza con seed_fondo_web.py.</div>
+    </div>
+  </div>`;
+
+  // chart: barras de cierres + valuación de hoy (MTM) si está disponible
+  const dark = document.documentElement.dataset.theme === "dark";
+  const grid = dark ? "rgba(255,255,255,.06)" : "rgba(0,0,0,.06)";
+  const tick = dark ? "rgba(240,237,232,.5)" : "rgba(35,32,26,.55)";
+  const labels = cierres.map(x => mesLbl(x.mes));
+  const totales = cierres.map(x => x.total_ars);
+  const gans = cierres.map(x => x.ganancia_ars);
+  if (mtm) { labels.push("Hoy (MTM)"); totales.push(mtm); gans.push(null); }
+  chart("fl-fondo-chart", { type: "bar",
+    data: { labels, datasets: [
+      { label: "Total del fondo", data: totales, backgroundColor: labels.map(l => l === "Hoy (MTM)" ? "rgba(176,138,62,.45)" : "rgba(176,138,62,.85)"), borderRadius: 6, maxBarThickness: 64 },
+      { label: "Ganancia del mes", data: gans, backgroundColor: "rgba(31,122,77,.75)", borderRadius: 6, maxBarThickness: 64 },
+    ] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: tick, font: { size: 11 } } },
+        tooltip: { callbacks: { label: x => ` ${x.dataset.label}: ${fmtARS(x.parsed.y)}` } } },
+      scales: { x: { grid: { color: grid }, ticks: { color: tick, font: { size: 11 } } },
+        y: { grid: { color: grid }, ticks: { color: tick, font: { size: 10 }, callback: v => "$" + (v / 1e6).toFixed(0) + "M" } } } } });
+}
 
 /* ── Mapa de cartera: render nativo (checklist de integración de Lauti:
       mismos tokens, tema claro/oscuro, sin iframe ni doble scroll) ── */
@@ -1123,12 +1219,12 @@ async function fetchAll() {
     const j = async f => { const r = await fetch(f); return r.ok ? await r.json() : null; };
     return { sync: await j("dev-data/sync_latest.json"), sheet: await j("dev-data/sheet_meta.json"),
       mercado: await j("dev-data/mercado.json"), informes: [], radar: await j("dev-data/radar.json"),
-      analisis: await j("dev-data/analisis.json"),
+      analisis: await j("dev-data/analisis.json"), fondoWeb: await j("dev-data/fondo_web.json"),
       news: [{ titulo:"Briefing demo", fecha:"09/07/2026", fuente:"cowork", contenido:"Briefing de ejemplo (modo dev)." }] };
   }
   const db = getFirestore(getApp());
   _db = db;
-  const [syncSnap, sheetSnap, newsSnap, mercadoSnap, informesSnap, radarSnap, anaSnap] = await Promise.all([
+  const [syncSnap, sheetSnap, newsSnap, mercadoSnap, informesSnap, radarSnap, anaSnap, fwSnap] = await Promise.all([
     getDoc(doc(db, "fondoSync", "latest")),
     getDoc(doc(db, "fondoMeta", "sheet")),
     getDocs(query(collection(db, "noticiasFondo"), orderBy("fecha", "desc"), limit(5))).catch(() => null),
@@ -1136,6 +1232,7 @@ async function fetchAll() {
     getDocs(collection(db, "informes")).catch(() => null),
     getDoc(doc(db, "radar", "latest")).catch(() => null),
     getDoc(doc(db, "fondoAnalisis", "latest")).catch(() => null),
+    getDoc(doc(db, "fondoWeb", "latest")).catch(() => null),
   ]);
   return {
     sync: syncSnap.exists() ? JSON.parse(syncSnap.data().json) : null,
@@ -1147,6 +1244,7 @@ async function fetchAll() {
       slug: d.data().slug, visibilidad: d.data().visibilidad })) : [],
     radar: radarSnap && radarSnap.exists() ? JSON.parse(radarSnap.data().json) : null,
     analisis: anaSnap && anaSnap.exists() ? anaSnap.data() : null,
+    fondoWeb: fwSnap && fwSnap.exists() ? fwSnap.data() : null,
   };
 }
 
@@ -1166,16 +1264,16 @@ window.initFondoAdmin = async function initFondoAdmin() {
     document.head.appendChild(l);
   }
   try {
-    const { sync, sheet, news, mercado, informes, radar, analisis } = await fetchAll();
+    const { sync, sheet, news, mercado, informes, radar, analisis, fondoWeb } = await fetchAll();
     if (!sync) {
       document.getElementById("tab-dashboard").insertAdjacentHTML("afterbegin",
         `<div class="flx"><div class="fl-strip"><b>Sin snapshot</b> <code>fondoSync/latest</code> en Firestore — corré fondo_sync.py o esperá la corrida de las 9:00.</div></div>`);
       return;
     }
-    lastPayload = { sync, sheet, news, mercado, informes, radar, analisis };
-    renderAll(sync, sheet, news, mercado, informes, radar, analisis);
+    lastPayload = { sync, sheet, news, mercado, informes, radar, analisis, fondoWeb };
+    renderAll(sync, sheet, news, mercado, informes, radar, analisis, fondoWeb);
     // el toggle claro/oscuro del portal cambia data-theme: re-renderizar con los tokens nuevos
-    new MutationObserver(() => { if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news, lastPayload.mercado, lastPayload.informes, lastPayload.radar, lastPayload.analisis); })
+    new MutationObserver(() => { if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news, lastPayload.mercado, lastPayload.informes, lastPayload.radar, lastPayload.analisis, lastPayload.fondoWeb); })
       .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   } catch (e) {
     document.getElementById("tab-dashboard").insertAdjacentHTML("afterbegin",

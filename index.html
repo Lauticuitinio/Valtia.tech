@@ -723,6 +723,7 @@ a.v2plain{color:inherit;text-decoration:none}
     <a href="#" onclick="portalTab(event,'informes')">Informes</a>
     <a href="#" onclick="portalTab(event,'herramientas-p')">Herramientas</a>
 
+    <a href="#" id="fondo-tab" onclick="portalTab(event,'fondo')" style="display:none">Fondo</a>
     <a href="#" id="senales-tab" onclick="portalTab(event,'senales')" style="display:none">Señales</a>
     <a href="#" id="admin-tab" onclick="portalTab(event,'admin')" style="display:none">Admin ⚙️</a>
     <a href="#" id="analisis-tab" onclick="portalTab(event,'analisis')" style="display:none">Análisis 📊</a>
@@ -782,6 +783,10 @@ a.v2plain{color:inherit;text-decoration:none}
     <div id="tab-analisis" style="display:none">
       <div class="portal-title">Análisis de cartera</div>
       <p style="color:var(--sub);font-size:14px">Cargando el mapa de cartera…</p>
+    </div>
+    <div id="tab-fondo" style="display:none">
+      <div class="portal-title">Fondo</div>
+      <p style="color:var(--sub);font-size:14px">Cargando el balance consolidado…</p>
     </div>
   </div>
 </div>
@@ -885,7 +890,7 @@ function portalTab(e,tab){
   e.preventDefault();
   document.querySelectorAll('.portal-nav a').forEach(a=>a.classList.remove('active'));
   e.target.classList.add('active');
-  ['dashboard','rendimientos','movimientos','informes','herramientas-p','admin','analisis','senales'].forEach(t=>{
+  ['dashboard','rendimientos','movimientos','informes','herramientas-p','admin','analisis','senales','fondo'].forEach(t=>{
     const el=document.getElementById('tab-'+t);
     if(el)el.style.display=t===tab?'block':'none';
   });
@@ -1179,7 +1184,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   // ── CLIENT DASHBOARD ──
   function renderClientDashboard(data, name) {
     const fmt = n => '$' + Math.round(n || 0).toLocaleString('es-AR');
-    ['admin-tab','analisis-tab','senales-tab'].forEach(id => {
+    ['admin-tab','analisis-tab','senales-tab','fondo-tab'].forEach(id => {
       const t = document.getElementById(id); if (t) t.style.display = 'none';
     });
 
@@ -1256,6 +1261,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     if (analisisTab) analisisTab.style.display = 'inline';
     const senalesTab = document.getElementById('senales-tab');
     if (senalesTab) senalesTab.style.display = 'inline';
+    const fondoTab = document.getElementById('fondo-tab');
+    if (fondoTab) fondoTab.style.display = 'inline';
     // poblar las secciones del portal con el fondo en vivo (fondo-live.js)
     if (window.initFondoAdmin) window.initFondoAdmin();
     else window.__fondoAdminPending = true;
@@ -1304,7 +1311,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Expose to global scope for onclick handlers
   window.showHome = showHome;
 </script>
-<script type="module" src="fondo-live.js?v=16"></script>
+<script type="module" src="fondo-live.js?v=17"></script>
 
 </body>
 </html>
