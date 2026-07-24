@@ -346,7 +346,7 @@ window.flResizeCharts = () => {
   });
 };
 
-function renderAll(d, sheet, news, mercado, informes, radar) {
+function renderAll(d, sheet, news, mercado, informes, radar, analisis) {
   const c = compute(d);
   const sh = sheet || {};
   const clientes = sh.clientes || [];
@@ -682,6 +682,25 @@ function renderAll(d, sheet, news, mercado, informes, radar) {
     tabSen.insertAdjacentHTML("beforeend", radarHtml);
   }
 
+  /* ── ANÁLISIS: mapa de cartera (HTML autocontenido, iframe aislado) ── */
+  const tabAna = document.getElementById("tab-analisis");
+  if (tabAna && analisis && analisis.html && !document.getElementById("fl-ana-frame")) {
+    const anaFecha = analisis.actualizado_utc
+      ? String(analisis.actualizado_utc.seconds ? new Date(analisis.actualizado_utc.seconds * 1000).toISOString() : analisis.actualizado_utc).slice(0, 10) : "";
+    tabAna.innerHTML = `<div class="flx">
+      <div class="fl-head"><div>
+        <div class="portal-title" style="margin-bottom:0">${analisis.titulo || "Análisis de cartera"}</div>
+        <div class="fl-meta" style="margin:6px 0 0">Mapa por posición · bull/bear, mi lectura y la tuya · ${anaFecha}</div>
+      </div></div>
+      <div style="height:12px"></div>
+      <iframe id="fl-ana-frame" title="Mapa de cartera" style="width:100%;height:80vh;border:1px solid rgba(184,151,90,.18);border-radius:12px;background:#0e0e10"></iframe>
+      <div class="fl-foot" style="margin-top:8px">Documento privado del gestor (fondoAnalisis/latest). Se actualiza con seed_analisis.py; los clientes no lo ven.</div></div>`;
+    document.getElementById("fl-ana-frame").srcdoc = analisis.html;
+  } else if (tabAna && !analisis && !document.getElementById("fl-ana-frame")) {
+    tabAna.innerHTML = `<div class="flx"><div class="portal-title">Análisis de cartera</div>
+      <div class="fl-strip">Sin mapa de cartera cargado — corré <code>python seed_analisis.py</code> con el último Dashboard_Cartera_Fondo.html.</div></div>`;
+  }
+
   /* ── INFORMES: lista + lector, todo dentro del portal ── */
   _informes = informes || [];
   flRenderInformesList();
@@ -910,17 +929,19 @@ async function fetchAll() {
     const j = async f => { const r = await fetch(f); return r.ok ? await r.json() : null; };
     return { sync: await j("dev-data/sync_latest.json"), sheet: await j("dev-data/sheet_meta.json"),
       mercado: await j("dev-data/mercado.json"), informes: [], radar: await j("dev-data/radar.json"),
+      analisis: await j("dev-data/analisis.json"),
       news: [{ titulo:"Briefing demo", fecha:"09/07/2026", fuente:"cowork", contenido:"Briefing de ejemplo (modo dev)." }] };
   }
   const db = getFirestore(getApp());
   _db = db;
-  const [syncSnap, sheetSnap, newsSnap, mercadoSnap, informesSnap, radarSnap] = await Promise.all([
+  const [syncSnap, sheetSnap, newsSnap, mercadoSnap, informesSnap, radarSnap, anaSnap] = await Promise.all([
     getDoc(doc(db, "fondoSync", "latest")),
     getDoc(doc(db, "fondoMeta", "sheet")),
     getDocs(query(collection(db, "noticiasFondo"), orderBy("fecha", "desc"), limit(5))).catch(() => null),
     getDoc(doc(db, "mercado", "latest")).catch(() => null),
     getDocs(collection(db, "informes")).catch(() => null),
     getDoc(doc(db, "radar", "latest")).catch(() => null),
+    getDoc(doc(db, "fondoAnalisis", "latest")).catch(() => null),
   ]);
   return {
     sync: syncSnap.exists() ? JSON.parse(syncSnap.data().json) : null,
@@ -931,6 +952,7 @@ async function fetchAll() {
       fecha: d.data().fecha, tipo: d.data().tipo, resumen: d.data().resumen,
       slug: d.data().slug, visibilidad: d.data().visibilidad })) : [],
     radar: radarSnap && radarSnap.exists() ? JSON.parse(radarSnap.data().json) : null,
+    analisis: anaSnap && anaSnap.exists() ? anaSnap.data() : null,
   };
 }
 
@@ -950,16 +972,16 @@ window.initFondoAdmin = async function initFondoAdmin() {
     document.head.appendChild(l);
   }
   try {
-    const { sync, sheet, news, mercado, informes, radar } = await fetchAll();
+    const { sync, sheet, news, mercado, informes, radar, analisis } = await fetchAll();
     if (!sync) {
       document.getElementById("tab-dashboard").insertAdjacentHTML("afterbegin",
         `<div class="flx"><div class="fl-strip"><b>Sin snapshot</b> <code>fondoSync/latest</code> en Firestore — corré fondo_sync.py o esperá la corrida de las 9:00.</div></div>`);
       return;
     }
-    lastPayload = { sync, sheet, news, mercado, informes, radar };
-    renderAll(sync, sheet, news, mercado, informes, radar);
+    lastPayload = { sync, sheet, news, mercado, informes, radar, analisis };
+    renderAll(sync, sheet, news, mercado, informes, radar, analisis);
     // el toggle claro/oscuro del portal cambia data-theme: re-renderizar con los tokens nuevos
-    new MutationObserver(() => { if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news, lastPayload.mercado, lastPayload.informes, lastPayload.radar); })
+    new MutationObserver(() => { if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news, lastPayload.mercado, lastPayload.informes, lastPayload.radar, lastPayload.analisis); })
       .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   } catch (e) {
     document.getElementById("tab-dashboard").insertAdjacentHTML("afterbegin",
