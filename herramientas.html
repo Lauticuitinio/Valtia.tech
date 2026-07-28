@@ -43,6 +43,7 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 [data-theme="light"] .theme-btn::after{transform:translateX(16px)}
 .nav-cta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--navy);background:var(--gold);padding:9px 22px;border-radius:2px;text-decoration:none;transition:background .2s}
 .nav-cta:hover{background:var(--gold2)}
+@media(max-width:880px){nav .nav-links{display:none}}
 
 /* COTIZACIONES TOP BAR */
 .cot-bar{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 48px;overflow-x:auto}
@@ -201,32 +202,8 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
   </div>
 </nav>
 
-<!-- COTIZACIONES TOP BAR -->
-<div class="cot-bar">
-  <div class="cot-bar-inner" id="cot-bar-inner">
-    <span class="cot-group-label">CRIPTO</span>
-    <div class="cot-item"><span class="cot-name">BTC</span><span class="cot-price" id="cb-btc">$--</span><span class="cot-chg" id="cb-btc-c">--%</span></div>
-    <div class="cot-item"><span class="cot-name">ETH</span><span class="cot-price" id="cb-eth">$--</span><span class="cot-chg" id="cb-eth-c">--%</span></div>
-    <div class="cot-item"><span class="cot-name">SOL</span><span class="cot-price" id="cb-sol">$--</span><span class="cot-chg" id="cb-sol-c">--%</span></div>
-    <div class="cot-sep"></div>
-    <span class="cot-group-label">DÓLAR ARG</span>
-    <div class="cot-item"><span class="cot-name">MEP</span><span class="cot-price" id="cb-mep">$--</span><span class="cot-chg neutral">ARS</span></div>
-    <div class="cot-item"><span class="cot-name">Blue</span><span class="cot-price" id="cb-blue">$--</span><span class="cot-chg neutral">ARS</span></div>
-    <div class="cot-item"><span class="cot-name">CCL</span><span class="cot-price" id="cb-ccl">$--</span><span class="cot-chg neutral">ARS</span></div>
-    <div class="cot-item"><span class="cot-name">Oficial</span><span class="cot-price" id="cb-oficial">$--</span><span class="cot-chg neutral">ARS</span></div>
-    <div class="cot-sep"></div>
-    <span class="cot-group-label">ARG</span>
-    <div class="cot-item"><span class="cot-name">YPFD</span><span class="cot-price" id="cb-ypf">$--</span><span class="cot-chg" id="cb-ypf-c">--%</span></div>
-    <div class="cot-item"><span class="cot-name">GGAL</span><span class="cot-price" id="cb-ggal">$--</span><span class="cot-chg" id="cb-ggal-c">--%</span></div>
-    <div class="cot-item"><span class="cot-name">MELI</span><span class="cot-price" id="cb-meli">$--</span><span class="cot-chg" id="cb-meli-c">--%</span></div>
-    <div class="cot-sep"></div>
-    <span class="cot-group-label">EEUU</span>
-    <div class="cot-item"><span class="cot-name">NVDA</span><span class="cot-price" id="cb-nvda">$--</span><span class="cot-chg" id="cb-nvda-c">--%</span></div>
-    <div class="cot-item"><span class="cot-name">MSFT</span><span class="cot-price" id="cb-msft">$--</span><span class="cot-chg" id="cb-msft-c">--%</span></div>
-    <div class="cot-item"><span class="cot-name">AAPL</span><span class="cot-price" id="cb-aapl">$--</span><span class="cot-chg" id="cb-aapl-c">--%</span></div>
-    <div class="cot-item"><span class="cot-name">SPY</span><span class="cot-price" id="cb-spy">$--</span><span class="cot-chg" id="cb-spy-c">--%</span></div>
-  </div>
-</div>
+<!-- COTIZACIONES EN VIVO (módulo único del sitio: cotizaciones.js) -->
+<div id="valtia-cot"></div>
 
 <!-- TOOL TABS -->
 <div class="tools-nav">
@@ -609,54 +586,24 @@ function toggleLine(type){
   if(dolarChart){const idx={blue:0,mep:1,ccl:2,oficial:3,cripto:4}[type];dolarChart.data.datasets[idx].hidden=!lineVisibility[type];dolarChart.update()}
 }
 
-// COTIZACIONES TOP BAR
-async function fetchCryptoBar(){
-  try{
-    const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true',{headers:{'Accept':'application/json'}});
-    if(!r.ok)return;
-    const d=await r.json();
-    const fmt=n=>'$'+n.toLocaleString('en-US',{maximumFractionDigits:0});
-    const fmtc=n=>(n>0?'+':'')+n.toFixed(2)+'%';
-    const setItem=(id,priceId,changeId,price,change)=>{
-      const p=document.getElementById(priceId);const c=document.getElementById(changeId);
-      if(p)p.textContent=fmt(price);
-      if(c){c.textContent=fmtc(change);c.className='cot-chg '+(change>0?'up':'down')}
-    };
-    setItem('btc','cb-btc','cb-btc-c',d.bitcoin.usd,d.bitcoin.usd_24h_change);
-    setItem('eth','cb-eth','cb-eth-c',d.ethereum.usd,d.ethereum.usd_24h_change);
-    setItem('sol','cb-sol','cb-sol-c',d.solana.usd,d.solana.usd_24h_change);
-  }catch(e){}
-}
-
-async function fetchDolarBar(){
-  try{
-    const r=await fetch('https://dolarapi.com/v1/dolares');
-    if(!r.ok)return;
-    const d=await r.json();
-    const set=(id,val)=>{const el=document.getElementById(id);if(el&&val)el.textContent='$'+val};
-    const mep=d.find(x=>x.casa==='bolsa');
-    const blue=d.find(x=>x.casa==='blue');
-    const ccl=d.find(x=>x.casa==='contadoconliqui');
-    const oficial=d.find(x=>x.casa==='oficial');
-    const cripto=d.find(x=>x.casa==='cripto');
-    if(mep){set('cb-mep',mep.venta);set('dc-mep',mep.venta)}
-    if(blue){set('cb-blue',blue.venta);set('dc-blue',blue.venta)}
-    if(ccl){set('cb-ccl',ccl.venta);set('dc-ccl',ccl.venta)}
-    if(oficial){set('cb-oficial',oficial.venta);set('dc-oficial',oficial.venta)}
-    if(cripto){set('dc-cripto',cripto.venta)}
-  }catch(e){}
-}
+// Las tarjetas de dólar se alimentan del módulo de cotizaciones (un solo
+// fetch para toda la página: la barra y las tarjetas comparten el dato).
+document.addEventListener('valtia:cotizaciones', e=>{
+  const M={'d-bolsa':'dc-mep','d-blue':'dc-blue','d-contadoconliqui':'dc-ccl',
+           'd-oficial':'dc-oficial','d-cripto':'dc-cripto'};
+  Object.keys(M).forEach(k=>{
+    const it=e.detail[k], el=document.getElementById(M[k]);
+    if(it&&el)el.textContent=it.v;
+  });
+});
 
 // INIT
 document.addEventListener('DOMContentLoaded',()=>{
   initHeatmap('sp500');
-  fetchCryptoBar();
-  fetchDolarBar();
   loadDolarHistorico();
-  setInterval(fetchCryptoBar,60000);
-  setInterval(fetchDolarBar,300000);
 });
 </script>
+<script type="module" src="cotizaciones.js?v=1"></script>
 <!-- RADAR DE VALUACIÓN — carga desde Firestore (radar/latest) -->
 <script type="module">
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';

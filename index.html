@@ -319,24 +319,8 @@ footer{background:#040c14;padding:48px 52px;border-top:1px solid rgba(184,151,90
 </head>
 <body>
 
-<!-- TICKER -->
-<div class="ticker-bar">
-  <div class="ticker-track" id="ticker">
-    <div class="ticker-item"><span class="ticker-name">BTC/USDT</span><span class="ticker-price" id="btc-p">$--</span><span class="ticker-change up" id="btc-c">--%</span></div>
-    <div class="ticker-item"><span class="ticker-name">ETH/USDT</span><span class="ticker-price" id="eth-p">$--</span><span class="ticker-change up" id="eth-c">--%</span></div>
-    <div class="ticker-item"><span class="ticker-name">DÓLAR MEP</span><span class="ticker-price" id="mep-p">$--</span><span class="ticker-change" id="mep-c">ARG</span></div>
-    <div class="ticker-item"><span class="ticker-name">DÓLAR BLUE</span><span class="ticker-price" id="blue-p">$--</span><span class="ticker-change" id="blue-c">ARG</span></div>
-    <div class="ticker-item"><span class="ticker-name">MERVAL</span><span class="ticker-price" id="merval-p">—</span><span class="ticker-change up">Local</span></div>
-    <div class="ticker-item"><span class="ticker-name">S&P 500</span><span class="ticker-price" id="sp500-p">$--</span><span class="ticker-change up" id="sp500-c">--%</span></div>
-    <!-- duplicate for seamless loop -->
-    <div class="ticker-item"><span class="ticker-name">BTC/USDT</span><span class="ticker-price" id="btc-p2">$--</span><span class="ticker-change up">--</span></div>
-    <div class="ticker-item"><span class="ticker-name">ETH/USDT</span><span class="ticker-price" id="eth-p2">$--</span><span class="ticker-change up">--</span></div>
-    <div class="ticker-item"><span class="ticker-name">DÓLAR MEP</span><span class="ticker-price" id="mep-p2">$--</span><span class="ticker-change">ARG</span></div>
-    <div class="ticker-item"><span class="ticker-name">DÓLAR BLUE</span><span class="ticker-price" id="blue-p2">$--</span><span class="ticker-change">ARG</span></div>
-    <div class="ticker-item"><span class="ticker-name">MERVAL</span><span class="ticker-price">—</span><span class="ticker-change up">Local</span></div>
-    <div class="ticker-item"><span class="ticker-name">S&P 500</span><span class="ticker-price" id="sp500-p2">$--</span><span class="ticker-change up">--</span></div>
-  </div>
-</div>
+<!-- COTIZACIONES EN VIVO (módulo único del sitio: cotizaciones.js) -->
+<div id="valtia-cot"></div>
 
 <!-- NAV -->
 <nav>
@@ -928,48 +912,9 @@ function updateChartTheme(){
   [rendChart,portalChart].forEach(ch=>{if(!ch)return;['x','y'].forEach(ax=>{ch.options.scales[ax].grid.color=c.grid;ch.options.scales[ax].ticks.color=c.text});ch.update()});
 }
 
-// ── COTIZACIONES LIVE ──
-async function fetchCrypto(){
-  try{
-    const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true',{headers:{'Accept':'application/json'}});
-    if(!r.ok)throw new Error('status '+r.status);
-    const d=await r.json();
-    const fmt=n=>'$'+n.toLocaleString('en-US',{maximumFractionDigits:0});
-    const fmtc=n=>(n>0?'+':'')+n.toFixed(2)+'%';
-    ['btc-p','btc-p2','cot-btc'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=fmt(d.bitcoin.usd)});
-    ['eth-p','eth-p2','cot-eth'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=fmt(d.ethereum.usd)});
-    const bc=d.bitcoin.usd_24h_change;const ec=d.ethereum.usd_24h_change;
-    ['btc-c','cot-btc-c'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=fmtc(bc);el.className='ticker-change '+(bc>0?'up':'down')}});
-    ['eth-c','cot-eth-c'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=fmtc(ec);el.className='ticker-change '+(ec>0?'up':'down')}});
-  }catch(e){
-    // fallback: show placeholder prices if API blocked (CORS on localhost)
-    ['btc-p','btc-p2','cot-btc'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='Sin datos'});
-    ['eth-p','eth-p2','cot-eth'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='Sin datos'});
-    console.log('Crypto API (funciona en valtia.tech, no en preview local):',e.message);
-  }
-}
-async function fetchDolar(){
-  try{
-    const r=await fetch('https://dolarapi.com/v1/dolares');
-    if(!r.ok)throw new Error('status '+r.status);
-    const d=await r.json();
-    const mep=d.find(x=>x.casa==='bolsa');
-    const blue=d.find(x=>x.casa==='blue');
-    if(mep){const v='$'+mep.venta;['mep-p','mep-p2','cot-mep'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=v})}
-    if(blue){const v='$'+blue.venta;['blue-p','blue-p2','cot-blue'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=v})}
-  }catch(e){
-    console.log('Dólar API (funciona en valtia.tech, no en preview local):',e.message);
-  }
-}
-
-// ── INIT ──
-document.addEventListener('DOMContentLoaded',()=>{
-  fetchCrypto();
-  fetchDolar();
-  setInterval(fetchCrypto,60000);
-  setInterval(fetchDolar,300000);
-});
+// las cotizaciones en vivo las maneja cotizaciones.js (módulo único del sitio)
 </script>
+<script type="module" src="cotizaciones.js?v=1"></script>
 
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';

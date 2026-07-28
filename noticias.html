@@ -31,14 +31,6 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .nav-cta:hover{background:#fff;color:#0E1830}
 @media(max-width:880px){.nav-links{display:none}}
 
-/* ticker full-width (la barrita, estilo Bloomberg) */
-.tkbar{background:#0B1327;border-bottom:1px solid rgba(232,206,150,.12);padding:9px 52px;overflow-x:auto}
-.tkin{display:flex;gap:34px;min-width:max-content;font:500 12px 'IBM Plex Mono',monospace}
-.tkin>span{display:flex;gap:8px;align-items:center;white-space:nowrap}
-.tk-n{color:rgba(255,255,255,.5);letter-spacing:.06em}
-.tk-v{color:#fff;font-weight:600}
-.tk-up{color:#3FCE8A}.tk-dn{color:#E88A8A}
-
 /* masthead centrado sobre la franja oscura (estilo Bloomberg Línea) */
 .masthead{background:#0E1830;padding:26px 52px 20px;text-align:center}
 .masthead .t{font:700 clamp(30px,3.6vw,44px) 'Playfair Display',serif;color:#fff;letter-spacing:.01em;line-height:1}
@@ -110,7 +102,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 
 @media(max-width:1080px){.hero{grid-template-columns:1fr 1fr}.lead{grid-column:1/-1}.more-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:880px){
-  .tkbar,.masthead,.cat-nav,.wrap,footer{padding-left:20px;padding-right:20px}
+  .masthead,.cat-nav,.wrap,footer{padding-left:20px;padding-right:20px}
   .cat-nav{top:64px}
 }
 @media(max-width:600px){.hero{grid-template-columns:1fr}.more-grid{grid-template-columns:1fr}}
@@ -151,15 +143,8 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   <div class="pill" data-cat="bonos" onclick="filterCat('bonos',this)">Bonos y acciones</div>
 </div></div>
 
-<!-- ticker en vivo -->
-<div class="tkbar"><div class="tkin">
-  <span><span class="tk-n">BTC/USD</span><span class="tk-v" id="s-btc">$--</span><span id="s-btc-c"></span></span>
-  <span><span class="tk-n">ETH/USD</span><span class="tk-v" id="s-eth">$--</span><span id="s-eth-c"></span></span>
-  <span><span class="tk-n">DÓLAR MEP</span><span class="tk-v" id="s-mep">$--</span></span>
-  <span><span class="tk-n">DÓLAR BLUE</span><span class="tk-v" id="s-blue">$--</span></span>
-  <span><span class="tk-n">DÓLAR CCL</span><span class="tk-v" id="s-ccl">$--</span></span>
-  <span><span class="tk-n">OFICIAL</span><span class="tk-v" id="s-ofi">$--</span></span>
-</div></div>
+<!-- cotizaciones en vivo (módulo único del sitio: cotizaciones.js) -->
+<div id="valtia-cot"></div>
 
 <!-- contenido -->
 <div class="wrap" id="paper-body">
@@ -286,25 +271,8 @@ function closeIfOverlay(e){ if(e.target===document.getElementById('articleModal'
   document.getElementById('mh-fecha').textContent=`${DIAS[d.getDay()]} ${d.getDate()} de ${MES[d.getMonth()]}, ${d.getFullYear()} · Mercados · Economía · Cripto`;
 })();
 
-/* ticker en vivo */
-async function fetchMkt(){
-  try{
-    const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true');
-    if(r.ok){const d=await r.json();
-      const set=(id,v,cid,ch)=>{const e=document.getElementById(id);if(e)e.textContent='$'+Math.round(v).toLocaleString('en-US');
-        const c=document.getElementById(cid);if(c){c.textContent=(ch>=0?'▲':'▼')+Math.abs(ch).toFixed(1)+'%';c.className=ch>=0?'tk-up':'tk-dn';}};
-      set('s-btc',d.bitcoin.usd,'s-btc-c',d.bitcoin.usd_24h_change);
-      set('s-eth',d.ethereum.usd,'s-eth-c',d.ethereum.usd_24h_change);}
-  }catch(e){}
-  try{
-    const r=await fetch('https://dolarapi.com/v1/dolares');
-    if(r.ok){const d=await r.json();
-      const set=(id,casa)=>{const x=d.find(v=>v.casa===casa);const e=document.getElementById(id);if(x&&e)e.textContent='$'+x.venta;};
-      set('s-mep','bolsa');set('s-blue','blue');set('s-ccl','contadoconliqui');set('s-ofi','oficial');}
-  }catch(e){}
-}
-fetchMkt(); setInterval(fetchMkt, 300000);
 </script>
+<script type="module" src="cotizaciones.js?v=1"></script>
 
 <script type="module">
 /* ── Noticias desde Firestore (colección noticias, solo publicadas) ── */
