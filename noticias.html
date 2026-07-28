@@ -7,9 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ── El Briefing Valtia — layout tipo portal de noticias (ref: Bloomberg
-     Línea): fondo blanco de borde a borde, ticker oscuro con variaciones,
-     nota principal grande con imagen + grilla de tarjetas. ── */
+/* ── Noticias — layout tipo portal (ref: Bloomberg Línea): masthead
+     centrado sobre franja oscura, secciones en pills, ticker con
+     variaciones, nota principal grande + grilla de tarjetas. ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--ink:#101010;--sub:#57534A;--mut:#8B8375;--navy:#0E1830;--gold:#B08A3E;--gold2:#8A6A2F;--line:#E7E3DA;--up:#1F7A4D;--dn:#B23A3A}
 html{scroll-behavior:smooth}
@@ -39,17 +39,20 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .tk-v{color:#fff;font-weight:600}
 .tk-up{color:#3FCE8A}.tk-dn{color:#E88A8A}
 
-/* fila de sección: título + fecha */
-.briefhead{display:flex;align-items:baseline;justify-content:space-between;gap:14px;padding:22px 52px 14px;border-bottom:2px solid var(--ink);flex-wrap:wrap}
-.briefhead .t{font:700 26px 'Playfair Display',serif;color:var(--ink)}
-.briefhead .t em{color:var(--gold);font-style:italic}
-.briefhead .d{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+/* masthead centrado sobre la franja oscura (estilo Bloomberg Línea) */
+.masthead{background:#0E1830;padding:26px 52px 20px;text-align:center}
+.masthead .t{font:700 clamp(30px,3.6vw,44px) 'Playfair Display',serif;color:#fff;letter-spacing:.01em;line-height:1}
+.masthead .t em{color:#E8CE96;font-style:italic}
+.masthead .d{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(232,206,150,.75);margin-top:12px}
 
 /* secciones estilo Bloomberg: botones pill sobre franja oscura, arriba del ticker */
-.cat-nav{display:flex;align-items:center;gap:10px;padding:11px 52px;overflow-x:auto;background:#0B1327;position:sticky;top:64px;z-index:150;border-bottom:1px solid rgba(255,255,255,.06)}
-.cat-nav div{font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer;padding:8px 18px;border-radius:6px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);white-space:nowrap;transition:background .15s}
-.cat-nav div:hover{background:rgba(255,255,255,.16);color:#fff}
-.cat-nav div.on{background:#E8CE96;color:#0E1830;font-weight:600}
+.cat-nav{display:flex;padding:11px 52px;overflow-x:auto;background:#0B1327;position:sticky;top:64px;z-index:150;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06)}
+/* margin:auto en vez de justify-content:center — centra cuando entra y no
+   corta el primer pill cuando hay scroll horizontal */
+.cat-in{display:flex;align-items:center;gap:10px;min-width:max-content;margin:0 auto}
+.cat-nav div.pill{font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer;padding:8px 18px;border-radius:6px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);white-space:nowrap;transition:background .15s}
+.cat-nav div.pill:hover{background:rgba(255,255,255,.16);color:#fff}
+.cat-nav div.pill.on{background:#E8CE96;color:#0E1830;font-weight:600}
 
 /* grilla principal */
 .wrap{padding:26px 52px 60px}
@@ -107,7 +110,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 
 @media(max-width:1080px){.hero{grid-template-columns:1fr 1fr}.lead{grid-column:1/-1}.more-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:880px){
-  .tkbar,.briefhead,.cat-nav,.wrap,footer{padding-left:20px;padding-right:20px}
+  .tkbar,.masthead,.cat-nav,.wrap,footer{padding-left:20px;padding-right:20px}
   .cat-nav{top:64px}
 }
 @media(max-width:600px){.hero{grid-template-columns:1fr}.more-grid{grid-template-columns:1fr}}
@@ -133,14 +136,20 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   </div>
 </nav>
 
-<!-- secciones estilo Bloomberg (arriba del ticker) -->
-<div class="cat-nav" id="cat-nav">
-  <div class="on" data-cat="todos" onclick="filterCat('todos',this)">Todas</div>
-  <div data-cat="local" onclick="filterCat('local',this)">Mercado local</div>
-  <div data-cat="wall" onclick="filterCat('wall',this)">Wall Street</div>
-  <div data-cat="cripto" onclick="filterCat('cripto',this)">Cripto</div>
-  <div data-cat="bonos" onclick="filterCat('bonos',this)">Bonos y acciones</div>
+<!-- masthead centrado (estilo Bloomberg) -->
+<div class="masthead">
+  <div class="t">Valtia <em>Analytics</em></div>
+  <div class="d" id="mh-fecha">—</div>
 </div>
+
+<!-- secciones estilo Bloomberg (arriba del ticker) -->
+<div class="cat-nav"><div class="cat-in" id="cat-nav">
+  <div class="pill on" data-cat="todos" onclick="filterCat('todos',this)">Todas</div>
+  <div class="pill" data-cat="local" onclick="filterCat('local',this)">Mercado local</div>
+  <div class="pill" data-cat="wall" onclick="filterCat('wall',this)">Wall Street</div>
+  <div class="pill" data-cat="cripto" onclick="filterCat('cripto',this)">Cripto</div>
+  <div class="pill" data-cat="bonos" onclick="filterCat('bonos',this)">Bonos y acciones</div>
+</div></div>
 
 <!-- ticker en vivo -->
 <div class="tkbar"><div class="tkin">
@@ -152,15 +161,9 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   <span><span class="tk-n">OFICIAL</span><span class="tk-v" id="s-ofi">$--</span></span>
 </div></div>
 
-<!-- título + fecha -->
-<div class="briefhead">
-  <span class="t">Valtia <em>Analytics</em></span>
-  <span class="d" id="mh-fecha">—</span>
-</div>
-
 <!-- contenido -->
 <div class="wrap" id="paper-body">
-  <div class="empty-state">Cargando el briefing…</div>
+  <div class="empty-state">Cargando las noticias…</div>
 </div>
 
 <!-- modal lector -->
@@ -280,7 +283,7 @@ function closeIfOverlay(e){ if(e.target===document.getElementById('articleModal'
   const DIAS=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
   const MES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
   const d=new Date();
-  document.getElementById('mh-fecha').textContent=`${DIAS[d.getDay()]} ${d.getDate()} de ${MES[d.getMonth()]}, ${d.getFullYear()}`;
+  document.getElementById('mh-fecha').textContent=`${DIAS[d.getDay()]} ${d.getDate()} de ${MES[d.getMonth()]}, ${d.getFullYear()} · Mercados · Economía · Cripto`;
 })();
 
 /* ticker en vivo */
