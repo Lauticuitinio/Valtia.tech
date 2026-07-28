@@ -5,18 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Noticias — Valtia Analytics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ── El Briefing Valtia — porteo del diseño "Valtia Noticias v2" (Design).
-     Paleta fija de diario (cream/paper/navy/dorado), sin toggle de tema. ── */
+/* ── El Briefing Valtia — layout tipo portal de noticias (ref: Bloomberg
+     Línea): fondo blanco de borde a borde, ticker oscuro con variaciones,
+     nota principal grande con imagen + grilla de tarjetas. ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--paper:#F6F3EC;--cream:#EDE7DA;--navy:#14213D;--gold:#B08A3E;--gold2:#8A6A2F;--ink:#23201A;--ink2:#4A453B;--sub:#6B6456;--mut:#8B8375}
+:root{--ink:#101010;--sub:#57534A;--mut:#8B8375;--navy:#0E1830;--gold:#B08A3E;--gold2:#8A6A2F;--line:#E7E3DA;--up:#1F7A4D;--dn:#B23A3A}
 html{scroll-behavior:smooth}
-body{background:var(--cream);font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink)}
+body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink)}
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
+img{max-width:100%}
 
-/* nav global (idéntica al resto del sitio, fija en navy) */
+/* nav global (navy, igual al resto del sitio) */
 nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;background:rgba(14,24,48,.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(232,206,150,.14)}
 .nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
 .nav-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;letter-spacing:.06em;color:#fff}
@@ -29,98 +31,86 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .nav-cta:hover{background:#fff;color:#0E1830}
 @media(max-width:880px){.nav-links{display:none}}
 
-/* hoja del diario */
-.sheet-wrap{max-width:1180px;margin:0 auto;padding:34px 24px 64px}
-.sheet{background:var(--paper);border:1px solid rgba(0,0,0,.1);border-radius:16px;box-shadow:0 24px 60px rgba(20,33,61,.14);overflow:hidden}
-.masthead{padding:36px 48px 22px;text-align:center;border-bottom:3px double var(--navy)}
-.mh-top{display:flex;justify-content:space-between;align-items:center;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;color:var(--mut);text-transform:uppercase;margin-bottom:16px}
-.mh-title{font:700 clamp(38px,5vw,52px) 'Playfair Display',serif;color:var(--navy);letter-spacing:.01em;margin-bottom:8px}
-.mh-sub{font:400 12px 'IBM Plex Sans',sans-serif;letter-spacing:.26em;color:var(--gold);text-transform:uppercase}
+/* ticker full-width (la barrita, estilo Bloomberg) */
+.tkbar{background:#0B1327;border-bottom:1px solid rgba(232,206,150,.12);padding:9px 52px;overflow-x:auto}
+.tkin{display:flex;gap:34px;min-width:max-content;font:500 12px 'IBM Plex Mono',monospace}
+.tkin>span{display:flex;gap:8px;align-items:center;white-space:nowrap}
+.tk-n{color:rgba(255,255,255,.5);letter-spacing:.06em}
+.tk-v{color:#fff;font-weight:600}
+.tk-up{color:#3FCE8A}.tk-dn{color:#E88A8A}
 
-/* tira de mercado (la barrita, versión diario) */
-.mkt-strip{display:flex;align-items:center;justify-content:center;gap:26px;padding:10px 48px;border-bottom:1px solid rgba(0,0,0,.12);font:500 12px 'IBM Plex Mono',monospace;color:var(--sub);flex-wrap:wrap}
-.mkt-strip b{color:var(--ink);font-weight:600}
-.mkt-up{color:#1F7A4D}.mkt-dn{color:#B23A3A}
+/* fila de sección: título + fecha */
+.briefhead{display:flex;align-items:baseline;justify-content:space-between;gap:14px;padding:22px 52px 14px;border-bottom:2px solid var(--ink);flex-wrap:wrap}
+.briefhead .t{font:700 26px 'Playfair Display',serif;color:var(--ink)}
+.briefhead .t em{color:var(--gold);font-style:italic}
+.briefhead .d{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
 
-/* nav de categorías */
-.cat-nav{display:flex;align-items:center;justify-content:center;gap:26px;padding:14px 48px;background:var(--navy);flex-wrap:wrap}
-.cat-nav div{font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;padding-bottom:3px;border-bottom:2px solid transparent;color:rgba(255,255,255,.72)}
-.cat-nav div:hover{color:#E8CE96}
-.cat-nav div.on{color:#E8CE96;border-bottom-color:var(--gold)}
+/* categorías */
+.cat-nav{display:flex;align-items:center;gap:24px;padding:0 52px;border-bottom:1px solid var(--line);overflow-x:auto;background:#fff;position:sticky;top:64px;z-index:150}
+.cat-nav div{font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;padding:13px 0 11px;border-bottom:2px solid transparent;color:var(--sub);white-space:nowrap}
+.cat-nav div:hover{color:var(--ink)}
+.cat-nav div.on{color:var(--ink);border-bottom-color:var(--gold)}
 
-/* lead + rail */
-.lead-rail{display:grid;grid-template-columns:1.65fr 1fr;gap:0}
-.lead{padding:36px 36px 36px 48px;border-right:1px solid rgba(0,0,0,.12)}
-.lead-cat{font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;margin-bottom:14px}
-.lead h2{font:700 clamp(30px,3.6vw,40px) 'Playfair Display',serif;color:var(--ink);line-height:1.12;margin-bottom:20px;text-wrap:pretty;cursor:pointer}
-.lead h2:hover{color:var(--navy)}
-.lead-img{position:relative;height:260px;border-radius:10px;margin-bottom:20px;box-shadow:0 10px 26px rgba(20,33,61,.18);background:linear-gradient(135deg,#14213D,#B08A3E);background-size:cover;background-position:center;cursor:pointer}
-.lead-sum{font:400 15.5px 'IBM Plex Sans',sans-serif;color:var(--ink2);line-height:1.8;column-count:2;column-gap:30px;margin-bottom:18px;text-wrap:pretty}
-.lead-meta{display:flex;align-items:center;gap:16px}
-.lead-meta .f{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;color:var(--mut);text-transform:uppercase}
-.lead-meta a{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.04em;cursor:pointer}
-.rail{padding:36px 48px 36px 32px}
-.rail-h{font:600 13px 'Playfair Display',serif;color:var(--navy);padding-bottom:11px;border-bottom:2px solid var(--gold);margin-bottom:4px}
-.rail-item{padding:18px 0;border-bottom:1px solid rgba(0,0,0,.1);cursor:pointer}
-.rail-item:hover{opacity:.72}
-.rail-cat{font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px}
-.rail-item h4{font:600 17px 'Playfair Display',serif;color:var(--ink);line-height:1.3;margin-bottom:7px;text-wrap:pretty}
-.rail-f{font:500 10px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;color:var(--mut);text-transform:uppercase}
+/* grilla principal */
+.wrap{padding:26px 52px 60px}
+.hero{display:grid;grid-template-columns:1.15fr .62fr .62fr;gap:26px;padding-bottom:26px;border-bottom:1px solid var(--line)}
+.card{cursor:pointer;display:block}
+.card:hover h2,.card:hover h3,.card:hover h4{text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
+.cimg{aspect-ratio:16/9;background:linear-gradient(135deg,#14213D,#B08A3E);background-size:cover;background-position:center;margin-bottom:12px}
+.lead .cimg{aspect-ratio:16/10}
+.ccat{font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:8px}
+.lead h2{font:700 clamp(26px,2.6vw,36px) 'Playfair Display',serif;color:var(--ink);line-height:1.14;margin-bottom:12px;text-wrap:pretty}
+.hero .side h3{font:600 19px 'Playfair Display',serif;color:var(--ink);line-height:1.22;margin-bottom:8px;text-wrap:pretty}
+.cexc{font:400 14px 'IBM Plex Sans',sans-serif;color:var(--sub);line-height:1.62;margin-bottom:10px}
+.side .cexc{font-size:12.5px;margin-bottom:8px}
+.cdate{font:500 10px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.side{display:flex;flex-direction:column;gap:24px}
+.side .card{padding-bottom:24px;border-bottom:1px solid var(--line)}
+.side .card:last-child{border-bottom:none;padding-bottom:0}
 
-/* grilla inferior */
-.more{padding:28px 48px 48px;border-top:3px double var(--navy);margin-top:6px}
-.more-h{display:flex;align-items:center;gap:14px;margin-bottom:24px}
-.more-h span{font:600 15px 'Playfair Display',serif;color:var(--ink)}
-.more-h i{flex:1;height:1px;background:rgba(0,0,0,.1)}
+/* más noticias */
+.more-h{display:flex;align-items:center;gap:14px;margin:26px 0 20px}
+.more-h span{font:700 17px 'Playfair Display',serif;color:var(--ink)}
+.more-h i{flex:1;height:1px;background:var(--line)}
 .more-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:26px}
-.mg-item{cursor:pointer}
-.mg-item:hover{opacity:.82}
-.mg-img{height:130px;border-radius:8px;margin-bottom:13px;background:linear-gradient(135deg,#14213D,#2B5FB0);background-size:cover;background-position:center}
-.mg-cat{font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px}
-.mg-item h4{font:600 16px 'Playfair Display',serif;color:var(--ink);line-height:1.3;margin-bottom:9px;text-wrap:pretty}
-.mg-item p{font:400 12.5px 'IBM Plex Sans',sans-serif;color:var(--sub);line-height:1.6;margin-bottom:10px}
-.mg-f{font:500 10px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;color:var(--mut);text-transform:uppercase}
+.more-grid h4{font:600 16.5px 'Playfair Display',serif;color:var(--ink);line-height:1.25;margin-bottom:8px;text-wrap:pretty}
+.more-grid .cexc{font-size:12.5px}
 .more-btn-wrap{text-align:center;margin-top:34px}
-.more-btn{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);background:transparent;border:1px solid rgba(20,33,61,.3);padding:11px 30px;border-radius:8px;cursor:pointer}
-.more-btn:hover{background:var(--navy);color:#fff}
-.empty-state{padding:70px 48px;text-align:center;font:400 15px 'IBM Plex Sans',sans-serif;color:var(--sub)}
+.more-btn{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);padding:12px 32px;cursor:pointer}
+.more-btn:hover{background:var(--ink);color:#fff}
+.empty-state{padding:80px 52px;text-align:center;font:400 15px 'IBM Plex Sans',sans-serif;color:var(--sub)}
 
 /* modal lector */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(14,24,48,.85);z-index:500;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(16,16,16,.8);z-index:500;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto}
 .modal-overlay.open{display:flex}
-.modal-article{background:var(--paper);border-radius:14px;width:100%;max-width:760px;position:relative;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.modal-article{background:#fff;width:100%;max-width:760px;position:relative;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45)}
 .modal-img{height:300px;overflow:hidden;position:relative;background:linear-gradient(135deg,#14213D,#B08A3E)}
 .modal-img img{width:100%;height:100%;object-fit:cover;display:block}
-.modal-close{position:absolute;top:14px;right:14px;width:34px;height:34px;background:rgba(20,33,61,.55);border:none;border-radius:50%;color:#fff;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(4px)}
+.modal-close{position:absolute;top:14px;right:14px;width:34px;height:34px;background:rgba(16,16,16,.55);border:none;border-radius:50%;color:#fff;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(4px)}
 .modal-body{padding:32px 40px 44px}
 .modal-cats{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-.mcat{font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border-radius:4px;background:rgba(20,33,61,.07)}
-.modal-title{font:700 30px 'Playfair Display',serif;color:var(--ink);line-height:1.18;margin-bottom:14px;text-wrap:pretty}
-.modal-meta{font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:var(--mut);text-transform:uppercase;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid rgba(0,0,0,.12)}
-.modal-content{font:400 14.5px 'IBM Plex Sans',sans-serif;line-height:1.85;color:var(--ink2)}
+.mcat{font:700 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2)}
+.modal-title{font:700 30px 'Playfair Display',serif;color:var(--ink);line-height:1.16;margin-bottom:14px;text-wrap:pretty}
+.modal-meta{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;color:var(--mut);text-transform:uppercase;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.modal-content{font:400 15px 'IBM Plex Sans',sans-serif;line-height:1.85;color:#2E2A24}
 .modal-content p{margin-bottom:16px}
 .modal-content h3{font:600 20px 'Playfair Display',serif;color:var(--navy);margin:26px 0 10px}
 .modal-content strong{color:var(--ink)}
 
-/* footer + mail float */
-footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+/* footer + mail */
+footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:40px}
 .footer-copy{font:400 11px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
 .footer-links{display:flex;gap:20px}
 .footer-links a{font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase}
 .wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;transition:transform .2s;text-decoration:none}
 .wa-float:hover{transform:scale(1.1)}
 
-@media(max-width:920px){
-  .lead-rail{grid-template-columns:1fr}
-  .lead{border-right:none;border-bottom:1px solid rgba(0,0,0,.12);padding:28px 24px}
-  .rail{padding:28px 24px}
-  .more{padding:24px 24px 40px}
-  .more-grid{grid-template-columns:repeat(2,1fr)}
-  .lead-sum{column-count:1}
-  .masthead{padding:28px 24px 18px}
-  .mkt-strip,.cat-nav{padding-left:24px;padding-right:24px}
+@media(max-width:1080px){.hero{grid-template-columns:1fr 1fr}.lead{grid-column:1/-1}.more-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:880px){
+  .tkbar,.briefhead,.cat-nav,.wrap,footer{padding-left:20px;padding-right:20px}
+  .cat-nav{top:64px}
 }
-@media(max-width:540px){.more-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.hero{grid-template-columns:1fr}.more-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -143,40 +133,34 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   </div>
 </nav>
 
-<div class="sheet-wrap">
-  <div class="sheet">
+<!-- ticker en vivo, estilo Bloomberg -->
+<div class="tkbar"><div class="tkin">
+  <span><span class="tk-n">BTC/USD</span><span class="tk-v" id="s-btc">$--</span><span id="s-btc-c"></span></span>
+  <span><span class="tk-n">ETH/USD</span><span class="tk-v" id="s-eth">$--</span><span id="s-eth-c"></span></span>
+  <span><span class="tk-n">DÓLAR MEP</span><span class="tk-v" id="s-mep">$--</span></span>
+  <span><span class="tk-n">DÓLAR BLUE</span><span class="tk-v" id="s-blue">$--</span></span>
+  <span><span class="tk-n">DÓLAR CCL</span><span class="tk-v" id="s-ccl">$--</span></span>
+  <span><span class="tk-n">OFICIAL</span><span class="tk-v" id="s-ofi">$--</span></span>
+</div></div>
 
-    <!-- masthead -->
-    <div class="masthead">
-      <div class="mh-top"><span>Córdoba · Argentina</span><span id="mh-fecha">—</span></div>
-      <div class="mh-title">El Briefing Valtia</div>
-      <div class="mh-sub">Mercados · Economía · Cripto</div>
-    </div>
+<!-- título de sección + fecha -->
+<div class="briefhead">
+  <span class="t">El Briefing <em>Valtia</em></span>
+  <span class="d" id="mh-fecha">—</span>
+</div>
 
-    <!-- tira de mercado en vivo -->
-    <div class="mkt-strip" id="mkt-strip">
-      <span>BTC <b id="s-btc">$--</b> <span id="s-btc-c"></span></span>
-      <span>ETH <b id="s-eth">$--</b> <span id="s-eth-c"></span></span>
-      <span>MEP <b id="s-mep">$--</b></span>
-      <span>BLUE <b id="s-blue">$--</b></span>
-      <span>CCL <b id="s-ccl">$--</b></span>
-    </div>
+<!-- categorías -->
+<div class="cat-nav" id="cat-nav">
+  <div class="on" data-cat="todos" onclick="filterCat('todos',this)">Todas</div>
+  <div data-cat="local" onclick="filterCat('local',this)">Mercado local</div>
+  <div data-cat="wall" onclick="filterCat('wall',this)">Wall Street</div>
+  <div data-cat="cripto" onclick="filterCat('cripto',this)">Cripto</div>
+  <div data-cat="bonos" onclick="filterCat('bonos',this)">Bonos y acciones</div>
+</div>
 
-    <!-- categorías -->
-    <div class="cat-nav" id="cat-nav">
-      <div class="on" data-cat="todos" onclick="filterCat('todos',this)">Todas</div>
-      <div data-cat="local" onclick="filterCat('local',this)">Mercado local</div>
-      <div data-cat="wall" onclick="filterCat('wall',this)">Wall Street</div>
-      <div data-cat="cripto" onclick="filterCat('cripto',this)">Cripto</div>
-      <div data-cat="bonos" onclick="filterCat('bonos',this)">Bonos y acciones</div>
-    </div>
-
-    <!-- contenido dinámico -->
-    <div id="paper-body">
-      <div class="empty-state">Cargando el briefing…</div>
-    </div>
-
-  </div>
+<!-- contenido -->
+<div class="wrap" id="paper-body">
+  <div class="empty-state">Cargando el briefing…</div>
 </div>
 
 <!-- modal lector -->
@@ -204,14 +188,14 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 <a href="mailto:valtyaanalytics@gmail.com?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail" style="background:#B08A3E;box-shadow:0 4px 16px rgba(176,138,62,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
 <script>
-/* ── El Briefing: render del diario ── */
+/* ── render del portal de noticias ── */
 const CATS = {
-  local:  { name:"Mercado local",    color:"#1F7A4D" },
-  wall:   { name:"Wall Street",      color:"#14213D" },
-  cripto: { name:"Cripto",           color:"#2B5FB0" },
-  bonos:  { name:"Bonos y acciones", color:"#B08A3E" },
+  local:  { name:"Mercado local" },
+  wall:   { name:"Wall Street" },
+  cripto: { name:"Cripto" },
+  bonos:  { name:"Bonos y acciones" },
 };
-const catInfo = c => CATS[c] || { name:c, color:"#8B8375" };
+const catInfo = c => CATS[c] || { name:c };
 const GRADS = ["linear-gradient(135deg,#14213D,#B08A3E)","linear-gradient(135deg,#1F7A4D,#14213D)",
   "linear-gradient(135deg,#2B5FB0,#0c1730)","linear-gradient(135deg,#1B2C55,#5B3FA8)"];
 
@@ -226,50 +210,44 @@ function fShort(s){ const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(s||"")); retu
 
 function filtered(){ return currentCat==='todos' ? articles : articles.filter(a=>a.cat.includes(currentCat)); }
 
-function renderPaper(){
+function cardHtml(a, i, tag){
+  const c = catInfo(a.cat[0]);
+  const exc = tag === 'h4' ? String(a.excerpt).slice(0,120) + (String(a.excerpt).length > 120 ? "…" : "") : a.excerpt;
+  return `<div class="card" onclick="openArticle(${a.id})">
+    <div class="cimg" style="${bg(a,i)}"></div>
+    <div class="ccat">${esc(c.name)}</div>
+    <${tag}>${esc(a.title)}</${tag}>
+    <p class="cexc">${esc(exc)}</p>
+    <div class="cdate">${fShort(a.fecha)}</div>
+  </div>`;
+}
+
+function renderNews(){
   const list = filtered();
   const body = document.getElementById('paper-body');
   if(!list.length){
     body.innerHTML = '<div class="empty-state">Estamos preparando nuevos análisis. Volvé pronto.</div>';
     return;
   }
-  const lead = list[0], rail = list.slice(1,5), grid = list.slice(5, 5+gridCount);
+  const lead = list[0], side = list.slice(1,5), more = list.slice(5, 5+gridCount);
   const c0 = catInfo(lead.cat[0]);
   let html = `
-  <div class="lead-rail">
-    <div class="lead">
-      <div class="lead-cat" style="color:${c0.color}">${esc(c0.name)} · Nota principal</div>
-      <h2 onclick="openArticle(${lead.id})">${esc(lead.title)}</h2>
-      <div class="lead-img" style="${bg(lead,0)}" onclick="openArticle(${lead.id})"></div>
-      <p class="lead-sum">${esc(lead.excerpt)}</p>
-      <div class="lead-meta"><span class="f">${fShort(lead.fecha)}</span><a onclick="openArticle(${lead.id})">Leer nota completa →</a></div>
+  <div class="hero">
+    <div class="card lead" onclick="openArticle(${lead.id})">
+      <div class="cimg" style="${bg(lead,0)}"></div>
+      <div class="ccat">${esc(c0.name)}</div>
+      <h2>${esc(lead.title)}</h2>
+      <p class="cexc">${esc(lead.excerpt)}</p>
+      <div class="cdate">${fShort(lead.fecha)}</div>
     </div>
-    <div class="rail">
-      <div class="rail-h">Últimas</div>
-      ${rail.map(a=>{const c=catInfo(a.cat[0]);return `
-      <div class="rail-item" onclick="openArticle(${a.id})">
-        <div class="rail-cat" style="color:${c.color}">${esc(c.name)}</div>
-        <h4>${esc(a.title)}</h4>
-        <div class="rail-f">${fShort(a.fecha)}</div>
-      </div>`;}).join("")}
-    </div>
+    <div class="side">${side.slice(0,2).map((a,i)=>cardHtml(a,i+1,'h3')).join("")}</div>
+    <div class="side">${side.slice(2,4).map((a,i)=>cardHtml(a,i+3,'h3')).join("")}</div>
   </div>`;
-  if(grid.length){
+  if(more.length){
     html += `
-  <div class="more">
-    <div class="more-h"><span>Más noticias</span><i></i></div>
-    <div class="more-grid">
-      ${grid.map((a,i)=>{const c=catInfo(a.cat[0]);return `
-      <div class="mg-item" onclick="openArticle(${a.id})">
-        <div class="mg-img" style="${bg(a,i+1)}"></div>
-        <div class="mg-cat" style="color:${c.color}">${esc(c.name)}</div>
-        <h4>${esc(a.title)}</h4>
-        <p>${esc(String(a.excerpt).slice(0,140))}${String(a.excerpt).length>140?"…":""}</p>
-        <div class="mg-f">${fShort(a.fecha)}</div>
-      </div>`;}).join("")}
-    </div>
-    ${list.length > 5+gridCount ? '<div class="more-btn-wrap"><button class="more-btn" onclick="gridCount+=8;renderPaper()">Ver más noticias</button></div>' : ''}
-  </div>`;
+  <div class="more-h"><span>Más noticias</span><i></i></div>
+  <div class="more-grid">${more.map((a,i)=>cardHtml(a,i+5,'h4')).join("")}</div>
+  ${list.length > 5+gridCount ? '<div class="more-btn-wrap"><button class="more-btn" onclick="gridCount+=8;renderNews()">Ver más noticias</button></div>' : ''}`;
   }
   body.innerHTML = html;
 }
@@ -278,7 +256,7 @@ function filterCat(cat, el){
   currentCat = cat; gridCount = 8;
   document.querySelectorAll('#cat-nav div').forEach(d=>d.classList.remove('on'));
   el.classList.add('on');
-  renderPaper();
+  renderNews();
 }
 
 /* lector */
@@ -287,7 +265,7 @@ function openArticle(id){
   const wrap = document.getElementById('modal-img-wrap');
   wrap.innerHTML = `<button class="modal-close" onclick="closeArticle()">✕</button>` +
     (a.imagen ? `<img src="${esc(a.imagen)}" alt="${esc(a.title)}" onerror="this.remove()">` : "");
-  document.getElementById('modal-cats').innerHTML = a.cat.map(c=>{const ci=catInfo(c);return `<span class="mcat" style="color:${ci.color}">${esc(ci.name)}</span>`;}).join("");
+  document.getElementById('modal-cats').innerHTML = a.cat.map(c=>`<span class="mcat">${esc(catInfo(c).name)}</span>`).join(" · ");
   document.getElementById('modal-title').textContent = a.title;
   document.getElementById('modal-meta').textContent = `${fShort(a.fecha)} · ${a.read} de lectura · Valtia Analytics`;
   document.getElementById('modal-content').innerHTML = a.content;
@@ -297,7 +275,7 @@ function openArticle(id){
 function closeArticle(){ document.getElementById('articleModal').classList.remove('open'); document.body.style.overflow=''; }
 function closeIfOverlay(e){ if(e.target===document.getElementById('articleModal')) closeArticle(); }
 
-/* fecha del masthead */
+/* fecha */
 (function(){
   const DIAS=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
   const MES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
@@ -305,13 +283,13 @@ function closeIfOverlay(e){ if(e.target===document.getElementById('articleModal'
   document.getElementById('mh-fecha').textContent=`${DIAS[d.getDay()]} ${d.getDate()} de ${MES[d.getMonth()]}, ${d.getFullYear()}`;
 })();
 
-/* tira de mercado en vivo */
+/* ticker en vivo */
 async function fetchMkt(){
   try{
     const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true');
     if(r.ok){const d=await r.json();
       const set=(id,v,cid,ch)=>{const e=document.getElementById(id);if(e)e.textContent='$'+Math.round(v).toLocaleString('en-US');
-        const c=document.getElementById(cid);if(c){c.textContent=(ch>=0?'▲':'▼')+Math.abs(ch).toFixed(1)+'%';c.className=ch>=0?'mkt-up':'mkt-dn';}};
+        const c=document.getElementById(cid);if(c){c.textContent=(ch>=0?'▲':'▼')+Math.abs(ch).toFixed(1)+'%';c.className=ch>=0?'tk-up':'tk-dn';}};
       set('s-btc',d.bitcoin.usd,'s-btc-c',d.bitcoin.usd_24h_change);
       set('s-eth',d.ethereum.usd,'s-eth-c',d.ethereum.usd_24h_change);}
   }catch(e){}
@@ -319,7 +297,7 @@ async function fetchMkt(){
     const r=await fetch('https://dolarapi.com/v1/dolares');
     if(r.ok){const d=await r.json();
       const set=(id,casa)=>{const x=d.find(v=>v.casa===casa);const e=document.getElementById(id);if(x&&e)e.textContent='$'+x.venta;};
-      set('s-mep','bolsa');set('s-blue','blue');set('s-ccl','contadoconliqui');}
+      set('s-mep','bolsa');set('s-blue','blue');set('s-ccl','contadoconliqui');set('s-ofi','oficial');}
   }catch(e){}
 }
 fetchMkt(); setInterval(fetchMkt, 300000);
@@ -339,14 +317,11 @@ const db = getFirestore(app);
 
 try {
   const snap = await getDocs(query(collection(db, "noticias"), where("estado", "==", "publicado")));
-  const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-    .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)) ||
-                    Number(!!b.destacado) - Number(!!a.destacado));
+  const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   // el destacado más nuevo primero (nota principal), después el resto por fecha
   docs.sort((a, b) => {
-    const f = String(b.fecha).localeCompare(String(a.fecha));
-    if (b.destacado !== a.destacado) return Number(!!b.destacado) - Number(!!a.destacado);
-    return f;
+    if (!!b.destacado !== !!a.destacado) return Number(!!b.destacado) - Number(!!a.destacado);
+    return String(b.fecha).localeCompare(String(a.fecha));
   });
   articles = docs.map((d, i) => ({
     id: i,
@@ -354,7 +329,7 @@ try {
     title: d.titulo, excerpt: d.resumen || "", fecha: d.fecha,
     read: Math.max(2, Math.round(String(d.contenido || "").split(/\s+/).length / 200)) + " min",
     content: d.contenido || "", imagen: d.imagen || "" }));
-  renderPaper();
+  renderNews();
 } catch (e) {
   document.getElementById('paper-body').innerHTML =
     '<div class="empty-state">Estamos preparando nuevos análisis. Volvé pronto.</div>';
