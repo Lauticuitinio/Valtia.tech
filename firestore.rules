@@ -68,9 +68,18 @@ service cloud.firestore {
     match /carterasModelo/{id} {
       allow read: if resource.data.visibilidad == 'publico' || isAuthenticated();
       allow write: if isAdmin();
-      match /posiciones/{p} { allow read: if true; allow write: if isAdmin(); }
-      match /historial/{h}  { allow read: if true; allow write: if isAdmin(); }
-      match /valores/{v}    { allow read: if true; allow write: if isAdmin(); }
+
+      // El contenido de la cartera (posiciones, rotaciones y serie de valores)
+      // hereda la visibilidad de la cartera padre. Antes estaba en "true" y
+      // las posiciones de las carteras de suscriptores se podían leer sin
+      // login pegándole directo a la API — el candado era solo visual.
+      function carteraPublica() {
+        return get(/databases/$(database)/documents/carterasModelo/$(id))
+                 .data.visibilidad == 'publico';
+      }
+      match /posiciones/{p} { allow read: if carteraPublica() || isAuthenticated(); allow write: if isAdmin(); }
+      match /historial/{h}  { allow read: if carteraPublica() || isAuthenticated(); allow write: if isAdmin(); }
+      match /valores/{v}    { allow read: if carteraPublica() || isAuthenticated(); allow write: if isAdmin(); }
     }
 
     // ── SEÑALES Y RÉGIMEN DE MERCADO (sistema de rotación) ──
