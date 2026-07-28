@@ -130,10 +130,18 @@ body.fl-app-on #portal-view { padding:0 !important; margin:0 !important; }
 .fl-layout .portal-nav #portal-user-name { color:rgba(255,255,255,.85); font:600 11px 'IBM Plex Sans',sans-serif; padding:14px 12px 3px; margin:0 !important; border-top:1px solid rgba(255,255,255,.12); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .fl-layout .portal-nav #portal-user-name::after { content:'Gestor · Admin'; display:block; font:400 9px 'IBM Plex Sans',sans-serif; color:rgba(255,255,255,.45); letter-spacing:.06em; margin-top:2px; }
 .fl-layout .portal-nav button { color:#B08A3E !important; text-align:left; padding:6px 12px 2px !important; font:600 10px 'IBM Plex Sans',sans-serif !important; letter-spacing:.12em !important; }
-.fl-exit { display:block; padding:9px 12px; margin-top:6px !important; border-top:1px solid rgba(255,255,255,.12);
-  color:rgba(255,255,255,.5) !important; font:500 10px 'IBM Plex Sans',sans-serif !important;
-  letter-spacing:.12em !important; text-transform:uppercase; text-decoration:none; cursor:pointer; }
-.fl-exit:hover { color:#fff !important; background:none !important; }
+.fl-main { flex:1; min-width:0; display:flex; flex-direction:column; }
+.fl-topbar { display:flex; align-items:center; gap:4px; padding:9px 14px 9px 0; margin-left:22px; border-bottom:1px solid rgba(0,0,0,.08);
+  background:#FBF9F3; position:sticky; top:0; z-index:60; overflow-x:auto; }
+[data-theme="dark"] .fl-topbar { background:#0F1B30; border-bottom-color:rgba(255,255,255,.08); }
+.fl-topbar a { font:600 10.5px 'IBM Plex Sans',sans-serif; letter-spacing:.1em; text-transform:uppercase; color:#6B6456;
+  padding:7px 13px; border-radius:8px; text-decoration:none; white-space:nowrap; cursor:pointer; }
+[data-theme="dark"] .fl-topbar a { color:rgba(240,237,232,.6); }
+.fl-topbar a:hover { background:rgba(176,138,62,.1); color:#8A6A2F; }
+[data-theme="dark"] .fl-topbar a:hover { background:rgba(232,206,150,.1); color:#E8CE96; }
+.fl-topbar .sep { flex:1; }
+.fl-topbar .dom { font:600 9.5px 'IBM Plex Mono',monospace; letter-spacing:.12em; color:#B08A3E; white-space:nowrap; }
+@media (max-width:840px) { .fl-topbar { margin-left:0; padding:8px 12px; } }
 .fl-sbbrand { display:flex; align-items:center; gap:10px; padding:2px 10px 20px; }
 .fl-sbbrand .lg { width:30px; height:30px; border:1.5px solid #B08A3E; border-radius:6px; display:flex; align-items:center; justify-content:center; flex:none; }
 .fl-sbbrand .nm { font:500 15px 'Playfair Display',serif; letter-spacing:.18em; color:#fff; }
@@ -320,13 +328,25 @@ function installShell() {
   wrap.className = "fl-layout";
   nav.parentElement.insertBefore(wrap, nav);
   wrap.appendChild(nav);
-  wrap.appendChild(content);
+  // columna principal: barra superior con las secciones del sitio + contenido.
+  // Así se navega a Noticias/Herramientas/etc. sin "salir" por el sidebar
+  // (pedido de Lauti); "Inicio" reemplaza al viejo "← Volver al sitio".
+  const main = document.createElement("div");
+  main.className = "fl-main";
+  main.innerHTML = `<div class="fl-topbar">
+    <a onclick="flExitApp(event)">← Inicio</a>
+    <a href="noticias.html">Noticias</a>
+    <a href="cartera.html">Carteras</a>
+    <a href="informes.html">Informes</a>
+    <a href="herramientas.html">Herramientas</a>
+    <span class="sep"></span>
+    <span class="dom">VALTIA.TECH</span>
+  </div>`;
+  main.appendChild(content);
+  wrap.appendChild(main);
   nav.insertAdjacentHTML("afterbegin", `<div class="fl-sbbrand">
     <div class="lg"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M1 12 L5 6 L8 9 L12 3 L15 6" fill="none" stroke="#B08A3E" stroke-width="1.5"/></svg></div>
     <div><div class="nm">VALTIA</div><div class="sb">ANALYTICS</div></div></div>`);
-  // salida del modo app: vuelve al sitio público restaurando nav + ticker
-  nav.insertAdjacentHTML("beforeend",
-    `<a class="fl-exit" onclick="flExitApp(event)">← Volver al sitio</a>`);
   document.body.classList.add("fl-app-on");
   // si vuelve al panel desde el sitio (Mi Panel / chip), reactivar el modo app
   const og = window.goPortal;
