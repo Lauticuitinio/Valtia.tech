@@ -45,11 +45,11 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .briefhead .t em{color:var(--gold);font-style:italic}
 .briefhead .d{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
 
-/* categorías */
-.cat-nav{display:flex;align-items:center;gap:24px;padding:0 52px;border-bottom:1px solid var(--line);overflow-x:auto;background:#fff;position:sticky;top:64px;z-index:150}
-.cat-nav div{font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;padding:13px 0 11px;border-bottom:2px solid transparent;color:var(--sub);white-space:nowrap}
-.cat-nav div:hover{color:var(--ink)}
-.cat-nav div.on{color:var(--ink);border-bottom-color:var(--gold)}
+/* secciones estilo Bloomberg: botones pill sobre franja oscura, arriba del ticker */
+.cat-nav{display:flex;align-items:center;gap:10px;padding:11px 52px;overflow-x:auto;background:#0B1327;position:sticky;top:64px;z-index:150;border-bottom:1px solid rgba(255,255,255,.06)}
+.cat-nav div{font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer;padding:8px 18px;border-radius:6px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);white-space:nowrap;transition:background .15s}
+.cat-nav div:hover{background:rgba(255,255,255,.16);color:#fff}
+.cat-nav div.on{background:#E8CE96;color:#0E1830;font-weight:600}
 
 /* grilla principal */
 .wrap{padding:26px 52px 60px}
@@ -133,7 +133,16 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   </div>
 </nav>
 
-<!-- ticker en vivo, estilo Bloomberg -->
+<!-- secciones estilo Bloomberg (arriba del ticker) -->
+<div class="cat-nav" id="cat-nav">
+  <div class="on" data-cat="todos" onclick="filterCat('todos',this)">Todas</div>
+  <div data-cat="local" onclick="filterCat('local',this)">Mercado local</div>
+  <div data-cat="wall" onclick="filterCat('wall',this)">Wall Street</div>
+  <div data-cat="cripto" onclick="filterCat('cripto',this)">Cripto</div>
+  <div data-cat="bonos" onclick="filterCat('bonos',this)">Bonos y acciones</div>
+</div>
+
+<!-- ticker en vivo -->
 <div class="tkbar"><div class="tkin">
   <span><span class="tk-n">BTC/USD</span><span class="tk-v" id="s-btc">$--</span><span id="s-btc-c"></span></span>
   <span><span class="tk-n">ETH/USD</span><span class="tk-v" id="s-eth">$--</span><span id="s-eth-c"></span></span>
@@ -143,19 +152,10 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   <span><span class="tk-n">OFICIAL</span><span class="tk-v" id="s-ofi">$--</span></span>
 </div></div>
 
-<!-- título de sección + fecha -->
+<!-- título + fecha -->
 <div class="briefhead">
-  <span class="t">El Briefing <em>Valtia</em></span>
+  <span class="t">Valtia <em>Analytics</em></span>
   <span class="d" id="mh-fecha">—</span>
-</div>
-
-<!-- categorías -->
-<div class="cat-nav" id="cat-nav">
-  <div class="on" data-cat="todos" onclick="filterCat('todos',this)">Todas</div>
-  <div data-cat="local" onclick="filterCat('local',this)">Mercado local</div>
-  <div data-cat="wall" onclick="filterCat('wall',this)">Wall Street</div>
-  <div data-cat="cripto" onclick="filterCat('cripto',this)">Cripto</div>
-  <div data-cat="bonos" onclick="filterCat('bonos',this)">Bonos y acciones</div>
 </div>
 
 <!-- contenido -->
