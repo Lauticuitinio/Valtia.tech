@@ -116,6 +116,7 @@ footer{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;font-
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
@@ -147,13 +148,15 @@ const RIESGO = { conservador: "Riesgo bajo", moderado: "Riesgo medio", agresivo:
 const fdate = v => !v ? "—" : (v.toDate ? v.toDate().toISOString().slice(0,10) : String(v).slice(0,10));
 
 let charts = [];
-let cache = null;
+let cache = null, cacheAuth = null;
 
-async function loadAll() {
-  if (cache) return cache;
-  // sin login solo se pueden listar las públicas (la regla exige el filtro)
-  const cartSnap = await getDocs(query(collection(db, "carterasModelo"),
-                                       where("visibilidad", "==", "publico")));
+async function loadAll(user) {
+  if (cache && cacheAuth === !!user) return cache;
+  // sin sesión solo se listan las públicas (la regla exige el filtro);
+  // con sesión se ven todas, incluidas las de suscriptores
+  const cartSnap = await getDocs(user
+    ? collection(db, "carterasModelo")
+    : query(collection(db, "carterasModelo"), where("visibilidad", "==", "publico")));
   const carteras = [];
   for (const d of cartSnap.docs) {
     const c = { id: d.id, ...d.data() };
@@ -169,7 +172,7 @@ async function loadAll() {
     c.historial = histSnap.docs.map(h => h.data());
     carteras.push(c);
   }
-  cache = carteras;
+  cache = carteras; cacheAuth = !!user;
   return carteras;
 }
 
@@ -182,15 +185,29 @@ function retornoBench(c) {
   return last && last.benchmark != null ? last.benchmark - 100 : null;
 }
 
+/* tarjeta de acceso: las carteras de suscriptores no se listan sin sesión
+   (la regla de Firestore las bloquea), así que se invita a entrar */
+function gateCard() {
+  return `
+    <div class="ccard" style="display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:12px">
+      <span class="badge" style="background:rgba(184,151,90,.14);color:var(--gold)">Suscriptores</span>
+      <h3 style="margin:0">Cartera IA y Semiconductores</h3>
+      <p style="margin:0">Las carteras temáticas —con sus posiciones, tesis y cada rotación fechada— están reservadas para cuentas registradas.</p>
+      <a class="go" href="index.html" style="margin-top:4px">Ingresá o creá tu cuenta →</a>
+    </div>`;
+}
+
 /* ── catálogo ── */
-function renderCatalogo(carteras) {
+function renderCatalogo(carteras, user) {
   const cards = carteras.map(c => {
     const r = retorno(c), rb = retornoBench(c);
+    const priv = c.visibilidad && c.visibilidad !== "publico";
     return `
     <div class="ccard">
       <div class="top"><span class="badge">${c.codigo || c.slug}</span>
         <span class="tagx">${RIESGO[c.nivelRiesgo] || c.nivelRiesgo || ""}</span>
-        <span class="tagx">Rebalanceo ${c.rebalanceo || "mensual"}</span></div>
+        <span class="tagx">Rebalanceo ${c.rebalanceo || "mensual"}</span>
+        ${priv ? '<span class="tagx" style="color:var(--gold);border-color:rgba(184,151,90,.4)">Suscriptores</span>' : ''}</div>
       <h3>${c.nombre}</h3>
       <p>${c.descripcionCorta || ((c.tesis || "").slice(0, 150) + ((c.tesis||"").length > 150 ? "…" : ""))}</p>
       <div class="mini">
@@ -207,7 +224,7 @@ function renderCatalogo(carteras) {
     <h1>Carteras que se <em>gestionan</em>,<br>no listas que se olvidan</h1>
     <p class="sub">Cada cartera es una página viva: posiciones con tesis, precio de entrada registrado el día que entra, y cada rotación fechada con su razonamiento. El rendimiento se mide desde el lanzamiento — nunca con backtests.</p>
     <div class="honest">🔎 <span><b>Transparencia primero:</b> el historial se construye día a día con precios reales. Lo que ves es lo que fue.</span></div>
-    <div class="grid">${cards || '<div class="state">Sin carteras activas todavía.</div>'}</div>
+    <div class="grid">${cards || '<div class="state">Sin carteras activas todavía.</div>'}${user ? "" : gateCard()}</div>
     <footer>Valtia Analytics no brinda asesoramiento financiero personalizado a través de estas carteras. La información es de carácter general y educativo; los rendimientos pasados no garantizan resultados futuros. Invertir en renta variable implica riesgo de pérdida del capital.</footer>`;
   charts.forEach(ch => ch.destroy()); charts = [];
   carteras.forEach(c => {
@@ -301,22 +318,30 @@ function renderDetalle(c) {
                 x: { grid: { display: false }, ticks: { color: subC, font: { size: 10.5 }, maxTicksLimit: 10 } } } } }));
 }
 
+let _user = null;
 async function render() {
   try {
-    const carteras = await loadAll();
+    const carteras = await loadAll(_user);
     const slug = new URLSearchParams(location.search).get("c");
     if (slug) {
       const c = carteras.find(x => x.id === slug || x.slug === slug);
       if (c) return renderDetalle(c);
-      $("#main").innerHTML = `<div class="state">No encontramos esa cartera. <a href="cartera.html" style="color:var(--gold)">Ver todas →</a></div>`;
+      // sin sesión no se puede distinguir "no existe" de "es de suscriptores":
+      // la regla bloquea la lectura, así que se ofrece el acceso
+      $("#main").innerHTML = _user
+        ? `<div class="state">No encontramos esa cartera. <a href="cartera.html" style="color:var(--gold)">Ver todas →</a></div>`
+        : `<div class="state">Esta cartera es para suscriptores.<br>
+             <a href="index.html" style="color:var(--gold)">Ingresá con tu cuenta</a> para verla, o
+             <a href="cartera.html" style="color:var(--gold)">mirá las abiertas →</a></div>`;
       return;
     }
-    renderCatalogo(carteras);
+    renderCatalogo(carteras, _user);
   } catch (e) {
     $("#main").innerHTML = `<div class="state">No se pudieron cargar las carteras (${String(e).slice(0, 140)})</div>`;
   }
 }
-render();
+// el catálogo cambia según haya sesión: se re-renderiza al resolver el auth
+onAuthStateChanged(getAuth(app), u => { _user = u; render(); });
 </script>
 <script type="module" src="nav-auth.js?v=3"></script>
 </body>
