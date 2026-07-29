@@ -10,7 +10,7 @@ import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc }
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 
 const STYLE = `
-.mc-wrap{max-width:1180px}
+.mc-wrap{width:100%}
 .mc-head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:18px}
 .mc-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px}
 .mc-k{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
@@ -215,8 +215,19 @@ function lectura(r) {
 
 let _orden = { col: "dValor", desc: true };
 
+/* los estilos se aseguran acá (y no solo al iniciar) para que cualquier
+   render —incluido uno con datos de prueba— se vea igual que en producción */
+function asegurarEstilo() {
+  if (typeof document === "undefined" || document.getElementById("mc-style")) return;
+  const st = document.createElement("style");
+  st.id = "mc-style";
+  st.textContent = STYLE;
+  document.head.appendChild(st);
+}
+
 /* ── render puro: se puede llamar con datos de prueba ── */
 export function renderMiCartera(el, posiciones, precios, opts = {}) {
+  asegurarEstilo();
   const r = calcular(posiciones, precios);
   const cur = curLabel();
   const fxTxt = _cur === "CCL" ? (_fx.ccl ? `CCL $${_fx.ccl.toLocaleString("es-AR")}` : "")
@@ -490,12 +501,7 @@ async function quitar(id) {
 export async function initMiCartera(user, el) {
   if (!user || !el) return;
   _user = user; _el = el;
-  if (!document.getElementById("mc-style")) {
-    const st = document.createElement("style");
-    st.id = "mc-style";
-    st.textContent = STYLE;
-    document.head.appendChild(st);
-  }
+  asegurarEstilo();
   el.innerHTML = `<div class="portal-title">Mi cartera</div><p style="color:var(--sub);font-size:14px">Cargando tus posiciones…</p>`;
   try {
     await Promise.all([leerTodo(), cargarFx()]);
