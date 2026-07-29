@@ -17,6 +17,30 @@ service cloud.firestore {
     match /inversores/{email} {
       allow read: if isAdmin() || (isAuthenticated() && request.auth.token.email == email);
       allow write: if isAdmin();
+
+      // ── MI CARTERA ──
+      // Las posiciones que carga el propio cliente para su seguimiento.
+      // Solo él (y el admin) las ve y las administra.
+      function esDuenio() {
+        return isAdmin() || (isAuthenticated() && request.auth.token.email == email);
+      }
+      match /cartera/{posId} {
+        allow read, delete: if esDuenio();
+        allow create, update: if esDuenio()
+                              && request.resource.data.ticker is string
+                              && request.resource.data.ticker.size() > 0
+                              && request.resource.data.ticker.size() <= 12
+                              && request.resource.data.cantidad is number
+                              && request.resource.data.cantidad > 0;
+      }
+    }
+
+    // ── PRECIOS Y FUNDAMENTALS DE LOS TICKERS DE CLIENTES ──
+    // El sync diario baja precio y ratios de cada ticker que algún cliente
+    // tenga en su cartera, y les calcula la lectura Valtia contra el radar.
+    match /precios/{ticker} {
+      allow read: if isAuthenticated();
+      allow write: if false;
     }
 
     // ── SOLICITUDES ──

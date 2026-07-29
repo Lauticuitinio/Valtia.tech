@@ -707,6 +707,7 @@ a.v2plain{color:inherit;text-decoration:none}
     <a href="#" onclick="portalTab(event,'informes')">Informes</a>
     <a href="#" onclick="portalTab(event,'herramientas-p')">Herramientas</a>
 
+    <a href="#" id="micartera-tab" onclick="portalTab(event,'micartera')" style="display:none">Mi cartera</a>
     <a href="#" id="fondo-tab" onclick="portalTab(event,'fondo')" style="display:none">Fondo</a>
     <a href="#" id="senales-tab" onclick="portalTab(event,'senales')" style="display:none">Señales</a>
     <a href="#" id="admin-tab" onclick="portalTab(event,'admin')" style="display:none">Admin ⚙️</a>
@@ -772,6 +773,7 @@ a.v2plain{color:inherit;text-decoration:none}
       <div class="portal-title">Fondo</div>
       <p style="color:var(--sub);font-size:14px">Cargando el balance consolidado…</p>
     </div>
+    <div id="tab-micartera" style="display:none"></div>
   </div>
 </div>
 
@@ -874,7 +876,7 @@ function portalTab(e,tab){
   e.preventDefault();
   document.querySelectorAll('.portal-nav a').forEach(a=>a.classList.remove('active'));
   e.target.classList.add('active');
-  ['dashboard','rendimientos','movimientos','informes','herramientas-p','admin','analisis','senales','fondo'].forEach(t=>{
+  ['dashboard','rendimientos','movimientos','informes','herramientas-p','admin','analisis','senales','fondo','micartera'].forEach(t=>{
     const el=document.getElementById('tab-'+t);
     if(el)el.style.display=t===tab?'block':'none';
   });
@@ -1124,6 +1126,14 @@ function updateChartTheme(){
     } else {
       renderClientDashboard(data, displayName);
     }
+
+    // "Mi cartera": seguimiento de las posiciones propias (todo usuario con
+    // sesión, admin incluido). Se carga aparte para no demorar el portal.
+    const mcTab = document.getElementById('micartera-tab');
+    if (mcTab) mcTab.style.display = 'inline';
+    import('./mi-cartera.js?v=1')
+      .then(m => m.initMiCartera(user, document.getElementById('tab-micartera')))
+      .catch(() => {});
   }
 
   // ── CLIENT DASHBOARD ──
