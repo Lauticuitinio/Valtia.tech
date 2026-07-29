@@ -74,12 +74,38 @@ const STYLE = `
 .mc-bad{color:#ef5350}
 .mc-live{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
 .mc-dot{width:6px;height:6px;border-radius:50%;background:#4caf50;display:inline-block}
+.mc-cur{display:flex;gap:0;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.mc-cur button{font-family:'Jost',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.06em;
+  padding:7px 13px;border:none;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
+.mc-cur button+button{border-left:1px solid var(--border)}
+.mc-cur button.on{background:var(--gold);color:var(--navy)}
+.mc-curwrap{display:flex;flex-direction:column;align-items:flex-end;gap:7px}
 `;
 
 const money = (n, cur) => (Number(n) < 0 ? "−" : "") + (cur === "ARS" ? "$" : "US$") +
   Math.abs(Number(n) || 0).toLocaleString("es-AR", { maximumFractionDigits: Math.abs(n) < 10 ? 2 : 0 });
 // con signo explícito (para resultados): +US$930 / −US$160
 const moneyS = (n, cur) => (Number(n) >= 0 ? "+" : "") + money(n, cur);
+
+/* ── moneda de visualización (como el portafolio de IOL) ──
+   Las posiciones se guardan en la moneda en la que cotizan (los CEDEARs y
+   acciones locales en pesos, las de EE.UU. en dólares) y acá se convierten
+   a lo que el usuario elija: pesos, dólar CCL o dólar MEP. */
+let _fx = { ccl: null, mep: null };
+let _cur = (typeof localStorage !== "undefined" && localStorage.getItem("valtia-mc-cur")) || "ARS";
+
+export function convertir(valor, monedaOrigen, display, fx) {
+  if (valor == null) return null;
+  const tasa = display === "CCL" ? fx.ccl : display === "MEP" ? fx.mep : null;
+  if (display === "ARS") {
+    // para pasar dólares a pesos se usa el CCL, que es la referencia de equity
+    return monedaOrigen === "ARS" ? valor : (fx.ccl ? valor * fx.ccl : null);
+  }
+  if (!tasa) return null;
+  return monedaOrigen === "ARS" ? valor / tasa : valor;
+}
+
+const curLabel = () => (_cur === "ARS" ? "ARS" : "USD");
 const pct = n => (n >= 0 ? "+" : "") + Number(n).toFixed(2).replace(".", ",") + "%";
 const num = (n, d = 1) => n == null ? "—" : Number(n).toFixed(d).replace(".", ",");
 const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
@@ -140,21 +166,29 @@ export function parseImport(texto) {
 }
 
 /* ── cálculo: posiciones + precios → filas con resultado ── */
-export function calcular(posiciones, precios) {
+export function calcular(posiciones, precios, cur = _cur, fx = _fx) {
   const filas = posiciones.map(p => {
     const px = precios[String(p.ticker).toUpperCase()] || null;
+    const moneda = (px && px.moneda) || p.moneda || "USD";
     const actual = px && px.precio != null ? px.precio : null;
-    const costo = (Number(p.cantidad) || 0) * (Number(p.precioCompra) || 0);
-    const valor = actual != null ? (Number(p.cantidad) || 0) * actual : null;
-    const pl = valor != null ? valor - costo : null;
-    const plPct = (pl != null && costo > 0) ? pl / costo * 100 : null;
-    return { ...p, px, actual, costo, valor, pl, plPct,
-             moneda: (px && px.moneda) || p.moneda || "USD" };
+    // factor de lámina: los bonos cotizan cada 100 nominales (factor 0,01),
+    // las acciones y CEDEARs 1 a 1. Los precios se muestran como cotizan;
+    // el factor solo entra en los totales.
+    const fac = Number(p.factor) > 0 ? Number(p.factor) : 1;
+    const costo = (Number(p.cantidad) || 0) * (Number(p.precioCompra) || 0) * fac;
+    const valor = actual != null ? (Number(p.cantidad) || 0) * actual * fac : null;
+    const c = v => convertir(v, moneda, cur, fx);   // a la moneda elegida
+    const dCosto = c(costo), dValor = c(valor);
+    const dPl = (dValor != null && dCosto != null) ? dValor - dCosto : null;
+    return { ...p, px, moneda, actual, costo, valor,
+             dCompra: c(Number(p.precioCompra) || 0), dActual: c(actual),
+             dCosto, dValor, dPl,
+             plPct: (valor != null && costo > 0) ? (valor - costo) / costo * 100 : null };
   });
-  const total = filas.reduce((s, f) => s + (f.valor ?? 0), 0);
-  const costoTot = filas.reduce((s, f) => s + (f.valor != null ? f.costo : 0), 0);
+  const total = filas.reduce((s, f) => s + (f.dValor ?? 0), 0);
+  const costoTot = filas.reduce((s, f) => s + (f.dValor != null ? (f.dCosto ?? 0) : 0), 0);
   const plTot = total - costoTot;
-  filas.forEach(f => { f.peso = total > 0 && f.valor != null ? f.valor / total * 100 : null; });
+  filas.forEach(f => { f.peso = total > 0 && f.dValor != null ? f.dValor / total * 100 : null; });
   return { filas, total, costoTot, plTot,
            plTotPct: costoTot > 0 ? plTot / costoTot * 100 : null };
 }
@@ -169,8 +203,9 @@ function lectura(r) {
   const partes = [];
   if (est > 0) partes.push(`<b>${est.toFixed(0)}%</b> de tu cartera está en activos que nuestra lectura marca <b>estirados</b>`);
   if (inf > 0) partes.push(`<b>${inf.toFixed(0)}%</b> en activos <b>infravalorados</b>`);
-  const sobrev = conVer.filter(f => f.px.rsi != null && f.px.rsi > 70).map(f => f.ticker);
-  const sobrec = conVer.filter(f => f.px.rsi != null && f.px.rsi < 30).map(f => f.ticker);
+  const corto = f => String(f.ticker).replace(/\.BA$/, "");
+  const sobrev = conVer.filter(f => f.px.rsi != null && f.px.rsi > 70).map(corto);
+  const sobrec = conVer.filter(f => f.px.rsi != null && f.px.rsi < 30).map(corto);
   let extra = "";
   if (sobrev.length) extra += ` ${sobrev.join(", ")} viene${sobrev.length > 1 ? "n" : ""} sobrecomprado${sobrev.length > 1 ? "s" : ""} (RSI &gt; 70).`;
   if (sobrec.length) extra += ` ${sobrec.join(", ")} está${sobrec.length > 1 ? "n" : ""} sobrevendido${sobrec.length > 1 ? "s" : ""} (RSI &lt; 30).`;
@@ -178,18 +213,27 @@ function lectura(r) {
   return `<div class="mc-lect">Lectura Valtia: ${partes.join(" y ")}.${extra}</div>`;
 }
 
-let _orden = { col: "valor", desc: true };
+let _orden = { col: "dValor", desc: true };
 
 /* ── render puro: se puede llamar con datos de prueba ── */
 export function renderMiCartera(el, posiciones, precios, opts = {}) {
   const r = calcular(posiciones, precios);
-  const cur = r.filas[0] ? r.filas[0].moneda : "USD";
+  const cur = curLabel();
+  const fxTxt = _cur === "CCL" ? (_fx.ccl ? `CCL $${_fx.ccl.toLocaleString("es-AR")}` : "")
+              : _cur === "MEP" ? (_fx.mep ? `MEP $${_fx.mep.toLocaleString("es-AR")}` : "") : "";
   const cabecera = `
     <div class="mc-head"><div>
       <div class="portal-title" style="margin-bottom:0">Mi cartera</div>
       <div style="font-size:12px;color:var(--muted);margin-top:6px">Seguimiento de tus posiciones con la valuación de Valtia</div>
     </div>
-    ${opts.frescura ? `<div class="mc-live"><span class="mc-dot"></span>${esc(opts.frescura)}</div>` : ""}</div>`;
+    <div class="mc-curwrap">
+      <div class="mc-cur">
+        <button data-cur="ARS" class="${_cur === "ARS" ? "on" : ""}">Pesos</button>
+        <button data-cur="CCL" class="${_cur === "CCL" ? "on" : ""}">USD CCL</button>
+        <button data-cur="MEP" class="${_cur === "MEP" ? "on" : ""}">USD MEP</button>
+      </div>
+      ${opts.frescura ? `<div class="mc-live"><span class="mc-dot"></span>${esc(opts.frescura)}${fxTxt ? " · " + fxTxt : ""}</div>` : ""}
+    </div></div>`;
 
   const form = `
     <div class="mc-form">
@@ -241,12 +285,14 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   const rows = filas.map(f => {
     const px = f.px || {};
     return `<tr>
-      <td class="l"><span class="mc-tk">${esc(f.ticker)}</span><span class="mc-nm">${esc(px.nombre || "")}</span></td>
+      <td class="l"><span class="mc-tk">${esc(String(f.ticker).replace(/\.BA$/, ""))}</span>${
+        String(f.ticker).endsWith(".BA") ? '<span class="mc-nm" style="display:inline;color:var(--gold);opacity:.7"> BYMA</span>' : ""}
+        <span class="mc-nm">${esc(px.nombre && px.nombre !== f.ticker ? px.nombre : "")}</span></td>
       <td>${num(f.cantidad, 4).replace(/,0+$/, "")}</td>
-      <td>${money(f.precioCompra, f.moneda)}</td>
-      <td>${f.actual != null ? money(f.actual, f.moneda) : "—"}</td>
-      <td>${f.valor != null ? money(f.valor, f.moneda) : "—"}</td>
-      <td class="${f.pl == null ? "mc-mut" : f.pl >= 0 ? "mc-pos" : "mc-neg"}">${f.pl == null ? "—" : moneyS(f.pl, f.moneda)}</td>
+      <td>${f.dCompra != null ? money(f.dCompra, cur) : "—"}</td>
+      <td>${f.dActual != null ? money(f.dActual, cur) : "—"}</td>
+      <td>${f.dValor != null ? money(f.dValor, cur) : "—"}</td>
+      <td class="${f.dPl == null ? "mc-mut" : f.dPl >= 0 ? "mc-pos" : "mc-neg"}">${f.dPl == null ? "—" : moneyS(f.dPl, cur)}</td>
       <td class="${f.plPct == null ? "mc-mut" : f.plPct >= 0 ? "mc-pos" : "mc-neg"}" style="font-weight:600">${f.plPct == null ? "—" : pct(f.plPct)}</td>
       <td>${f.peso != null ? num(f.peso) + "%" : "—"}</td>
       <td>${num(px.per)}</td>
@@ -269,16 +315,18 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     ${form}
     <div class="mc-tblwrap"><table class="mc-tbl">
       <thead><tr>
-        ${th("ticker", "Activo", "l")}${th("cantidad", "Cant.")}${th("precioCompra", "Compra")}
-        ${th("actual", "Actual")}${th("valor", "Valor")}${th("pl", "Resultado")}${th("plPct", "%")}
+        ${th("ticker", "Activo", "l")}${th("cantidad", "Cant.")}${th("dCompra", "Compra")}
+        ${th("dActual", "Actual")}${th("dValor", "Valor")}${th("dPl", "Resultado")}${th("plPct", "%")}
         ${th("peso", "Peso")}<th>PER</th><th>RSI</th><th class="l">Lectura Valtia</th><th></th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table></div>
     ${lectura(r)}
-    <div class="mc-foot">Los precios y ratios se actualizan una vez por día con el cierre de mercado; no son intradiarios.
-      El resultado es sobre el precio de compra que cargaste. Esta información es de carácter general y no constituye
-      asesoramiento financiero personalizado.</div>
+    <div class="mc-foot">Los precios se actualizan cada 15 minutos durante la rueda; los ratios y la lectura, una vez por día.
+      El resultado es sobre el precio de compra que cargaste.
+      ${_cur !== "ARS" ? `Los valores en pesos se convierten al ${_cur === "CCL" ? "contado con liqui" : "dólar MEP"} de hoy —
+        tanto el costo como el valor actual—, así que el rendimiento en % coincide con el de pesos.` : ""}
+      Esta información es de carácter general y no constituye asesoramiento financiero personalizado.</div>
   </div>`;
 
   el.querySelectorAll("th[data-col]").forEach(h => h.onclick = () => {
@@ -339,6 +387,22 @@ function enganchar() {
   });
   const ib = _el.querySelector("#mc-imp-btn");
   if (ib) ib.onclick = revisarImport;
+  _el.querySelectorAll(".mc-cur button").forEach(b => b.onclick = () => {
+    _cur = b.dataset.cur;
+    try { localStorage.setItem("valtia-mc-cur", _cur); } catch (e) {}
+    pintar();
+  });
+}
+
+/* cotizaciones para convertir (misma fuente que la barra del sitio) */
+async function cargarFx() {
+  try {
+    const r = await fetch("https://dolarapi.com/v1/dolares");
+    if (!r.ok) return;
+    const d = await r.json();
+    const v = casa => { const x = d.find(y => y.casa === casa); return x ? x.venta : null; };
+    _fx = { ccl: v("contadoconliqui"), mep: v("bolsa") };
+  } catch (e) {}
 }
 
 /* ── importar: primero muestra qué entendió, después confirma ── */
@@ -434,7 +498,7 @@ export async function initMiCartera(user, el) {
   }
   el.innerHTML = `<div class="portal-title">Mi cartera</div><p style="color:var(--sub);font-size:14px">Cargando tus posiciones…</p>`;
   try {
-    await leerTodo();
+    await Promise.all([leerTodo(), cargarFx()]);
     pintar();
     // el sync intradía reescribe los precios cada ~15 min: se releen solos
     // (sin pisar lo que el usuario esté escribiendo ni si la pestaña no se ve)
@@ -443,7 +507,7 @@ export async function initMiCartera(user, el) {
         if (document.hidden || !_el || _el.offsetParent === null) return;
         const act = document.activeElement;
         if (act && _el.contains(act) && /INPUT|TEXTAREA/.test(act.tagName)) return;
-        try { await leerTodo(); pintar(); } catch (e) {}
+        try { await Promise.all([leerTodo(), cargarFx()]); pintar(); } catch (e) {}
       }, 120000);
     }
   } catch (e) {
