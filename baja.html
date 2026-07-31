@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baja del newsletter — Valtia Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0E1830;font-family:'IBM Plex Sans',system-ui,sans-serif;padding:20px}
+.card{background:#fff;max-width:440px;width:100%;padding:44px 40px;text-align:center}
+h1{font:700 30px 'Playfair Display',serif;color:#0E1830;margin-bottom:6px}
+h1 em{color:#B08A3E;font-style:italic}
+p{font-size:14px;color:#57534A;line-height:1.7;margin:14px 0 22px}
+button{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;background:#0E1830;color:#E8CE96;border:none;padding:14px 30px;cursor:pointer}
+button:hover{background:#B23A3A;color:#fff}
+.msg{font-size:14px;font-weight:600;margin-top:18px;display:none}
+a{color:#B08A3E;font-size:12px;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Valtia <em>Analytics</em></h1>
+  <p id="texto">¿Querés dejar de recibir el briefing diario en tu casilla?</p>
+  <button id="btn" onclick="darBaja()">Confirmar baja</button>
+  <div class="msg" id="msg"></div>
+  <p style="margin-top:26px;margin-bottom:0"><a href="noticias.html">← Volver a las noticias</a></p>
+</div>
+
+<script type="module">
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = getApps().length ? getApp() : initializeApp({
+  apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
+  authDomain: 'valtia-analytics.firebaseapp.com',
+  projectId: 'valtia-analytics',
+});
+const db = getFirestore(app);
+const id = new URLSearchParams(location.search).get('id');
+const msg = document.getElementById('msg');
+const btn = document.getElementById('btn');
+
+if (!id) {
+  document.getElementById('texto').textContent = 'El link de baja no es válido — usá el que viene al pie del mail.';
+  btn.style.display = 'none';
+}
+
+window.darBaja = async () => {
+  btn.disabled = true;
+  try {
+    await deleteDoc(doc(db, 'newsletter', id));
+    msg.style.display = 'block'; msg.style.color = '#1F7A4D';
+    msg.textContent = 'Listo — no vas a recibir más el newsletter.';
+    btn.style.display = 'none';
+  } catch (e) {
+    msg.style.display = 'block'; msg.style.color = '#B23A3A';
+    msg.textContent = 'No se pudo procesar, probá de nuevo en un rato.';
+    btn.disabled = false;
+  }
+};
+</script>
+</body>
+</html>

@@ -140,13 +140,16 @@ service cloud.firestore {
 
     // ── NEWSLETTER (suscripciones desde Noticias) ──
     // Cualquiera puede suscribirse (solo crear, con forma de email); la
-    // lista solo la ve el admin.
+    // lista solo la ve el admin. La baja es por link con el id del doc
+    // (id aleatorio no adivinable que solo viaja en el mail del suscripto),
+    // por eso delete abierto: sin lectura pública no se pueden enumerar.
     match /newsletter/{docId} {
       allow create: if request.resource.data.keys().hasOnly(['email', 'fecha'])
         && request.resource.data.email is string
         && request.resource.data.email.matches('.+@.+[.].+')
         && request.resource.data.email.size() < 120;
-      allow read, update, delete: if isAdmin();
+      allow delete: if true;
+      allow read, update: if isAdmin();
     }
 
     // ── INFORMES DE RESEARCH ──
