@@ -125,10 +125,28 @@ service cloud.firestore {
 
     // ── NOTICIAS PÚBLICAS (sección Noticias del sitio) ──
     // Solo las publicadas son visibles (query con filtro estado). El admin
-    // gestiona borradores vía Admin SDK / consola.
+    // gestiona borradores vía Admin SDK / consola. Cualquiera puede sumar
+    // UNA vista por update (ranking "las más leídas"): el único cambio
+    // permitido es vistas = vistas + 1.
     match /noticias/{docId} {
       allow read: if resource.data.estado == 'publicado' || isAdmin();
-      allow write: if isAdmin();
+      allow update: if isAdmin()
+        || (resource.data.estado == 'publicado'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['vistas'])
+            && request.resource.data.vistas is int
+            && request.resource.data.vistas == resource.data.get('vistas', 0) + 1);
+      allow create, delete: if isAdmin();
+    }
+
+    // ── NEWSLETTER (suscripciones desde Noticias) ──
+    // Cualquiera puede suscribirse (solo crear, con forma de email); la
+    // lista solo la ve el admin.
+    match /newsletter/{docId} {
+      allow create: if request.resource.data.keys().hasOnly(['email', 'fecha'])
+        && request.resource.data.email is string
+        && request.resource.data.email.matches('.+@.+[.].+')
+        && request.resource.data.email.size() < 120;
+      allow read, update, delete: if isAdmin();
     }
 
     // ── INFORMES DE RESEARCH ──

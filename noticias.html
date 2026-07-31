@@ -63,17 +63,40 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .side .card{padding-bottom:24px;border-bottom:1px solid var(--line)}
 .side .card:last-child{border-bottom:none;padding-bottom:0}
 
-/* más noticias */
-.more-h{display:flex;align-items:center;gap:14px;margin:26px 0 20px}
+/* más noticias: columna principal en filas + rail derecho (ref Bloomberg) */
+.more-h{display:flex;align-items:center;gap:14px;margin:0 0 6px}
 .more-h span{font:700 17px 'Playfair Display',serif;color:var(--ink)}
 .more-h i{flex:1;height:1px;background:var(--line)}
-.more-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:26px}
-.more-grid h4{font:600 16.5px 'Playfair Display',serif;color:var(--ink);line-height:1.25;margin-bottom:8px;text-wrap:pretty}
-.more-grid .cexc{font-size:12.5px}
-.more-btn-wrap{text-align:center;margin-top:34px}
+.lower{display:grid;grid-template-columns:1fr 330px;gap:46px;margin-top:26px}
+.nrow{display:grid;grid-template-columns:180px 1fr;gap:18px;padding:18px 0;border-bottom:1px solid var(--line);cursor:pointer;align-items:start}
+.nrow .cimg{aspect-ratio:16/10;margin:0}
+.nrow h4{font:600 17.5px 'Playfair Display',serif;color:var(--ink);line-height:1.25;margin-bottom:6px;text-wrap:pretty}
+.nrow:hover h4{text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
+.nrow .cexc{font-size:12.5px;margin-bottom:7px}
+.more-btn-wrap{text-align:center;margin-top:30px}
 .more-btn{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);padding:12px 32px;cursor:pointer}
 .more-btn:hover{background:var(--ink);color:#fff}
 .empty-state{padding:80px 52px;text-align:center;font:400 15px 'IBM Plex Sans',sans-serif;color:var(--sub)}
+
+/* rail derecho: más leídas + newsletter */
+.rail{display:flex;flex-direction:column;gap:30px}
+.rail-h{align-self:flex-start;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;background:#0E1830;color:#fff;padding:7px 13px}
+.ml-item{display:grid;grid-template-columns:1fr 82px;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);cursor:pointer;align-items:start}
+.ml-item:last-child{border-bottom:none}
+.ml-item .cimg{aspect-ratio:4/3;margin:0}
+.ml-item .t{font:600 13.5px 'IBM Plex Sans',sans-serif;color:var(--ink);line-height:1.4}
+.ml-item:hover .t{text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
+.ml-item .ccat{margin-bottom:5px}
+.nl-box{background:#0E1830;padding:28px 26px}
+.nl-box h3{font:700 23px 'Playfair Display',serif;color:#fff;line-height:1.2;margin-bottom:8px}
+.nl-box h3 em{color:#E8CE96;font-style:italic}
+.nl-box p{font:400 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.72);line-height:1.6;margin-bottom:16px}
+.nl-box input{width:100%;padding:12px 13px;border:1px solid rgba(232,206,150,.35);background:rgba(255,255,255,.07);color:#fff;font:400 13px 'IBM Plex Sans',sans-serif;outline:none}
+.nl-box input::placeholder{color:rgba(255,255,255,.4)}
+.nl-box input:focus{border-color:#E8CE96}
+.nl-box button{width:100%;margin-top:10px;font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#0E1830;background:#E8CE96;border:none;padding:12px;cursor:pointer}
+.nl-box button:hover{background:#fff}
+.nl-msg{font:500 12px 'IBM Plex Sans',sans-serif;margin-top:10px;color:#7FD8A4;display:none}
 
 /* modal lector */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(16,16,16,.8);z-index:500;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto}
@@ -100,12 +123,12 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 .wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;transition:transform .2s;text-decoration:none}
 .wa-float:hover{transform:scale(1.1)}
 
-@media(max-width:1080px){.hero{grid-template-columns:1fr 1fr}.lead{grid-column:1/-1}.more-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:1080px){.hero{grid-template-columns:1fr 1fr}.lead{grid-column:1/-1}.lower{grid-template-columns:1fr}}
 @media(max-width:880px){
   .masthead,.cat-nav,.wrap,footer{padding-left:20px;padding-right:20px}
   .cat-nav{top:64px}
 }
-@media(max-width:600px){.hero{grid-template-columns:1fr}.more-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.hero{grid-template-columns:1fr}.nrow{grid-template-columns:120px 1fr}.nrow .cexc{display:none}}
 </style>
 </head>
 <body>
@@ -189,7 +212,7 @@ const GRADS = ["linear-gradient(135deg,#14213D,#B08A3E)","linear-gradient(135deg
 
 let articles = [];      // se cargan desde Firestore (colección noticias)
 let currentCat = 'todos';
-let gridCount = 8;
+let gridCount = 6;
 
 const esc = s => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 const bg = (a,i) => a.imagen ? `background-image:url('${esc(a.imagen)}')` : `background:${GRADS[i % GRADS.length]}`;
@@ -207,6 +230,42 @@ function cardHtml(a, i, tag){
     <${tag}>${esc(a.title)}</${tag}>
     <p class="cexc">${esc(exc)}</p>
     <div class="cdate">${fShort(a.fecha)}</div>
+  </div>`;
+}
+
+/* fila de "Más noticias" (columna principal) */
+function rowHtml(a, i){
+  const c = catInfo(a.cat[0]);
+  const exc = String(a.excerpt).slice(0,150) + (String(a.excerpt).length > 150 ? "…" : "");
+  return `<div class="nrow" onclick="openArticle(${a.id})">
+    <div class="cimg" style="${bg(a,i)}"></div>
+    <div><div class="ccat">${esc(c.name)}</div>
+      <h4>${esc(a.title)}</h4>
+      <p class="cexc">${esc(exc)}</p>
+      <div class="cdate">${fShort(a.fecha)}${a.fuente ? " · " + esc(a.fuente) : ""}</div></div>
+  </div>`;
+}
+
+/* rail: las 5 más leídas de todo el sitio (por vistas reales; empate → más nueva) */
+function masLeidasHtml(){
+  const top = articles.slice()
+    .sort((a,b) => (b.vistas - a.vistas) || String(b.fecha).localeCompare(String(a.fecha)))
+    .slice(0,5);
+  if(!top.length) return "";
+  return `<div><div class="rail-h">Las más leídas</div>
+    ${top.map((a,i)=>`<div class="ml-item" onclick="openArticle(${a.id})">
+      <div><div class="ccat">${esc(catInfo(a.cat[0]).name)}</div><div class="t">${esc(a.title)}</div></div>
+      <div class="cimg" style="${bg(a,i)}"></div>
+    </div>`).join("")}</div>`;
+}
+
+function newsletterHtml(){
+  return `<div class="nl-box">
+    <h3>Recibí el análisis de <em>Valtia</em></h3>
+    <p>Las claves de los mercados, la economía argentina y cripto — directo a tu casilla, sin ruido.</p>
+    <input type="email" id="nl-email" placeholder="tu@email.com" autocomplete="email">
+    <button onclick="suscribirNews()">Suscribirme</button>
+    <div class="nl-msg" id="nl-msg"></div>
   </div>`;
 }
 
@@ -231,17 +290,23 @@ function renderNews(){
     <div class="side">${side.slice(0,2).map((a,i)=>cardHtml(a,i+1,'h3')).join("")}</div>
     <div class="side">${side.slice(2,4).map((a,i)=>cardHtml(a,i+3,'h3')).join("")}</div>
   </div>`;
-  if(more.length){
-    html += `
-  <div class="more-h"><span>Más noticias</span><i></i></div>
-  <div class="more-grid">${more.map((a,i)=>cardHtml(a,i+5,'h4')).join("")}</div>
-  ${list.length > 5+gridCount ? '<div class="more-btn-wrap"><button class="more-btn" onclick="gridCount+=8;renderNews()">Ver más noticias</button></div>' : ''}`;
-  }
+  html += `
+  <div class="lower">
+    <div>
+      ${more.length ? `<div class="more-h"><span>Más noticias</span><i></i></div>
+      ${more.map((a,i)=>rowHtml(a,i+5)).join("")}
+      ${list.length > 5+gridCount ? '<div class="more-btn-wrap"><button class="more-btn" onclick="gridCount+=6;renderNews()">Ver más noticias</button></div>' : ''}` : ''}
+    </div>
+    <aside class="rail">
+      ${masLeidasHtml()}
+      ${newsletterHtml()}
+    </aside>
+  </div>`;
   body.innerHTML = html;
 }
 
 function filterCat(cat, el){
-  currentCat = cat; gridCount = 8;
+  currentCat = cat; gridCount = 6;
   document.querySelectorAll('#cat-nav div').forEach(d=>d.classList.remove('on'));
   el.classList.add('on');
   renderNews();
@@ -261,6 +326,8 @@ function openArticle(id){
   document.getElementById('modal-content').innerHTML = a.content;
   document.getElementById('articleModal').classList.add('open');
   document.body.style.overflow = 'hidden';
+  a.vistas++;                                    // refleja al toque en "más leídas"
+  if (window._regView) window._regView(a.docId); // contador real en Firestore
 }
 function closeArticle(){ document.getElementById('articleModal').classList.remove('open'); document.body.style.overflow=''; }
 function closeIfOverlay(e){ if(e.target===document.getElementById('articleModal')) closeArticle(); }
@@ -279,7 +346,7 @@ function closeIfOverlay(e){ if(e.target===document.getElementById('articleModal'
 <script type="module">
 /* ── Noticias desde Firestore (colección noticias, solo publicadas) ── */
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, getDocs, query, where, doc, updateDoc, increment, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const app = getApps().length ? getApp() : initializeApp({
   apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
@@ -297,7 +364,7 @@ try {
     return String(b.fecha).localeCompare(String(a.fecha));
   });
   articles = docs.map((d, i) => ({
-    id: i,
+    id: i, docId: d.id, vistas: Number(d.vistas) || 0,
     cat: (d.categorias && d.categorias.length) ? d.categorias : ["local"],
     title: d.titulo, excerpt: d.resumen || "", fecha: d.fecha,
     read: Math.max(2, Math.round(String(d.contenido || "").split(/\s+/).length / 200)) + " min",
@@ -307,6 +374,31 @@ try {
   document.getElementById('paper-body').innerHTML =
     '<div class="empty-state">Estamos preparando nuevos análisis. Volvé pronto.</div>';
 }
+
+/* contador de vistas (las reglas solo permiten vistas = vistas + 1) */
+window._regView = docId => {
+  if (!docId) return;
+  updateDoc(doc(db, "noticias", docId), { vistas: increment(1) }).catch(() => {});
+};
+
+/* suscripción al newsletter */
+window.suscribirNews = async () => {
+  const inp = document.getElementById('nl-email');
+  const msg = document.getElementById('nl-msg');
+  const email = (inp.value || "").trim();
+  msg.style.display = 'block';
+  if (!/.+@.+\..+/.test(email)) {
+    msg.style.color = '#F5A5A5'; msg.textContent = 'Escribí un email válido.';
+    return;
+  }
+  try {
+    await addDoc(collection(db, "newsletter"), { email, fecha: serverTimestamp() });
+    msg.style.color = '#7FD8A4'; msg.textContent = '¡Listo! Te vas a enterar primero.';
+    inp.value = '';
+  } catch (e) {
+    msg.style.color = '#F5A5A5'; msg.textContent = 'No se pudo guardar, probá de nuevo.';
+  }
+};
 </script>
 <script type="module" src="nav-auth.js?v=3"></script>
 </body>
