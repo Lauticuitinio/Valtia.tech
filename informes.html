@@ -307,7 +307,30 @@ async function catalogo(user) {
     docs = (await getDocs(q)).docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (e) {}
   docs.sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
-  const cards = docs.map(d => `
+
+  // con imagen → tarjeta con cover en la grilla de empresas y sectores
+  const conCover = docs.filter(d => d.imagen);
+  const grid = document.querySelector('.inf-grid');
+  document.querySelectorAll('.inf-card[data-fsr]').forEach(el => el.remove());
+  if (grid) conCover.forEach(d => {
+    const badge = d.visibilidad === "publico"
+      ? '<span class="inf-badge b-free">Gratis</span>'
+      : `<span class="inf-badge b-new">${user ? "✓ Acceso" : "Clientes"}</span>`;
+    const card = document.createElement("div");
+    card.className = "inf-card";
+    card.dataset.fsr = "1";
+    card.onclick = () => location.href = `informes.html?i=${d.slug || d.id}`;
+    card.innerHTML = `
+      <div class="cover"><img src="${d.imagen}" alt="">${badge}</div>
+      <div class="ccat">${d.categorias || "Informe"}</div>
+      <h4>${d.titulo}</h4>
+      <p class="desc">${d.resumen || ""}</p>
+      <div class="meta">${fdate(d.fecha)} · Leer →</div>`;
+    grid.prepend(card);
+  });
+
+  // el resto (registros mensuales) → lista de tarjetas de research
+  const cards = docs.filter(d => !d.imagen).map(d => `
     <div class="fsr-card">
       <div class="fsr-top"><span class="fsr-badge">${d.tipo || "Informe"}</span>
         <span class="fsr-tag">${fdate(d.fecha)}</span>
