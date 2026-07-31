@@ -302,21 +302,28 @@ window.flGo = tab => {
 function flujoMensual(movs) {
   const map = {};
   const MES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  let aTot = 0, rTot = 0;
   (movs||[]).forEach(m => {
     const t = String(m.tipo||"").toLowerCase();
     const externo = t.startsWith("aporte") || t.startsWith("devoluc") || t.startsWith("retiro") || t.startsWith("fee");
     if (!externo) return; // transferencias internas (A IOL, A Binance, ARS->USD) no son flujo
-    const mm = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/.exec(String(m.fecha||"").trim());
-    if (!mm) return;
-    const y = mm[3].length === 2 ? "20" + mm[3] : mm[3];
-    const key = y + "-" + String(mm[2]).padStart(2, "0");
-    const o = map[key] || (map[key] = { a: 0, r: 0 });
     const ars = Math.abs(Number(m.ars) || 0);
+    if (t.startsWith("aporte")) aTot += ars; else rTot += ars;
+    // fechas d/m/aa (sheet histórico) o ISO aaaa-mm-dd (ledger); sin fecha
+    // clara ("may-jun") cuentan en los totales pero no en las barras
+    const f = String(m.fecha||"").trim();
+    let key = null;
+    let mm = /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/.exec(f);
+    if (mm) key = (mm[3].length === 2 ? "20" + mm[3] : mm[3]) + "-" + String(mm[2]).padStart(2, "0");
+    else { mm = /^(\d{4})-(\d{2})/.exec(f); if (mm) key = mm[1] + "-" + mm[2]; }
+    if (!key) return;
+    const o = map[key] || (map[key] = { a: 0, r: 0 });
     if (t.startsWith("aporte")) o.a += ars; else o.r += ars;
   });
-  return Object.keys(map).sort().slice(-12).map(k => ({
+  const bars = Object.keys(map).sort().slice(-12).map(k => ({
     key: k, label: MES[Number(k.slice(5)) - 1] || k.slice(5),
     a: map[k].a, r: map[k].r, net: map[k].a - map[k].r }));
+  return { bars, aportes: aTot, salidas: rTot };
 }
 
 // shell 2a: convierte la nav del portal en el sidebar navy del diseño
@@ -481,9 +488,22 @@ function renderAll(d, sheet, news, mercado, informes, radar, analisis, fondoWeb)
     ])
     .sort((a, b) => b.val - a.val).slice(0, 6);
   // flujo mensual (aportes vs devoluciones/fees) desde MOVIMIENTOS
-  const flujo = flujoMensual(movs);
+  const fj = flujoMensual(movs);
+  const flujo = fj.bars;
   const flMax = Math.max(...flujo.map(f => Math.abs(f.net)), 1);
-  const apTot = flujo.reduce((s, f) => s + f.a, 0), reTot = flujo.reduce((s, f) => s + f.r, 0);
+  const apTot = fj.aportes, reTot = fj.salidas;
+
+  // retiros por cliente + cuenta del gestor (detalle del ledger)
+  const devRows = Object.entries(sh.devoluciones_detalle || {})
+    .flatMap(([nom, ds]) => (ds||[]).map(d => ({ nom, fecha: d.fecha, monto: Number(d.monto)||0 })))
+    .sort((x, y) => String(x.fecha||"").localeCompare(String(y.fecha||"")));
+  const devTot = devRows.reduce((s, d) => s + d.monto, 0);
+  const g = sh.gestor || {};
+  const g10 = Number(rKey(g, "fee 10")) || 0, g2 = Number(rKey(g, "fee 2")) || 0;
+  const gDev = Number(rKey(g, "total devengado")) || (g10 + g2);
+  const gCob = Math.abs(Number(rKey(g, "cobrado")) || 0);
+  const gSaldo = rKey(g, "saldo") != null ? Number(rKey(g, "saldo")) : gDev - gCob;
+  const gPctCob = gDev ? Math.min(100, gCob / gDev * 100) : 0;
   // objetivos por bloque (composición card)
   const objMax = Math.max(...blocks.map(b => Math.max(c.blk[b.key] / c.total, b.tgt))) * 1.15;
 
@@ -591,6 +611,38 @@ function renderAll(d, sheet, news, mercado, informes, radar, analisis, fondoWeb)
       </div>
     </div>
 
+    <div class="fl-dashrow2">
+      <div class="fl-panel fl-pad" style="min-width:0">
+        <h4 class="fl-h4">Retiros y devoluciones</h4>
+        ${devRows.length ? `<table class="fl-mini-tbl">
+          <thead><tr><th>Cliente</th><th>Fecha</th><th class="fl-num">Monto</th></tr></thead>
+          <tbody>${devRows.map(d => `<tr>
+            <td style="font-weight:600">${d.nom}</td>
+            <td style="color:var(--flMut)">${d.fecha||"—"}</td>
+            <td class="fl-num fl-neg" style="font-weight:600">−${mny(d.monto)}</td></tr>`).join("")}
+          <tr><td style="font-weight:700">Total devuelto</td><td></td>
+            <td class="fl-num fl-neg" style="font-weight:700">−${mny(devTot)}</td></tr></tbody>
+        </table>` : `<div class="fl-foot" style="border-top:none">Sin retiros registrados todavía.</div>`}
+        <div class="fl-foot">Devoluciones de capital por cliente, ya descontadas de su capital neto.</div>
+      </div>
+      <div class="fl-panel fl-pad" style="min-width:0">
+        <h4 class="fl-h4">Tu cuenta de gestor</h4>
+        <table class="fl-mini-tbl"><tbody>
+          <tr><td>Fee 10% s/aportes (devengado)</td><td class="fl-num" style="font-weight:600">${mny(g10)}</td></tr>
+          <tr><td>Fee 2% s/ganancia mensual</td><td class="fl-num" style="font-weight:600">${g2?mny(g2):"$0"}</td></tr>
+          <tr><td style="font-weight:700">Total devengado</td><td class="fl-num" style="font-weight:700">${mny(gDev)}</td></tr>
+          ${(sh.gestor_detalle||[]).map(x => `<tr>
+            <td style="color:var(--flMut)">${String(x.detalle||"Cobro").replace(/^\(-\)\s*/,"")}</td>
+            <td class="fl-num fl-neg">−${mny(Math.abs(Number(x.monto)||0))}</td></tr>`).join("")}
+          <tr><td style="font-weight:700">Saldo pendiente de cobro</td>
+            <td class="fl-num" style="font-weight:700;color:var(--flGold)">${mny(gSaldo)}</td></tr>
+        </tbody></table>
+        <div style="height:6px;border-radius:3px;background:var(--flLine);margin:12px 0 6px;overflow:hidden">
+          <div style="height:100%;width:${gPctCob.toFixed(1)}%;background:var(--flGold)"></div></div>
+        <div class="fl-foot" style="border-top:none;padding-top:0">Ya cobraste el ${gPctCob.toFixed(0)}% de lo devengado (${mny(gCob)} de ${mny(gDev)}).</div>
+      </div>
+    </div>
+
     <div class="fl-sec">Briefing del día · Cowork</div>
     <div class="fl-news">${newsHtml}</div></div>`;
 
@@ -604,12 +656,12 @@ function renderAll(d, sheet, news, mercado, informes, radar, analisis, fondoWeb)
     <td class="fl-num">${s.ccl?Number(s.ccl).toLocaleString("es-AR"):"—"}</td></tr>`).join("");
   document.getElementById("tab-rendimientos").innerHTML = `<div class="flx">
     <div class="portal-title">Rendimientos del fondo</div>
-    <div class="fl-meta">Cierres de mes (hoja SNAPSHOTS) · base del fee 2% sobre ganancia${ganLive!=null?` · ganancia actual de clientes ${fmtPct(rendLive*100)}`:""}</div>
+    <div class="fl-meta">Cierres de mes de la contabilidad · base del fee 2% sobre ganancia${ganLive!=null?` · ganancia actual de clientes ${fmtPct(rendLive*100)}`:""}</div>
     <div class="fl-grid2">
       <div class="fl-panel"><table>
         <thead><tr><th>Cierre</th><th class="fl-num">Total ARS</th><th class="fl-num">Ganancia mes</th><th class="fl-num">Fee 2%</th><th class="fl-num">IOL ARS</th><th class="fl-num">Binance USD</th><th class="fl-num">CCL</th></tr></thead>
         <tbody>${snapRows || '<tr><td colspan="7" class="fl-mut" style="text-align:center">Sin cierres cargados todavía</td></tr>'}</tbody></table>
-        <div class="fl-foot">El cierre de julio es provisorio: el fee 2% del mes se calcula al cerrarlo.</div></div>
+        <div class="fl-foot">El fee 2% se cobra solo en meses con ganancia (julio cerró en pérdida → fee $0). El cierre corre solo el 1° de cada mes.</div></div>
       <div class="fl-chart"><h4>Valor del fondo (ARS) por cierre</h4><div class="inner"><canvas id="flChHist"></canvas></div></div>
     </div></div>`;
 
@@ -1238,7 +1290,7 @@ function renderAnalisis(tab, data, sync, comp, mercado) {
 
 async function fetchAll() {
   if (DEV) {
-    const j = async f => { const r = await fetch(f); return r.ok ? await r.json() : null; };
+    const j = async f => { const r = await fetch(f, { cache: "no-store" }); return r.ok ? await r.json() : null; };
     return { sync: await j("dev-data/sync_latest.json"), sheet: await j("dev-data/sheet_meta.json"),
       mercado: await j("dev-data/mercado.json"), informes: [], radar: await j("dev-data/radar.json"),
       analisis: await j("dev-data/analisis.json"), fondoWeb: await j("dev-data/fondo_web.json"),
