@@ -170,6 +170,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── VALUACIÓN INTRADÍA (curva "1D": un doc por día, puntos cada 15') ──
+    match /fondoIntradia/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     // ── NOTICIAS DEL FONDO ──
     // Briefings diarios generados por la tarea de Cowork, copiados por
     // fondo_sync.py via Admin SDK. Solo el admin las ve.

@@ -287,11 +287,15 @@ function blockOf(tipo) {
 /* ── helpers del dashboard 2a ── */
 const fmtM = n => "$" + (n/1e6).toLocaleString("es-AR", {maximumFractionDigits:1}) + " M";
 const curCur = () => localStorage.getItem("fl-cur") === "USD" ? "USD" : "ARS";
-const RANGOS = { "1S": 7, "1M": 30, "3M": 90, "6M": 180 };   // "Todo" = sin filtro
-const curRango = () => localStorage.getItem("fl-rango") || "Todo";
+const RANGOS = { "1S": 7, "1M": 30, "3M": 90, "6M": 180, "1A": 365, "5A": 1825 };  // "1D" intradía, "Máx" sin filtro
+const curRango = () => {
+  const r = localStorage.getItem("fl-rango");
+  return !r || r === "Todo" ? "Máx" : r;
+};
 const reRender = () => {
   if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news, lastPayload.mercado,
-    lastPayload.informes, lastPayload.radar, lastPayload.analisis, lastPayload.fondoWeb, lastPayload.historial);
+    lastPayload.informes, lastPayload.radar, lastPayload.analisis, lastPayload.fondoWeb,
+    lastPayload.historial, lastPayload.intradia);
 };
 window.flSetCur = cur => { localStorage.setItem("fl-cur", cur); reRender(); };
 window.flSetRango = r => { localStorage.setItem("fl-rango", r); reRender(); };
@@ -437,7 +441,7 @@ window.flResizeCharts = () => {
   });
 };
 
-function renderAll(d, sheet, news, mercado, informes, radar, analisis, fondoWeb, historial) {
+function renderAll(d, sheet, news, mercado, informes, radar, analisis, fondoWeb, historial, intradia) {
   const c = compute(d);
   const sh = sheet || {};
   const clientes = sh.clientes || [];
@@ -486,10 +490,19 @@ function renderAll(d, sheet, news, mercado, informes, radar, analisis, fondoWeb,
     const desde = new Date(Date.now() - RANGOS[rango] * 864e5).toISOString().slice(0, 10);
     evoSerie = evoSerie.filter(p => p.f >= desde);
   }
-  const evoPts = evoSerie.map(p => ({ label: p.hoy ? "hoy" : p.f.slice(8, 10) + "/" + p.f.slice(5, 7),
-    v: cur === "USD" ? p.t / (p.fx || c.fx) : p.t }));
+  let evoPts;
+  if (rango === "1D") {
+    // intradía: puntos cada ~15' de fondoIntradia + valuación en vivo
+    evoPts = ((intradia && intradia.puntos) || []).map(p => ({ label: p.h,
+      v: cur === "USD" ? p.t / (p.fx || c.fx) : p.t }))
+      .concat([{ label: "ahora", v: cur === "USD" ? c.total / c.fx : c.total }]);
+  } else {
+    evoPts = evoSerie.map(p => ({ label: p.hoy ? "hoy" : p.f.slice(8, 10) + "/" + p.f.slice(5, 7),
+      v: cur === "USD" ? p.t / (p.fx || c.fx) : p.t }));
+  }
   const evoDelta = evoPts.length > 1 ? (evoPts[evoPts.length - 1].v / evoPts[0].v - 1) * 100 : null;
-  const evoDeltaTxt = rango === "Todo" ? "desde el primer cierre" : "en " + (rango === "1S" ? "la última semana" : rango);
+  const evoDeltaTxt = rango === "Máx" ? "desde el inicio del fondo"
+    : rango === "1D" ? "hoy" : rango === "1S" ? "en la última semana" : "en " + rango;
   // principales posiciones: IOL + agregados de Binance, ordenadas por valor
   const topPos = c.activos.map(a => {
       const b = blocks.find(x => x.key === a.blk) || {};
@@ -575,12 +588,12 @@ function renderAll(d, sheet, news, mercado, informes, radar, analisis, fondoWeb,
       <div class="fl-panel fl-pad" style="min-width:0">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
           <h4 class="fl-h4" style="margin:0">Evolución del valor del fondo</h4>
-          <span class="fl-cur fl-rango">${["1S","1M","3M","6M","Todo"].map(r =>
+          <span class="fl-cur fl-rango">${["1D","1S","1M","3M","6M","1A","5A","Máx"].map(r =>
             `<button class="${rango===r?"on":""}" onclick="flSetRango('${r}')">${r}</button>`).join("")}</span>
         </div>
         <div class="fl-evohead"><span class="big">${mny(c.total)}</span>${evoDelta!=null?pill(evoDelta, fmtPct(evoDelta) + " " + evoDeltaTxt):""}</div>
         <div class="fl-evochart"><canvas id="flChEvo"></canvas></div>
-        <div class="fl-foot" style="border-top:none;padding:8px 0 0">Cierres mensuales + un punto por día de cada sync (fondoHistorial). La curva se densifica sola.</div>
+        <div class="fl-foot" style="border-top:none;padding:8px 0 0">Historia desde el nacimiento del fondo (18/05, reconstruida de cierres y flujos hasta el 30/07) · un punto real por día desde ahora · 1D = intradía cada 15'.</div>
       </div>
       <div class="fl-panel fl-pad" style="min-width:0">
         <h4 class="fl-h4">Composición real del fondo</h4>
@@ -1317,11 +1330,12 @@ async function fetchAll() {
       mercado: await j("dev-data/mercado.json"), informes: [], radar: await j("dev-data/radar.json"),
       analisis: await j("dev-data/analisis.json"), fondoWeb: await j("dev-data/fondo_web.json"),
       historial: (await j("dev-data/historial.json")) || [],
+      intradia: await j("dev-data/intradia.json"),
       news: [{ titulo:"Briefing demo", fecha:"09/07/2026", fuente:"cowork", contenido:"Briefing de ejemplo (modo dev)." }] };
   }
   const db = getFirestore(getApp());
   _db = db;
-  const [syncSnap, sheetSnap, newsSnap, mercadoSnap, informesSnap, radarSnap, anaSnap, fwSnap, histSnap] = await Promise.all([
+  const [syncSnap, sheetSnap, newsSnap, mercadoSnap, informesSnap, radarSnap, anaSnap, fwSnap, histSnap, idSnap] = await Promise.all([
     getDoc(doc(db, "fondoSync", "latest")),
     getDoc(doc(db, "fondoMeta", "sheet")),
     getDocs(query(collection(db, "noticiasFondo"), orderBy("fecha", "desc"), limit(5))).catch(() => null),
@@ -1331,9 +1345,11 @@ async function fetchAll() {
     getDoc(doc(db, "fondoAnalisis", "latest")).catch(() => null),
     getDoc(doc(db, "fondoWeb", "latest")).catch(() => null),
     getDocs(query(collection(db, "fondoHistorial"), orderBy("fecha", "desc"), limit(370))).catch(() => null),
+    getDoc(doc(db, "fondoIntradia", new Date().toISOString().slice(0, 10))).catch(() => null),
   ]);
   return {
     historial: histSnap ? histSnap.docs.map(d => d.data()).reverse() : [],
+    intradia: idSnap && idSnap.exists() ? { puntos: JSON.parse(idSnap.data().json || "[]") } : null,
     sync: syncSnap.exists() ? JSON.parse(syncSnap.data().json) : null,
     sheet: sheetSnap.exists() ? JSON.parse(sheetSnap.data().json) : null,
     news: newsSnap ? newsSnap.docs.map(d => d.data()) : [],
@@ -1363,14 +1379,14 @@ window.initFondoAdmin = async function initFondoAdmin() {
     document.head.appendChild(l);
   }
   try {
-    const { sync, sheet, news, mercado, informes, radar, analisis, fondoWeb, historial } = await fetchAll();
+    const { sync, sheet, news, mercado, informes, radar, analisis, fondoWeb, historial, intradia } = await fetchAll();
     if (!sync) {
       document.getElementById("tab-dashboard").insertAdjacentHTML("afterbegin",
         `<div class="flx"><div class="fl-strip"><b>Sin snapshot</b> <code>fondoSync/latest</code> en Firestore — corré fondo_sync.py o esperá la corrida de las 9:00.</div></div>`);
       return;
     }
-    lastPayload = { sync, sheet, news, mercado, informes, radar, analisis, fondoWeb, historial };
-    renderAll(sync, sheet, news, mercado, informes, radar, analisis, fondoWeb, historial);
+    lastPayload = { sync, sheet, news, mercado, informes, radar, analisis, fondoWeb, historial, intradia };
+    renderAll(sync, sheet, news, mercado, informes, radar, analisis, fondoWeb, historial, intradia);
     // el toggle claro/oscuro del portal cambia data-theme: re-renderizar con los tokens nuevos
     new MutationObserver(reRender)
       .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
