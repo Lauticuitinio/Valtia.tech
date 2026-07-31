@@ -162,6 +162,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── HISTORIAL DIARIO DE VALUACIÓN (curva de evolución del fondo) ──
+    // Un doc por día {fecha, total_ars, iol_ars, binance_usd, fx}.
+    // Totales privados del fondo → solo el admin.
+    match /fondoHistorial/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     // ── NOTICIAS DEL FONDO ──
     // Briefings diarios generados por la tarea de Cowork, copiados por
     // fondo_sync.py via Admin SDK. Solo el admin las ve.
