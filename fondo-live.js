@@ -538,7 +538,7 @@ function renderAll(d, sheet, news, mercado, informes, radar, analisis, fondoWeb)
         <h4 class="fl-h4">Evolución del valor del fondo</h4>
         <div class="fl-evohead"><span class="big">${mny(c.total)}</span>${evoDelta!=null?pill(evoDelta, fmtPct(evoDelta) + " desde el primer cierre"):""}</div>
         <div class="fl-evochart"><canvas id="flChEvo"></canvas></div>
-        <div class="fl-foot" style="border-top:none;padding:8px 0 0">Cierres mensuales del sheet + valuación en vivo de hoy. La curva se densifica con cada sync diario.</div>
+        <div class="fl-foot" style="border-top:none;padding:8px 0 0">Cierres mensuales de la contabilidad + valuación en vivo de hoy. La curva se densifica con cada sync diario.</div>
       </div>
       <div class="fl-panel fl-pad" style="min-width:0">
         <h4 class="fl-h4">Composición real del fondo</h4>
@@ -609,7 +609,7 @@ function renderAll(d, sheet, news, mercado, informes, radar, analisis, fondoWeb)
       <div class="fl-panel"><table>
         <thead><tr><th>Cierre</th><th class="fl-num">Total ARS</th><th class="fl-num">Ganancia mes</th><th class="fl-num">Fee 2%</th><th class="fl-num">IOL ARS</th><th class="fl-num">Binance USD</th><th class="fl-num">CCL</th></tr></thead>
         <tbody>${snapRows || '<tr><td colspan="7" class="fl-mut" style="text-align:center">Sin cierres cargados todavía</td></tr>'}</tbody></table>
-        <div class="fl-foot">La ganancia mensual es provisoria hasta completar las valuaciones IOL de 31/05 y 30/06 en el sheet (celdas amarillas de SNAPSHOTS).</div></div>
+        <div class="fl-foot">El cierre de julio es provisorio: el fee 2% del mes se calcula al cerrarlo.</div></div>
       <div class="fl-chart"><h4>Valor del fondo (ARS) por cierre</h4><div class="inner"><canvas id="flChHist"></canvas></div></div>
     </div></div>`;
 
@@ -665,7 +665,7 @@ function renderAll(d, sheet, news, mercado, informes, radar, analisis, fondoWeb)
     <div class="fl-panel"><table>
       <thead><tr><th>Fecha</th><th>Tipo</th><th>Detalle</th><th class="fl-num">ARS</th><th class="fl-num">USD</th></tr></thead>
       <tbody>${movRows}</tbody></table>
-      <div class="fl-foot">Registro de la hoja MOVIMIENTOS del sheet (últimos ${movs.length}).</div></div>` : ""}</div>`;
+      <div class="fl-foot">Registro contable del fondo (últimos ${movs.length} movimientos).</div></div>` : ""}</div>`;
 
   /* ── SEÑALES: sistema dinámico de rotación ── */
   const tabSen = document.getElementById("tab-senales");
@@ -827,7 +827,7 @@ function renderAll(d, sheet, news, mercado, informes, radar, analisis, fondoWeb)
           <div class="fg"><button class="fl-btn" id="fl-ev-btn" onclick="flRegistrarEvento()">Registrar</button></div>
         </div>
         <div class="fl-ev-msg" id="fl-ev-msg"></div>
-        <div class="fl-foot">El evento queda <b>pendiente</b> y el sync diario (9:00, o corré <code>run_sync.bat</code>) lo consolida en el sheet: los aportes entran como fila nueva en CLIENTES (fee 10% y participación se calculan solos) y todo queda logueado en MOVIMIENTOS.</div>
+        <div class="fl-foot">El evento queda <b>pendiente</b> y el sync diario (9:00, o corré <code>run_sync.bat</code>) lo aplica a la contabilidad del fondo: los aportes descuentan el fee 10% y recalculan las participaciones, los retiros suman a devoluciones, y todo queda logueado en Movimientos. Ya no depende del sheet.</div>
       </div>
       <div class="fl-sec">Eventos registrados</div>
       <div class="fl-panel" id="fl-eventos" style="margin-bottom:22px"><div class="fl-foot" style="border-top:none">Cargando…</div></div>
@@ -952,8 +952,9 @@ window.flLeerInforme = async function(id) {
 
 /* ── eventos: registrar y listar aportes/retiros ── */
 let _db = null;
-const EV_ESTADOS = { pendiente:["m","Pendiente de sync"], aplicado:["p","Aplicado al sheet"],
-                     revisar_manual:["n","Revisar en el sheet"], error:["n","Error al aplicar"] };
+const EV_ESTADOS = { pendiente:["m","Pendiente de sync"], aplicado:["p","Aplicado"],
+                     aplicado_manual:["p","Aplicado a mano"],
+                     revisar_manual:["n","Revisar a mano"], error:["n","Error al aplicar"] };
 
 window.flRegistrarEvento = async function() {
   const msg = document.getElementById("fl-ev-msg");
@@ -973,7 +974,7 @@ window.flRegistrarEvento = async function() {
     await addDoc(collection(_db, "fondoEventos"), {
       tipo, cliente, monto_ars: monto, fecha, nota,
       estado: "pendiente", creado: serverTimestamp() });
-    say(`✓ ${tipo} de ${fmtARS(monto)} para ${cliente} registrado. Se consolida en el sheet en el próximo sync.`, true);
+    say(`✓ ${tipo} de ${fmtARS(monto)} para ${cliente} registrado. Se aplica a la contabilidad en el próximo sync.`, true);
     document.getElementById("fl-ev-monto").value = "";
     document.getElementById("fl-ev-nota").value = "";
     flLoadEventos();
@@ -1046,7 +1047,7 @@ function renderFondo(tab, data, comp) {
     <div class="fl-dashrow2" style="margin-top:4px;margin-bottom:14px">
       <div class="fl-panel fl-pad">
         <h4 class="fl-h4">Evolución mensual</h4>
-        <div class="fl-meta" style="margin:2px 0 10px">Cierres del sheet contable${mtm ? " + valuación de hoy a mercado" : ""}</div>
+        <div class="fl-meta" style="margin:2px 0 10px">Cierres contables${mtm ? " + valuación de hoy a mercado" : ""}</div>
         <div style="position:relative;height:240px;min-width:0;overflow:hidden"><canvas id="fl-fondo-chart"></canvas></div>
       </div>
       <div class="fl-panel fl-pad">

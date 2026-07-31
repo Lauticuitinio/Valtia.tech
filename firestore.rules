@@ -154,6 +154,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── LEDGER CONTABLE DEL FONDO (fuente de verdad, reemplaza al sheet) ──
+    // Aportes/devoluciones por cliente, cierres y cuenta del gestor.
+    // Escrito solo por fondo_sync.py via Admin SDK.
+    match /fondoLedger/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
     // ── NOTICIAS DEL FONDO ──
     // Briefings diarios generados por la tarea de Cowork, copiados por
     // fondo_sync.py via Admin SDK. Solo el admin las ve.
