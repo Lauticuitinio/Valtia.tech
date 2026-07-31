@@ -288,7 +288,8 @@ const fmtM = n => "$" + (n/1e6).toLocaleString("es-AR", {maximumFractionDigits:1
 const curCur = () => localStorage.getItem("fl-cur") === "USD" ? "USD" : "ARS";
 window.flSetCur = cur => {
   localStorage.setItem("fl-cur", cur);
-  if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news, lastPayload.mercado, lastPayload.informes);
+  if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news, lastPayload.mercado,
+    lastPayload.informes, lastPayload.radar, lastPayload.analisis, lastPayload.fondoWeb);
 };
 // cambiar de pestaña por código (para "Ver todas →")
 window.flGo = tab => {
@@ -522,11 +523,11 @@ function renderAll(d, sheet, news, mercado, informes, radar, analisis, fondoWeb)
         <div class="v mono">${mny(c.iolTotal)}</div>
         <div class="s mono">${(c.iolTotal/c.total*100).toFixed(1)}% del fondo · P&L pos. <span class="${cls(pnlIol)}">${pnlIol>=0?"+":""}${mny(pnlIol)} (${fmtPct(costoIol?pnlIol/costoIol*100:0)})</span></div></div>
       <div class="fl-kpi" style="--fla:var(--flS3)"><div class="l">Binance · Crypto</div>
-        <div class="v mono">${fmtUSD(c.binTotalUSD)}</div>
-        <div class="s mono">${fmtARS(c.binTotal)} · ${(c.binTotal/c.total*100).toFixed(1)}% del fondo</div></div>
+        <div class="v mono">${mny(c.binTotal)}</div>
+        <div class="s mono">${cur==="USD"?fmtARS(c.binTotal):fmtUSD(c.binTotalUSD)} · ${(c.binTotal/c.total*100).toFixed(1)}% del fondo</div></div>
       <div class="fl-kpi" style="--fla:${c.upnl>=0?"var(--flGood)":"var(--flCrit)"}"><div class="l">uPnL futuros · live</div>
-        <div class="v mono ${cls(c.upnl)}">${fmtUSD(c.upnl)}</div>
-        <div class="s mono">${c.open.length} posición${c.open.length===1?"":"es"} abierta${c.open.length===1?"":"s"}</div></div>
+        <div class="v mono ${cls(c.upnl)}">${mny(c.upnl*c.fx)}</div>
+        <div class="s mono">${cur==="USD"?fmtARS(c.upnl*c.fx):fmtUSD(c.upnl)} · ${c.open.length} posición${c.open.length===1?"":"es"} abierta${c.open.length===1?"":"s"}</div></div>
       ${feePend ? `<div class="fl-kpi" style="--fla:var(--flS2)"><div class="l">Fee gestor pendiente</div>
         <div class="v mono">${mny(feePend)}</div>
         <div class="s">10% inicial s/aportes + 2% mensual s/ganancia</div></div>` : ""}
