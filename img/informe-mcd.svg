@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0D1B2A"/><stop offset="1" stop-color="#152336"/>
+    </linearGradient>
+    <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D4AF6E" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#D4AF6E" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.22" cy="0.28" r="0.8">
+      <stop offset="0" stop-color="#D4AF6E" stop-opacity=".14"/>
+      <stop offset="1" stop-color="#D4AF6E" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <line x1="0" y1="90" x2="1200" y2="90" stroke="rgba(245,242,236,.04)"/><line x1="0" y1="180" x2="1200" y2="180" stroke="rgba(245,242,236,.04)"/><line x1="0" y1="270" x2="1200" y2="270" stroke="rgba(245,242,236,.04)"/><line x1="0" y1="360" x2="1200" y2="360" stroke="rgba(245,242,236,.04)"/><line x1="0" y1="450" x2="1200" y2="450" stroke="rgba(245,242,236,.04)"/><line x1="0" y1="540" x2="1200" y2="540" stroke="rgba(245,242,236,.04)"/>
+  <path d="M 0,500 Q 0,500 12,511.8 Q 24,523.5 36,513.7 Q 48,503.9 60,502.2 Q 72,500.5 84,506.8 Q 96,513.1 108,521.9 Q 120,530.7 132,524.5 Q 144,518.2 156,508.4 Q 168,498.5 180,485.3 Q 192,472.1 204,471.4 Q 216,470.7 228,478.0 Q 240,485.3 252,480.6 Q 264,476.0 276,483.5 Q 288,491.0 300,486.9 Q 312,482.8 324,490.5 Q 336,498.1 348,508.4 Q 360,518.6 372,522.5 Q 384,526.5 396,524.0 Q 408,521.6 420,532.4 Q 432,543.2 444,546.3 Q 456,549.4 468,551.5 Q 480,553.5 492,549.9 Q 504,546.2 516,536.2 Q 528,526.2 540,532.4 Q 552,538.5 564,529.4 Q 576,520.2 588,527.2 Q 600,534.1 612,533.8 Q 624,533.5 636,526.8 Q 648,520.1 660,523.5 Q 672,526.8 684,518.5 Q 696,510.1 708,522.0 Q 720,534.0 732,536.8 Q 744,539.5 756,537.1 Q 768,534.8 780,547.3 Q 792,559.9 804,560.0 Q 816,560 828,557.9 Q 840,555.7 852,557.9 Q 864,560 876,560.0 Q 888,560 900,560.0 Q 912,560 924,560.0 Q 936,560 948,560.0 Q 960,560 972,558.9 Q 984,557.8 996,558.9 Q 1008,560 1020,560.0 Q 1032,560 1044,560.0 Q 1056,560 1068,560.0 Q 1080,560 1092,553.1 Q 1104,546.2 1116,537.1 Q 1128,528.0 1140,537.4 Q 1152,546.8 1164,552.1 Q 1176,557.4 1188,549.1 L 1200,580 L 0,580 Z" fill="url(#area)"/>
+  <path d="M 0,500 Q 0,500 12,511.8 Q 24,523.5 36,513.7 Q 48,503.9 60,502.2 Q 72,500.5 84,506.8 Q 96,513.1 108,521.9 Q 120,530.7 132,524.5 Q 144,518.2 156,508.4 Q 168,498.5 180,485.3 Q 192,472.1 204,471.4 Q 216,470.7 228,478.0 Q 240,485.3 252,480.6 Q 264,476.0 276,483.5 Q 288,491.0 300,486.9 Q 312,482.8 324,490.5 Q 336,498.1 348,508.4 Q 360,518.6 372,522.5 Q 384,526.5 396,524.0 Q 408,521.6 420,532.4 Q 432,543.2 444,546.3 Q 456,549.4 468,551.5 Q 480,553.5 492,549.9 Q 504,546.2 516,536.2 Q 528,526.2 540,532.4 Q 552,538.5 564,529.4 Q 576,520.2 588,527.2 Q 600,534.1 612,533.8 Q 624,533.5 636,526.8 Q 648,520.1 660,523.5 Q 672,526.8 684,518.5 Q 696,510.1 708,522.0 Q 720,534.0 732,536.8 Q 744,539.5 756,537.1 Q 768,534.8 780,547.3 Q 792,559.9 804,560.0 Q 816,560 828,557.9 Q 840,555.7 852,557.9 Q 864,560 876,560.0 Q 888,560 900,560.0 Q 912,560 924,560.0 Q 936,560 948,560.0 Q 960,560 972,558.9 Q 984,557.8 996,558.9 Q 1008,560 1020,560.0 Q 1032,560 1044,560.0 Q 1056,560 1068,560.0 Q 1080,560 1092,553.1 Q 1104,546.2 1116,537.1 Q 1128,528.0 1140,537.4 Q 1152,546.8 1164,552.1 Q 1176,557.4 1188,549.1" fill="none" stroke="#D4AF6E" stroke-width="2.5" opacity=".85"/>
+  <!-- marca -->
+  <g transform="translate(72,74)">
+    <circle cx="7" cy="-6" r="7" fill="#B8975A"/>
+    <text x="26" y="0" font-family="Georgia, 'Times New Roman', serif" font-size="26" letter-spacing="6" fill="#F5F2EC">VALTIA</text>
+    <text x="26" y="24" font-family="Helvetica, Arial, sans-serif" font-size="12" letter-spacing="4" fill="rgba(245,242,236,.45)">ANALYTICS</text>
+  </g>
+  <!-- kicker -->
+  <text x="72" y="188" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="4" fill="#D4AF6E">INFORME · CONSUMO · FRANQUICIAS</text>
+  <!-- título -->
+  <text x="70" y="256" font-family="Georgia, 'Times New Roman', serif" font-size="72" fill="#F5F2EC">MCDONALD'S</text>
+  <text x="72" y="252" font-family="Helvetica, Arial, sans-serif" font-size="22" fill="rgba(245,242,236,.6)">Análisis fundamental</text>
+  
+  <!-- fecha / pie -->
+  <line x1="72" y1="556" x2="180" y2="556" stroke="#B8975A" stroke-width="2"/>
+  <text x="72" y="592" font-family="Helvetica, Arial, sans-serif" font-size="20" letter-spacing="2" fill="rgba(245,242,236,.7)">VALTIA RESEARCH</text>
+  <text x="1128" y="592" text-anchor="end" font-family="Helvetica, Arial, sans-serif" font-size="16" letter-spacing="1" fill="rgba(245,242,236,.4)">valtia.tech</text>
+</svg>

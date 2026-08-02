@@ -132,6 +132,38 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .fsr-reader .card strong{color:var(--ink)}
 .fsr-reader .disclaimer{margin-top:44px;padding:18px 22px;background:var(--marfil);font-size:11.5px;color:var(--mut);line-height:1.7}
 
+/* KPIs del informe (tiles) */
+.fsr-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:22px 0 8px}
+.fsr-kpi{background:var(--marfil);border:1px solid var(--line);padding:12px 14px;min-width:0}
+.fsr-kpi .l{font:600 8.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:5px}
+.fsr-kpi .v{font:600 15.5px 'IBM Plex Mono',monospace;color:var(--ink);white-space:nowrap}
+.fsr-kpi .s{font-size:10px;color:var(--sub);margin-top:3px;line-height:1.4}
+@media(max-width:700px){.fsr-kpis{grid-template-columns:repeat(2,1fr)}}
+
+/* barras de valuación por año */
+.fsr-bars{display:flex;gap:12px;align-items:flex-end;height:130px;margin:18px 0 4px;padding:0 2px}
+.fsr-bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%}
+.fsr-bar .col{width:100%;max-width:66px;background:#B08A3E;min-height:4px}
+.fsr-bar.est .col{background:repeating-linear-gradient(45deg,#B08A3E,#B08A3E 5px,#D9BE85 5px,#D9BE85 10px)}
+.fsr-bar .n{font:600 11px 'IBM Plex Mono',monospace;color:var(--ink)}
+.fsr-bar .y{font:600 9.5px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+.fsr-caption{font-size:10.5px;color:var(--mut);margin:6px 0 18px}
+
+/* rango de precios objetivos del consenso */
+.fsr-rango{margin:20px 0 8px}
+.fsr-rango .track{position:relative;height:8px;background:linear-gradient(90deg,#E7E3DA,#B08A3E)}
+.fsr-rango .mark{position:absolute;top:-6px;width:3px;height:20px;background:#0E1830}
+.fsr-rango .mark span{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font:700 10px 'IBM Plex Mono',monospace;color:#0E1830;white-space:nowrap}
+.fsr-rango .labels{display:flex;justify-content:space-between;font:500 10px 'IBM Plex Mono',monospace;color:var(--sub);margin-top:8px}
+
+/* FODA 2×2 */
+.fsr-foda{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}
+.fsr-foda .q{border:1px solid var(--line);border-top:3px solid var(--c);padding:14px 16px;min-width:0}
+.fsr-foda h4{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--c);margin:0 0 8px;border:none;padding:0}
+.fsr-foda ul{margin:0 0 0 16px}
+.fsr-foda li{font-size:12.5px;line-height:1.65;color:#2E2A24;margin:6px 0}
+@media(max-width:700px){.fsr-foda{grid-template-columns:1fr}}
+
 /* footer + mail (igual a Noticias) */
 footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:40px}
 .footer-copy{font:400 11px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
@@ -185,20 +217,6 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
     <div id="sec-analisis">
       <div class="sec-h"><span>Análisis por empresa y sector</span><i></i></div>
       <div class="inf-grid">
-        <div class="inf-card" onclick="openInforme('nvda')">
-          <div class="cover"><img src="img/informe-nvda.svg" alt="NVIDIA"><span class="inf-badge b-free">Gratis</span></div>
-          <div class="ccat">Semiconductores</div>
-          <h4>NVIDIA — Análisis fundamental Q1 2026</h4>
-          <p class="desc">Valuación, márgenes, posición competitiva y perspectivas para el segmento de IA.</p>
-          <div class="meta">Mayo 2026 · Leer →</div>
-        </div>
-        <div class="inf-card" onclick="openInforme('meli')">
-          <div class="cover"><img src="img/informe-meli.svg" alt="MercadoLibre"><span class="inf-badge b-free">Gratis</span></div>
-          <div class="ccat">eCommerce LatAm</div>
-          <h4>MercadoLibre — Crecimiento y valuación</h4>
-          <p class="desc">El líder del ecommerce latinoamericano: crecimiento de pagos, fintech y logística.</p>
-          <div class="meta">Abril 2026 · Leer →</div>
-        </div>
         <div class="inf-card" onclick="openInforme('macro-arg')">
           <div class="cover"><img src="img/informe-macro-arg.svg" alt="Argentina macro"><span class="inf-badge b-new">Nuevo</span></div>
           <div class="ccat">Macroeconomía</div>
