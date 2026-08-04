@@ -317,11 +317,22 @@ const slug = new URLSearchParams(location.search).get('i');
 const content = document.querySelector('.content');
 const fdate = v => v && v.toDate ? v.toDate().toISOString().slice(0,10) : String(v||"").slice(0,10);
 
+// acceso PRO: admin, alta manual (usuariosPro) o cliente del fondo (inversores)
+async function esPro(user) {
+  if (!user || !user.email) return false;
+  if (user.email === 'valtyaanalytics@gmail.com') return true;
+  for (const col of ['usuariosPro', 'inversores']) {
+    try { if ((await getDoc(doc(db, col, user.email))).exists()) return true; } catch (e) {}
+  }
+  return false;
+}
+
 async function catalogo(user) {
+  const pro = await esPro(user);
   let docs = [];
   try {
-    const q = user ? collection(db, "informes")
-                   : query(collection(db, "informes"), where("visibilidad", "==", "publico"));
+    const q = pro ? collection(db, "informes")
+                  : query(collection(db, "informes"), where("visibilidad", "==", "publico"));
     docs = (await getDocs(q)).docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (e) {}
   docs.sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
@@ -333,7 +344,7 @@ async function catalogo(user) {
   if (grid) conCover.forEach(d => {
     const badge = d.visibilidad === "publico"
       ? '<span class="inf-badge b-free">Gratis</span>'
-      : `<span class="inf-badge b-new">${user ? "✓ Acceso" : "Clientes"}</span>`;
+      : `<span class="inf-badge b-new">${pro ? "✓ Acceso" : "Clientes"}</span>`;
     const card = document.createElement("div");
     card.className = "inf-card";
     card.dataset.fsr = "1";
@@ -356,7 +367,7 @@ async function catalogo(user) {
       <h3>${d.titulo}</h3>
       <p>${d.resumen || ""}</p>
       <div class="fsr-foot">
-        <span class="lock">${d.visibilidad === "publico" ? "Acceso libre" : (user ? "✓ Acceso habilitado" : "🔒 Exclusivo clientes")}</span>
+        <span class="lock">${d.visibilidad === "publico" ? "Acceso libre" : (pro ? "✓ Acceso habilitado" : "🔒 Exclusivo clientes")}</span>
         <a class="go" href="informes.html?i=${d.slug || d.id}">Leer informe →</a>
       </div>
     </div>`).join("");
@@ -400,6 +411,6 @@ onAuthStateChanged(getAuth(app), user => {
   else catalogo(user);
 });
 </script>
-<script type="module" src="nav-auth.js?v=3"></script>
+<script type="module" src="nav-auth.js?v=4"></script>
 </body>
 </html>

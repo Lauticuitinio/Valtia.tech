@@ -150,11 +150,22 @@ const fdate = v => !v ? "—" : (v.toDate ? v.toDate().toISOString().slice(0,10)
 let charts = [];
 let cache = null, cacheAuth = null;
 
+// acceso PRO: admin, alta manual (usuariosPro) o cliente del fondo (inversores)
+async function esPro(user) {
+  if (!user || !user.email) return false;
+  if (user.email === 'valtyaanalytics@gmail.com') return true;
+  for (const col of ['usuariosPro', 'inversores']) {
+    try { if ((await getDoc(doc(db, col, user.email))).exists()) return true; } catch (e) {}
+  }
+  return false;
+}
+
 async function loadAll(user) {
   if (cache && cacheAuth === !!user) return cache;
-  // sin sesión solo se listan las públicas (la regla exige el filtro);
-  // con sesión se ven todas, incluidas las de suscriptores
-  const cartSnap = await getDocs(user
+  // sin acceso PRO solo se listan las públicas (la regla exige el filtro);
+  // con acceso se ven todas, incluidas las de suscriptores
+  const pro = await esPro(user);
+  const cartSnap = await getDocs(pro
     ? collection(db, "carterasModelo")
     : query(collection(db, "carterasModelo"), where("visibilidad", "==", "publico")));
   const carteras = [];
@@ -343,6 +354,6 @@ async function render() {
 // el catálogo cambia según haya sesión: se re-renderiza al resolver el auth
 onAuthStateChanged(getAuth(app), u => { _user = u; render(); });
 </script>
-<script type="module" src="nav-auth.js?v=3"></script>
+<script type="module" src="nav-auth.js?v=4"></script>
 </body>
 </html>

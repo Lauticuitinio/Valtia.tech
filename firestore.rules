@@ -11,6 +11,17 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Cliente con acceso PRO: dado de alta a mano por el admin en
+    // usuariosPro/{email} (marcar_pro.py) o cliente del fondo con doc en
+    // inversores/{email}. Hasta que exista el cobro online (LLC + pasarela),
+    // el login solo NO abre el contenido pago.
+    function esCliente() {
+      return isAdmin()
+        || (request.auth != null && (
+             exists(/databases/$(database)/documents/usuariosPro/$(request.auth.token.email))
+          || exists(/databases/$(database)/documents/inversores/$(request.auth.token.email))));
+    }
+
     // ── INVERSORES ──
     // Solo el admin puede leer todos los documentos.
     // Cada cliente solo puede leer y actualizar su propio documento.
@@ -90,7 +101,7 @@ service cloud.firestore {
     // Escritas por el admin / fondo_sync (Admin SDK). Las de visibilidad
     // "publico" las ve cualquiera; el resto requiere login (PRO a futuro).
     match /carterasModelo/{id} {
-      allow read: if resource.data.visibilidad == 'publico' || isAuthenticated();
+      allow read: if resource.data.visibilidad == 'publico' || esCliente();
       allow write: if isAdmin();
 
       // El contenido de la cartera (posiciones, rotaciones y serie de valores)
@@ -101,9 +112,9 @@ service cloud.firestore {
         return get(/databases/$(database)/documents/carterasModelo/$(id))
                  .data.visibilidad == 'publico';
       }
-      match /posiciones/{p} { allow read: if carteraPublica() || isAuthenticated(); allow write: if isAdmin(); }
-      match /historial/{h}  { allow read: if carteraPublica() || isAuthenticated(); allow write: if isAdmin(); }
-      match /valores/{v}    { allow read: if carteraPublica() || isAuthenticated(); allow write: if isAdmin(); }
+      match /posiciones/{p} { allow read: if carteraPublica() || esCliente(); allow write: if isAdmin(); }
+      match /historial/{h}  { allow read: if carteraPublica() || esCliente(); allow write: if isAdmin(); }
+      match /valores/{v}    { allow read: if carteraPublica() || esCliente(); allow write: if isAdmin(); }
     }
 
     // ── SEÑALES Y RÉGIMEN DE MERCADO (sistema de rotación) ──
@@ -153,11 +164,21 @@ service cloud.firestore {
     }
 
     // ── INFORMES DE RESEARCH ──
-    // Los "publico" los ve cualquiera; los "clientes" requieren login.
+    // Los "publico" los ve cualquiera; los "clientes" requieren acceso PRO
+    // (alta manual hasta que exista el cobro online).
     // Escritos por el admin / seed via Admin SDK.
     match /informes/{docId} {
-      allow read: if resource.data.visibilidad == 'publico' || isAuthenticated();
+      allow read: if resource.data.visibilidad == 'publico' || esCliente();
       allow write: if isAdmin();
+    }
+
+    // ── USUARIOS PRO (acceso pago, alta manual con marcar_pro.py) ──
+    // Cada usuario puede consultar SU propio doc (para que la web sepa si
+    // destapar el contenido); la lista completa solo la ve el admin.
+    match /usuariosPro/{email} {
+      allow get: if isAdmin() || (request.auth != null && request.auth.token.email == email);
+      allow list: if isAdmin();
+      allow write: if false;
     }
 
     // ── BALANCE CONSOLIDADO DEL FONDO (fondo_web.json) ──
