@@ -179,6 +179,27 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .wa-float:hover{transform:scale(1.1)}
 footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90,.08);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:60px}
 .footer-copy{font-size:11px;color:rgba(255,255,255,.2)}
+
+/* ── Panel de bonos (estilo mesa) ── */
+.bp-vars{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px;margin-bottom:16px}
+.bp-var{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:10px 12px}
+.bp-var .l{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--sub)}
+.bp-var .v{font-family:'Jost',sans-serif;font-size:19px;font-weight:500;color:var(--text);margin-top:3px;font-variant-numeric:tabular-nums}
+.bp-var .s{font-size:11px;margin-top:1px;color:var(--sub);font-variant-numeric:tabular-nums}
+.bp-table-wrap{overflow-x:auto}
+.bp-table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bp-table th{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);font-weight:500;text-align:right;padding:8px 10px;border-bottom:1px solid var(--border)}
+.bp-table th:first-child,.bp-table td:first-child{text-align:left}
+.bp-table td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text);text-align:right}
+.bp-table tr:last-child td{border-bottom:none}
+.bp-sym{font-weight:600;letter-spacing:.02em}
+.bp-ley{display:inline-block;font-size:9px;letter-spacing:.08em;padding:1px 6px;border-radius:3px;margin-left:7px;vertical-align:1px;border:1px solid var(--border);color:var(--sub)}
+.bp-ley.ny{color:var(--gold);border-color:var(--gold)}
+.bp-up{color:#3FCE8A}.bp-dn{color:#E88A8A}.bp-nt{color:var(--sub)}
+.bp-tir{font-weight:600;color:var(--gold)}
+.bp-curva-box{height:340px;position:relative}
+.bp-asof{font-size:11px;color:var(--sub);text-align:right;margin-top:10px}
+@media(max-width:760px){.bp-2col{grid-template-columns:1fr!important}}
 </style>
 </head>
 <body>
@@ -326,44 +347,78 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
 
 <!-- BONOS Y LETRAS PRO -->
 <div class="tool-content" id="tool-bonos">
-  <div class="tool-title">Bonos soberanos en dólares</div>
-  <p class="tool-desc">La curva soberana argentina con precios en vivo de TradingView, y la guía para leerla de cara al ciclo electoral.</p>
-  <div style="position:relative">
-    <!-- Preview visible: 3 bonos en vivo -->
-    <div class="widget-box">
-      <div class="widget-header"><span class="widget-title">Referencias de la curva</span><span class="widget-source">TradingView · BYMA · Tiempo real</span></div>
-      <div class="tradingview-widget-container">
-        <div class="tradingview-widget-container__widget"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>{"width":"100%","height":260,"symbolsGroups":[{"name":"Soberanos USD","symbols":[{"name":"BCBA:AL30","displayName":"AL30 — Bonar 2030 (ley local)"},{"name":"BCBA:GD30","displayName":"GD30 — Global 2030 (ley NY)"},{"name":"BCBA:AE38","displayName":"AE38 — Bonar 2038 (ley local)"}]}],"showSymbolLogo":false,"colorTheme":"dark","isTransparent":false,"locale":"es"}</script>
+  <div class="tool-title">Análisis de bonos</div>
+  <p class="tool-desc">Precio, TIR, paridad y duration de la curva soberana en dólares, Bopreal, tasa fija, CER y dólar linked — calculados por Valtia sobre los flujos oficiales de cada bono.</p>
+
+  <!-- Variables del mercado (visible) -->
+  <div class="bp-vars" id="bp-vars"></div>
+
+  <!-- Referencias de la curva (visible: 3 bonos con métricas reales) -->
+  <div class="widget-box">
+    <div class="widget-header"><span class="widget-title">Referencias de la curva — soberanos USD</span><span class="widget-source">BYMA · TIR y duration calculadas por Valtia</span></div>
+    <div class="bp-table-wrap"><table class="bp-table" id="bp-mini"><thead><tr>
+      <th>Especie</th><th>Venc.</th><th>Último USD</th><th>% Día</th><th>TIR</th><th>Paridad</th><th>MD</th>
+    </tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <!-- PRO: panel completo -->
+  <div style="position:relative;margin-top:16px">
+    <div class="preview-blur">
+      <div class="widget-box" style="margin-top:0">
+        <div class="widget-header"><span class="widget-title">Curva soberana completa — ley local vs ley Nueva York</span><span class="widget-source">TIR efectiva anual vs duration modificada</span></div>
+        <div class="bp-table-wrap"><table class="bp-table" id="bp-soberanos"><thead><tr>
+          <th>Especie</th><th>Venc.</th><th>Último USD</th><th>% Día</th><th>TIR</th><th>Paridad</th><th>MD</th><th>Duration</th><th>CY</th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="widget-box" style="margin-top:16px">
+        <div class="widget-header"><span class="widget-title">Curva de rendimientos</span><span class="widget-source">Dorado: ley local · Celeste: ley NY</span></div>
+        <div class="bp-curva-box"><canvas id="bp-curva"></canvas></div>
+      </div>
+      <div class="widget-box" style="margin-top:16px">
+        <div class="widget-header"><span class="widget-title">Bopreal (BCRA, Serie 1)</span><span class="widget-source">USD · vencen 31/10/2027</span></div>
+        <div class="bp-table-wrap"><table class="bp-table" id="bp-bopreal"><thead><tr>
+          <th>Especie</th><th>Venc.</th><th>Último USD</th><th>% Día</th><th>TIR</th><th>MD</th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px" class="bp-2col">
+        <div class="widget-box" style="margin-top:0">
+          <div class="widget-header"><span class="widget-title">Tasa fija (Lecap / Boncap)</span><span class="widget-source">$ · por 100 VN</span></div>
+          <div class="bp-table-wrap"><table class="bp-table" id="bp-tasafija"><thead><tr>
+            <th>Especie</th><th>Venc.</th><th>Último</th><th>% Día</th>
+          </tr></thead><tbody></tbody></table></div>
+        </div>
+        <div>
+          <div class="widget-box" style="margin-top:0">
+            <div class="widget-header"><span class="widget-title">Bonos CER</span><span class="widget-source">$ · ajustan por inflación</span></div>
+            <div class="bp-table-wrap"><table class="bp-table" id="bp-cer"><thead><tr>
+              <th>Especie</th><th>Último</th><th>% Día</th>
+            </tr></thead><tbody></tbody></table></div>
+          </div>
+          <div class="widget-box" style="margin-top:16px">
+            <div class="widget-header"><span class="widget-title">Dólar linked</span><span class="widget-source">$ · ajustan por A3500</span></div>
+            <div class="bp-table-wrap"><table class="bp-table" id="bp-dl"><thead><tr>
+              <th>Especie</th><th>Venc.</th><th>Último</th><th>% Día</th>
+            </tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+      </div>
+      <div class="widget-box" style="margin-top:16px">
+        <div class="widget-header"><span class="widget-title">Cómo leer la curva — guía Valtia</span></div>
+        <div style="padding:18px 20px;font-size:13px;line-height:1.8;color:var(--sub)">
+          <p style="margin-bottom:10px"><strong style="color:var(--text)">El eje no es solo la duración: es el calendario electoral.</strong> Los bonos que amortizan antes o durante 2027 (AL29, AL30, GD29, GD30, AO27) cobran la mayor parte de su flujo antes del evento político. Los largos (AL35, AE38, GD35 en adelante) concentran el flujo después — más torque si el riesgo país comprime, más golpe si no.</p>
+          <p style="margin-bottom:10px"><strong style="color:var(--text)">Ley local vs ley Nueva York:</strong> a igual vencimiento, el Global (ley NY) cotiza con premio por la protección jurídica; el Bonar (ley local) paga más rendimiento. El spread entre ambos es el precio del paraguas legal.</p>
+          <p><strong style="color:var(--text)">El tramo medio como punto dulce:</strong> los 2029/2030 combinan carry razonable con devolución de capital pre-electoral. El análisis completo de posicionamiento está en los informes para clientes.</p>
+        </div>
       </div>
     </div>
-    <!-- PRO: curva completa + guía -->
-    <div style="position:relative">
-      <div class="preview-blur">
-        <div class="widget-box" style="margin-top:0">
-          <div class="widget-header"><span class="widget-title">Curva completa — ley local vs ley Nueva York</span><span class="widget-source">TradingView · BYMA · Tiempo real</span></div>
-          <div class="tradingview-widget-container">
-            <div class="tradingview-widget-container__widget"></div>
-            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-quotes.js" async>{"width":"100%","height":440,"symbolsGroups":[{"name":"Ley local (Bonares)","symbols":[{"name":"BCBA:AL29","displayName":"AL29 — Bonar 2029"},{"name":"BCBA:AL30","displayName":"AL30 — Bonar 2030"},{"name":"BCBA:AL35","displayName":"AL35 — Bonar 2035"},{"name":"BCBA:AE38","displayName":"AE38 — Bonar 2038"},{"name":"BCBA:AL41","displayName":"AL41 — Bonar 2041"}]},{"name":"Ley Nueva York (Globales)","symbols":[{"name":"BCBA:GD29","displayName":"GD29 — Global 2029"},{"name":"BCBA:GD30","displayName":"GD30 — Global 2030"},{"name":"BCBA:GD35","displayName":"GD35 — Global 2035"},{"name":"BCBA:GD38","displayName":"GD38 — Global 2038"},{"name":"BCBA:GD41","displayName":"GD41 — Global 2041"},{"name":"BCBA:GD46","displayName":"GD46 — Global 2046"}]}],"showSymbolLogo":false,"colorTheme":"dark","isTransparent":false,"locale":"es"}</script>
-          </div>
-        </div>
-        <div class="widget-box" style="margin-top:16px">
-          <div class="widget-header"><span class="widget-title">Cómo leer la curva — guía Valtia</span></div>
-          <div style="padding:18px 20px;font-size:13px;line-height:1.8;color:var(--sub)">
-            <p style="margin-bottom:10px"><strong style="color:var(--text)">El eje no es solo la duración: es el calendario electoral.</strong> Los bonos que amortizan antes o durante 2027 (AL29, AL30, GD29, GD30) cobran la mayor parte de su flujo antes del evento político. Los largos (AL35, AE38, GD35 en adelante) concentran el flujo después — más torque si el riesgo país comprime, más golpe si no.</p>
-            <p style="margin-bottom:10px"><strong style="color:var(--text)">Ley local vs ley Nueva York:</strong> a igual vencimiento, el Global (ley NY) cotiza con premio por la protección jurídica; el Bonar (ley local) paga más rendimiento. El spread entre ambos es el precio del paraguas legal.</p>
-            <p><strong style="color:var(--text)">El tramo medio como punto dulce:</strong> los 2029/2030 combinan carry razonable con devolución de capital pre-electoral. El análisis completo de posicionamiento está en los informes para clientes.</p>
-          </div>
-        </div>
-      </div>
-      <div class="pro-overlay">
-        <div class="pro-lock-icon">🔒</div>
-        <h4>Contenido PRO</h4>
-        <p>Curva soberana completa en vivo (ley local y ley NY) y la guía Valtia para leerla.</p>
-        <a href="index.html#planes" class="btn">Ver planes →</a>
-      </div>
+    <div class="pro-overlay">
+      <div class="pro-lock-icon">🔒</div>
+      <h4>Contenido PRO</h4>
+      <p>La curva soberana completa con TIR, paridad y duration, Bopreal, tasa fija, CER y la guía Valtia para leerla.</p>
+      <a href="index.html#planes" class="btn">Ver planes →</a>
     </div>
   </div>
+  <div class="bp-asof" id="bp-asof"></div>
 </div>
 
 <!-- ACCIONES ARG/EEUU PRO -->
@@ -681,6 +736,136 @@ async function loadRadar() {
   }).join('');
 }
 loadRadar();
+</script>
+<script type="module">
+// ── PANEL DE BONOS: lee bonosPanel/latest (público) y arma tablas + curva ──
+(async () => {
+  const URL = "https://firestore.googleapis.com/v1/projects/valtia-analytics/databases/(default)/documents/bonosPanel/latest?key=AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw";
+  let data, asof;
+  try {
+    const r = await fetch(URL, { cache: "no-store" });
+    const doc = await r.json();
+    data = JSON.parse(doc.fields.json.stringValue);
+    asof = doc.fields.actualizado_utc?.timestampValue;
+  } catch (e) { return; }
+
+  const nf = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const n1 = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const n0 = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
+  const pct = v => v == null ? "—" : `<span class="${v > 0 ? "bp-up" : v < 0 ? "bp-dn" : "bp-nt"}">${v > 0 ? "+" : ""}${n1.format(v)}%</span>`;
+  const num = (v, f = nf) => v == null ? "—" : f.format(v);
+  const venc = v => v ? `${v.slice(8, 10)}/${v.slice(5, 7)}/${v.slice(2, 4)}` : "—";
+
+  // variables
+  const V = data.variables || {};
+  const vars = [
+    ["Riesgo país", V.riesgo_pais != null ? n0.format(V.riesgo_pais) : "—", V.riesgo_pais_var || ""],
+    ["Dólar MEP", num(V.mep, n0), V.brecha_mep != null ? `brecha ${n1.format(V.brecha_mep)}%` : ""],
+    ["Dólar CCL", num(V.ccl, n0), V.brecha_ccl != null ? `brecha ${n1.format(V.brecha_ccl)}%` : ""],
+    ["Mayorista", num(V.mayorista, n0), "A3500"],
+    ["Blue", num(V.blue, n0), "informal"],
+  ];
+  const elVars = document.getElementById("bp-vars");
+  if (elVars) elVars.innerHTML = vars.map(([l, v, s]) =>
+    `<div class="bp-var"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+
+  const fila = tds => `<tr>${tds.join("")}</tr>`;
+  const c = h => `<td>${h}</td>`;
+  const sym = b => c(`<span class="bp-sym">${b.s}</span>` +
+    (b.ley ? `<span class="bp-ley${b.ley === "NY" ? " ny" : ""}">${b.ley === "NY" ? "NY" : "ARG"}</span>` : ""));
+
+  const sob = data.soberanos || [];
+  const filaSob = (b, full) => fila([sym(b), c(venc(b.vence)), c(num(b.p)), c(pct(b.v)),
+    c(b.tir != null ? `<span class="bp-tir">${n1.format(b.tir)}%</span>` : "—"),
+    c(b.paridad != null ? n1.format(b.paridad) + "%" : "—"), c(num(b.md)),
+    ...(full ? [c(num(b.dur)), c(b.cy != null ? n1.format(b.cy) + "%" : "—")] : [])]);
+
+  const mini = document.querySelector("#bp-mini tbody");
+  if (mini) mini.innerHTML = ["AL30D", "GD30D", "AE38D"].map(s => sob.find(b => b.s === s))
+    .filter(Boolean).map(b => filaSob(b, false)).join("");
+  const tSob = document.querySelector("#bp-soberanos tbody");
+  if (tSob) tSob.innerHTML = sob.map(b => filaSob(b, true)).join("");
+
+  const tBop = document.querySelector("#bp-bopreal tbody");
+  if (tBop) tBop.innerHTML = (data.bopreal || []).map(b => fila([sym(b), c(venc(b.vence)),
+    c(num(b.p)), c(pct(b.v)), c(b.tir != null ? `<span class="bp-tir">${n1.format(b.tir)}%</span>` : "—"),
+    c(num(b.md))])).join("");
+
+  const simple = (id, arr, conVenc = true) => {
+    const el = document.querySelector(id + " tbody");
+    if (el) el.innerHTML = (arr || []).map(b => fila([sym(b),
+      ...(conVenc ? [c(venc(b.vence))] : []), c(num(b.p)), c(pct(b.v))])).join("");
+  };
+  simple("#bp-tasafija", data.tasa_fija);
+  simple("#bp-cer", data.cer, false);
+  simple("#bp-dl", data.dolar_linked);
+
+  if (asof) {
+    const d = new Date(asof);
+    const el = document.getElementById("bp-asof");
+    if (el) el.textContent =
+      "Datos: BYMA vía IOL + Ámbito · TIR efectiva anual calculada sobre flujos oficiales (Dto. 701/2020) · Actualizado " +
+      d.toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + " hs";
+  }
+
+  // curva de rendimientos (scatter TIR vs MD) con etiquetas propias
+  const canvas = document.getElementById("bp-curva");
+  if (!canvas || typeof Chart === "undefined") return;
+  const puntos = sob.filter(b => b.tir != null && b.md != null);
+  let chart;
+  const dibujar = () => {
+    const css = getComputedStyle(document.documentElement);
+    const gold = css.getPropertyValue("--gold").trim() || "#B8975A";
+    const sub = css.getPropertyValue("--sub").trim() || "#8A94A6";
+    const border = css.getPropertyValue("--border").trim() || "rgba(184,151,90,.15)";
+    const text = css.getPropertyValue("--text").trim() || "#EAE6DD";
+    if (chart) chart.destroy();
+    chart = new Chart(canvas, {
+      type: "scatter",
+      data: { datasets: [
+        { label: "Ley local", data: puntos.filter(b => b.ley === "AR").map(b => ({ x: b.md, y: b.tir, s: b.s })),
+          backgroundColor: gold, pointRadius: 5, pointHoverRadius: 7 },
+        { label: "Ley NY", data: puntos.filter(b => b.ley === "NY").map(b => ({ x: b.md, y: b.tir, s: b.s })),
+          backgroundColor: "#7FA8C9", pointRadius: 5, pointHoverRadius: 7 },
+      ]},
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: sub, font: { family: "Jost", size: 11 } } },
+          tooltip: { callbacks: { label: ctx => `${ctx.raw.s}: TIR ${n1.format(ctx.raw.y)}% · MD ${nf.format(ctx.raw.x)}` } },
+        },
+        scales: {
+          x: { title: { display: true, text: "Duration modificada", color: sub, font: { family: "Jost", size: 11 } },
+               grid: { color: border }, ticks: { color: sub } },
+          y: { title: { display: true, text: "TIR %", color: sub, font: { family: "Jost", size: 11 } },
+               grid: { color: border }, ticks: { color: sub } },
+        },
+      },
+      plugins: [{
+        id: "bpLabels",
+        afterDatasetsDraw(ch) {
+          const { ctx } = ch;
+          ctx.save(); ctx.font = "10px Jost"; ctx.fillStyle = text; ctx.textAlign = "center";
+          ch.data.datasets.forEach((ds, di) => ch.getDatasetMeta(di).data.forEach((pt, i) =>
+            ctx.fillText(ds.data[i].s, pt.x, pt.y - 9)));
+          ctx.restore();
+        },
+      }],
+    });
+  };
+  // dibujo perezoso: el canvas nace oculto (pestaña display:none) y Chart.js
+  // no puede medirlo — mismo motivo por el que los heatmaps se inician lazy.
+  let dibujado = false;
+  const intentar = () => { if (!dibujado && canvas.offsetParent) { dibujado = true; dibujar(); } };
+  intentar();
+  const io = new IntersectionObserver(es => {
+    if (es.some(e => e.isIntersecting)) { intentar(); if (dibujado) io.disconnect(); }
+  });
+  io.observe(canvas);
+  document.querySelectorAll(".tool-tab").forEach(t =>
+    t.addEventListener("click", () => setTimeout(intentar, 50)));
+  new MutationObserver(() => { if (dibujado) dibujar(); }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+})();
 </script>
 <script type="module" src="nav-auth.js?v=4"></script>
 </body>
