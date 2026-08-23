@@ -397,7 +397,7 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
           <div class="widget-box" style="margin-top:16px">
             <div class="widget-header"><span class="widget-title">Dólar linked</span><span class="widget-source">$ · ajustan por A3500</span></div>
             <div class="bp-table-wrap"><table class="bp-table" id="bp-dl"><thead><tr>
-              <th>Especie</th><th>Venc.</th><th>Último</th><th>% Día</th>
+              <th>Especie</th><th>Último</th><th>% Día</th>
             </tr></thead><tbody></tbody></table></div>
           </div>
         </div>
@@ -803,7 +803,7 @@ loadRadar();
   };
   simple("#bp-tasafija", data.tasa_fija);
   simple("#bp-cer", data.cer, false);
-  simple("#bp-dl", data.dolar_linked);
+  simple("#bp-dl", data.dolar_linked, false);
 
   if (asof) {
     const d = new Date(asof);
