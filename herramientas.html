@@ -747,7 +747,12 @@ loadRadar();
     const doc = await r.json();
     data = JSON.parse(doc.fields.json.stringValue);
     asof = doc.fields.actualizado_utc?.timestampValue;
-  } catch (e) { return; }
+  } catch (e) {
+    const ev = document.getElementById("bp-vars");
+    if (ev) ev.innerHTML = '<div class="bp-var" style="grid-column:1/-1"><div class="l">Panel de bonos</div>' +
+      '<div class="s" style="margin-top:6px">No pudimos cargar los datos en este momento. Probá recargar la página en unos minutos.</div></div>';
+    return;
+  }
 
   const nf = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const n1 = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
