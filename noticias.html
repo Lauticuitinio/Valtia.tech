@@ -98,23 +98,6 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .nl-box button:hover{background:#fff}
 .nl-msg{font:500 12px 'IBM Plex Sans',sans-serif;margin-top:10px;color:#7FD8A4;display:none}
 
-/* modal lector */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(16,16,16,.8);z-index:500;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto}
-.modal-overlay.open{display:flex}
-.modal-article{background:#fff;width:100%;max-width:760px;position:relative;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45)}
-.modal-img{height:300px;overflow:hidden;position:relative;background:linear-gradient(135deg,#14213D,#B08A3E)}
-.modal-img img{width:100%;height:100%;object-fit:cover;display:block}
-.modal-close{position:absolute;top:14px;right:14px;width:34px;height:34px;background:rgba(16,16,16,.55);border:none;border-radius:50%;color:#fff;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(4px)}
-.modal-body{padding:32px 40px 44px}
-.modal-cats{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-.mcat{font:700 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2)}
-.modal-title{font:700 30px 'Playfair Display',serif;color:var(--ink);line-height:1.16;margin-bottom:14px;text-wrap:pretty}
-.modal-meta{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;color:var(--mut);text-transform:uppercase;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--line)}
-.modal-content{font:400 15px 'IBM Plex Sans',sans-serif;line-height:1.85;color:#2E2A24}
-.modal-content p{margin-bottom:16px}
-.modal-content h3{font:600 20px 'Playfair Display',serif;color:var(--navy);margin:26px 0 10px}
-.modal-content strong{color:var(--ink)}
-
 /* footer + mail */
 footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:40px}
 .footer-copy{font:400 11px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
@@ -172,21 +155,6 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 <!-- contenido -->
 <div class="wrap" id="paper-body">
   <div class="empty-state">Cargando las noticias…</div>
-</div>
-
-<!-- modal lector -->
-<div class="modal-overlay" id="articleModal" onclick="closeIfOverlay(event)">
-  <div class="modal-article">
-    <div class="modal-img" id="modal-img-wrap">
-      <button class="modal-close" onclick="closeArticle()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="modal-cats" id="modal-cats"></div>
-      <div class="modal-title" id="modal-title"></div>
-      <div class="modal-meta" id="modal-meta"></div>
-      <div class="modal-content" id="modal-content"></div>
-    </div>
-  </div>
 </div>
 
 <footer>
@@ -312,25 +280,12 @@ function filterCat(cat, el){
   renderNews();
 }
 
-/* lector */
+/* lector: cada nota tiene su propia página (estilo Bloomberg) — el contador
+   de vistas lo registra nota.html al abrirse */
 function openArticle(id){
   const a = articles.find(x=>x.id===id); if(!a) return;
-  const wrap = document.getElementById('modal-img-wrap');
-  wrap.innerHTML = `<button class="modal-close" onclick="closeArticle()">✕</button>` +
-    (a.imagen ? `<img src="${esc(a.imagen)}" alt="${esc(a.title)}" onerror="this.remove()">` : "");
-  document.getElementById('modal-cats').innerHTML = a.cat.map(c=>`<span class="mcat">${esc(catInfo(c).name)}</span>`).join(" · ");
-  document.getElementById('modal-title').textContent = a.title;
-  document.getElementById('modal-meta').textContent = a.fuente
-    ? `${fShort(a.fecha)} · ${a.fuente}`
-    : `${fShort(a.fecha)} · ${a.read} de lectura · Valtia Analytics`;
-  document.getElementById('modal-content').innerHTML = a.content;
-  document.getElementById('articleModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  a.vistas++;                                    // refleja al toque en "más leídas"
-  if (window._regView) window._regView(a.docId); // contador real en Firestore
+  location.href = 'nota.html?n=' + encodeURIComponent(a.docId);
 }
-function closeArticle(){ document.getElementById('articleModal').classList.remove('open'); document.body.style.overflow=''; }
-function closeIfOverlay(e){ if(e.target===document.getElementById('articleModal')) closeArticle(); }
 
 /* fecha */
 (function(){
@@ -374,12 +329,6 @@ try {
   document.getElementById('paper-body').innerHTML =
     '<div class="empty-state">Estamos preparando nuevos análisis. Volvé pronto.</div>';
 }
-
-/* contador de vistas (las reglas solo permiten vistas = vistas + 1) */
-window._regView = docId => {
-  if (!docId) return;
-  updateDoc(doc(db, "noticias", docId), { vistas: increment(1) }).catch(() => {});
-};
 
 /* suscripción al newsletter */
 window.suscribirNews = async () => {
