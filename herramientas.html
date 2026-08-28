@@ -522,7 +522,7 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
   <span class="footer-copy">Los datos son referenciales y no constituyen asesoramiento financiero.</span>
 </footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="chart.umd.min.js?v=1"></script>
 <script>
 // THEME
 function toggleTheme(){const h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'light':'dark';localStorage.setItem('valtia-theme',h.dataset.theme)}
@@ -815,7 +815,11 @@ loadRadar();
 
   // curva de rendimientos (scatter TIR vs MD) con etiquetas propias
   const canvas = document.getElementById("bp-curva");
-  if (!canvas || typeof Chart === "undefined") return;
+  if (!canvas) return;
+  if (typeof Chart === "undefined") {
+    canvas.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:12px;color:var(--sub);padding:0 24px;text-align:center">El gráfico no pudo cargarse (el navegador bloqueó la librería). Los datos de la curva están en la tabla de arriba.</div>';
+    return;
+  }
   const puntos = sob.filter(b => b.tir != null && b.md != null);
   let chart;
   const dibujar = () => {
