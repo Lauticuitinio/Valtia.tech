@@ -376,6 +376,20 @@ try {
   // ── tu posición (cliente logueado con tenencia en este activo) ──
   const ALIAS = { BTC: ["BTC", "BTC-USD"], ETH: ["ETH", "ETH-USD"] };
   onAuthStateChanged(getAuth(app), async user => {
+    // destape PRO: los candados de esta ficha se crean DESPUÉS de que
+    // nav-auth pinta (los datos llegan async), así que acá se re-aplica
+    if (user) {
+      const esperar = ms => new Promise(r => setTimeout(r, ms));
+      for (let i = 0; i < 20 && !window.valtiaEsPro; i++) await esperar(150);
+      try {
+        if (window.valtiaEsPro && await window.valtiaEsPro(user)) {
+          document.querySelectorAll(".pro-overlay").forEach(o => o.style.display = "none");
+          document.querySelectorAll(".preview-blur").forEach(b => {
+            b.style.filter = "none"; b.style.pointerEvents = ""; b.style.userSelect = "";
+          });
+        }
+      } catch (e) {}
+    }
     const cont = document.getElementById("mi-pos");
     if (!user || !user.email || !cont) return;
     try {
