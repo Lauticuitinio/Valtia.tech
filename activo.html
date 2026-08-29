@@ -161,7 +161,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 /* ── Ficha de activo: precio + gráfico + radar + informe + noticias ── */
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, collection, getDocs, doc, getDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { EMPRESAS, SECTORES } from './empresas.js?v=2';
+import { EMPRESAS, SECTORES } from './empresas.js?v=3';
 
 const app = getApps().length ? getApp() : initializeApp({
   apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
@@ -193,7 +193,7 @@ try {
     getDoc(doc(db, "preciosInformes", "latest")).catch(() => null),
     getDoc(doc(db, "historialInformes", t)).catch(() => null),
     getDoc(doc(db, "radar", "latest")).catch(() => null),
-    getDoc(doc(db, "informes", emp.slug)).catch(() => null),
+    emp.slug ? getDoc(doc(db, "informes", emp.slug)).catch(() => null) : Promise.resolve(null),
     getDocs(query(collection(db, "noticias"), where("estado", "==", "publicado"))).catch(() => null),
   ]);
 
@@ -276,20 +276,28 @@ try {
     </div>
     <div class="card-w">
       <div class="card-h"><span class="t">Informe Valtia</span>
-        ${inf ? (inf.visibilidad === "publico" ? '<span class="badge b-free">Gratis</span>' : '<span class="badge b-cli">Clientes</span>') : '<span class="badge b-cli">Clientes</span>'}
+        ${!emp.slug ? '<span class="badge" style="background:var(--marfil);color:var(--mut)">Próximamente</span>'
+          : inf ? (inf.visibilidad === "publico" ? '<span class="badge b-free">Gratis</span>' : '<span class="badge b-cli">Clientes</span>')
+          : '<span class="badge b-cli">Clientes</span>'}
       </div>
-      <a class="inf-cover" href="informes.html?i=${emp.slug}"><img src="${cover}" alt="${esc(emp.nombre)}" onerror="this.remove()"></a>
+      ${emp.slug ? `<a class="inf-cover" href="informes.html?i=${emp.slug}"><img src="${cover}" alt="${esc(emp.nombre)}" onerror="this.remove()"></a>` : ""}
       <div class="inf-body">
-        ${inf ? `
+        ${!emp.slug ? `
+          <h3>Todavía no publicamos el informe de ${esc(emp.nombre)}</h3>
+          <p>El equipo va sumando análisis fundamentales a pedido de los clientes: tesis, KPIs, valuación por año, FODA y riesgos. Si querés que ${esc(emp.nombre)} sea el próximo, decínoslo.</p>
+          <a class="btn-leer" href="mailto:valtyaanalytics@gmail.com?subject=Quiero%20el%20informe%20de%20${encodeURIComponent(emp.nombre)}">Pedir este análisis →</a>
+          <a class="btn-leer" href="informes.html" style="background:#fff;color:var(--ink);border:1px solid var(--line);margin-left:8px">Ver los publicados</a>
+        ` : inf ? `
           <h3>${esc(inf.titulo)}</h3>
           <div class="inf-meta">${venc(fdate(inf.fecha))} · Valtia Research</div>
           <p>${esc(inf.resumen || "")}</p>
           ${desde != null ? `<div class="inf-desde ${clase(desde)}">${signo(desde)} desde la publicación <span style="color:var(--mut);font-weight:400">(salió a US$${nf.format(inf.precio_pub)})</span></div>` : ""}
+          <a class="btn-leer" href="informes.html?i=${emp.slug}">Leer el informe →</a>
         ` : `
           <h3>Análisis fundamental de ${esc(emp.nombre)}</h3>
           <p>Tesis, KPIs, valuación por año, FODA y riesgos — el informe completo es exclusivo para clientes de Valtia.</p>
+          <a class="btn-leer" href="informes.html?i=${emp.slug}">Leer el informe →</a>
         `}
-        <a class="btn-leer" href="informes.html?i=${emp.slug}">Leer el informe →</a>
       </div>
     </div>
   </div>

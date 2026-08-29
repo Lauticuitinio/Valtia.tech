@@ -187,6 +187,8 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .sector-pills .sp:hover{border-color:var(--gold);color:var(--ink)}
 .sector-pills .sp.on{background:#0E1830;border-color:#0E1830;color:#fff}
 .sin-resultados{padding:30px 0;font:400 14px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+.ficha-link{font:600 11.5px 'IBM Plex Sans',sans-serif;padding:8px 14px;border:1px solid var(--gold);color:var(--gold2);white-space:nowrap;text-decoration:none}
+.ficha-link:hover{background:var(--gold);color:#fff}
 
 /* footer + mail (igual a Noticias) */
 footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:40px}
@@ -243,6 +245,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
       <div class="inf-tools">
         <input class="inf-buscar" id="inf-buscar" type="search" placeholder="Buscar empresa o ticker — NVDA, Galicia, Walmart…" oninput="window.filtroTexto && filtroTexto(this.value)">
         <div class="sector-pills" id="sector-pills"></div>
+        <a class="ficha-link" href="activo.html?t=NVDA">📈 Fichas de activos</a>
       </div>
       <div class="sin-resultados" id="sin-resultados" style="display:none">Ningún informe coincide con la búsqueda. Probá con otro nombre o ticker.</div>
       <div class="inf-grid">
@@ -334,7 +337,7 @@ import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebase
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, getDocs, doc, getDoc, query, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { EMPRESAS, SECTORES } from './empresas.js?v=2';
+import { EMPRESAS, SECTORES } from './empresas.js?v=3';
 
 const app = getApps().length ? getApp() : initializeApp({
   apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
@@ -443,7 +446,10 @@ function initFiltros() {
   });
   const cont = document.getElementById("sector-pills");
   if (cont && !cont.children.length) {
-    const pills = [{ k: "todos", n: "Todos" }, ...SECTORES];
+    // solo sectores con informes en la grilla (el catálogo tiene más para las fichas)
+    const presentes = new Set([...document.querySelectorAll(".inf-card")]
+      .map(c => c.dataset.sector).filter(Boolean));
+    const pills = [{ k: "todos", n: "Todos" }, ...SECTORES.filter(s => presentes.has(s.k))];
     cont.innerHTML = pills.map(s =>
       `<div class="sp${s.k === "todos" ? " on" : ""}" data-k="${s.k}">${s.n}</div>`).join("");
     cont.querySelectorAll(".sp").forEach(p => p.addEventListener("click", () => {

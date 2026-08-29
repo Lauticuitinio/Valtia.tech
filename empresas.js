@@ -1,8 +1,13 @@
-/* Mapa empresa ↔ informe, compartido por informes.html y nota.html.
-   claves: substrings (en minúsculas) que identifican a la empresa en el
-   texto de una noticia. Cuidado con palabras ambiguas ("meta" solo va
-   como "meta platforms"). */
+/* Catálogo de activos de Valtia, compartido por informes.html, nota.html y
+   activo.html. Los que tienen `slug` tienen informe publicado; el resto solo
+   ficha (precio, gráfico, radar si corresponde, noticias).
+   claves: substrings (en minúsculas) que identifican al activo en el texto
+   de una noticia. Cuidado con palabras ambiguas ("meta" solo va como
+   "meta platforms").
+   AL AGREGAR/EDITAR: bumpear ?v= de empresas.js en las TRES páginas, y si el
+   activo es nuevo correr fondo-sync/informes_live.py (precios+historial). */
 export const EMPRESAS = [
+  /* ── con informe publicado ── */
   { sector: "arg", slug: "informe-ypf",   ticker: "YPF",   nombre: "YPF",               claves: ["ypf"] },
   { sector: "arg", slug: "informe-pampa", ticker: "PAM",   nombre: "Pampa Energía",     claves: ["pampa energ"] },
   { sector: "arg", slug: "informe-ggal",  ticker: "GGAL",  nombre: "Grupo Galicia",     claves: ["grupo galicia", "banco galicia", "ggal"] },
@@ -21,6 +26,22 @@ export const EMPRESAS = [
   { sector: "tech", slug: "informe-meli",  ticker: "MELI",  nombre: "MercadoLibre",      claves: ["mercadolibre", "mercado libre"] },
   { sector: "salud", slug: "informe-jnj",   ticker: "JNJ",   nombre: "Johnson & Johnson", claves: ["johnson & johnson", "johnson y johnson"] },
   { sector: "fin", slug: "informe-cme",   ticker: "CME",   nombre: "CME Group",         claves: ["cme group"] },
+  /* ── solo ficha (sin informe todavía) ── */
+  { sector: "tech", ticker: "AAPL", nombre: "Apple",            claves: ["apple"] },
+  { sector: "tech", ticker: "AMZN", nombre: "Amazon",           claves: ["amazon"] },
+  { sector: "tech", ticker: "TSLA", nombre: "Tesla",            claves: ["tesla"] },
+  { sector: "tech", ticker: "AVGO", nombre: "Broadcom",         claves: ["broadcom"] },
+  { sector: "tech", ticker: "TSM",  nombre: "TSMC",             claves: ["tsmc", "taiwan semiconductor"] },
+  { sector: "fin",  ticker: "JPM",  nombre: "JPMorgan",         claves: ["jpmorgan", "jp morgan"] },
+  { sector: "fin",  ticker: "V",    nombre: "Visa",             claves: ["visa"] },
+  { sector: "arg",  ticker: "VIST", nombre: "Vista Energy",     claves: ["vista energy", "vista oil"] },
+  { sector: "arg",  ticker: "BMA",  nombre: "Banco Macro",      claves: ["banco macro"] },
+  { sector: "arg",  ticker: "CEPU", nombre: "Central Puerto",   claves: ["central puerto"] },
+  { sector: "arg",  ticker: "TGS",  nombre: "Transp. Gas del Sur", claves: ["transportadora de gas"] },
+  { sector: "cripto", ticker: "BTC", nombre: "Bitcoin",         claves: ["bitcoin"] },
+  { sector: "cripto", ticker: "ETH", nombre: "Ethereum",        claves: ["ethereum"] },
+  { sector: "etf", ticker: "SPY", nombre: "S&P 500 (SPY)",      claves: ["s&p 500", "sp 500"] },
+  { sector: "etf", ticker: "QQQ", nombre: "Nasdaq 100 (QQQ)",   claves: ["nasdaq"] },
 ];
 
 export const SECTORES = [
@@ -29,9 +50,11 @@ export const SECTORES = [
   { k: "consumo", n: "Consumo" },
   { k: "fin",     n: "Financieras" },
   { k: "salud",   n: "Salud" },
+  { k: "cripto",  n: "Cripto" },
+  { k: "etf",     n: "ETFs e índices" },
   { k: "macro",   n: "Macro y sectores" },
 ];
 
-/* Empresas con informe mencionadas en un texto (ya en minúsculas). */
+/* Empresas/activos mencionados en un texto (ya en minúsculas). */
 export const mencionadas = (texto, max = 2) =>
   EMPRESAS.filter(e => e.claves.some(k => texto.includes(k))).slice(0, max);
