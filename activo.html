@@ -47,6 +47,13 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .head .px .h{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--mut);margin-top:3px}
 .up{color:var(--up)}.dn{color:var(--dn)}
 
+/* tu posición (solo cliente logueado con tenencia) */
+.mi-pos{background:var(--marfil);border:1px solid var(--line);border-left:3px solid var(--gold);padding:15px 20px;margin-bottom:22px;display:flex;flex-wrap:wrap;gap:10px 36px;align-items:baseline}
+.mi-pos .tt{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);width:100%}
+.mi-pos .l{font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.mi-pos .v{font:600 17px 'IBM Plex Mono',monospace;margin-top:3px;font-variant-numeric:tabular-nums}
+.mi-pos .s{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--sub);margin-top:2px}
+
 /* tarjetas */
 .card-w{background:#fff;border:1px solid var(--line)}
 .card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--line)}
@@ -161,6 +168,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 /* ── Ficha de activo: precio + gráfico + radar + informe + noticias ── */
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, collection, getDocs, doc, getDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { EMPRESAS, SECTORES } from './empresas.js?v=3';
 
 const app = getApps().length ? getApp() : initializeApp({
@@ -259,6 +267,8 @@ try {
       ${hora ? `<div class="h">Actualizado ${hora} hs · cada 15 min en rueda</div>` : ""}
     </div>
   </div>
+
+  <div id="mi-pos"></div>
 
   <div class="card-w">
     <div class="card-h"><span class="t">Evolución del precio</span>
@@ -362,6 +372,37 @@ try {
   } else if (canvas) {
     canvas.parentElement.innerHTML = '<div class="vacio">El histórico de precios se está generando — volvé en unos minutos.</div>';
   }
+
+  // ── tu posición (cliente logueado con tenencia en este activo) ──
+  const ALIAS = { BTC: ["BTC", "BTC-USD"], ETH: ["ETH", "ETH-USD"] };
+  onAuthStateChanged(getAuth(app), async user => {
+    const cont = document.getElementById("mi-pos");
+    if (!user || !user.email || !cont) return;
+    try {
+      const snap = await getDocs(collection(db, "inversores", user.email, "cartera"));
+      const nombres = ALIAS[t] || [t];
+      const lotes = snap.docs.map(x => x.data())
+        .filter(p => nombres.includes(String(p.ticker || "").toUpperCase()));
+      if (!lotes.length) return;
+      const cant = lotes.reduce((a, p) => a + (Number(p.cantidad) || 0), 0);
+      const conCosto = lotes.filter(p => Number(p.precioCompra) > 0);
+      const cantCosto = conCosto.reduce((a, p) => a + Number(p.cantidad), 0);
+      const costo = conCosto.reduce((a, p) => a + Number(p.cantidad) * Number(p.precioCompra), 0);
+      const ppc = cantCosto ? costo / cantCosto : null;
+      const valor = px.p ? cant * px.p : null;
+      const pnlPct = ppc && px.p ? (px.p / ppc - 1) * 100 : null;
+      const pnlUsd = ppc && px.p ? (px.p - ppc) * cantCosto : null;
+      const item = (l, v, s) => `<div><div class="l">${l}</div><div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`;
+      cont.innerHTML = `<div class="mi-pos">
+        <div class="tt">Tu posición en ${esc(emp.nombre)}</div>
+        ${item("Tenencia", nf.format(cant) + " u.", "")}
+        ${valor != null ? item("Valor hoy", "US$" + nf.format(valor), "al último precio") : ""}
+        ${ppc != null ? item("Precio promedio", "US$" + nf.format(ppc), cantCosto < cant ? "sobre los lotes con costo cargado" : "") : ""}
+        ${pnlPct != null ? item("Resultado", `<span class="${clase(pnlPct)}">${signo(pnlPct)}</span>`,
+          (pnlUsd >= 0 ? "+" : "−") + "US$" + nf.format(Math.abs(pnlUsd))) : ""}
+      </div>`;
+    } catch (e) {}
+  });
 } catch (e) {
   ficha.innerHTML = '<div class="empty-state">No pudimos cargar la ficha. <a href="informes.html">Volver a Informes</a></div>';
 }
