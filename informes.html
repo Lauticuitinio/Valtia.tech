@@ -384,7 +384,9 @@ async function catalogo(user) {
     const emp = EMPRESAS.find(e => e.slug === (d.slug || d.id)) || {};
     card.dataset.sector = emp.sector || "";
     card.dataset.buscar = `${d.titulo} ${emp.ticker || ""} ${emp.nombre || ""} ${d.categorias || ""}`.toLowerCase();
-    card.onclick = () => location.href = `informes.html?i=${d.slug || d.id}`;
+    // los informes de empresas viven en la ficha del activo (una sola página)
+    card.onclick = () => location.href = emp.ticker
+      ? `activo.html?t=${emp.ticker}#informe` : `informes.html?i=${d.slug || d.id}`;
     card.innerHTML = `
       <div class="cover"><img src="${d.imagen}" alt="">${badge}</div>
       <div class="ccat">${d.categorias || "Informe"}</div>
@@ -463,6 +465,12 @@ function initFiltros() {
 }
 
 async function lector() {
+  // informes de empresas: redirigir a la ficha del activo (página única)
+  const empFicha = EMPRESAS.find(e => e.slug === slug);
+  if (empFicha && empFicha.ticker) {
+    location.replace(`activo.html?t=${empFicha.ticker}#informe`);
+    return;
+  }
   try {
     const snap = await getDoc(doc(db, "informes", slug));
     if (!snap.exists()) throw new Error("no existe");

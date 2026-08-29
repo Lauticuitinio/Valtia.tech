@@ -30,11 +30,19 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 
 .wrap{max-width:1240px;margin:0 auto;padding:26px 52px 60px}
 
-/* selector de activos */
-.sel-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:14px;margin-bottom:22px;border-bottom:1px solid var(--line)}
-.sel-row .tk{font:600 11.5px 'IBM Plex Mono',monospace;cursor:pointer;padding:7px 13px;border:1px solid var(--line);background:#fff;color:var(--sub);white-space:nowrap;text-decoration:none}
-.sel-row .tk:hover{border-color:var(--gold);color:var(--ink)}
-.sel-row .tk.on{background:#0E1830;border-color:#0E1830;color:#fff}
+/* barra superior: volver + buscador de activos */
+.top-row{display:flex;gap:16px;align-items:center;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.volver{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);white-space:nowrap;cursor:pointer}
+.volver:hover{color:var(--gold)}
+.bx{position:relative;flex:1;max-width:430px}
+.bx input{width:100%;padding:11px 14px;border:1px solid var(--line);background:#fff;font:400 13.5px 'IBM Plex Sans',sans-serif;color:var(--ink);outline:none}
+.bx input:focus{border-color:var(--gold)}
+.bx-panel{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--line);box-shadow:0 14px 40px rgba(16,16,16,.12);max-height:380px;overflow-y:auto;z-index:150;display:none}
+.bx-panel.open{display:block}
+.bx-g{font:700 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);padding:10px 14px 5px;background:var(--marfil)}
+.bx-it{display:flex;justify-content:space-between;gap:10px;padding:9px 14px;cursor:pointer;font:400 13px 'IBM Plex Sans',sans-serif}
+.bx-it:hover{background:var(--marfil)}
+.bx-it .tk{font:600 11px 'IBM Plex Mono',monospace;color:var(--mut)}
 
 /* cabecera del activo */
 .head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:24px}
@@ -112,6 +120,73 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .vacio{padding:22px 18px;font:400 12.5px 'IBM Plex Sans',sans-serif;color:var(--mut)}
 
 .empty-state{padding:80px 52px;text-align:center;font:400 15px 'IBM Plex Sans',sans-serif;color:var(--sub)}
+
+
+/* ── estilos del lector de informes (compartidos con informes.html) ── */
+.fsr-badge{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;background:var(--gold);color:#fff;padding:4px 10px;text-transform:uppercase}
+.fsr-tag{font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;border:1px solid var(--line);padding:3px 8px;color:var(--sub);text-transform:uppercase}
+.fsr-state{border:1px dashed var(--line);text-align:center;padding:44px 20px;color:var(--sub);line-height:1.9;font-size:14px}
+/* lector de registros (research completo) — clases usadas por el módulo */
+.fsr-crumb{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin-bottom:22px}
+.fsr-crumb a{color:var(--sub)}
+.fsr-crumb a:hover{color:var(--gold)}
+.fsr-reader{background:#fff;border:1px solid var(--line);padding:clamp(24px,4vw,50px);max-width:860px;margin:0 auto}
+.fsr-rhead{border-bottom:2px solid var(--gold);padding-bottom:22px;margin-bottom:8px}
+.fsr-rhead h1{font:700 clamp(28px,4vw,40px) 'Playfair Display',serif;line-height:1.15;color:var(--ink)}
+.fsr-rhead .meta{font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-top:12px}
+.fsr-reader h2{font:700 26px 'Playfair Display',serif;margin:42px 0 14px;padding-top:26px;border-top:1px solid var(--line);color:var(--ink)}
+.fsr-reader h3{font:600 15.5px 'IBM Plex Sans',sans-serif;margin:24px 0 8px;color:var(--ink)}
+.fsr-reader p{margin:11px 0;font-size:14.5px;line-height:1.85;color:#2E2A24}
+.fsr-reader p strong,.fsr-reader li strong{color:var(--ink);font-weight:600}
+.fsr-reader ul{margin:10px 0 10px 22px}
+.fsr-reader li{margin:7px 0;font-size:14px;line-height:1.8;color:#2E2A24}
+.fsr-reader .kicker{color:var(--mut);font-style:italic}
+.fsr-reader .tag{display:inline-block;font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:var(--gold);padding:3px 9px;margin:18px 0 4px}
+.fsr-reader .tag.bull{background:#1F7A4D}
+.fsr-reader .tag.bear{background:#B23A3A}
+.fsr-reader .tag.neutral{background:#b7791f}
+.fsr-reader .fecha{font:500 11px 'IBM Plex Sans',sans-serif;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
+.fsr-reader table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;display:block;overflow-x:auto}
+.fsr-reader th{text-align:left;background:var(--marfil);color:var(--ink);padding:10px 12px;font-weight:600;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--line)}
+.fsr-reader td{padding:10px 12px;border-bottom:1px solid var(--line);color:#2E2A24;vertical-align:top;line-height:1.7;min-width:130px}
+.fsr-reader td strong{color:var(--ink)}
+.fsr-reader .card{background:var(--marfil);border:1px solid var(--line);border-left:3px solid var(--gold);padding:16px 20px;margin:18px 0;font-size:13.5px;line-height:1.8;color:#2E2A24}
+.fsr-reader .card.warn{border-left-color:#b7791f}
+.fsr-reader .card.risk{border-left-color:#B23A3A}
+.fsr-reader .card.ok{border-left-color:#1F7A4D}
+.fsr-reader .card strong{color:var(--ink)}
+.fsr-reader .disclaimer{margin-top:44px;padding:18px 22px;background:var(--marfil);font-size:11.5px;color:var(--mut);line-height:1.7}
+/* KPIs del informe (tiles) */
+.fsr-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:22px 0 8px}
+.fsr-kpi{background:var(--marfil);border:1px solid var(--line);padding:12px 14px;min-width:0}
+.fsr-kpi .l{font:600 8.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:5px}
+.fsr-kpi .v{font:600 15.5px 'IBM Plex Mono',monospace;color:var(--ink);white-space:nowrap}
+.fsr-kpi .s{font-size:10px;color:var(--sub);margin-top:3px;line-height:1.4}
+@media(max-width:700px){.fsr-kpis{grid-template-columns:repeat(2,1fr)}}
+
+/* barras de valuación por año */
+.fsr-bars{display:flex;gap:12px;align-items:flex-end;height:130px;margin:18px 0 4px;padding:0 2px}
+.fsr-bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%}
+.fsr-bar .col{width:100%;max-width:66px;background:#B08A3E;min-height:4px}
+.fsr-bar.est .col{background:repeating-linear-gradient(45deg,#B08A3E,#B08A3E 5px,#D9BE85 5px,#D9BE85 10px)}
+.fsr-bar .n{font:600 11px 'IBM Plex Mono',monospace;color:var(--ink)}
+.fsr-bar .y{font:600 9.5px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+.fsr-caption{font-size:10.5px;color:var(--mut);margin:6px 0 18px}
+
+/* rango de precios objetivos del consenso */
+.fsr-rango{margin:20px 0 8px}
+.fsr-rango .track{position:relative;height:8px;background:linear-gradient(90deg,#E7E3DA,#B08A3E)}
+.fsr-rango .mark{position:absolute;top:-6px;width:3px;height:20px;background:#0E1830}
+.fsr-rango .mark span{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font:700 10px 'IBM Plex Mono',monospace;color:#0E1830;white-space:nowrap}
+.fsr-rango .labels{display:flex;justify-content:space-between;font:500 10px 'IBM Plex Mono',monospace;color:var(--sub);margin-top:8px}
+
+/* FODA 2×2 */
+.fsr-foda{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}
+.fsr-foda .q{border:1px solid var(--line);border-top:3px solid var(--c);padding:14px 16px;min-width:0}
+.fsr-foda h4{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--c);margin:0 0 8px;border:none;padding:0}
+.fsr-foda ul{margin:0 0 0 16px}
+.fsr-foda li{font-size:12.5px;line-height:1.65;color:#2E2A24;margin:6px 0}
+@media(max-width:700px){.fsr-foda{grid-template-columns:1fr}}
 
 footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:46px}
 .footer-copy{font:400 11px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
@@ -220,9 +295,6 @@ try {
   const cover = `img/${emp.slug}.svg`;
   const desde = inf && inf.precio_pub && px.p ? (px.p / inf.precio_pub - 1) * 100 : null;
 
-  // selector
-  const selector = EMPRESAS.map(e =>
-    `<a class="tk${e.ticker === t ? " on" : ""}" href="activo.html?t=${e.ticker}">${e.ticker}</a>`).join("");
 
   // stats del radar (visibles)
   const fila = (l, v, z) => `<div class="st"><div class="l">${l}</div><div class="v">${v}</div>${z ? `<div class="z">${z}</div>` : ""}</div>`;
@@ -255,7 +327,13 @@ try {
     </div>` : "";
 
   ficha.innerHTML = `
-  <div class="sel-row">${selector}</div>
+  <div class="top-row">
+    <span class="volver" id="volver">← Volver</span>
+    <div class="bx">
+      <input id="bx-input" type="search" placeholder="Buscar activo — NVDA, Apple, Bitcoin…" autocomplete="off">
+      <div class="bx-panel" id="bx-panel"></div>
+    </div>
+  </div>
   <div class="head">
     <div>
       <div class="sec">${esc(sectorN)}</div>
@@ -290,32 +368,86 @@ try {
           : inf ? (inf.visibilidad === "publico" ? '<span class="badge b-free">Gratis</span>' : '<span class="badge b-cli">Clientes</span>')
           : '<span class="badge b-cli">Clientes</span>'}
       </div>
-      ${emp.slug ? `<a class="inf-cover" href="informes.html?i=${emp.slug}"><img src="${cover}" alt="${esc(emp.nombre)}" onerror="this.remove()"></a>` : ""}
-      <div class="inf-body">
+      ${emp.slug ? `<a class="inf-cover" href="#informe"><img src="${cover}" alt="${esc(emp.nombre)}" onerror="this.remove()"></a>` : ""}
+      <div class="inf-body" id="inf-card-body">
         ${!emp.slug ? `
           <h3>Todavía no publicamos el informe de ${esc(emp.nombre)}</h3>
           <p>El equipo va sumando análisis fundamentales a pedido de los clientes: tesis, KPIs, valuación por año, FODA y riesgos. Si querés que ${esc(emp.nombre)} sea el próximo, decínoslo.</p>
           <a class="btn-leer" href="mailto:valtyaanalytics@gmail.com?subject=Quiero%20el%20informe%20de%20${encodeURIComponent(emp.nombre)}">Pedir este análisis →</a>
           <a class="btn-leer" href="informes.html" style="background:#fff;color:var(--ink);border:1px solid var(--line);margin-left:8px">Ver los publicados</a>
-        ` : inf ? `
-          <h3>${esc(inf.titulo)}</h3>
-          <div class="inf-meta">${venc(fdate(inf.fecha))} · Valtia Research</div>
-          <p>${esc(inf.resumen || "")}</p>
-          ${desde != null ? `<div class="inf-desde ${clase(desde)}">${signo(desde)} desde la publicación <span style="color:var(--mut);font-weight:400">(salió a US$${nf.format(inf.precio_pub)})</span></div>` : ""}
-          <a class="btn-leer" href="informes.html?i=${emp.slug}">Leer el informe →</a>
         ` : `
           <h3>Análisis fundamental de ${esc(emp.nombre)}</h3>
           <p>Tesis, KPIs, valuación por año, FODA y riesgos — el informe completo es exclusivo para clientes de Valtia.</p>
-          <a class="btn-leer" href="informes.html?i=${emp.slug}">Leer el informe →</a>
+          <a class="btn-leer" href="#informe">Leer más abajo ↓</a>
         `}
       </div>
     </div>
   </div>
 
+  <div id="informe-full"></div>
+
   <div class="card-w act-news">
     <div class="card-h"><span class="t">Noticias de ${esc(emp.nombre)}</span><a class="s" href="noticias.html">Ver todas →</a></div>
     <div id="act-news-list"><div class="vacio">Buscando noticias…</div></div>
   </div>`;
+
+  // ── informe embebido en la ficha (una sola página por activo) ──
+  const renderInforme = d => {
+    const full = document.getElementById("informe-full");
+    if (!full || !d) return;
+    const dsd = d.precio_pub && px.p ? (px.p / d.precio_pub - 1) * 100 : null;
+    document.getElementById("inf-card-body").innerHTML = `
+      <h3>${esc(d.titulo)}</h3>
+      <div class="inf-meta">${venc(fdate(d.fecha))} · Valtia Research</div>
+      <p>${esc(d.resumen || "")}</p>
+      ${dsd != null ? `<div class="inf-desde ${clase(dsd)}">${signo(dsd)} desde la publicación <span style="color:var(--mut);font-weight:400">(salió a US$${nf.format(d.precio_pub)})</span></div>` : ""}
+      <a class="btn-leer" href="#informe">Leer el informe completo ↓</a>`;
+    full.innerHTML = `<div class="fsr-reader" id="informe" style="margin-top:26px">
+      <div class="fsr-rhead">
+        <div style="display:flex;gap:9px;margin-bottom:12px;flex-wrap:wrap"><span class="fsr-badge">${esc(d.tipo || "Informe")}</span>${d.categorias ? `<span class="fsr-tag">${esc(d.categorias)}</span>` : ""}</div>
+        <h1>${esc(d.titulo)}</h1>
+        <div class="inf-meta" style="margin:12px 0 0">${venc(fdate(d.fecha))} · ${esc(d.autor || "Valtia Analytics")}</div>
+      </div>
+      ${d.contenido_html || ""}
+    </div>`;
+    if (location.hash === "#informe") full.scrollIntoView();
+  };
+  if (inf) renderInforme(inf);
+  else if (emp.slug) document.getElementById("informe-full").innerHTML =
+    `<div class="fsr-state" id="informe" style="margin-top:26px">El informe completo de ${esc(emp.nombre)} es exclusivo para clientes de Valtia.<br>
+     <a href="index.html">Ingresá con tu cuenta</a> para leerlo — o conocé los <a href="index.html#planes">planes</a>.</div>`;
+
+  // ── volver + buscador de activos ──
+  document.getElementById("volver").addEventListener("click", () => {
+    if (document.referrer && document.referrer.startsWith(location.origin) && history.length > 1) history.back();
+    else location.href = "informes.html";
+  });
+  const bxInput = document.getElementById("bx-input");
+  const bxPanel = document.getElementById("bx-panel");
+  const pintarLista = q => {
+    q = (q || "").trim().toLowerCase();
+    const items = EMPRESAS.filter(e => !q || e.ticker.toLowerCase().includes(q) || e.nombre.toLowerCase().includes(q));
+    bxPanel.innerHTML = SECTORES.map(s => {
+      const del = items.filter(e => e.sector === s.k);
+      if (!del.length) return "";
+      return `<div class="bx-g">${s.n}</div>` + del.map(e =>
+        `<div class="bx-it" data-t="${e.ticker}"><span>${esc(e.nombre)}</span><span class="tk">${e.ticker}</span></div>`).join("");
+    }).join("") || '<div class="bx-it">Sin resultados — probá con el ticker</div>';
+    bxPanel.querySelectorAll(".bx-it[data-t]").forEach(it => it.addEventListener("mousedown", ev => {
+      ev.preventDefault();
+      location.href = "activo.html?t=" + it.dataset.t;
+    }));
+  };
+  bxInput.addEventListener("focus", () => { pintarLista(bxInput.value); bxPanel.classList.add("open"); });
+  bxInput.addEventListener("input", () => { pintarLista(bxInput.value); bxPanel.classList.add("open"); });
+  bxInput.addEventListener("blur", () => setTimeout(() => bxPanel.classList.remove("open"), 160));
+  bxInput.addEventListener("keydown", ev => {
+    if (ev.key === "Enter") {
+      const it = bxPanel.querySelector(".bx-it[data-t]");
+      if (it) location.href = "activo.html?t=" + it.dataset.t;
+    }
+    if (ev.key === "Escape") bxPanel.classList.remove("open");
+  });
 
   // noticias del activo
   const lista = document.getElementById("act-news-list");
@@ -389,6 +521,14 @@ try {
           });
         }
       } catch (e) {}
+      // el getDoc inicial corre sin sesión: si el informe estaba vedado,
+      // reintentar ahora que Firestore conoce al usuario
+      if (emp.slug && !inf && !document.querySelector("#informe-full .fsr-reader")) {
+        try {
+          const s2 = await getDoc(doc(db, "informes", emp.slug));
+          if (s2.exists()) renderInforme(s2.data());
+        } catch (e) {}
+      }
     }
     const cont = document.getElementById("mi-pos");
     if (!user || !user.email || !cont) return;
