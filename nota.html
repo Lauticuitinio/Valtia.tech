@@ -252,7 +252,7 @@ try {
     const tags = document.querySelector(".art-tags");
     if (tags) tags.insertAdjacentHTML("beforebegin", `<div class="rel-inf">
       <div class="h">📊 Análisis Valtia</div>
-      ${emps.map(e => `<a href="informes.html?i=${e.slug}">${e.nombre} — leé el informe completo de Valtia →</a>`).join("")}
+      ${emps.map(e => `<a href="activo.html?t=${e.ticker}">${e.nombre} — ficha Valtia: precio en vivo, radar, informe y noticias →</a>`).join("")}
     </div>`);
   }
 

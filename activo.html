@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ficha de activo — Valtia Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── Ficha de activo: todo lo del activo en un solo lugar ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--ink:#101010;--sub:#57534A;--mut:#8B8375;--navy:#0E1830;--gold:#B08A3E;--gold2:#8A6A2F;--line:#E7E3DA;--marfil:#F6F3EC;--up:#1F7A4D;--dn:#B23A3A}
+html{scroll-behavior:smooth}
+body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink)}
+a{color:var(--gold);text-decoration:none}
+a:hover{color:var(--gold2)}
+img{max-width:100%}
+
+nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;background:rgba(14,24,48,.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(232,206,150,.14)}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;letter-spacing:.06em;color:#fff}
+.nav-name em{color:#E8CE96;font-style:italic}
+.nav-sub{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4)}
+.nav-links{display:flex;align-items:center;gap:26px}
+.nav-links a{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+.nav-links a:hover,.nav-links a.active{color:#E8CE96}
+.nav-cta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0E1830;background:#E8CE96;padding:9px 22px;border-radius:8px;text-decoration:none}
+.nav-cta:hover{background:#fff;color:#0E1830}
+@media(max-width:880px){.nav-links{display:none}}
+
+.wrap{max-width:1240px;margin:0 auto;padding:26px 52px 60px}
+
+/* selector de activos */
+.sel-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:14px;margin-bottom:22px;border-bottom:1px solid var(--line)}
+.sel-row .tk{font:600 11.5px 'IBM Plex Mono',monospace;cursor:pointer;padding:7px 13px;border:1px solid var(--line);background:#fff;color:var(--sub);white-space:nowrap;text-decoration:none}
+.sel-row .tk:hover{border-color:var(--gold);color:var(--ink)}
+.sel-row .tk.on{background:#0E1830;border-color:#0E1830;color:#fff}
+
+/* cabecera del activo */
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:24px}
+.head .sec{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:8px}
+.head h1{font:700 clamp(30px,3.4vw,42px) 'Playfair Display',serif;line-height:1.05}
+.head h1 span{font:600 18px 'IBM Plex Mono',monospace;color:var(--mut);margin-left:12px}
+.head .px{text-align:right}
+.head .px .p{font:600 34px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums}
+.head .px .d{font:600 15px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums}
+.head .px .h{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--mut);margin-top:3px}
+.up{color:var(--up)}.dn{color:var(--dn)}
+
+/* tarjetas */
+.card-w{background:#fff;border:1px solid var(--line)}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--line)}
+.card-h .t{font:700 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase}
+.card-h .s{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+
+/* gráfico */
+.chart-box{height:330px;position:relative;padding:16px}
+.rangos{display:flex;gap:6px}
+.rangos button{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;cursor:pointer;padding:5px 12px;border:1px solid var(--line);background:#fff;color:var(--sub)}
+.rangos button.on{background:var(--gold);border-color:var(--gold);color:#fff}
+
+/* grilla radar + informe */
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line)}
+.stats .st{background:#fff;padding:14px 16px}
+.stats .l{font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.stats .v{font:600 16px 'IBM Plex Mono',monospace;margin-top:5px;font-variant-numeric:tabular-nums}
+.stats .z{font:400 10px 'IBM Plex Sans',sans-serif;color:var(--sub);margin-top:2px}
+.veredicto{position:relative;border-top:1px solid var(--line)}
+.veredicto .inner{padding:18px}
+.ver-tag{display:inline-block;font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:7px 14px;color:#fff;background:var(--gold2)}
+.ver-tag.infra{background:var(--up)}.ver-tag.cara{background:var(--dn)}
+.scores{display:flex;gap:22px;margin-top:14px}
+.scores .sc{flex:1}
+.scores .n{font:600 20px 'IBM Plex Mono',monospace}
+.scores .e{font:400 10px 'IBM Plex Sans',sans-serif;color:var(--mut);letter-spacing:.08em;text-transform:uppercase}
+.entrada{margin-top:12px;font:600 12px 'IBM Plex Sans',sans-serif;color:var(--up)}
+.preview-blur{filter:blur(6px);pointer-events:none;user-select:none}
+.pro-overlay{position:absolute;inset:0;background:rgba(246,243,236,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:5}
+.pro-overlay h4{font:400 19px 'Playfair Display',serif}
+.pro-overlay p{font-size:12px;color:var(--sub);max-width:250px;text-align:center;line-height:1.5}
+.pro-overlay .btn{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:var(--gold);color:#fff;padding:9px 20px}
+
+/* informe */
+.inf-cover{display:block}
+.inf-cover img{width:100%;display:block}
+.inf-body{padding:16px 18px}
+.inf-body h3{font:700 19px 'Playfair Display',serif;line-height:1.25;margin-bottom:8px}
+.inf-body p{font:400 12.5px 'IBM Plex Sans',sans-serif;color:var(--sub);line-height:1.65;margin-bottom:12px}
+.inf-meta{font:500 10px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:12px}
+.inf-desde{font:600 13px 'IBM Plex Sans',sans-serif;margin-bottom:14px;font-variant-numeric:tabular-nums}
+.btn-leer{display:inline-block;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:#0E1830;color:#fff;padding:11px 22px}
+.btn-leer:hover{background:var(--gold);color:#fff}
+.badge{font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:4px 9px}
+.b-free{background:#E4F3EA;color:var(--up)}.b-cli{background:#0E1830;color:#E8CE96}
+
+/* noticias del activo */
+.act-news{margin-top:22px}
+.act-news a{display:grid;grid-template-columns:88px 1fr;gap:14px;padding:13px 18px;border-bottom:1px solid var(--line);color:var(--ink);align-items:center}
+.act-news a:last-child{border-bottom:none}
+.act-news .im{aspect-ratio:16/10;background:linear-gradient(135deg,#14213D,#B08A3E);background-size:cover;background-position:center}
+.act-news .tt{font:600 14px 'IBM Plex Sans',sans-serif;line-height:1.4}
+.act-news a:hover .tt{text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
+.act-news .f{font:500 10px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-top:3px}
+.vacio{padding:22px 18px;font:400 12.5px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+
+.empty-state{padding:80px 52px;text-align:center;font:400 15px 'IBM Plex Sans',sans-serif;color:var(--sub)}
+
+footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:46px}
+.footer-copy{font:400 11px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
+.footer-links{display:flex;gap:20px}
+.footer-links a{font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase}
+.wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;transition:transform .2s;text-decoration:none}
+.wa-float:hover{transform:scale(1.1)}
+
+@media(max-width:960px){.dos{grid-template-columns:1fr}}
+@media(max-width:880px){.wrap,footer{padding-left:20px;padding-right:20px}}
+@media(max-width:600px){.head .px{text-align:left}.stats{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-brand">
+    <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
+  </a>
+  <div class="nav-links">
+    <a href="noticias.html">Noticias</a>
+    <a href="index.html#servicios">¿Qué hacemos?</a>
+    <a href="informes.html" class="active">Informes</a>
+    <a href="herramientas.html">Herramientas</a>
+    <a href="index.html#planes">Planes</a>
+    <a href="index.html#contacto">Contacto</a>
+  </div>
+  <div class="nav-right">
+    <a href="index.html" class="nav-cta">Acceso Cliente</a>
+  </div>
+</nav>
+
+<!-- cotizaciones en vivo (módulo único del sitio) -->
+<div id="valtia-cot"></div>
+
+<div class="wrap" id="ficha">
+  <div class="empty-state">Cargando la ficha…</div>
+</div>
+
+<footer>
+  <div class="footer-copy">© 2026 Valtia Analytics — Análisis de carácter general y educativo. No constituye asesoramiento financiero.</div>
+  <div class="footer-links">
+    <a href="index.html">Inicio</a><a href="noticias.html">Noticias</a><a href="informes.html">Informes</a><a href="herramientas.html">Herramientas</a>
+  </div>
+</footer>
+
+<a href="mailto:valtyaanalytics@gmail.com?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail" style="background:#B08A3E;box-shadow:0 4px 16px rgba(176,138,62,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
+
+<script src="chart.umd.min.js?v=1"></script>
+<script type="module" src="cotizaciones.js?v=1"></script>
+
+<script type="module">
+/* ── Ficha de activo: precio + gráfico + radar + informe + noticias ── */
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, getDocs, doc, getDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { EMPRESAS, SECTORES } from './empresas.js?v=2';
+
+const app = getApps().length ? getApp() : initializeApp({
+  apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
+  authDomain: 'valtia-analytics.firebaseapp.com',
+  projectId: 'valtia-analytics',
+});
+const db = getFirestore(app);
+
+const RADAR_SYM = { PAM: "PAMP", YPF: "YPFD" };   // el radar usa el símbolo local
+const t = (new URLSearchParams(location.search).get("t") || "NVDA").toUpperCase();
+const emp = EMPRESAS.find(e => e.ticker === t);
+const ficha = document.getElementById("ficha");
+if (!emp) location.replace("informes.html");
+
+const nf = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const n1 = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const compacto = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 });
+const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const signo = v => (v > 0 ? "+" : "") + n1.format(v) + "%";
+const clase = v => v > 0 ? "up" : v < 0 ? "dn" : "";
+const venc = v => v ? `${String(v).slice(8, 10)}/${String(v).slice(5, 7)}/${String(v).slice(2, 4)}` : "";
+const fdate = v => v && v.toDate ? v.toDate().toISOString().slice(0, 10) : String(v || "").slice(0, 10);
+
+document.title = `${emp.nombre} (${t}) — Valtia Analytics`;
+const sectorN = (SECTORES.find(s => s.k === emp.sector) || {}).n || "";
+
+try {
+  const [pxSnap, histSnap, radarSnap, infSnap, notSnap] = await Promise.all([
+    getDoc(doc(db, "preciosInformes", "latest")).catch(() => null),
+    getDoc(doc(db, "historialInformes", t)).catch(() => null),
+    getDoc(doc(db, "radar", "latest")).catch(() => null),
+    getDoc(doc(db, "informes", emp.slug)).catch(() => null),
+    getDocs(query(collection(db, "noticias"), where("estado", "==", "publicado"))).catch(() => null),
+  ]);
+
+  // precio en vivo
+  const precios = pxSnap && pxSnap.exists() ? JSON.parse(pxSnap.data().json || "{}") : {};
+  const px = precios[t] || {};
+  const ts = pxSnap && pxSnap.exists() ? pxSnap.data().actualizado_utc : null;
+  const hora = ts && ts.toDate ? ts.toDate().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false }) : "";
+
+  // radar
+  const radar = radarSnap && radarSnap.exists() ? JSON.parse(radarSnap.data().json || "{}") : {};
+  const ra = (radar.activos || []).find(a => a.sym === (RADAR_SYM[t] || t));
+
+  // informe (si las reglas lo dejan leer; si no, tarjeta genérica bloqueada)
+  const inf = infSnap && infSnap.exists() ? infSnap.data() : null;
+  const cover = `img/${emp.slug}.svg`;
+  const desde = inf && inf.precio_pub && px.p ? (px.p / inf.precio_pub - 1) * 100 : null;
+
+  // selector
+  const selector = EMPRESAS.map(e =>
+    `<a class="tk${e.ticker === t ? " on" : ""}" href="activo.html?t=${e.ticker}">${e.ticker}</a>`).join("");
+
+  // stats del radar (visibles)
+  const fila = (l, v, z) => `<div class="st"><div class="l">${l}</div><div class="v">${v}</div>${z ? `<div class="z">${z}</div>` : ""}</div>`;
+  const statsHtml = ra ? [
+    fila("RSI (14)", ra.rsi != null ? n1.format(ra.rsi) : "—", esc(ra.rsiZona || "")),
+    fila("P/E", ra.per != null ? n1.format(ra.per) + "x" : "—", "precio / ganancias"),
+    fila("P/Libro", ra.pb != null ? n1.format(ra.pb) + "x" : "—", ""),
+    fila("P/Ventas", ra.ps != null ? n1.format(ra.ps) + "x" : "—", ""),
+    fila("Div. yield", ra.divYield != null ? n1.format(ra.divYield) + "%" : "—", ""),
+    fila("Market cap", ra.mktcap ? "US$" + compacto.format(ra.mktcap) : "—", ""),
+  ].join("") : "";
+
+  const verClase = ra && ra.veredicto === "Infravalorada" ? " infra" : ra && ra.veredicto === "Estirada" ? " cara" : "";
+  const veredictoHtml = ra && ra.veredicto && ra.veredicto !== "Sin cobertura" ? `
+    <div class="veredicto">
+      <div class="inner preview-blur">
+        <span class="ver-tag${verClase}">${esc(ra.veredicto)}</span>
+        <div class="scores">
+          <div class="sc"><div class="n">${ra.valorScore != null ? Math.round(ra.valorScore) : "—"}</div><div class="e">Puntaje valor</div></div>
+          <div class="sc"><div class="n">${ra.calidadScore != null ? Math.round(ra.calidadScore) : "—"}</div><div class="e">Calidad</div></div>
+          <div class="sc"><div class="n">${ra.score != null ? Math.round(ra.score) : "—"}</div><div class="e">Compuesto</div></div>
+        </div>
+        ${ra.entrada ? '<div class="entrada">● En zona de compra según el radar</div>' : ""}
+      </div>
+      <div class="pro-overlay">
+        <h4>Lectura Valtia</h4>
+        <p>El veredicto y los puntajes del radar son parte del plan PRO.</p>
+        <a href="index.html#planes" class="btn">Ver planes →</a>
+      </div>
+    </div>` : "";
+
+  ficha.innerHTML = `
+  <div class="sel-row">${selector}</div>
+  <div class="head">
+    <div>
+      <div class="sec">${esc(sectorN)}</div>
+      <h1>${esc(emp.nombre)}<span>${t}</span></h1>
+    </div>
+    <div class="px">
+      <div class="p">${px.p ? "US$" + nf.format(px.p) : "—"}</div>
+      ${px.d != null ? `<div class="d ${clase(px.d)}">${signo(px.d)} hoy</div>` : ""}
+      ${hora ? `<div class="h">Actualizado ${hora} hs · cada 15 min en rueda</div>` : ""}
+    </div>
+  </div>
+
+  <div class="card-w">
+    <div class="card-h"><span class="t">Evolución del precio</span>
+      <div class="rangos" id="rangos">
+        <button data-d="22">1M</button><button data-d="126">6M</button><button data-d="9999" class="on">1A</button>
+      </div>
+    </div>
+    <div class="chart-box"><canvas id="chart"></canvas></div>
+  </div>
+
+  <div class="dos">
+    <div class="card-w">
+      <div class="card-h"><span class="t">Radar de valuación</span><span class="s">Lectura propia Valtia · diaria</span></div>
+      ${ra ? `<div class="stats">${statsHtml}</div>${veredictoHtml}` : '<div class="vacio">Este activo todavía no está en el radar de valuación.</div>'}
+    </div>
+    <div class="card-w">
+      <div class="card-h"><span class="t">Informe Valtia</span>
+        ${inf ? (inf.visibilidad === "publico" ? '<span class="badge b-free">Gratis</span>' : '<span class="badge b-cli">Clientes</span>') : '<span class="badge b-cli">Clientes</span>'}
+      </div>
+      <a class="inf-cover" href="informes.html?i=${emp.slug}"><img src="${cover}" alt="${esc(emp.nombre)}" onerror="this.remove()"></a>
+      <div class="inf-body">
+        ${inf ? `
+          <h3>${esc(inf.titulo)}</h3>
+          <div class="inf-meta">${venc(fdate(inf.fecha))} · Valtia Research</div>
+          <p>${esc(inf.resumen || "")}</p>
+          ${desde != null ? `<div class="inf-desde ${clase(desde)}">${signo(desde)} desde la publicación <span style="color:var(--mut);font-weight:400">(salió a US$${nf.format(inf.precio_pub)})</span></div>` : ""}
+        ` : `
+          <h3>Análisis fundamental de ${esc(emp.nombre)}</h3>
+          <p>Tesis, KPIs, valuación por año, FODA y riesgos — el informe completo es exclusivo para clientes de Valtia.</p>
+        `}
+        <a class="btn-leer" href="informes.html?i=${emp.slug}">Leer el informe →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-w act-news">
+    <div class="card-h"><span class="t">Noticias de ${esc(emp.nombre)}</span><a class="s" href="noticias.html">Ver todas →</a></div>
+    <div id="act-news-list"><div class="vacio">Buscando noticias…</div></div>
+  </div>`;
+
+  // noticias del activo
+  const lista = document.getElementById("act-news-list");
+  const notas = notSnap ? notSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .filter(nn => {
+      const txt = (String(nn.titulo) + " " + String(nn.resumen)).toLowerCase();
+      return emp.claves.some(k => txt.includes(k));
+    })
+    .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 5) : [];
+  lista.innerHTML = notas.length ? notas.map(nn => `
+    <a href="nota.html?n=${encodeURIComponent(nn.id)}">
+      <div class="im" style="${nn.imagen ? `background-image:url('${esc(nn.imagen)}')` : ""}"></div>
+      <div><div class="tt">${esc(nn.titulo)}</div>
+      <div class="f">${venc(String(nn.fecha))}${nn.fuente ? " · " + esc(nn.fuente) : ""}</div></div>
+    </a>`).join("")
+    : '<div class="vacio">Sin noticias recientes de esta empresa. El bot publica a toda hora — volvé pronto.</div>';
+
+  // gráfico
+  const serie = histSnap && histSnap.exists() ? JSON.parse(histSnap.data().json || "[]") : [];
+  const canvas = document.getElementById("chart");
+  if (serie.length && typeof Chart !== "undefined") {
+    let chart;
+    const dibujar = dias => {
+      const datos = serie.slice(-dias);
+      const primera = datos.length ? datos[0][1] : 0;
+      const ultima = datos.length ? datos[datos.length - 1][1] : 0;
+      const color = ultima >= primera ? "#1F7A4D" : "#B23A3A";
+      if (chart) chart.destroy();
+      chart = new Chart(canvas, {
+        type: "line",
+        data: { labels: datos.map(p => p[0]), datasets: [{
+          data: datos.map(p => p[1]), borderColor: "#B08A3E", borderWidth: 1.8,
+          pointRadius: 0, pointHitRadius: 8, fill: true,
+          backgroundColor: "rgba(176,138,62,.07)", tension: 0.15 }] },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false },
+            tooltip: { callbacks: {
+              title: items => venc(items[0].label),
+              label: ctx => "US$" + nf.format(ctx.raw) } } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: "#8B8375", maxTicksLimit: 7,
+                 callback: function (v) { return venc(this.getLabelForValue(v)); }, font: { size: 10 } } },
+            y: { grid: { color: "#EFECE4" }, ticks: { color: "#8B8375", font: { size: 10 },
+                 callback: v => "US$" + compacto.format(v) } } },
+        },
+      });
+    };
+    dibujar(9999);
+    document.querySelectorAll("#rangos button").forEach(b => b.addEventListener("click", () => {
+      document.querySelectorAll("#rangos button").forEach(x => x.classList.toggle("on", x === b));
+      dibujar(Number(b.dataset.d));
+    }));
+  } else if (canvas) {
+    canvas.parentElement.innerHTML = '<div class="vacio">El histórico de precios se está generando — volvé en unos minutos.</div>';
+  }
+} catch (e) {
+  ficha.innerHTML = '<div class="empty-state">No pudimos cargar la ficha. <a href="informes.html">Volver a Informes</a></div>';
+}
+</script>
+<script type="module" src="nav-auth.js?v=4"></script>
+</body>
+</html>

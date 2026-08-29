@@ -506,6 +506,9 @@ async function bandaViva(d) {
       `<div class="s">salió a US$${nf.format(d.precio_pub)} el ${fpub}</div></div>`;
     if (hora) html += `<div class="lb"><div class="l">Datos</div><div class="v" style="font-size:14px;margin-top:8px">En vivo</div>` +
       `<div class="s">actualizado ${hora} hs</div></div>`;
+    html += `<a class="lb" href="activo.html?t=${d.ticker}" style="display:block"><div class="l">Ficha del activo</div>` +
+      `<div class="v" style="font-size:14px;margin-top:8px">${d.ticker} →</div>` +
+      `<div class="s">gráfico, radar y noticias</div></a>`;
     document.getElementById("live-band").innerHTML = `<div class="live-band">${html}</div>`;
   } catch (e) {}
 }

@@ -132,6 +132,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── HISTORIAL DE PRECIOS (gráfico de la ficha de activo) ──
+    match /historialInformes/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // ── PANEL DE BONOS (pestaña Bonos de Herramientas) ──
     // Cotizaciones + TIR/paridad/duration calculadas por bonos_sync.py
     // (Admin SDK). Solo dato de mercado, sin info de clientes: lectura publica.
