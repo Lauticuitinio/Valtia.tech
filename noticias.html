@@ -313,9 +313,12 @@ const db = getFirestore(app);
 try {
   const snap = await getDocs(query(collection(db, "noticias"), where("estado", "==", "publicado")));
   const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  // el destacado más nuevo primero (nota principal), después el resto por fecha
+  // el destacado lidera la tapa solo mientras está fresco (48 h desde su
+  // fecha); después manda siempre la noticia más reciente
+  const corte = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
+  const pin = d => !!d.destacado && String(d.fecha).slice(0, 10) >= corte;
   docs.sort((a, b) => {
-    if (!!b.destacado !== !!a.destacado) return Number(!!b.destacado) - Number(!!a.destacado);
+    if (pin(b) !== pin(a)) return Number(pin(b)) - Number(pin(a));
     return String(b.fecha).localeCompare(String(a.fecha));
   });
   articles = docs.map((d, i) => ({
