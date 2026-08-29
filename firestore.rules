@@ -125,6 +125,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── PRECIOS EN VIVO DE LOS INFORMES (banda del lector) ──
+    // Solo precio y variación del día por ticker: dato de mercado puro.
+    match /preciosInformes/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // ── PANEL DE BONOS (pestaña Bonos de Herramientas) ──
     // Cotizaciones + TIR/paridad/duration calculadas por bonos_sync.py
     // (Admin SDK). Solo dato de mercado, sin info de clientes: lectura publica.

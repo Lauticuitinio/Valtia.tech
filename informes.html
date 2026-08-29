@@ -131,6 +131,20 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .fsr-reader .card.ok{border-left-color:#1F7A4D}
 .fsr-reader .card strong{color:var(--ink)}
 .fsr-reader .disclaimer{margin-top:44px;padding:18px 22px;background:var(--marfil);font-size:11.5px;color:var(--mut);line-height:1.7}
+/* banda de datos vivos del informe */
+.live-band{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0 6px}
+.live-band .lb{background:var(--marfil);border:1px solid var(--line);border-left:3px solid var(--gold);padding:12px 15px}
+.live-band .l{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.13em;text-transform:uppercase;color:var(--mut)}
+.live-band .v{font:600 20px 'IBM Plex Sans',sans-serif;color:var(--ink);margin-top:4px;font-variant-numeric:tabular-nums}
+.live-band .s{font:400 11px 'IBM Plex Sans',sans-serif;color:var(--mut);margin-top:2px;font-variant-numeric:tabular-nums}
+.lb-up{color:#1F7A4D}.lb-dn{color:#B23A3A}
+/* noticias relacionadas al pie del informe */
+.rel-news{margin-top:34px;padding-top:20px;border-top:1px solid var(--line)}
+.rel-news .h{font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;background:#0E1830;color:#fff;display:inline-block;padding:6px 12px;margin-bottom:6px}
+.rel-news a{display:block;padding:11px 0;border-bottom:1px solid var(--line);color:var(--ink);font:600 14px 'IBM Plex Sans',sans-serif;line-height:1.45}
+.rel-news a:last-child{border-bottom:none}
+.rel-news a:hover{text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
+.rel-news .f{font:500 10px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);display:block;margin-top:3px}
 
 /* KPIs del informe (tiles) */
 .fsr-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:22px 0 8px}
@@ -305,6 +319,7 @@ import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebase
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, getDocs, doc, getDoc, query, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { EMPRESAS } from './empresas.js?v=1';
 
 const app = getApps().length ? getApp() : initializeApp({
   apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
@@ -395,15 +410,68 @@ async function lector() {
           <div style="display:flex;gap:9px;margin-bottom:12px;flex-wrap:wrap"><span class="fsr-badge">${d.tipo || "Informe"}</span>${d.categorias ? `<span class="fsr-tag">${d.categorias}</span>` : ""}</div>
           <h1>${d.titulo}</h1>
           <div class="meta">${fdate(d.fecha)} · ${d.autor || "Valtia Analytics"}</div>
+          <div id="live-band"></div>
         </div>
         ${d.contenido_html || "<p>Sin contenido.</p>"}
+        <div id="rel-news"></div>
       </div>`;
+    if (d.ticker) { bandaViva(d); noticiasRelacionadas(d); }
   } catch (e) {
     content.innerHTML = `
       <div class="fsr-crumb"><a href="informes.html">← Todos los informes</a></div>
       <div class="fsr-state">Este informe es exclusivo para clientes de Valtia.<br>
         <a href="index.html">Ingresá con tu cuenta</a> para leerlo — o conocé los <a href="index.html#planes">planes</a>.</div>`;
   }
+}
+
+/* banda de datos vivos: precio hoy + variación desde la publicación */
+async function bandaViva(d) {
+  try {
+    const snap = await getDoc(doc(db, "preciosInformes", "latest"));
+    if (!snap.exists()) return;
+    const data = JSON.parse(snap.data().json || "{}");
+    const px = data[d.ticker];
+    if (!px || !px.p) return;
+    const nf = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const n1 = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const signo = v => (v > 0 ? "+" : "") + n1.format(v) + "%";
+    const clase = v => v > 0 ? "lb-up" : v < 0 ? "lb-dn" : "";
+    const desde = d.precio_pub ? (px.p / d.precio_pub - 1) * 100 : null;
+    const ts = snap.data().actualizado_utc;
+    const hora = ts && ts.toDate ? ts.toDate().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false }) : "";
+    const fpub = (s => s.length === 10 ? `${s.slice(8,10)}/${s.slice(5,7)}/${s.slice(2,4)}` : s)(fdate(d.fecha));
+    let html = `<div class="lb"><div class="l">${d.ticker} · hoy</div><div class="v">US$${nf.format(px.p)}</div>` +
+      (px.d != null ? `<div class="s ${clase(px.d)}">${signo(px.d)} en el día</div>` : "") + `</div>`;
+    if (desde != null) html += `<div class="lb"><div class="l">Desde la publicación</div>` +
+      `<div class="v ${clase(desde)}">${signo(desde)}</div>` +
+      `<div class="s">salió a US$${nf.format(d.precio_pub)} el ${fpub}</div></div>`;
+    if (hora) html += `<div class="lb"><div class="l">Datos</div><div class="v" style="font-size:14px;margin-top:8px">En vivo</div>` +
+      `<div class="s">actualizado ${hora} hs</div></div>`;
+    document.getElementById("live-band").innerHTML = `<div class="live-band">${html}</div>`;
+  } catch (e) {}
+}
+
+/* últimas noticias del sitio que mencionan a la empresa */
+async function noticiasRelacionadas(d) {
+  try {
+    const emp = EMPRESAS.find(e => e.ticker === d.ticker);
+    if (!emp) return;
+    const snap = await getDocs(query(collection(db, "noticias"), where("estado", "==", "publicado")));
+    const esc = s => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const rel = snap.docs.map(x => ({ id: x.id, ...x.data() }))
+      .filter(nn => {
+        const t = (String(nn.titulo) + " " + String(nn.resumen)).toLowerCase();
+        return emp.claves.some(k => t.includes(k));
+      })
+      .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)))
+      .slice(0, 3);
+    if (!rel.length) return;
+    document.getElementById("rel-news").innerHTML = `<div class="rel-news">
+      <div class="h">Últimas noticias de ${esc(emp.nombre)}</div>
+      ${rel.map(nn => `<a href="nota.html?n=${encodeURIComponent(nn.id)}">${esc(nn.titulo)}
+        <span class="f">${fdate(nn.fecha)}${nn.fuente ? " · " + esc(nn.fuente) : ""}</span></a>`).join("")}
+    </div>`;
+  } catch (e) {}
 }
 
 onAuthStateChanged(getAuth(app), user => {

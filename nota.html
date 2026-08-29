@@ -49,6 +49,11 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .art-tags{display:flex;flex-wrap:wrap;gap:8px;margin:30px 0 0;padding-top:22px;border-top:1px solid var(--line)}
 .art-tag{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--gold2);border:1px solid var(--line);padding:6px 12px;cursor:pointer}
 .art-tag:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+/* cruce con informes: análisis Valtia de las empresas mencionadas */
+.rel-inf{background:#F6F3EC;border:1px solid var(--line);border-left:3px solid var(--gold);padding:16px 20px;margin-top:28px}
+.rel-inf .h{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:6px}
+.rel-inf a{display:block;font:600 14px 'IBM Plex Sans',sans-serif;color:var(--ink);padding:6px 0}
+.rel-inf a:hover{color:var(--gold2)}
 
 /* anterior / siguiente (estilo Bloomberg) */
 .pn{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
@@ -168,6 +173,7 @@ const app = getApps().length ? getApp() : initializeApp({
   projectId: 'valtia-analytics',
 });
 const db = getFirestore(app);
+import { mencionadas } from './empresas.js?v=1';
 
 const CATS = { local: "Mercado local", wall: "Wall Street", cripto: "Cripto", bonos: "Bonos y acciones" };
 const catName = c => CATS[c] || c;
@@ -237,6 +243,18 @@ try {
       <div class="nl-msg" id="nl-msg"></div>
     </div>
   </aside>`;
+
+  // análisis Valtia relacionado (cruce con informes)
+  const textoNota = (a.titulo + " " + (a.resumen || "") + " " +
+    String(a.contenido || "").replace(/<[^>]+>/g, " ")).toLowerCase();
+  const emps = mencionadas(textoNota);
+  if (emps.length) {
+    const tags = document.querySelector(".art-tags");
+    if (tags) tags.insertAdjacentHTML("beforebegin", `<div class="rel-inf">
+      <div class="h">📊 Análisis Valtia</div>
+      ${emps.map(e => `<a href="informes.html?i=${e.slug}">${e.nombre} — leé el informe completo de Valtia →</a>`).join("")}
+    </div>`);
+  }
 
   // más noticias al pie: las 8 más recientes, sin la actual
   const mas = docs.filter(d => d.docId !== a.docId).slice(0, 8);
