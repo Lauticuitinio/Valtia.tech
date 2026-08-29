@@ -173,7 +173,7 @@ const app = getApps().length ? getApp() : initializeApp({
   projectId: 'valtia-analytics',
 });
 const db = getFirestore(app);
-import { mencionadas } from './empresas.js?v=1';
+import { mencionadas } from './empresas.js?v=2';
 
 const CATS = { local: "Mercado local", wall: "Wall Street", cripto: "Cripto", bonos: "Bonos y acciones" };
 const catName = c => CATS[c] || c;

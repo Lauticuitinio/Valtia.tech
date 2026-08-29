@@ -178,6 +178,16 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .fsr-foda li{font-size:12.5px;line-height:1.65;color:#2E2A24;margin:6px 0}
 @media(max-width:700px){.fsr-foda{grid-template-columns:1fr}}
 
+/* buscador + filtros por sector */
+.inf-tools{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:0 0 18px}
+.inf-buscar{flex:1;min-width:230px;padding:11px 14px;border:1px solid var(--line);background:#fff;font:400 13.5px 'IBM Plex Sans',sans-serif;color:var(--ink);outline:none}
+.inf-buscar:focus{border-color:var(--gold)}
+.sector-pills{display:flex;gap:8px;flex-wrap:wrap}
+.sector-pills .sp{font:500 11.5px 'IBM Plex Sans',sans-serif;cursor:pointer;padding:8px 14px;border:1px solid var(--line);background:#fff;color:var(--sub);white-space:nowrap;transition:all .15s}
+.sector-pills .sp:hover{border-color:var(--gold);color:var(--ink)}
+.sector-pills .sp.on{background:#0E1830;border-color:#0E1830;color:#fff}
+.sin-resultados{padding:30px 0;font:400 14px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+
 /* footer + mail (igual a Noticias) */
 footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:40px}
 .footer-copy{font:400 11px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
@@ -230,15 +240,20 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 
     <div id="sec-analisis">
       <div class="sec-h"><span>Análisis por empresa y sector</span><i></i></div>
+      <div class="inf-tools">
+        <input class="inf-buscar" id="inf-buscar" type="search" placeholder="Buscar empresa o ticker — NVDA, Galicia, Walmart…" oninput="window.filtroTexto && filtroTexto(this.value)">
+        <div class="sector-pills" id="sector-pills"></div>
+      </div>
+      <div class="sin-resultados" id="sin-resultados" style="display:none">Ningún informe coincide con la búsqueda. Probá con otro nombre o ticker.</div>
       <div class="inf-grid">
-        <div class="inf-card" onclick="openInforme('macro-arg')">
+        <div class="inf-card" data-sector="macro" onclick="openInforme('macro-arg')">
           <div class="cover"><img src="img/informe-macro-arg.svg" alt="Argentina macro"><span class="inf-badge b-new">Nuevo</span></div>
           <div class="ccat">Macroeconomía</div>
           <h4>Argentina macro — Perspectivas Q3 2026</h4>
           <p class="desc">Inflación, tipo de cambio y política monetaria. Escenarios para los próximos 90 días.</p>
           <div class="meta">Mayo 2026 · Leer →</div>
         </div>
-        <div class="inf-card" onclick="openInforme('tech-sector')">
+        <div class="inf-card" data-sector="macro" onclick="openInforme('tech-sector')">
           <div class="cover"><img src="img/informe-tech-sector.svg" alt="Tecnología global"><span class="inf-badge b-free">Gratis</span></div>
           <div class="ccat">Sector</div>
           <h4>Tecnología global — Ciclo de IA e inversión</h4>
@@ -319,7 +334,7 @@ import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebase
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, getDocs, doc, getDoc, query, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { EMPRESAS } from './empresas.js?v=1';
+import { EMPRESAS, SECTORES } from './empresas.js?v=2';
 
 const app = getApps().length ? getApp() : initializeApp({
   apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
@@ -363,6 +378,9 @@ async function catalogo(user) {
     const card = document.createElement("div");
     card.className = "inf-card";
     card.dataset.fsr = "1";
+    const emp = EMPRESAS.find(e => e.slug === (d.slug || d.id)) || {};
+    card.dataset.sector = emp.sector || "";
+    card.dataset.buscar = `${d.titulo} ${emp.ticker || ""} ${emp.nombre || ""} ${d.categorias || ""}`.toLowerCase();
     card.onclick = () => location.href = `informes.html?i=${d.slug || d.id}`;
     card.innerHTML = `
       <div class="cover"><img src="${d.imagen}" alt="">${badge}</div>
@@ -395,6 +413,47 @@ async function catalogo(user) {
   holder.innerHTML = html;
   const old = document.getElementById("fsr-holder");
   if (old) old.replaceWith(holder); else content.prepend(holder);
+  initFiltros();
+}
+
+/* ── buscador + filtros por sector ── */
+let sectorActivo = "todos", textoBusqueda = "";
+
+function aplicarFiltros() {
+  const q = textoBusqueda.trim().toLowerCase();
+  let visibles = 0;
+  document.querySelectorAll(".inf-card").forEach(c => {
+    const okSector = sectorActivo === "todos" || c.dataset.sector === sectorActivo;
+    const okTexto = !q || (c.dataset.buscar || "").includes(q);
+    const ok = okSector && okTexto;
+    c.style.display = ok ? "" : "none";
+    if (ok) visibles++;
+  });
+  document.querySelectorAll(".fsr-card").forEach(c => {
+    c.style.display = (!q || (c.dataset.buscar || "").includes(q)) ? "" : "none";
+  });
+  const vacio = document.getElementById("sin-resultados");
+  if (vacio) vacio.style.display = visibles ? "none" : "";
+}
+
+function initFiltros() {
+  // indexar texto de búsqueda de las cards que no lo tengan (estáticas y registros)
+  document.querySelectorAll(".inf-card, .fsr-card").forEach(c => {
+    if (!c.dataset.buscar) c.dataset.buscar = c.textContent.toLowerCase();
+  });
+  const cont = document.getElementById("sector-pills");
+  if (cont && !cont.children.length) {
+    const pills = [{ k: "todos", n: "Todos" }, ...SECTORES];
+    cont.innerHTML = pills.map(s =>
+      `<div class="sp${s.k === "todos" ? " on" : ""}" data-k="${s.k}">${s.n}</div>`).join("");
+    cont.querySelectorAll(".sp").forEach(p => p.addEventListener("click", () => {
+      sectorActivo = p.dataset.k;
+      cont.querySelectorAll(".sp").forEach(x => x.classList.toggle("on", x === p));
+      aplicarFiltros();
+    }));
+  }
+  window.filtroTexto = v => { textoBusqueda = v; aplicarFiltros(); };
+  aplicarFiltros();
 }
 
 async function lector() {
