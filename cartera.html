@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Carteras — Valtia Analytics</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="chart.umd.min.js?v=1"></script>
 <style>
 :root{
   --navy:#0D1B2A;--navy2:#152336;--gold:#B8975A;--gold2:#D4AF6E;
@@ -119,6 +119,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { EMPRESAS } from './empresas.js?v=3';
 
 const app = initializeApp({
   apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
@@ -196,6 +197,50 @@ function retornoBench(c) {
   return last && last.benchmark != null ? last.benchmark - 100 : null;
 }
 
+/* métricas sobre la serie diaria (base 100) */
+function diasCalendario(c) {
+  const v = c.valores;
+  if (v.length < 2) return 0;
+  return Math.max(1, Math.round((new Date(v[v.length - 1].fecha) - new Date(v[0].fecha)) / 86400000));
+}
+function anualizada(c) {
+  const last = c.valores[c.valores.length - 1];
+  const dias = diasCalendario(c);
+  if (!last || dias < 21) return null;      // muy joven para anualizar
+  return (Math.pow(last.indice / 100, 365 / dias) - 1) * 100;
+}
+function volatilidad(c) {
+  const v = c.valores;
+  if (v.length < 15) return null;
+  const rets = [];
+  for (let i = 1; i < v.length; i++) rets.push(v[i].indice / v[i - 1].indice - 1);
+  const m = rets.reduce((a, x) => a + x, 0) / rets.length;
+  const varza = rets.reduce((a, x) => a + (x - m) * (x - m), 0) / (rets.length - 1);
+  return Math.sqrt(varza) * Math.sqrt(252) * 100;   // anualizada, en %
+}
+function calRiesgo(vol) {
+  return vol == null ? null : vol < 15 ? "Baja" : vol < 25 ? "Media" : "Alta";
+}
+
+/* radar: P/E y veredicto por ticker (doc público) */
+let _radar = null;
+async function radarMapa() {
+  if (_radar) return _radar;
+  _radar = {};
+  try {
+    const snap = await getDoc(doc(db, "radar", "latest"));
+    if (snap.exists()) {
+      const alias = { PAMP: "PAM", YPFD: "YPF" };   // símbolo local → ADR
+      (JSON.parse(snap.data().json || "{}").activos || []).forEach(a => {
+        _radar[alias[a.sym] || a.sym] = a;
+      });
+    }
+  } catch (e) {}
+  return _radar;
+}
+const linkFicha = tk => EMPRESAS.some(e => e.ticker === tk)
+  ? `<a href="activo.html?t=${tk}" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--gold)">${tk}</a>` : tk;
+
 /* tarjeta de acceso: las carteras de suscriptores no se listan sin sesión
    (la regla de Firestore las bloquea), así que se invita a entrar */
 function gateCard() {
@@ -252,17 +297,21 @@ function renderCatalogo(carteras, user) {
 }
 
 /* ── detalle ── */
-function renderDetalle(c) {
+async function renderDetalle(c) {
   document.title = c.nombre + " — Valtia Analytics";
+  const radar = await radarMapa();
   const r = retorno(c), rb = retornoBench(c);
   const dif = rb != null && r != null ? r - rb : null;
+  const anual = anualizada(c), vol = volatilidad(c), riesgo = calRiesgo(vol);
   const inicio = fdate(c.fechaInicio);
   const posRows = c.posiciones.map(p => {
     const ret = p.precioEntrada ? (p.precioActual / p.precioEntrada - 1) * 100 : 0;
-    return `<tr><td><b>${p.ticker}</b><div style="font-size:11px;color:var(--sub)">${p.empresa || ""}</div></td>
+    const ra = radar[p.ticker];
+    return `<tr><td><b>${linkFicha(p.ticker)}</b><div style="font-size:11px;color:var(--sub)">${p.empresa || ""}</div></td>
       <td class="num">${((p.pesoObjetivo || 0) * 100).toFixed(0)}%</td>
       <td class="num">${fmtUSD(p.precioEntrada)}<div style="font-size:10px;color:var(--muted)">${fdate(p.fechaIncorporacion)}</div></td>
       <td class="num">${fmtUSD(p.precioActual)}</td>
+      <td class="num">${ra && ra.per != null ? ra.per.toFixed(1) + "x" : "—"}${ra && ra.veredicto && ra.veredicto !== "Sin cobertura" ? `<div style="font-size:10px;color:var(--muted)">${ra.veredicto}</div>` : ""}</td>
       <td class="num">${pill(ret, fmtPct(ret))}</td>
       <td class="tesis-row">${p.tesisPosicion || ""}</td></tr>`;
   }).join("");
@@ -272,7 +321,7 @@ function renderDetalle(c) {
   const histRows = c.historial.map(h => {
     const added = String(h.accion || "").includes("añad");
     return `<tr><td style="white-space:nowrap">${h.fecha}</td>
-      <td><b>${h.ticker}</b><div style="font-size:11px;color:var(--sub)">${h.empresa || ""}</div></td>
+      <td><b>${linkFicha(h.ticker)}</b><div style="font-size:11px;color:var(--sub)">${h.empresa || ""}</div></td>
       <td>${added ? '<span class="pill p">Añadido</span>' : '<span class="pill n">Eliminado</span>'}</td>
       <td class="num">${h.precio != null ? fmtUSD(h.precio) : "—"}</td>
       <td class="num">${h.retornoSalida != null ? `<span class="${cls(h.retornoSalida)}">${fmtPct(h.retornoSalida)}</span>` : "—"}</td>
@@ -290,6 +339,8 @@ function renderDetalle(c) {
       <div class="kpi"><div class="l">Retorno desde inicio</div><div class="v ${r!=null?cls(r):"mut"}">${r!=null?fmtPct(r):"—"}</div><div class="s">desde ${inicio}</div></div>
       ${rb != null ? `<div class="kpi"><div class="l">${c.benchmark} en igual período</div><div class="v ${cls(rb)}">${fmtPct(rb)}</div><div class="s">misma ventana temporal</div></div>` : ""}
       ${dif != null ? `<div class="kpi"><div class="l">Diferencia vs benchmark</div><div class="v ${cls(dif)}">${fmtPct(dif)}</div><div class="s">alpha desde lanzamiento</div></div>` : ""}
+      ${anual != null ? `<div class="kpi"><div class="l">Rentabilidad anualizada</div><div class="v ${cls(anual)}">${fmtPct(anual)}</div><div class="s">extrapolada · cartera de ${diasCalendario(c)} días</div></div>` : ""}
+      ${riesgo != null ? `<div class="kpi"><div class="l">Calificación de riesgo</div><div class="v">${riesgo}</div><div class="s">volatilidad anualizada ${vol.toFixed(0)}%</div></div>` : ""}
       <div class="kpi"><div class="l">Posiciones</div><div class="v">${c.posiciones.length}</div><div class="s">${c.rebalanceo || "mensual"} · pesos equitativos</div></div>
     </div>
     <div class="sec">Evolución · base 100 al lanzamiento</div>
@@ -304,7 +355,7 @@ function renderDetalle(c) {
     <div class="chips">${destacadas}</div>
     <div class="sec">Composición actual</div>
     <div class="panel"><table>
-      <thead><tr><th>Activo</th><th class="num">Peso</th><th class="num">Entrada</th><th class="num">Último</th><th class="num">Retorno</th><th>Tesis</th></tr></thead>
+      <thead><tr><th>Activo</th><th class="num">Peso</th><th class="num">Entrada</th><th class="num">Último</th><th class="num">P/E · Radar</th><th class="num">Retorno</th><th>Tesis</th></tr></thead>
       <tbody>${posRows}</tbody></table></div>
     <div class="sec">Historial de selecciones · cada decisión, fechada</div>
     <div class="panel"><table>
