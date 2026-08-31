@@ -235,7 +235,8 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   const cabecera = `
     <div class="mc-head"><div>
       <div class="portal-title" style="margin-bottom:0">Mi cartera</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:6px">Seguimiento de tus posiciones con la valuación de Valtia</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">Seguimiento de tus posiciones con la valuación de Valtia
+        · <a href="disciplina.html" style="color:var(--gold);text-decoration:none">Tu plan de disciplina mensual →</a></div>
     </div>
     <div class="mc-curwrap">
       <div class="mc-cur">

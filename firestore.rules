@@ -44,6 +44,13 @@ service cloud.firestore {
                               && request.resource.data.cantidad is number
                               && request.resource.data.cantidad > 0;
       }
+
+      // ── DISCIPLINA (plan mensual de compras: config + registro) ──
+      // Mismo dueño que Mi Cartera: solo el propio usuario (y el admin).
+      match /disciplina/{docId} {
+        allow read, delete: if esDuenio();
+        allow create, update: if esDuenio();
+      }
     }
 
     // ── PRECIOS Y FUNDAMENTALS DE LOS TICKERS DE CLIENTES ──

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disciplina — Valtia Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0D1B2A;--navy2:#152336;--gold:#B8975A;--gold2:#D4AF6E;
+  --text-d:#F0EDE8;--sub-d:rgba(240,237,232,.55);--muted-d:rgba(240,237,232,.35);
+  --text-l:#1A2B3C;--sub-l:#4A5A6C;--muted-l:#8A9BAD;
+  --bg-d:#0D1B2A;--bg3-d:#152336;--bg-l:#F5F2EC;--bg3-l:#EDE9E0;
+  --border-d:rgba(184,151,90,.14);--border-l:rgba(26,58,92,.12);
+  --card-d:#101F31;--card-l:#FFFFFF;--green:#2E7D32;--red:#C62828;
+}
+[data-theme="dark"]{--bg:var(--bg-d);--bg3:var(--bg3-d);--text:var(--text-d);--sub:var(--sub-d);--muted:var(--muted-d);--border:var(--border-d);--card:var(--card-d);--greenTx:#4caf50;--redTx:#ef5350}
+[data-theme="light"]{--bg:var(--bg-l);--bg3:var(--bg3-l);--text:var(--text-l);--sub:var(--sub-l);--muted:var(--muted-l);--border:var(--border-l);--card:var(--card-l);--greenTx:#2E7D32;--redTx:#C62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;min-height:100vh}
+a{color:inherit}
+nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px clamp(16px,4vw,52px);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:50}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand-name{font-family:'Cormorant Garamond',serif;font-size:19px;letter-spacing:.14em;text-transform:uppercase}
+.brand-name em{color:var(--gold);font-style:normal}
+.nav-links{display:flex;gap:20px;align-items:center;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.nav-links a{text-decoration:none;color:var(--sub)}
+.nav-links a:hover{color:var(--gold)}
+.theme-btn{width:36px;height:20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;position:relative;flex-shrink:0}
+.theme-btn::after{content:'';position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--gold);transition:transform .2s}
+[data-theme="light"] .theme-btn::after{transform:translateX(16px)}
+main{max-width:1080px;margin:0 auto;padding:34px clamp(16px,3vw,40px) 70px}
+.eye{font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.eye::before{content:'';display:block;width:32px;height:1px;background:var(--gold);opacity:.6}
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,4.5vw,46px);font-weight:400;line-height:1.1;margin-bottom:12px}
+h1 em{font-style:italic;color:var(--gold2)}
+.sub{color:var(--sub);font-size:15px;line-height:1.75;max-width:720px;margin-bottom:8px}
+.sec{display:flex;align-items:center;gap:12px;margin:34px 0 14px;font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+.sec::before{content:'';display:block;width:32px;height:1px;background:var(--gold);opacity:.6}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:20px 22px}
+.pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:24px}
+.paso{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+.paso .n{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--gold2);line-height:1;margin-bottom:8px}
+.paso b{display:block;font-size:14px;margin-bottom:6px}
+.paso p{font-size:12.5px;color:var(--sub);line-height:1.6}
+.regla{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.regla .campo label{display:block;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.regla input{width:130px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'Jost',sans-serif;font-size:15px;outline:none}
+.regla input:focus{border-color:var(--gold)}
+.btn{font-family:'Jost',sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);background:var(--gold);border:none;padding:11px 20px;border-radius:6px;cursor:pointer}
+.btn:hover{background:var(--gold2)}
+.btn.sec2{background:transparent;color:var(--sub);border:1px solid var(--border)}
+.btn.sec2:hover{color:var(--gold);border-color:var(--gold)}
+.regla-txt{font-size:14px;color:var(--sub);line-height:1.6}
+.regla-txt b{color:var(--text)}
+.mes-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.dots{display:flex;gap:7px}
+.dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--border);background:transparent}
+.dot.on{background:var(--gold);border-color:var(--gold)}
+.estado-mes{font-size:14px;margin-top:10px;color:var(--sub)}
+.estado-mes b{color:var(--text)}
+.racha{display:inline-flex;align-items:center;gap:10px;font-size:13px;color:var(--sub);margin-top:14px;flex-wrap:wrap}
+.racha .fuego{font-size:16px}
+.mchip{font-size:10.5px;font-weight:600;border:1px solid var(--border);border-radius:6px;padding:3px 9px;letter-spacing:.04em}
+.mchip.ok{color:var(--greenTx);border-color:rgba(76,175,80,.35)}
+.mchip.no{color:var(--muted)}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+th{text-align:left;font-size:9.5px;letter-spacing:.15em;color:var(--muted);padding:12px 16px;border-bottom:1px solid var(--border);text-transform:uppercase;font-weight:600}
+td{padding:11px 16px;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--bg3)}
+.num{text-align:right}
+.pos{color:var(--greenTx)!important}.neg{color:var(--redTx)!important}.mut{color:var(--muted)!important}
+.tk a{color:var(--gold);font-weight:600;text-decoration:none;border-bottom:1px dotted var(--gold)}
+.nom{font-size:11px;color:var(--sub)}
+.ver{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:4px;white-space:nowrap}
+.ver.infra{color:var(--greenTx);background:rgba(76,175,80,.12)}
+.ver.precio{color:var(--gold);background:rgba(184,151,90,.14)}
+.ver.cara{color:var(--redTx);background:rgba(239,83,80,.12)}
+.zona{font-size:9.5px;font-weight:700;color:var(--gold);border:1px solid rgba(184,151,90,.4);border-radius:4px;padding:2.5px 7px;letter-spacing:.05em;white-space:nowrap}
+.compra-form{display:flex;align-items:center;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.compra-form input{width:92px;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Jost',sans-serif;font-size:13px;outline:none}
+.compra-form input:focus{border-color:var(--gold)}
+.btn.mini{padding:8px 13px;font-size:10px}
+.msg{font-size:12px;margin-top:10px}
+.otra{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;align-items:end;margin-top:12px}
+.otra label{display:block;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.otra input{width:100%;padding:9px 11px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Jost',sans-serif;font-size:14px;outline:none}
+.otra input:focus{border-color:var(--gold)}
+.state{border:1px dashed var(--border);border-radius:14px;text-align:center;padding:60px 20px;color:var(--sub);margin-top:30px}
+.gate{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:12px;padding:22px 24px;margin-top:26px}
+.gate b{font-size:15px}
+.gate p{font-size:13px;color:var(--sub);line-height:1.7;margin:8px 0 14px}
+footer{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;font-size:11px;color:var(--muted);line-height:1.9;max-width:900px}
+@media(max-width:600px){.regla input{width:100%}.regla .campo{flex:1}}
+</style>
+</head>
+<body>
+<nav>
+  <a class="brand" href="index.html">
+    <svg width="30" height="30" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <span class="brand-name">VAL<em>T</em>IA</span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Inicio</a>
+    <a href="cartera.html">Carteras</a>
+    <a href="disciplina.html" style="color:var(--gold)">Disciplina</a>
+    <a href="noticias.html">Noticias</a>
+    <a href="herramientas.html">Herramientas</a>
+    <button class="theme-btn" onclick="tg()" title="Cambiar tema"></button>
+  </div>
+</nav>
+<main id="main">
+  <div class="state">Cargando tu plan…</div>
+</main>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { EMPRESAS } from './empresas.js?v=3';
+
+const app = initializeApp({
+  apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
+  authDomain: 'valtia-analytics.firebaseapp.com',
+  projectId: 'valtia-analytics',
+});
+const db = getFirestore(app);
+
+const saved = localStorage.getItem('valtia-theme');
+if (saved) document.documentElement.dataset.theme = saved;
+window.tg = () => {
+  const h = document.documentElement;
+  h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('valtia-theme', h.dataset.theme);
+};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+const fmtUSD = n => "US$" + Number(n).toLocaleString("es-AR", { maximumFractionDigits: Math.abs(n) < 10 ? 2 : 2 });
+const fmtPct = n => (n >= 0 ? "+" : "") + n.toFixed(2).replace(".", ",") + "%";
+const cls = n => n > 0.004 ? "pos" : n < -0.004 ? "neg" : "mut";
+const verCls = v => v === "Infravalorada" ? "infra" : v === "Estirada" ? "cara" : "precio";
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const hoyISO = () => new Date().toISOString().slice(0, 10);
+const mesDe = f => String(f || "").slice(0, 7);
+const mesNombre = m => { const [a, mm] = m.split("-"); return MESES[Number(mm) - 1] + " " + a; };
+const mesAnterior = m => { let [a, mm] = m.split("-").map(Number); mm--; if (!mm) { mm = 12; a--; } return a + "-" + String(mm).padStart(2, "0"); };
+
+// símbolo del radar (local BYMA) ↔ ticker de las fichas (ADR, empresas.js)
+const A_RADAR = { PAM: "PAMP", YPF: "YPFD" };
+const A_FICHA = { PAMP: "PAM", YPFD: "YPF" };
+const norm = t => {
+  const x = String(t || "").toUpperCase().replace(/\.BA$/, "").replace(/-USD$/, "");
+  return A_RADAR[x] || x;
+};
+const fichaDe = sym => A_FICHA[sym] || sym;
+const linkTk = sym => {
+  const tk = fichaDe(sym);
+  return EMPRESAS.some(e => e.ticker === tk)
+    ? `<a href="activo.html?t=${tk}">${tk}</a>` : `<b>${esc(tk)}</b>`;
+};
+
+/* ── datos públicos: radar (diario) + precios en vivo (15 min en rueda) ── */
+let _radar = [], _px = {};
+async function cargarMercado() {
+  try {
+    const snap = await getDoc(doc(db, "radar", "latest"));
+    if (snap.exists()) _radar = JSON.parse(snap.data().json || "{}").activos || [];
+  } catch (e) {}
+  try {
+    const snap = await getDoc(doc(db, "preciosInformes", "latest"));
+    if (snap.exists()) _px = JSON.parse(snap.data().json || "{}");
+  } catch (e) {}
+}
+const precioDe = sym => {
+  const vivo = _px[fichaDe(sym)];
+  if (vivo && vivo.p != null) return vivo.p;
+  const ra = _radar.find(a => a.sym === sym);
+  return ra ? ra.precio : null;
+};
+
+/* ── datos del usuario ── */
+let _user = null, _config = null, _log = [], _tengoSet = new Set();
+async function cargarUsuario() {
+  _config = null; _log = []; _tengoSet = new Set();
+  if (!_user) return;
+  const [discSnap, cartSnap] = await Promise.all([
+    getDocs(collection(db, "inversores", _user.email, "disciplina")),
+    getDocs(collection(db, "inversores", _user.email, "cartera")),
+  ]);
+  discSnap.docs.forEach(d => {
+    if (d.id === "config") _config = d.data();
+    else if (d.data().tipo === "compra") _log.push({ id: d.id, ...d.data() });
+  });
+  _log.sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+  cartSnap.docs.forEach(d => _tengoSet.add(norm(d.data().ticker)));
+}
+
+const comprasEn = mes => _log.filter(c => mesDe(c.fecha) === mes).length;
+const objetivo = () => Math.max(1, Number(_config && _config.compras) || 1);
+function racha() {
+  if (!_config) return 0;
+  let n = 0, m = mesDe(hoyISO());
+  if (comprasEn(m) >= objetivo()) n++;
+  m = mesAnterior(m);
+  for (let i = 0; i < 120 && comprasEn(m) >= objetivo(); i++) { n++; m = mesAnterior(m); }
+  return n;
+}
+function chipsMeses() {
+  if (!_log.length) return "";
+  const meses = [...new Set(_log.map(c => mesDe(c.fecha)))].sort().reverse().slice(0, 8);
+  return meses.map(m => {
+    const c = comprasEn(m), ok = c >= objetivo();
+    return `<span class="mchip ${ok ? "ok" : "no"}">${mesNombre(m).slice(0, 3)} ${m.slice(0, 4)} · ${c}/${objetivo()}${ok ? " ✓" : ""}</span>`;
+  }).join(" ");
+}
+
+/* ── escrituras: la compra queda en Mi Cartera Y en el plan (una sola carga) ── */
+async function registrarCompra(tickerFicha, cantidad, precio) {
+  const f = hoyISO(), ahora = new Date().toISOString();
+  const suf = Date.now().toString(36);
+  await setDoc(doc(db, "inversores", _user.email, "cartera", tickerFicha + "-" + suf), {
+    ticker: tickerFicha, cantidad, precioCompra: precio, fecha: f, creado: ahora,
+  });
+  await setDoc(doc(db, "inversores", _user.email, "disciplina", "c-" + suf), {
+    tipo: "compra", ticker: tickerFicha, cantidad, precio, fecha: f, mes: mesDe(f), creado: ahora,
+  });
+}
+
+/* ── vistas ── */
+function intro(publico) {
+  return `
+    <div class="eye">Disciplina Valtia · el método del inversor constante</div>
+    <h1>Invertí todos los meses.<br>Nosotros te <em>marcamos</em> el ritmo.</h1>
+    <p class="sub">El secreto del largo plazo no es acertarle al momento: es aportar siempre y comprar lo que está barato.
+    Definís tu regla —cuánto aportás por mes y en cuántas compras—, el radar te propone los activos mejor puntuados
+    que todavía no tenés, y cada compra que marcás se agrega sola a Mi Cartera. Tu constancia queda a la vista.</p>
+    <div class="pasos">
+      <div class="paso"><div class="n">01</div><b>Tu regla, una vez</b><p>Elegí tu aporte mensual en dólares y en cuántas compras lo repartís. Es tu contrato con vos mismo.</p></div>
+      <div class="paso"><div class="n">02</div><b>Candidatas del radar</b><p>Cada mes te mostramos lo mejor puntuado por la lectura Valtia que falta en tu cartera, con precio del día.</p></div>
+      <div class="paso"><div class="n">03</div><b>"La compré" y listo</b><p>Un click registra la compra en tu plan y en Mi Cartera al precio del día. Sin doble carga, sin planillas.</p></div>
+    </div>
+    ${publico ? `<div class="gate"><b>Armá tu plan con tu cuenta</b>
+      <p>El plan, la racha y el historial son tuyos y viajan con tu cuenta. Entrá para definir tu regla y arrancar este mes.</p>
+      <a class="btn" href="index.html" style="text-decoration:none;display:inline-block">Ingresá con tu cuenta →</a></div>` : ""}`;
+}
+
+function candidatas(max) {
+  return _radar
+    .filter(a => a.score != null && !_tengoSet.has(a.sym))
+    .sort((x, y) => (y.score || 0) - (x.score || 0) || (x.rsi || 99) - (y.rsi || 99))
+    .slice(0, max);
+}
+
+function filaCandidata(a) {
+  const px = precioDe(a.sym);
+  const monto = _config ? (Number(_config.aporte) || 0) / objetivo() : 0;
+  const sug = px && monto ? Math.max(0.0001, +(monto / px).toFixed(4)) : "";
+  return `<tr data-sym="${a.sym}">
+    <td class="tk">${linkTk(a.sym)}<div class="nom">${esc(a.nombre)} · ${esc(a.sector || "")}</div></td>
+    <td class="num"><b>${a.score}</b><div class="nom">puntaje valor</div></td>
+    <td><span class="ver ${verCls(a.veredicto)}">${esc(a.veredicto)}</span>${a.entrada ? ' <span class="zona">◎ zona de compra</span>' : ""}</td>
+    <td class="num">${a.per != null ? a.per.toFixed(1) + "x" : "—"}</td>
+    <td class="num">${a.rsi != null ? a.rsi.toFixed(0) : "—"}<div class="nom">${esc(a.rsiZona || "")}</div></td>
+    <td class="num">${px != null ? fmtUSD(px) : "—"}</td>
+    <td class="num">
+      <div class="compra-form" data-form="${a.sym}" style="display:none">
+        <input type="number" step="any" min="0" value="${sug}" data-cant="${a.sym}" title="Cantidad">
+        <button class="btn mini" data-ok="${a.sym}">Confirmar</button>
+      </div>
+      <button class="btn mini sec2" data-compre="${a.sym}" ${px == null ? "disabled" : ""}>La compré ✓</button>
+    </td></tr>`;
+}
+
+function vistaPlan() {
+  const mesAct = mesDe(hoyISO());
+  const hechas = comprasEn(mesAct), obj = objetivo();
+  const faltan = Math.max(0, obj - hechas);
+  const r = racha();
+  const dots = Array.from({ length: obj }, (_, i) => `<span class="dot ${i < hechas ? "on" : ""}"></span>`).join("");
+  const cands = candidatas(5);
+
+  const histRows = _log.slice(0, 24).map(c => {
+    const px = precioDe(norm(c.ticker));
+    const ret = px != null && c.precio > 0 ? (px / c.precio - 1) * 100 : null;
+    return `<tr>
+      <td style="white-space:nowrap">${esc(c.fecha)}</td>
+      <td class="tk">${linkTk(norm(c.ticker))}</td>
+      <td class="num">${Number(c.cantidad).toLocaleString("es-AR", { maximumFractionDigits: 4 })}</td>
+      <td class="num">${fmtUSD(c.precio)}</td>
+      <td class="num">${px != null ? fmtUSD(px) : "—"}</td>
+      <td class="num">${ret != null ? `<span class="${cls(ret)}">${fmtPct(ret)}</span>` : "—"}</td></tr>`;
+  }).join("");
+
+  $("#main").innerHTML = `
+    ${intro(false)}
+    <div class="sec">Tu regla</div>
+    <div class="card">
+      ${_config ? `<div class="regla-txt" id="regla-vista">Tu contrato: <b>${fmtUSD(Number(_config.aporte) || 0)} por mes</b> repartidos en <b>${obj} compra${obj > 1 ? "s" : ""}</b> (${fmtUSD((Number(_config.aporte) || 0) / obj)} por compra). <button class="btn mini sec2" id="editar" style="margin-left:10px">Cambiar</button></div>` : ""}
+      <div class="regla" id="regla-form" style="${_config ? "display:none" : ""}">
+        <div class="campo"><label>Aporte mensual (USD)</label><input id="in-aporte" type="number" min="1" step="any" value="${_config ? Number(_config.aporte) || 200 : 200}"></div>
+        <div class="campo"><label>Compras por mes</label><input id="in-compras" type="number" min="1" max="6" step="1" value="${obj}"></div>
+        <button class="btn" id="guardar">Guardar mi regla</button>
+      </div>
+      <div class="msg" id="msg-regla"></div>
+    </div>
+
+    ${_config ? `
+    <div class="sec">${mesNombre(mesAct)}</div>
+    <div class="card">
+      <div class="mes-head">
+        <div class="estado-mes" style="margin-top:0">${faltan
+          ? `Este mes: <b>te falta${faltan > 1 ? "n" : ""} ${faltan} compra${faltan > 1 ? "s" : ""}</b> de ${obj}.`
+          : `<b>Plan cumplido este mes ✓</b> — ${hechas} de ${obj} compras hechas.`}</div>
+        <div class="dots">${dots}</div>
+      </div>
+      ${r ? `<div class="racha"><span class="fuego">🔥</span> <b>${r} mes${r > 1 ? "es" : ""}</b>&nbsp;seguido${r > 1 ? "s" : ""} cumpliendo tu plan &nbsp; ${chipsMeses()}</div>` : (_log.length ? `<div class="racha">${chipsMeses()}</div>` : "")}
+    </div>
+
+    <div class="sec">Candidatas del mes · lo mejor del radar que no tenés</div>
+    <div class="panel"><table>
+      <thead><tr><th>Activo</th><th class="num">Score</th><th>Lectura Valtia</th><th class="num">P/E</th><th class="num">RSI</th><th class="num">Precio hoy</th><th class="num"></th></tr></thead>
+      <tbody>${cands.map(filaCandidata).join("") || '<tr><td colspan="7" class="mut" style="text-align:center">Ya tenés todo lo puntuado por el radar — constancia de acero.</td></tr>'}</tbody>
+    </table></div>
+    <div class="msg" id="msg-compra"></div>
+    <p class="nom" style="margin-top:10px">El puntaje y la lectura salen del <a href="herramientas.html" style="color:var(--gold)">radar de valuación Valtia</a> (valor relativo dentro del radar, no recomendación). Precio del día con actualización de rueda.</p>
+
+    <div class="card" style="margin-top:18px">
+      <b style="font-size:13.5px">¿Compraste otra cosa o reforzaste una posición?</b>
+      <div class="nom" style="margin-top:3px">Contala igual para tu plan del mes — también se agrega a Mi Cartera.</div>
+      <div class="otra">
+        <div><label>Ticker</label><input id="o-tk" placeholder="AAPL" maxlength="12"></div>
+        <div><label>Cantidad</label><input id="o-cant" type="number" step="any" min="0" placeholder="2"></div>
+        <div><label>Precio pagado (USD)</label><input id="o-px" type="number" step="any" min="0" placeholder="315.50"></div>
+        <div><button class="btn" id="o-ok" style="width:100%">Registrar compra</button></div>
+      </div>
+      <div class="msg" id="msg-otra"></div>
+    </div>
+
+    ${_log.length ? `
+    <div class="sec">Tu historial · cada compra, fechada</div>
+    <div class="panel"><table>
+      <thead><tr><th>Fecha</th><th>Activo</th><th class="num">Cantidad</th><th class="num">Pagaste</th><th class="num">Hoy</th><th class="num">Retorno</th></tr></thead>
+      <tbody>${histRows}</tbody></table></div>` : ""}
+    ` : ""}
+    <footer>Disciplina Valtia es una herramienta de organización personal: registra las compras que vos decidís y hacés en tu broker.
+    Valtia no ejecuta operaciones ni custodia fondos. La lectura del radar es análisis de carácter general y educativo,
+    no constituye asesoramiento financiero personalizado. Invertir implica riesgo de pérdida del capital.</footer>`;
+
+  enganchar();
+}
+
+function enganchar() {
+  const ed = $("#editar");
+  if (ed) ed.onclick = () => { $("#regla-vista").style.display = "none"; $("#regla-form").style.display = "flex"; };
+  const g = $("#guardar");
+  if (g) g.onclick = async () => {
+    const aporte = parseFloat($("#in-aporte").value), compras = parseInt($("#in-compras").value, 10);
+    const msg = $("#msg-regla");
+    if (!(aporte > 0) || !(compras >= 1)) { msg.innerHTML = '<span class="neg">Completá el aporte y las compras por mes.</span>'; return; }
+    try {
+      await setDoc(doc(db, "inversores", _user.email, "disciplina", "config"), {
+        aporte, compras: Math.min(6, compras),
+        creado: (_config && _config.creado) || new Date().toISOString(),
+        actualizado: new Date().toISOString(),
+      });
+      await cargarUsuario(); vistaPlan();
+    } catch (e) { msg.innerHTML = `<span class="neg">No se pudo guardar: ${esc(String(e).slice(0, 90))}</span>`; }
+  };
+  document.querySelectorAll("[data-compre]").forEach(b => b.onclick = () => {
+    const f = document.querySelector(`[data-form="${b.dataset.compre}"]`);
+    if (f) { f.style.display = "flex"; b.style.display = "none"; f.querySelector("input").focus(); }
+  });
+  document.querySelectorAll("[data-ok]").forEach(b => b.onclick = async () => {
+    const sym = b.dataset.ok;
+    const cant = parseFloat(document.querySelector(`[data-cant="${sym}"]`).value);
+    const px = precioDe(sym), msg = $("#msg-compra");
+    if (!(cant > 0)) { msg.innerHTML = '<span class="neg">Poné la cantidad que compraste.</span>'; return; }
+    b.disabled = true;
+    try {
+      await registrarCompra(fichaDe(sym), cant, px);
+      await cargarUsuario(); vistaPlan();
+      $("#msg-compra").innerHTML = `<span class="pos">${fichaDe(sym)} registrada en tu plan y en Mi Cartera al precio del día (${fmtUSD(px)}).</span>`;
+    } catch (e) { b.disabled = false; msg.innerHTML = `<span class="neg">No se pudo registrar: ${esc(String(e).slice(0, 90))}</span>`; }
+  });
+  const o = $("#o-ok");
+  if (o) o.onclick = async () => {
+    const tk = (($("#o-tk").value) || "").trim().toUpperCase().replace(/[^A-Z0-9.\-]/g, "");
+    const cant = parseFloat($("#o-cant").value);
+    let px = parseFloat($("#o-px").value);
+    const msg = $("#msg-otra");
+    if (!isFinite(px) || px <= 0) px = precioDe(norm(tk));
+    if (!tk || !(cant > 0)) { msg.innerHTML = '<span class="neg">Completá ticker y cantidad.</span>'; return; }
+    if (!(px > 0)) { msg.innerHTML = '<span class="neg">No tenemos precio de ese activo: poné el precio que pagaste.</span>'; return; }
+    try {
+      await registrarCompra(tk, cant, px);
+      await cargarUsuario(); vistaPlan();
+      $("#msg-otra") && ($("#msg-otra").innerHTML = "");
+      $("#msg-compra").innerHTML = `<span class="pos">${tk} registrada en tu plan y en Mi Cartera.</span>`;
+    } catch (e) { msg.innerHTML = `<span class="neg">No se pudo registrar: ${esc(String(e).slice(0, 90))}</span>`; }
+  };
+}
+
+async function render() {
+  try {
+    await cargarMercado();
+    if (!_user) {
+      $("#main").innerHTML = intro(true) + `
+        <div class="sec">Así se ve un mes del plan</div>
+        <div class="panel"><table>
+          <thead><tr><th>Activo</th><th class="num">Score</th><th>Lectura Valtia</th><th class="num">P/E</th><th class="num">Precio hoy</th></tr></thead>
+          <tbody>${candidatas(3).map(a => {
+            const px = precioDe(a.sym);
+            return `<tr><td class="tk">${linkTk(a.sym)}<div class="nom">${esc(a.nombre)}</div></td>
+              <td class="num"><b>${a.score}</b></td>
+              <td><span class="ver ${verCls(a.veredicto)}">${esc(a.veredicto)}</span></td>
+              <td class="num">${a.per != null ? a.per.toFixed(1) + "x" : "—"}</td>
+              <td class="num">${px != null ? fmtUSD(px) : "—"}</td></tr>`;
+          }).join("")}</tbody></table></div>
+        <p class="nom" style="margin-top:10px">Muestra libre: las tres mejor puntuadas del radar hoy. Con tu cuenta ves cinco candidatas filtradas contra tu propia cartera.</p>
+        <footer>Disciplina Valtia es una herramienta de organización personal. La lectura del radar es análisis de carácter general y educativo, no constituye asesoramiento financiero personalizado.</footer>`;
+      return;
+    }
+    await cargarUsuario();
+    vistaPlan();
+  } catch (e) {
+    $("#main").innerHTML = `<div class="state">No se pudo cargar el plan (${esc(String(e).slice(0, 140))})</div>`;
+  }
+}
+onAuthStateChanged(getAuth(app), u => { _user = u; render(); });
+</script>
+<script type="module" src="nav-auth.js?v=4"></script>
+</body>
+</html>
