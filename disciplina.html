@@ -90,6 +90,9 @@ tbody tr:hover td{background:var(--bg3)}
 .otra input{width:100%;padding:9px 11px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Jost',sans-serif;font-size:14px;outline:none}
 .otra input:focus{border-color:var(--gold)}
 .state{border:1px dashed var(--border);border-radius:14px;text-align:center;padding:60px 20px;color:var(--sub);margin-top:30px}
+.top-volver{max-width:1080px;margin:0 auto;padding:20px clamp(16px,3vw,40px) 0}
+.volver{font-family:'Jost',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);background:none;border:1px solid var(--border);border-radius:7px;padding:8px 14px;cursor:pointer}
+.volver:hover{color:var(--gold);border-color:var(--gold)}
 .gate{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:12px;padding:22px 24px;margin-top:26px}
 .gate b{font-size:15px}
 .gate p{font-size:13px;color:var(--sub);line-height:1.7;margin:8px 0 14px}
@@ -112,6 +115,7 @@ footer{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;font-
     <button class="theme-btn" onclick="tg()" title="Cambiar tema"></button>
   </div>
 </nav>
+<div class="top-volver"><button class="volver" onclick="volver()">← Volver</button></div>
 <main id="main">
   <div class="state">Cargando tu plan…</div>
 </main>
@@ -136,6 +140,16 @@ window.tg = () => {
   const h = document.documentElement;
   h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
   localStorage.setItem('valtia-theme', h.dataset.theme);
+};
+// volver: atrás si venís de adentro de la web; si no, a la home
+window.volver = () => {
+  try {
+    if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
+      history.back();
+      return;
+    }
+  } catch (e) {}
+  location.href = 'index.html';
 };
 
 const $ = s => document.querySelector(s);
