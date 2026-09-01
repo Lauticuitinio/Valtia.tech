@@ -365,7 +365,7 @@ function vistaPlan() {
     ` : ""}
     <footer>Disciplina Valtia es una herramienta de organización personal: registra las compras que vos decidís y hacés en tu broker.
     Valtia no ejecuta operaciones ni custodia fondos. La lectura del radar es análisis de carácter general y educativo,
-    no constituye asesoramiento financiero personalizado. Invertir implica riesgo de pérdida del capital.</footer>`;
+    no constituye asesoramiento financiero personalizado. Invertir implica riesgo de pérdida del capital. · <a href="terminos.html" style="color:inherit;text-decoration:underline">Términos</a> · <a href="privacidad.html" style="color:inherit;text-decoration:underline">Privacidad</a></footer>`;
 
   enganchar();
 }
@@ -459,6 +459,6 @@ async function render() {
 onAuthStateChanged(getAuth(app), u => { _user = u; render(); });
 </script>
 <script type="module" src="nav-auth.js?v=5"></script>
-<script src="nav-menu.js?v=1"></script>
+<script src="nav-menu.js?v=2"></script>
 </body>
 </html>

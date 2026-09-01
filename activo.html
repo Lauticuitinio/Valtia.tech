@@ -229,7 +229,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 </div>
 
 <footer>
-  <div class="footer-copy">© 2026 Valtia Analytics — Análisis de carácter general y educativo. No constituye asesoramiento financiero.</div>
+  <div class="footer-copy">© 2026 Valtia Analytics — Análisis de carácter general y educativo. No constituye asesoramiento financiero. · <a href="terminos.html" style="color:inherit;text-decoration:underline">Términos</a> · <a href="privacidad.html" style="color:inherit;text-decoration:underline">Privacidad</a></div>
   <div class="footer-links">
     <a href="index.html">Inicio</a><a href="noticias.html">Noticias</a><a href="informes.html">Informes</a><a href="herramientas.html">Herramientas</a>
   </div>
@@ -407,7 +407,7 @@ try {
       <div class="fsr-rhead">
         <div style="display:flex;gap:9px;margin-bottom:12px;flex-wrap:wrap"><span class="fsr-badge">${esc(d.tipo || "Informe")}</span>${d.categorias ? `<span class="fsr-tag">${esc(d.categorias)}</span>` : ""}</div>
         <h1>${esc(d.titulo)}</h1>
-        <div class="inf-meta" style="margin:12px 0 0">${venc(fdate(d.fecha))} · ${esc(d.autor || "Valtia Analytics")}</div>
+        <div class="inf-meta" style="margin:12px 0 0">${venc(fdate(d.fecha))} · ${esc(d.autor || "Lautaro Cuitiño · Valtia Analytics")}</div>
       </div>
       ${d.contenido_html || ""}
     </div>`;
@@ -563,6 +563,6 @@ try {
 }
 </script>
 <script type="module" src="nav-auth.js?v=5"></script>
-<script src="nav-menu.js?v=1"></script>
+<script src="nav-menu.js?v=2"></script>
 </body>
 </html>

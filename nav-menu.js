@@ -66,7 +66,9 @@
       return '<a class="vn-link' + (on ? ' on' : '') + '" href="' + l[0] + '">' + l[1] + '</a>';
     }).join('') +
     '<a class="vn-link" id="vnav-tema" href="#" style="display:none">◐ &nbsp;Cambiar tema</a>' +
-    '<a class="vn-cta" id="vnav-cta" href="index.html?login=1">Ingresar / Crear cuenta</a>';
+    '<a class="vn-cta" id="vnav-cta" href="index.html?login=1">Ingresar / Crear cuenta</a>' +
+    '<div style="margin-top:auto;padding:18px 22px 0;font-size:10.5px;color:rgba(240,237,232,.4)">' +
+    '<a href="terminos.html" style="color:inherit">Términos</a> · <a href="privacidad.html" style="color:inherit">Privacidad</a></div>';
   document.body.appendChild(back);
   document.body.appendChild(menu);
 

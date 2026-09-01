@@ -290,7 +290,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 <a href="mailto:valtyaanalytics@gmail.com?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail" style="background:#B08A3E;box-shadow:0 4px 16px rgba(176,138,62,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
 <footer>
-  <div class="footer-copy">© 2026 Valtia Analytics — Los informes son de carácter informativo y no constituyen asesoramiento financiero.</div>
+  <div class="footer-copy">© 2026 Valtia Analytics — Los informes son de carácter informativo y no constituyen asesoramiento financiero. · <a href="terminos.html" style="color:inherit;text-decoration:underline">Términos</a> · <a href="privacidad.html" style="color:inherit;text-decoration:underline">Privacidad</a></div>
   <div class="footer-links">
     <a href="index.html">Inicio</a><a href="noticias.html">Noticias</a><a href="cartera.html">Carteras</a><a href="herramientas.html">Herramientas</a>
   </div>
@@ -483,7 +483,7 @@ async function lector() {
         <div class="fsr-rhead">
           <div style="display:flex;gap:9px;margin-bottom:12px;flex-wrap:wrap"><span class="fsr-badge">${d.tipo || "Informe"}</span>${d.categorias ? `<span class="fsr-tag">${d.categorias}</span>` : ""}</div>
           <h1>${d.titulo}</h1>
-          <div class="meta">${fdate(d.fecha)} · ${d.autor || "Valtia Analytics"}</div>
+          <div class="meta">${fdate(d.fecha)} · ${d.autor || "Lautaro Cuitiño · Valtia Analytics"}</div>
           <div id="live-band"></div>
         </div>
         ${d.contenido_html || "<p>Sin contenido.</p>"}
@@ -557,6 +557,6 @@ onAuthStateChanged(getAuth(app), user => {
 });
 </script>
 <script type="module" src="nav-auth.js?v=5"></script>
-<script src="nav-menu.js?v=1"></script>
+<script src="nav-menu.js?v=2"></script>
 </body>
 </html>
