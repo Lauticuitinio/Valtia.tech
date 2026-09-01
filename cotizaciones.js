@@ -27,6 +27,9 @@ const STYLE = `
 .vc-v{color:#fff;font-weight:600}
 .vc-c{font-size:11px}
 .vc-up{color:#3FCE8A}.vc-dn{color:#E88A8A}.vc-nt{color:rgba(255,255,255,.35)}
+a.vc-i{text-decoration:none;cursor:pointer}
+a.vc-i:hover .vc-n{color:#E8CE96}
+a.vc-i:hover .vc-v{color:#E8CE96}
 @keyframes vc-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){
   .vc-track{animation:none}
@@ -51,12 +54,26 @@ function put(key, grp, n, v, c) {
   S.set(key, { grp, n, v, c: (typeof c === "number" && isFinite(c)) ? c : null });
 }
 
+// cada precio lleva a su lugar: acciones y BTC/ETH a la ficha del activo,
+// los dólares al histórico de Herramientas. El resto no linkea.
+const ADR_FICHA = { PAMP: "PAM", YPFD: "YPF" };
+function linkDe(k) {
+  if (k.startsWith("s-")) return "activo.html?t=" + (ADR_FICHA[k.slice(2)] || k.slice(2));
+  if (k === "c-bitcoin") return "activo.html?t=BTC";
+  if (k === "c-ethereum") return "activo.html?t=ETH";
+  if (k.startsWith("d-")) return "herramientas.html";
+  return null;
+}
+
 function itemHtml(k, it) {
   const cls = it.c == null ? "vc-nt" : it.c >= 0 ? "vc-up" : "vc-dn";
   const chg = it.c == null ? "" :
     `<span class="vc-c ${cls}" data-c="${esc(k)}">${it.c >= 0 ? "▲" : "▼"}${Math.abs(it.c).toFixed(2)}%</span>`;
-  return `<span class="vc-i"><span class="vc-n">${esc(it.n)}</span>` +
-         `<span class="vc-v" data-v="${esc(k)}">${esc(it.v)}</span>${chg}</span>`;
+  const cuerpo = `<span class="vc-n">${esc(it.n)}</span>` +
+    `<span class="vc-v" data-v="${esc(k)}">${esc(it.v)}</span>${chg}`;
+  const link = linkDe(k);
+  return link ? `<a class="vc-i" href="${link}" title="Ver más">${cuerpo}</a>`
+              : `<span class="vc-i">${cuerpo}</span>`;
 }
 
 function seqHtml() {

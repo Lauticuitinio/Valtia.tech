@@ -134,6 +134,15 @@ service cloud.firestore {
       match /valores/{v}    { allow read: if carteraPublica() || esCliente(); allow write: if isAdmin(); }
     }
 
+    // ── VIDRIERA DE CARTERAS (teaser público) ──
+    // Solo agregados por cartera (nombre, retorno vs benchmark, serie del
+    // índice, fecha de última rotación) — sin posiciones, tesis ni
+    // razonamientos. Escrito por fondo_sync (Admin SDK).
+    match /carterasTeaser/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // ── SEÑALES Y RÉGIMEN DE MERCADO (sistema de rotación) ──
     // Calculado a diario por fondo_sync.py. Privado del gestor por ahora
     // (a futuro: producto PRO con visibilidad por plan).

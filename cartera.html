@@ -244,20 +244,43 @@ async function radarMapa() {
 const linkFicha = tk => EMPRESAS.some(e => e.ticker === tk)
   ? `<a href="activo.html?t=${tk}" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--gold)">${tk}</a>` : tk;
 
-/* tarjeta de acceso: las carteras de suscriptores no se listan sin sesión
-   (la regla de Firestore las bloquea), así que se invita a entrar */
-function gateCard() {
+/* vidriera: las carteras PRO no se pueden LEER sin acceso (regla de
+   Firestore), pero sus agregados —retorno real, curva, última rotación—
+   son públicos vía carterasTeaser (fondo_sync). El retorno a la vista es
+   el argumento de venta; lo que se paga es composición, tesis e historial. */
+let _teaserCache = null;
+async function teaserMapa() {
+  if (_teaserCache) return _teaserCache;
+  _teaserCache = [];
+  try {
+    const snap = await getDoc(doc(db, "carterasTeaser", "latest"));
+    if (snap.exists()) _teaserCache = JSON.parse(snap.data().json || "{}").carteras || [];
+  } catch (e) {}
+  return _teaserCache;
+}
+
+function lockedCard(t) {
+  const r = t.retorno, rb = t.retornoBench;
   return `
-    <div class="ccard" style="display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:12px">
-      <span class="badge" style="background:rgba(184,151,90,.14);color:var(--gold)">Suscriptores</span>
-      <h3 style="margin:0">Cartera IA y Semiconductores</h3>
-      <p style="margin:0">Las carteras temáticas —con sus posiciones, tesis y cada rotación fechada— están reservadas para cuentas registradas.</p>
-      <a class="go" href="index.html?login=crear" style="margin-top:4px">Ingresá o creá tu cuenta →</a>
+    <div class="ccard">
+      <div class="top"><span class="badge">${t.codigo || t.id}</span>
+        <span class="tagx">${RIESGO[t.nivelRiesgo] || t.nivelRiesgo || ""}</span>
+        <span class="tagx" style="color:var(--gold);border-color:rgba(184,151,90,.4)">🔒 PRO</span></div>
+      <h3>${t.nombre}</h3>
+      <p>El retorno real, a la vista. La composición, la tesis por posición y cada rotación con su razonamiento se destapan con Valtia PRO.</p>
+      <div class="mini">
+        <div class="mi"><div class="l">Desde inicio (${t.fechaInicio || "—"})</div><div class="v ${r != null ? cls(r) : "mut"}">${r != null ? fmtPct(r) : "—"}</div></div>
+        <div class="mi"><div class="l">${rb != null ? "Benchmark " + (t.benchmark || "SPY") : "Posiciones"}</div><div class="v">${rb != null ? `<span class="${cls(rb)}">${fmtPct(rb)}</span>` : t.posiciones}</div></div>
+      </div>
+      <div class="spark"><canvas id="sp-t-${t.id}"></canvas></div>
+      <div class="cta"><span class="meta">${t.posiciones} posiciones${t.ultimaRotacion ? " · última rotación " + t.ultimaRotacion.fecha : ""}</span>
+        <a class="go" href="planes.html">USD 19/mes →</a></div>
     </div>`;
 }
 
 /* ── catálogo ── */
-function renderCatalogo(carteras, user) {
+function renderCatalogo(carteras, user, teaser) {
+  const bloqueadas = (teaser || []).filter(t => !carteras.some(c => c.id === t.id));
   const cards = carteras.map(c => {
     const r = retorno(c), rb = retornoBench(c);
     const priv = c.visibilidad && c.visibilidad !== "publico";
@@ -283,19 +306,22 @@ function renderCatalogo(carteras, user) {
     <h1>Carteras que se <em>gestionan</em>,<br>no listas que se olvidan</h1>
     <p class="sub">Cada cartera es una página viva: posiciones con tesis, precio de entrada registrado el día que entra, y cada rotación fechada con su razonamiento. El rendimiento se mide desde el lanzamiento — nunca con backtests.</p>
     <div class="honest">🔎 <span><b>Transparencia primero:</b> el historial se construye día a día con precios reales. Lo que ves es lo que fue.</span></div>
-    <div class="grid">${cards || '<div class="state">Sin carteras activas todavía.</div>'}${user ? "" : gateCard()}</div>
+    <div class="grid">${cards || '<div class="state">Sin carteras activas todavía.</div>'}${bloqueadas.map(lockedCard).join("")}</div>
     <footer>Valtia Analytics no brinda asesoramiento financiero personalizado a través de estas carteras. La información es de carácter general y educativo; los rendimientos pasados no garantizan resultados futuros. Invertir en renta variable implica riesgo de pérdida del capital.</footer>`;
   charts.forEach(ch => ch.destroy()); charts = [];
+  const spark = (el, labels, data) => charts.push(new Chart(el, { type: "line",
+    data: { labels, datasets: [{ data, borderColor: "#B8975A",
+      backgroundColor: "rgba(184,151,90,.12)", fill: true, borderWidth: 2, pointRadius: 0, tension: .3 }] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      scales: { x: { display: false }, y: { display: false } } } }));
   carteras.forEach(c => {
     const el = document.getElementById("sp-" + c.id);
-    if (!el || c.valores.length < 2) return;
-    charts.push(new Chart(el, { type: "line",
-      data: { labels: c.valores.map(v => v.fecha),
-        datasets: [{ data: c.valores.map(v => v.indice), borderColor: "#B8975A",
-          backgroundColor: "rgba(184,151,90,.12)", fill: true, borderWidth: 2, pointRadius: 0, tension: .3 }] },
-      options: { responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { enabled: false } },
-        scales: { x: { display: false }, y: { display: false } } } }));
+    if (el && c.valores.length >= 2) spark(el, c.valores.map(v => v.fecha), c.valores.map(v => v.indice));
+  });
+  bloqueadas.forEach(t => {
+    const el = document.getElementById("sp-t-" + t.id);
+    if (el && (t.serie || []).length >= 2) spark(el, t.serie.map(p => p[0]), t.serie.map(p => p[1]));
   });
 }
 
@@ -386,21 +412,27 @@ async function renderDetalle(c) {
 let _user = null;
 async function render() {
   try {
-    const carteras = await loadAll(_user);
+    const [carteras, teaser] = await Promise.all([loadAll(_user), teaserMapa()]);
     const slug = new URLSearchParams(location.search).get("c");
     if (slug) {
       const c = carteras.find(x => x.id === slug || x.slug === slug);
       if (c) return renderDetalle(c);
-      // sin sesión no se puede distinguir "no existe" de "es de suscriptores":
-      // la regla bloquea la lectura, así que se ofrece el acceso
-      $("#main").innerHTML = _user
-        ? `<div class="state">No encontramos esa cartera. <a href="cartera.html" style="color:var(--gold)">Ver todas →</a></div>`
-        : `<div class="state">Esta cartera es para suscriptores.<br>
-             <a href="index.html?login=1" style="color:var(--gold)">Ingresá con tu cuenta</a> para verla, o
-             <a href="cartera.html" style="color:var(--gold)">mirá las abiertas →</a></div>`;
+      // no la puede leer: si está en la vidriera es PRO — se vende con el
+      // retorno real a la vista; si no está, no existe
+      const t = teaser.find(x => x.id === slug);
+      if (t) {
+        $("#main").innerHTML = `<div class="state">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:26px;margin-bottom:8px">${t.nombre}</div>
+          ${t.retorno != null ? `<div style="margin-bottom:14px">Retorno real desde ${t.fechaInicio}: <b class="${cls(t.retorno)}" style="font-size:18px">${fmtPct(t.retorno)}</b>${t.retornoBench != null ? ` · ${t.benchmark || "SPY"} ${fmtPct(t.retornoBench)}` : ""}</div>` : ""}
+          La composición, la tesis y cada rotación con su razonamiento son de Valtia PRO.<br><br>
+          <a class="go" href="planes.html" style="color:var(--gold);font-weight:600">Conocé Valtia PRO · USD 19/mes →</a>
+          &nbsp;·&nbsp; <a href="cartera.html" style="color:var(--sub)">mirá las abiertas</a></div>`;
+        return;
+      }
+      $("#main").innerHTML = `<div class="state">No encontramos esa cartera. <a href="cartera.html" style="color:var(--gold)">Ver todas →</a></div>`;
       return;
     }
-    renderCatalogo(carteras, _user);
+    renderCatalogo(carteras, _user, teaser);
   } catch (e) {
     $("#main").innerHTML = `<div class="state">No se pudieron cargar las carteras (${String(e).slice(0, 140)})</div>`;
   }
