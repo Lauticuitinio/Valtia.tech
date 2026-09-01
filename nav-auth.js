@@ -41,9 +41,11 @@ function pintarCandados(abiertos) {
 
 onAuthStateChanged(getAuth(app), async user => {
   const links = [...document.querySelectorAll('nav a, .nav-links a')];
+  // solo se ocultan los anchors de marketing de la home; "Planes" queda SIEMPRE
+  // visible — un usuario gratis logueado tiene que poder llegar al precio
   const mkt = links.filter(a => {
     const h = (a.getAttribute('href') || '').toLowerCase();
-    return h.includes('#servicios') || h.includes('#planes') || h.includes('#contacto');
+    return h.includes('#servicios') || h.includes('#contacto');
   });
   let cta = document.querySelector('.nav-cta');
   if (user) {
@@ -63,9 +65,9 @@ onAuthStateChanged(getAuth(app), async user => {
     pintarCandados(await window.valtiaEsPro(user));
   } else {
     if (cta) {
-      cta.textContent = 'Acceso Cliente';
-      cta.setAttribute('href', 'index.html');
-      cta.setAttribute('onclick', 'openLogin(event)');
+      cta.textContent = 'Ingresar / Crear cuenta';
+      cta.setAttribute('href', 'index.html?login=1');
+      cta.removeAttribute('onclick');
     }
     const extra = document.getElementById('nav-mipanel');
     if (extra) extra.remove();

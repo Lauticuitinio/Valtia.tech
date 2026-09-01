@@ -208,15 +208,16 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
     <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
+    <a href="index.html">Inicio</a>
+    <a href="cartera.html">Carteras</a>
+    <a href="disciplina.html">Disciplina</a>
     <a href="noticias.html">Noticias</a>
-    <a href="index.html#servicios">¿Qué hacemos?</a>
     <a href="informes.html" class="active">Informes</a>
     <a href="herramientas.html">Herramientas</a>
-    <a href="index.html#planes">Planes</a>
-    <a href="index.html#contacto">Contacto</a>
+    <a href="planes.html">Planes</a>
   </div>
   <div class="nav-right">
-    <a href="index.html" class="nav-cta">Acceso Cliente</a>
+    <a href="index.html?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
   </div>
 </nav>
 
@@ -322,7 +323,7 @@ try {
       <div class="pro-overlay">
         <h4>Lectura Valtia</h4>
         <p>El veredicto y los puntajes del radar son parte del plan PRO.</p>
-        <a href="index.html#planes" class="btn">Ver planes →</a>
+        <a href="planes.html" class="btn">Ver planes →</a>
       </div>
     </div>` : "";
 
@@ -415,7 +416,7 @@ try {
   if (inf) renderInforme(inf);
   else if (emp.slug) document.getElementById("informe-full").innerHTML =
     `<div class="fsr-state" id="informe" style="margin-top:26px">El informe completo de ${esc(emp.nombre)} es exclusivo para clientes de Valtia.<br>
-     <a href="index.html">Ingresá con tu cuenta</a> para leerlo — o conocé los <a href="index.html#planes">planes</a>.</div>`;
+     <a href="index.html?login=1">Ingresá con tu cuenta</a> para leerlo — o conocé los <a href="planes.html">planes</a>.</div>`;
 
   // ── volver + buscador de activos ──
   document.getElementById("volver").addEventListener("click", () => {
@@ -561,6 +562,7 @@ try {
   ficha.innerHTML = '<div class="empty-state">No pudimos cargar la ficha. <a href="informes.html">Volver a Informes</a></div>';
 }
 </script>
-<script type="module" src="nav-auth.js?v=4"></script>
+<script type="module" src="nav-auth.js?v=5"></script>
+<script src="nav-menu.js?v=1"></script>
 </body>
 </html>

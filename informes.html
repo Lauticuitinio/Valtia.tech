@@ -209,15 +209,16 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
     <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
+    <a href="index.html">Inicio</a>
+    <a href="cartera.html">Carteras</a>
+    <a href="disciplina.html">Disciplina</a>
     <a href="noticias.html">Noticias</a>
-    <a href="index.html#servicios">¿Qué hacemos?</a>
     <a href="informes.html" class="active">Informes</a>
     <a href="herramientas.html">Herramientas</a>
-    <a href="index.html#planes">Planes</a>
-    <a href="index.html#contacto">Contacto</a>
+    <a href="planes.html">Planes</a>
   </div>
   <div class="nav-right">
-    <a href="index.html" class="nav-cta">Acceso Cliente</a>
+    <a href="index.html?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
   </div>
 </nav>
 
@@ -321,7 +322,7 @@ function openInforme(id){
   if(free){
     content.innerHTML=`<div class="modal-kicker">Informe · Gratuito · Valtia Analytics</div>${free.content}`;
   }else{
-    content.innerHTML=`<div class="modal-lock"><div class="ic">🔒</div><h3>Contenido exclusivo</h3><p>Este informe está disponible para suscriptores de los planes de asesoría. Accedé a análisis profundos por empresa, sector y estrategia de cartera.</p><a href="index.html#planes" class="modal-btn">Ver planes →</a></div>`;
+    content.innerHTML=`<div class="modal-lock"><div class="ic">🔒</div><h3>Contenido exclusivo</h3><p>Este informe está disponible para suscriptores de los planes de asesoría. Accedé a análisis profundos por empresa, sector y estrategia de cartera.</p><a href="planes.html" class="modal-btn">Ver planes →</a></div>`;
   }
   modal.classList.add('open');
   document.body.style.overflow='hidden';
@@ -411,7 +412,7 @@ async function catalogo(user) {
     </div>`).join("");
   const html = `<div class="sec-h"><span>Registros de análisis</span><i></i></div>
     ${cards || `<div class="fsr-state">Los registros de análisis completos son exclusivos para clientes.<br>
-      <a href="index.html">Ingresá con tu cuenta</a> para leerlos.</div>`}
+      <a href="index.html?login=1">Ingresá con tu cuenta</a> para leerlos.</div>`}
     <div class="divider"></div>`;
   const holder = document.createElement("div");
   holder.id = "fsr-holder";
@@ -493,7 +494,7 @@ async function lector() {
     content.innerHTML = `
       <div class="fsr-crumb"><a href="informes.html">← Todos los informes</a></div>
       <div class="fsr-state">Este informe es exclusivo para clientes de Valtia.<br>
-        <a href="index.html">Ingresá con tu cuenta</a> para leerlo — o conocé los <a href="index.html#planes">planes</a>.</div>`;
+        <a href="index.html?login=1">Ingresá con tu cuenta</a> para leerlo — o conocé los <a href="planes.html">planes</a>.</div>`;
   }
 }
 
@@ -555,6 +556,7 @@ onAuthStateChanged(getAuth(app), user => {
   else catalogo(user);
 });
 </script>
-<script type="module" src="nav-auth.js?v=4"></script>
+<script type="module" src="nav-auth.js?v=5"></script>
+<script src="nav-menu.js?v=1"></script>
 </body>
 </html>

@@ -210,16 +210,17 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
     <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
-    <a href="noticias.html">Noticias</a>
-    <a href="index.html#servicios">¿Qué hacemos?</a>
+    <a href="index.html">Inicio</a>
+    <a href="cartera.html">Carteras</a>
     <a href="disciplina.html">Disciplina</a>
+    <a href="noticias.html">Noticias</a>
+    <a href="informes.html">Informes</a>
     <a href="herramientas.html" class="active">Herramientas</a>
-    <a href="index.html#planes">Planes</a>
-    <a href="index.html#contacto">Contacto</a>
+    <a href="planes.html">Planes</a>
   </div>
   <div class="nav-right">
     <button class="theme-btn" onclick="toggleTheme()"></button>
-    <a href="index.html" class="nav-cta" onclick="openLogin(event)">Acceso Cliente</a>
+    <a href="index.html?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
   </div>
 </nav>
 
@@ -294,7 +295,7 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
       <div class="pro-lock-icon">🔒</div>
       <h4>Radar completo PRO</h4>
       <p>Los 20 activos con puntaje de valor, calidad, RSI y veredicto Valtia. Se actualiza todos los días.</p>
-      <a href="index.html#planes" class="btn">Ver planes →</a>
+      <a href="planes.html" class="btn">Ver planes →</a>
     </div>
   </div>
 </div>
@@ -415,7 +416,7 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
       <div class="pro-lock-icon">🔒</div>
       <h4>Contenido PRO</h4>
       <p>La curva soberana completa con TIR, paridad y duration, Bopreal, tasa fija, CER y la guía Valtia para leerla.</p>
-      <a href="index.html#planes" class="btn">Ver planes →</a>
+      <a href="planes.html" class="btn">Ver planes →</a>
     </div>
   </div>
   <div class="bp-asof" id="bp-asof"></div>
@@ -453,7 +454,7 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
         <div class="pro-lock-icon">🔒</div>
         <h4>Acciones EEUU + ETFs</h4>
         <p>Accedé al screener completo de acciones americanas, ETFs sectoriales y análisis técnico integrado.</p>
-        <a href="index.html#planes" class="btn">Ver planes →</a>
+        <a href="planes.html" class="btn">Ver planes →</a>
       </div>
     </div>
   </div>
@@ -509,7 +510,7 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
         <div class="pro-lock-icon">🔒</div>
         <h4>Tabla completa PRO</h4>
         <p>+60 CEDEARs de acciones y ETFs con ratios actualizados, precio ARS y comparativa vs precio exterior.</p>
-        <a href="index.html#planes" class="btn">Ver planes →</a>
+        <a href="planes.html" class="btn">Ver planes →</a>
       </div>
     </div>
   </div>
@@ -527,7 +528,7 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
 // THEME
 function toggleTheme(){const h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'light':'dark';localStorage.setItem('valtia-theme',h.dataset.theme)}
 const t=localStorage.getItem('valtia-theme');if(t)document.documentElement.dataset.theme=t;
-function openLogin(e){e.preventDefault();window.location.href='index.html'}
+function openLogin(e){e.preventDefault();window.location.href='index.html?login=1'}
 
 // TOOL TABS
 function switchTool(name,btn){
@@ -903,6 +904,7 @@ loadRadar();
   new MutationObserver(() => { if (dibujado) dibujar(); }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 })();
 </script>
-<script type="module" src="nav-auth.js?v=4"></script>
+<script type="module" src="nav-auth.js?v=5"></script>
+<script src="nav-menu.js?v=1"></script>
 </body>
 </html>

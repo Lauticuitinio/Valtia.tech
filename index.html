@@ -337,6 +337,7 @@ footer{background:#040c14;padding:48px 52px;border-top:1px solid rgba(184,151,90
   </a>
   <div class="nav-links">
     <a href="cartera.html">Carteras</a>
+    <a href="disciplina.html">Disciplina</a>
     <a href="noticias.html">Noticias</a>
     <a href="#servicios">¿Qué hacemos?</a>
     <a href="informes.html">Informes</a>
@@ -346,7 +347,7 @@ footer{background:#040c14;padding:48px 52px;border-top:1px solid rgba(184,151,90
   </div>
   <div class="nav-right">
     <button class="theme-btn" onclick="toggleTheme()" title="Cambiar tema"></button>
-    <a href="#" class="nav-cta" id="nav-cta" onclick="openLogin(event)">Acceso Cliente</a>
+    <a href="#" class="nav-cta" id="nav-cta" onclick="openLogin(event)">Ingresar / Crear cuenta</a>
     <div class="nav-user" id="nav-user" style="display:none">
       <button class="nav-user-btn" onclick="toggleUserMenu(event)">
         <span class="nav-avatar" id="nav-avatar">U</span><span id="nav-username">usuario</span><span style="font-size:9px;opacity:.7">▾</span>
@@ -410,7 +411,7 @@ a.v2plain{color:inherit;text-decoration:none}
       <h1 style="font:700 clamp(42px,4.6vw,68px) 'Playfair Display',serif;color:#fff;line-height:1.04;letter-spacing:-.01em;margin-bottom:24px;text-wrap:balance">Entendé el mercado. Tomá mejores <span style="font-style:italic;color:#E8CE96">decisiones</span>.</h1>
       <p style="font:400 18px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.72);line-height:1.62;max-width:520px;margin-bottom:36px;text-wrap:pretty">Análisis claros y actualizados, carteras con seguimiento y las herramientas para invertir con criterio propio — tengas o no tiempo para ocuparte.</p>
       <div style="display:flex;gap:14px;align-items:center;margin-bottom:22px;flex-wrap:wrap">
-        <a href="#" onclick="openLogin(event)" style="background:#B08A3E;color:#fff;font:600 15px 'IBM Plex Sans',sans-serif;padding:16px 32px;border-radius:11px;cursor:pointer;box-shadow:0 12px 28px rgba(176,138,62,.4);text-decoration:none">Empezá gratis →</a>
+        <a href="#" onclick="openLogin(event,'crear')" style="background:#B08A3E;color:#fff;font:600 15px 'IBM Plex Sans',sans-serif;padding:16px 32px;border-radius:11px;cursor:pointer;box-shadow:0 12px 28px rgba(176,138,62,.4);text-decoration:none">Empezá gratis →</a>
         <a href="cartera.html" style="color:#fff;font:600 15px 'IBM Plex Sans',sans-serif;padding:16px 28px;border-radius:11px;border:1px solid rgba(255,255,255,.25);cursor:pointer;text-decoration:none">Ver las carteras vivas</a>
       </div>
       <div style="display:flex;align-items:center;gap:8px;font:500 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.55)"><span style="color:#3FCE8A">✓</span>Gratis para siempre · sin tarjeta · sin vencimiento</div>
@@ -574,7 +575,7 @@ a.v2plain{color:inherit;text-decoration:none}
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span style="font:600 13px 'IBM Plex Sans',sans-serif;letter-spacing:.02em;color:#1F7A4D">Gratis</span></div>
           <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px"><span style="font:700 38px 'Playfair Display',serif;color:#14213D">USD 0</span><span style="font:500 13px 'IBM Plex Sans',sans-serif;color:#8B8375">para siempre</span></div>
           <div style="font:400 12.5px 'IBM Plex Sans',sans-serif;color:#8B8375;margin-bottom:22px">Sin tarjeta, sin vencimiento</div>
-          <a href="#" onclick="openLogin(event)" style="display:block;font:600 14px 'IBM Plex Sans',sans-serif;text-align:center;padding:13px;border-radius:10px;cursor:pointer;background:#EDE7DA;color:#14213D;text-decoration:none">Crear cuenta</a>
+          <a href="#" onclick="openLogin(event,'crear')" style="display:block;font:600 14px 'IBM Plex Sans',sans-serif;text-align:center;padding:13px;border-radius:10px;cursor:pointer;background:#EDE7DA;color:#14213D;text-decoration:none">Crear cuenta</a>
         </div>
         <div style="padding:22px 28px 30px;border-top:1px solid rgba(0,0,0,.08);display:flex;flex-direction:column;gap:12px">
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:#3A362E"><span style="color:#1F7A4D;font-weight:600;margin-top:1px">✓</span>Cartera Top 10 S&amp;P 500 completa</div>
@@ -587,14 +588,20 @@ a.v2plain{color:inherit;text-decoration:none}
       <!-- PRO -->
       <div style="border-radius:16px;overflow:hidden;border:1px solid #B08A3E;background:#14213D;box-shadow:0 20px 48px rgba(20,33,61,.24)">
         <div style="padding:30px 28px 24px">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span style="font:600 13px 'IBM Plex Sans',sans-serif;letter-spacing:.02em;color:#E8CE96">Valtia PRO</span><span style="font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;background:#B08A3E;color:#fff;padding:3px 9px;border-radius:99px;text-transform:uppercase">Más popular</span></div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span style="font:600 13px 'IBM Plex Sans',sans-serif;letter-spacing:.02em;color:#E8CE96">Valtia PRO</span><span style="font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;background:#B08A3E;color:#fff;padding:3px 9px;border-radius:99px;text-transform:uppercase">Recomendado</span></div>
           <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px"><span style="font:700 38px 'Playfair Display',serif;color:#fff">USD 19</span><span style="font:500 13px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.55)">/ mes</span></div>
-          <div style="font:400 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.55);margin-bottom:22px">Suscripciones online muy pronto · cupos de lanzamiento</div>
-          <a href="mailto:valtyaanalytics@gmail.com?subject=Quiero%20Valtia%20PRO%20(lista%20de%20espera)" style="display:block;font:600 14px 'IBM Plex Sans',sans-serif;text-align:center;padding:13px;border-radius:10px;cursor:pointer;background:#B08A3E;color:#fff;text-decoration:none">Sumarme a la lista de espera</a>
+          <div style="font:400 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.55);margin-bottom:22px">Suscripciones online muy pronto — anotándote congelás el precio de lanzamiento</div>
+          <div id="wl-pro">
+            <div style="display:flex;gap:8px">
+              <input type="email" id="wl-email" placeholder="tu@email.com" autocomplete="email" inputmode="email" style="flex:1;min-width:0;font:400 14px 'IBM Plex Sans',sans-serif;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;outline:none">
+              <a href="#" onclick="waitlistPro(event)" style="font:600 14px 'IBM Plex Sans',sans-serif;text-align:center;padding:12px 18px;border-radius:10px;cursor:pointer;background:#B08A3E;color:#fff;text-decoration:none;white-space:nowrap">Anotarme</a>
+            </div>
+            <div id="wl-msg" style="font:400 12.5px 'IBM Plex Sans',sans-serif;margin-top:9px;line-height:1.5"></div>
+          </div>
         </div>
         <div style="padding:22px 28px 30px;border-top:1px solid rgba(255,255,255,.14);display:flex;flex-direction:column;gap:12px">
-          <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.85)"><span style="color:#E8CE96;font-weight:600;margin-top:1px">✓</span>Todas las carteras vivas + avisos de rotación</div>
-          <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.85)"><span style="color:#E8CE96;font-weight:600;margin-top:1px">✓</span>Señales del sistema: score y régimen</div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.85)"><span style="color:#E8CE96;font-weight:600;margin-top:1px">✓</span>Todas las carteras vivas, con cada rotación fechada y justificada</div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.85)"><span style="color:#E8CE96;font-weight:600;margin-top:1px">✓</span>Fichas de activo completas, con informe y radar destapados</div>
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.85)"><span style="color:#E8CE96;font-weight:600;margin-top:1px">✓</span>Radar de valuación completo</div>
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.85)"><span style="color:#E8CE96;font-weight:600;margin-top:1px">✓</span>Informes de research completos</div>
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.85)"><span style="color:#E8CE96;font-weight:600;margin-top:1px">✓</span>Panel de herramientas completo</div>
@@ -643,7 +650,7 @@ a.v2plain{color:inherit;text-decoration:none}
       <details class="v2faq"><summary>¿Qué son las "carteras vivas"?<span class="sign"></span></summary><div class="ans">Cada cartera es una página que se actualiza: posiciones con su tesis, precio de entrada registrado el día que entra y cada rotación fechada con su razón. El rendimiento se mide desde el lanzamiento con precios reales.</div></details>
       <details class="v2faq"><summary>¿Garantizan resultados?<span class="sign"></span></summary><div class="ans">No. Los mercados implican riesgos y los rendimientos pasados no garantizan resultados futuros. Lo que ofrecemos es análisis riguroso, seguimiento constante y decisiones fundamentadas y verificables.</div></details>
       <details class="v2faq"><summary>¿Puedo usar el panel desde el celular?<span class="sign"></span></summary><div class="ans">Sí, el portal y las herramientas están optimizados para mobile. Accedés desde cualquier dispositivo con conexión a internet.</div></details>
-      <details class="v2faq"><summary>¿Cómo cancelo o cambio mi suscripción?<span class="sign"></span></summary><div class="ans">Desde tu cuenta, en cualquier momento y sin dar explicaciones. La suscripción se renueva de forma automática cada mes; si cancelás, mantenés el acceso hasta el final del período que ya pagaste.</div></details>
+      <details class="v2faq"><summary>¿Cómo cancelo o cambio mi suscripción?<span class="sign"></span></summary><div class="ans">Sin permanencia y sin dar explicaciones: hoy el alta y la baja se gestionan directo con nosotros, con un mail alcanza. Cuando lancemos las suscripciones online vas a poder cancelar desde tu cuenta, manteniendo el acceso hasta el final del período pagado.</div></details>
     </div>
   </div>
 </div>
@@ -654,7 +661,7 @@ a.v2plain{color:inherit;text-decoration:none}
     <h2 style="font:700 clamp(32px,3.8vw,48px) 'Playfair Display',serif;color:#fff;line-height:1.1;margin-bottom:18px;text-wrap:balance">¿Querés <span style="font-style:italic;color:#E8CE96">empezar</span> a invertir mejor?</h2>
     <p style="font:400 17px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.68);line-height:1.6;margin-bottom:34px">Creá tu cuenta gratis y mirá cómo trabajamos. Sin tarjeta, sin compromiso.</p>
     <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
-      <a href="#" onclick="openLogin(event)" style="background:#B08A3E;color:#fff;font:600 15px 'IBM Plex Sans',sans-serif;padding:16px 34px;border-radius:11px;cursor:pointer;box-shadow:0 12px 28px rgba(176,138,62,.4);text-decoration:none">Empezá gratis →</a>
+      <a href="#" onclick="openLogin(event,'crear')" style="background:#B08A3E;color:#fff;font:600 15px 'IBM Plex Sans',sans-serif;padding:16px 34px;border-radius:11px;cursor:pointer;box-shadow:0 12px 28px rgba(176,138,62,.4);text-decoration:none">Empezá gratis →</a>
       <a href="mailto:valtyaanalytics@gmail.com?subject=Consulta%20desde%20valtia.tech" style="color:#fff;font:600 15px 'IBM Plex Sans',sans-serif;padding:16px 28px;border-radius:11px;border:1px solid rgba(255,255,255,.25);cursor:pointer;text-decoration:none">Hablar con el equipo</a>
     </div>
   </div>
@@ -778,6 +785,12 @@ a.v2plain{color:inherit;text-decoration:none}
 </div>
 
 <!-- LOGIN MODAL -->
+<style>
+.lm-tabs{display:flex;gap:0;border:1px solid var(--border,rgba(184,151,90,.25));border-radius:9px;overflow:hidden;margin-bottom:16px}
+.lm-tab{flex:1;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;padding:10px 8px;border:none;background:transparent;color:inherit;opacity:.55;cursor:pointer}
+.lm-tab+.lm-tab{border-left:1px solid var(--border,rgba(184,151,90,.25))}
+.lm-tab.on{background:var(--gold,#B08A3E);color:#fff;opacity:1}
+</style>
 <div class="modal-overlay" id="loginModal">
   <div class="modal">
     <button class="modal-close" onclick="closeLogin()">✕</button>
@@ -789,26 +802,45 @@ a.v2plain{color:inherit;text-decoration:none}
       </svg>
     </div>
     <div class="modal-title">Acceso Valtia</div>
-    <div class="modal-sub">Ingresá con tu cuenta para acceder al portal</div>
+    <div class="modal-sub">Ingresá o creá tu cuenta gratis — sin tarjeta, sin compromiso</div>
+    <div class="lm-tabs">
+      <button type="button" class="lm-tab on" id="lm-tab-ingresar" onclick="loginModo('ingresar')">Ingresar</button>
+      <button type="button" class="lm-tab" id="lm-tab-crear" onclick="loginModo('crear')">Crear cuenta</button>
+    </div>
     <button class="btn-google" id="btn-google" onclick="loginWithGoogle()">
       <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
       Continuar con Google
     </button>
+    <div style="font-size:11.5px;opacity:.55;text-align:center;margin:7px 0 0">Con Google, si no tenés cuenta se crea sola al instante</div>
     <div class="login-divider">o</div>
-    <div class="form-group">
-      <label>Email</label>
-      <input type="email" id="login-email" placeholder="tu@email.com" autocomplete="email" inputmode="email">
+    <div id="lm-ingresar">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="tu@email.com" autocomplete="email" inputmode="email">
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div style="text-align:right;margin:-4px 0 14px">
+        <a href="#" onclick="resetPassword(event)" style="font-size:12px;color:var(--gold);text-decoration:none">¿Olvidaste tu contraseña?</a>
+      </div>
+      <button class="btn-login" id="btn-ingresar" onclick="loginWithEmail()">Ingresar</button>
     </div>
-    <div class="form-group">
-      <label>Contraseña</label>
-      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    <div id="lm-crear" style="display:none">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="signup-email" placeholder="tu@email.com" autocomplete="email" inputmode="email">
+      </div>
+      <div class="form-group">
+        <label>Creá una contraseña</label>
+        <input type="password" id="signup-pass" placeholder="mínimo 6 caracteres" autocomplete="new-password">
+      </div>
+      <button class="btn-login" id="btn-signup" onclick="signupWithEmail()">Crear mi cuenta gratis</button>
+      <div style="font-size:12px;opacity:.6;text-align:center;margin-top:10px;line-height:1.6">Gratis para siempre: Mi Cartera, tu plan de Disciplina, noticias y herramientas. Sin tarjeta.</div>
     </div>
-    <div style="text-align:right;margin:-4px 0 14px">
-      <a href="#" onclick="resetPassword(event)" style="font-size:12px;color:var(--gold);text-decoration:none">¿Olvidaste tu contraseña?</a>
-    </div>
-    <button class="btn-login" onclick="loginWithEmail()">Ingresar</button>
     <div class="login-2fa">🔒 Conexión cifrada · Firebase Authentication de Google</div>
-    <div class="login-signup">¿No tenés cuenta? <a href="#" onclick="openContacto()">Contactanos</a></div>
+    <div class="login-signup" id="lm-alt">¿No tenés cuenta? <a href="#" onclick="loginModo('crear');return false">Creala gratis en un minuto</a></div>
   </div>
 </div>
 
@@ -828,10 +860,51 @@ const savedTheme=localStorage.getItem('valtia-theme');
 if(savedTheme)document.documentElement.dataset.theme=savedTheme;
 
 // ── LOGIN / MODAL ──
-function openLogin(e){if(e)e.preventDefault();document.getElementById('loginModal').classList.add('open')}
+function openLogin(e,modo){if(e)e.preventDefault();document.getElementById('loginModal').classList.add('open');if(modo)loginModo(modo)}
 function closeLogin(){document.getElementById('loginModal').classList.remove('open')}
 document.getElementById('loginModal').addEventListener('click',function(e){if(e.target===this)closeLogin()})
 function openContacto(){closeLogin();document.getElementById('contacto')?.scrollIntoView({behavior:'smooth'})}
+// pestañas Ingresar / Crear cuenta del modal
+function loginModo(m){
+  const crear=m==='crear';
+  document.getElementById('lm-ingresar').style.display=crear?'none':'';
+  document.getElementById('lm-crear').style.display=crear?'':'none';
+  document.getElementById('lm-tab-ingresar').classList.toggle('on',!crear);
+  document.getElementById('lm-tab-crear').classList.toggle('on',crear);
+  document.getElementById('lm-alt').innerHTML=crear
+    ?'¿Ya tenés cuenta? <a href="#" onclick="loginModo(\'ingresar\');return false">Ingresá</a>'
+    :'¿No tenés cuenta? <a href="#" onclick="loginModo(\'crear\');return false">Creala gratis en un minuto</a>';
+  const box=document.getElementById('login-error');if(box)box.remove();
+  const bi=document.getElementById('btn-ingresar'),bs=document.getElementById('btn-signup');
+  if(bi){bi.disabled=false;bi.style.opacity='1';bi.textContent='Ingresar';}
+  if(bs){bs.disabled=false;bs.style.opacity='1';bs.textContent='Crear mi cuenta gratis';}
+}
+// stubs: los handlers reales llegan cuando termina de cargar el modulo de
+// Firebase (los pisa al definirse). Si el usuario clickea antes (red lenta,
+// gstatic bloqueado) damos feedback en vez de un ReferenceError mudo.
+['loginWithGoogle','loginWithEmail','signupWithEmail','resetPassword','waitlistPro','reenviarVerificacion'].forEach(function(n){
+  window[n]=function(e){
+    if(e&&e.preventDefault)e.preventDefault();
+    var aviso='Conectando con el servidor… esperá unos segundos y volvé a intentar.';
+    if(n==='waitlistPro'){
+      var wl=document.getElementById('wl-msg');
+      if(wl){wl.style.color='#ef9a9a';wl.textContent=aviso;}
+      return;
+    }
+    var m=document.querySelector('#loginModal .modal');
+    var b=document.getElementById('login-error');
+    if(!b&&m){b=document.createElement('div');b.id='login-error';b.style.cssText='margin-top:10px;font-size:13px;color:#ef5350;text-align:center;line-height:1.5';m.appendChild(b);}
+    if(b)b.textContent=aviso;
+  };
+});
+// llegada desde otra página: index.html?login=1 abre el modal (login=crear, la pestaña de registro)
+(function(){
+  const q=new URLSearchParams(location.search);
+  if(q.get('login')){
+    openLogin(null,q.get('login')==='crear'?'crear':null);
+    history.replaceState({},'',location.pathname+location.hash);
+  }
+})();
 
 // ── CHIP DE USUARIO (nav) ──
 function toggleUserMenu(e){e.preventDefault();e.stopPropagation();document.getElementById('nav-user-menu').classList.toggle('open')}
@@ -848,14 +921,18 @@ function updateNavUser(user,isAdmin){
   // links comerciales: se ocultan cuando ya sos cliente (foco en el uso)
   const mkt=[...document.querySelectorAll('.nav-links a')].filter(a=>{
     const h=a.getAttribute('href')||'';
-    return h.includes('#servicios')||h.includes('#planes')||h.includes('#contacto');
+    return h.includes('#servicios')||h.includes('#contacto');
   });
+  // "Planes" queda siempre visible; con sesion el ancla #planes no existe
+  // (la home esta oculta), asi que pasa a la pagina standalone
+  const pl=document.querySelector('.nav-links a[href="#planes"],.nav-links a[href="planes.html"]');
   if(user){
     box.style.display='block';
     cta.style.display='';
     cta.textContent='Mi Panel';
     cta.setAttribute('onclick','goPortal(event)');
     mkt.forEach(a=>a.style.display='none');
+    if(pl)pl.setAttribute('href','planes.html');
     const name=user.displayName||user.email.split('@')[0];
     document.getElementById('nav-username').textContent=name.split(' ')[0];
     document.getElementById('nav-avatar').textContent=(name[0]||'U').toUpperCase();
@@ -863,10 +940,11 @@ function updateNavUser(user,isAdmin){
     document.getElementById('nav-user-portal').textContent=isAdmin?'Panel de gestión':'Mi portal';
   }else{
     cta.style.display='';
-    cta.textContent='Acceso Cliente';
+    cta.textContent='Ingresar / Crear cuenta';
     cta.setAttribute('onclick','openLogin(event)');
     box.style.display='none';
     mkt.forEach(a=>a.style.display='');
+    if(pl)pl.setAttribute('href','#planes');
   }
 }
 // loginWithGoogle, loginWithEmail, logout, showHome handled by Firebase module
@@ -920,9 +998,9 @@ function updateChartTheme(){
 
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider,
-           onAuthStateChanged, signOut, sendPasswordResetEmail,
-           signInWithRedirect, getRedirectResult } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup,
+           GoogleAuthProvider, onAuthStateChanged, signOut, sendPasswordResetEmail,
+           sendEmailVerification, signInWithRedirect, getRedirectResult } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
   import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc,
            query, where, orderBy, updateDoc, serverTimestamp, onSnapshot }
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -958,10 +1036,12 @@ function updateChartTheme(){
   // ── AUTH STATE LISTENER ──
   onAuthStateChanged(auth, async (user) => {
     if (user) {
+      closeLogin();   // si llegó con ?login=1 ya logueado, el modal sobra
       const isAdmin = user.email === ADMIN_EMAIL;
       updateNavUser(user, isAdmin);
       const userData = await getUserData(user.email, isAdmin);
       enterPortal(user, userData, isAdmin);
+      avisoVerificacion(user);
     } else {
       updateNavUser(null, false);
       showHome();
@@ -1002,7 +1082,9 @@ function updateChartTheme(){
     'auth/too-many-requests': 'Demasiados intentos. Esperá unos minutos y probá de nuevo.',
     'auth/invalid-credential': 'Email o contraseña incorrectos.',
     'auth/network-request-failed': 'Sin conexión — revisá tu internet e intentá de nuevo.',
-    'auth/user-disabled': 'Esta cuenta está deshabilitada. Escribinos por WhatsApp.',
+    'auth/user-disabled': 'Esta cuenta está deshabilitada. Escribinos a valtyaanalytics@gmail.com.',
+    'auth/email-already-in-use': 'Ya existe una cuenta con ese email — pasá a la pestaña "Ingresar".',
+    'auth/weak-password': 'La contraseña necesita al menos 6 caracteres.',
   };
 
   // ── LOGIN WITH GOOGLE ──
@@ -1032,11 +1114,57 @@ function updateChartTheme(){
     if (!email) { showLoginMsg('Completá tu email.', 'error'); document.getElementById('login-email').focus(); return; }
     if (!pass) { showLoginMsg('Completá tu contraseña.', 'error'); document.getElementById('login-pass').focus(); return; }
     try {
-      showLoginLoading(true);
+      showLoginLoading(true, false);
       await signInWithEmailAndPassword(auth, email, pass);
     } catch(e) {
-      showLoginLoading(false);
       showLoginMsg(AUTH_MSGS[e.code] || 'Error al iniciar sesión.', 'error');
+    } finally {
+      showLoginLoading(false, false);
+    }
+  };
+
+  // ── CREAR CUENTA (registro gratis por email) ──
+  window.signupWithEmail = async function() {
+    clearLoginMsg();
+    const email = document.getElementById('signup-email').value.trim();
+    const pass = document.getElementById('signup-pass').value;
+    if (!email) { showLoginMsg('Completá tu email.', 'error'); document.getElementById('signup-email').focus(); return; }
+    if (!pass || pass.length < 6) { showLoginMsg('Elegí una contraseña de al menos 6 caracteres.', 'error'); document.getElementById('signup-pass').focus(); return; }
+    try {
+      showLoginLoading(true, true);
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      try { await sendEmailVerification(cred.user); } catch(e2) {}
+      // onAuthStateChanged toma la sesión nueva y entra al portal solo
+    } catch(e) {
+      showLoginMsg(AUTH_MSGS[e.code] || 'No se pudo crear la cuenta. Probá de nuevo.', 'error');
+    } finally {
+      showLoginLoading(false, true);
+    }
+  };
+
+  // ── LISTA DE ESPERA PRO (captura en página, sin mailto) ──
+  window.waitlistPro = async function(e) {
+    if (e) e.preventDefault();
+    const inp = document.getElementById('wl-email');
+    const msg = document.getElementById('wl-msg');
+    const email = (inp.value || '').trim();
+    if (!/.+@.+\..+/.test(email) || email.length > 119) {
+      msg.style.color = '#ef9a9a';
+      msg.textContent = 'Escribí un email válido.';
+      inp.focus();
+      return;
+    }
+    try {
+      await addDoc(collection(db, 'waitlistPro'), {
+        email, fecha: new Date().toISOString().slice(0, 10),
+        origen: location.pathname.includes('planes') ? 'planes' : 'index',
+      });
+      msg.style.color = '#a5d6a7';
+      msg.textContent = 'Listo, sos parte de la lista ✓ Te escribimos apenas abra el cobro, con el precio de lanzamiento congelado.';
+      inp.value = '';
+    } catch(err) {
+      msg.style.color = '#ef9a9a';
+      msg.textContent = 'No se pudo guardar — probá de nuevo en un rato.';
     }
   };
 
@@ -1078,24 +1206,68 @@ function updateChartTheme(){
     el.addEventListener('keydown', ev => { if (ev.key === 'Enter') window.loginWithEmail(); });
     el.addEventListener('input', clearLoginMsg);
   });
+  ['signup-email','signup-pass'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('keydown', ev => { if (ev.key === 'Enter') window.signupWithEmail(); });
+    el.addEventListener('input', clearLoginMsg);
+  });
 
   // ── LOGOUT ──
   window.logout = async function() {
     await signOut(auth);
   };
 
+  // ── AVISO DE EMAIL SIN VERIFICAR (cuentas nuevas por email) ──
+  // Sin verificar, las reglas de Firestore bloquean Mi Cartera/Disciplina:
+  // el banner explica el porque y permite reenviar el mail.
+  function avisoVerificacion(user) {
+    const viejo = document.getElementById('aviso-verif');
+    if (viejo) viejo.remove();
+    if (!user || user.emailVerified) return;
+    const portal = document.getElementById('portal-view');
+    if (!portal) return;
+    const d = document.createElement('div');
+    d.id = 'aviso-verif';
+    d.style.cssText = 'margin:14px clamp(16px,4vw,52px) 0;padding:12px 16px;border:1px solid rgba(224,169,62,.5);border-left:3px solid #E0A93E;border-radius:8px;font-size:13.5px;line-height:1.6;background:rgba(224,169,62,.08)';
+    d.innerHTML = 'Te mandamos un mail a <b>' + user.email.replace(/</g, '&lt;') + '</b> para verificar tu cuenta. Hasta verificarla, Mi Cartera y el plan de Disciplina quedan bloqueados. ' +
+      '<a href="#" onclick="reenviarVerificacion(event)" style="color:#B08A3E;font-weight:600">Reenviar mail</a> · ' +
+      '<a href="#" onclick="location.reload()" style="color:#B08A3E;font-weight:600">Ya la verifiqué</a>';
+    portal.prepend(d);
+  }
+  window.reenviarVerificacion = async function(e) {
+    if (e) e.preventDefault();
+    try {
+      await sendEmailVerification(auth.currentUser);
+      alert('Mail reenviado a ' + auth.currentUser.email + '. Revisá también spam.');
+    } catch(err) {
+      alert('No se pudo reenviar — esperá unos minutos y probá de nuevo.');
+    }
+  };
+
   // ── UI HELPERS ──
-  function showLoginLoading(show) {
-    const btn = document.querySelector('.btn-login');
-    if (btn) { btn.textContent = show ? 'Ingresando…' : 'Ingresar'; btn.disabled = show; btn.style.opacity = show ? '.65' : '1'; }
+  function showLoginLoading(show, crear) {
+    if (crear === undefined) crear = modoCrear();
+    const btn = document.getElementById(crear ? 'btn-signup' : 'btn-ingresar') || document.querySelector('.btn-login');
+    if (btn) {
+      btn.textContent = show ? (crear ? 'Creando tu cuenta…' : 'Ingresando…')
+                             : (crear ? 'Crear mi cuenta gratis' : 'Ingresar');
+      btn.disabled = show; btn.style.opacity = show ? '.65' : '1';
+    }
   }
 
+  // ¿está abierta la pestaña "Crear cuenta"? (el modal tiene dos formularios)
+  function modoCrear() {
+    const c = document.getElementById('lm-crear');
+    return !!c && c.style.display !== 'none';
+  }
   function showLoginMsg(msg, kind) {
     let box = document.getElementById('login-error');
     if (!box) {
       box = document.createElement('div');
       box.id = 'login-error';
-      document.querySelector('.btn-login').after(box);
+      (document.getElementById(modoCrear() ? 'btn-signup' : 'btn-ingresar')
+        || document.querySelector('.btn-login')).after(box);
     }
     box.style.cssText = kind === 'ok'
       ? 'background:rgba(46,125,50,.1);border:1px solid rgba(46,125,50,.3);border-radius:6px;padding:10px 12px;font-size:13px;color:#2E7D32;margin-top:10px;text-align:center;line-height:1.5'
@@ -1131,7 +1303,7 @@ function updateChartTheme(){
     // sesión, admin incluido). Se carga aparte para no demorar el portal.
     const mcTab = document.getElementById('micartera-tab');
     if (mcTab) mcTab.style.display = 'inline';
-    import('./mi-cartera.js?v=6')
+    import('./mi-cartera.js?v=7')
       .then(m => m.initMiCartera(user, document.getElementById('tab-micartera')))
       .catch(() => {});
   }
@@ -1268,5 +1440,6 @@ function updateChartTheme(){
 </script>
 <script type="module" src="fondo-live.js?v=23"></script>
 
+<script src="nav-menu.js?v=1"></script>
 </body>
 </html>

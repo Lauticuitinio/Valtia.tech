@@ -11,13 +11,22 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Con el registro por email abierto, cualquiera puede crear una cuenta
+    // para un email que no le pertenece. Todo lo que se gatea POR IDENTIDAD
+    // (datos del inversor, acceso PRO, cartera propia) exige ademas el email
+    // VERIFICADO: sin esto, un atacante reclama el mail de un cliente que
+    // todavia no creo su cuenta y lee sus datos.
+    function esVerificado() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
     // Cliente con acceso PRO: dado de alta a mano por el admin en
     // usuariosPro/{email} (marcar_pro.py) o cliente del fondo con doc en
     // inversores/{email}. Hasta que exista el cobro online (LLC + pasarela),
     // el login solo NO abre el contenido pago.
     function esCliente() {
       return isAdmin()
-        || (request.auth != null && (
+        || (esVerificado() && (
              exists(/databases/$(database)/documents/usuariosPro/$(request.auth.token.email))
           || exists(/databases/$(database)/documents/inversores/$(request.auth.token.email))));
     }
@@ -26,14 +35,15 @@ service cloud.firestore {
     // Solo el admin puede leer todos los documentos.
     // Cada cliente solo puede leer y actualizar su propio documento.
     match /inversores/{email} {
-      allow read: if isAdmin() || (isAuthenticated() && request.auth.token.email == email);
+      allow read: if isAdmin() || (esVerificado() && request.auth.token.email == email);
       allow write: if isAdmin();
 
       // ── MI CARTERA ──
       // Las posiciones que carga el propio cliente para su seguimiento.
-      // Solo él (y el admin) las ve y las administra.
+      // Solo él (y el admin) las ve y las administra. Email verificado:
+      // ver el comentario de esVerificado().
       function esDuenio() {
-        return isAdmin() || (isAuthenticated() && request.auth.token.email == email);
+        return isAdmin() || (esVerificado() && request.auth.token.email == email);
       }
       match /cartera/{posId} {
         allow read, delete: if esDuenio();
@@ -65,7 +75,7 @@ service cloud.firestore {
     // Clientes autenticados pueden crear solicitudes propias y leer las suyas.
     // Solo el admin puede leer todas, actualizar estado (aprobar/rechazar).
     match /solicitudes/{solicitudId} {
-      allow create: if isAuthenticated()
+      allow create: if esVerificado()
                     && request.resource.data.email == request.auth.token.email
                     && request.resource.data.tipo in ['deposito', 'rescate']
                     && request.resource.data.monto is number
@@ -73,7 +83,7 @@ service cloud.firestore {
                     && request.resource.data.estado == 'pendiente';
 
       allow read: if isAdmin()
-                  || (isAuthenticated() && resource.data.email == request.auth.token.email);
+                  || (esVerificado() && resource.data.email == request.auth.token.email);
 
       allow update: if isAdmin()
                     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado'])
@@ -191,6 +201,21 @@ service cloud.firestore {
       allow read, update: if isAdmin();
     }
 
+    // ── LISTA DE ESPERA DE VALTIA PRO ──
+    // Captura del interesado en la sección de planes (sin login). Igual que
+    // newsletter: cualquiera crea su registro con forma de email; la lista
+    // solo la ve el admin. Sin lectura pública no se puede enumerar.
+    match /waitlistPro/{docId} {
+      allow create: if request.resource.data.keys().hasOnly(['email', 'fecha', 'origen'])
+        && request.resource.data.email is string
+        && request.resource.data.email.matches('.+@.+[.].+')
+        && request.resource.data.email.size() < 120
+        && request.resource.data.fecha is string
+        && request.resource.data.origen is string
+        && request.resource.data.origen.size() < 40;
+      allow read, update, delete: if isAdmin();
+    }
+
     // ── INFORMES DE RESEARCH ──
     // Los "publico" los ve cualquiera; los "clientes" requieren acceso PRO
     // (alta manual hasta que exista el cobro online).
@@ -204,7 +229,7 @@ service cloud.firestore {
     // Cada usuario puede consultar SU propio doc (para que la web sepa si
     // destapar el contenido); la lista completa solo la ve el admin.
     match /usuariosPro/{email} {
-      allow get: if isAdmin() || (request.auth != null && request.auth.token.email == email);
+      allow get: if isAdmin() || (esVerificado() && request.auth.token.email == email);
       allow list: if isAdmin();
       allow write: if false;
     }

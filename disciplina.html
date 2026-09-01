@@ -111,7 +111,9 @@ footer{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;font-
     <a href="cartera.html">Carteras</a>
     <a href="disciplina.html" style="color:var(--gold)">Disciplina</a>
     <a href="noticias.html">Noticias</a>
+    <a href="informes.html">Informes</a>
     <a href="herramientas.html">Herramientas</a>
+    <a href="planes.html">Planes</a>
     <button class="theme-btn" onclick="tg()" title="Cambiar tema"></button>
   </div>
 </nav>
@@ -260,7 +262,7 @@ function intro(publico) {
     </div>
     ${publico ? `<div class="gate"><b>Armá tu plan con tu cuenta</b>
       <p>El plan, la racha y el historial son tuyos y viajan con tu cuenta. Entrá para definir tu regla y arrancar este mes.</p>
-      <a class="btn" href="index.html" style="text-decoration:none;display:inline-block">Ingresá con tu cuenta →</a></div>` : ""}`;
+      <a class="btn" href="index.html?login=crear" style="text-decoration:none;display:inline-block">Ingresá con tu cuenta →</a></div>` : ""}`;
 }
 
 function candidatas(max) {
@@ -439,6 +441,15 @@ async function render() {
         <footer>Disciplina Valtia es una herramienta de organización personal. La lectura del radar es análisis de carácter general y educativo, no constituye asesoramiento financiero personalizado.</footer>`;
       return;
     }
+    if (!_user.emailVerified) {
+      // sin verificar, las reglas de Firestore bloquean el plan del usuario
+      $("#main").innerHTML = intro(false) + `
+        <div class="gate"><b>Verificá tu email para activar tu plan</b>
+        <p>Al crear la cuenta te mandamos un mail de verificación a <b>${esc(_user.email)}</b>.
+        Abrilo, tocá el link y volvé — tu plan, tu racha y Mi Cartera se activan al instante. Revisá también spam.</p>
+        <button class="btn" onclick="location.reload()">Ya la verifiqué</button></div>`;
+      return;
+    }
     await cargarUsuario();
     vistaPlan();
   } catch (e) {
@@ -447,6 +458,7 @@ async function render() {
 }
 onAuthStateChanged(getAuth(app), u => { _user = u; render(); });
 </script>
-<script type="module" src="nav-auth.js?v=4"></script>
+<script type="module" src="nav-auth.js?v=5"></script>
+<script src="nav-menu.js?v=1"></script>
 </body>
 </html>

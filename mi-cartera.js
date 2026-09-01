@@ -503,6 +503,14 @@ export async function initMiCartera(user, el) {
   if (!user || !el) return;
   _user = user; _el = el;
   asegurarEstilo();
+  if (!user.emailVerified) {
+    // sin verificar, las reglas de Firestore bloquean la cartera del usuario
+    el.innerHTML = `<div class="portal-title">Mi cartera</div>
+      <div class="mc-empty"><h4>Verificá tu email para activar Mi Cartera</h4>
+      <p>Te mandamos un mail de verificación a <b>${esc(user.email)}</b>. Abrilo, tocá el link
+      y recargá la página — tus posiciones y el plan de Disciplina se activan al instante.</p></div>`;
+    return;
+  }
   el.innerHTML = `<div class="portal-title">Mi cartera</div><p style="color:var(--sub);font-size:14px">Cargando tus posiciones…</p>`;
   try {
     await Promise.all([leerTodo(), cargarFx()]);

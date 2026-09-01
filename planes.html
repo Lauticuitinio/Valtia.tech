@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planes — Valtia Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0D1B2A;--gold:#B8975A;--gold2:#D4AF6E;
+  --text-d:#F0EDE8;--sub-d:rgba(240,237,232,.55);--muted-d:rgba(240,237,232,.35);
+  --text-l:#1A2B3C;--sub-l:#4A5A6C;--muted-l:#8A9BAD;
+  --bg-d:#0D1B2A;--bg3-d:#152336;--bg-l:#F5F2EC;--bg3-l:#EDE9E0;
+  --border-d:rgba(184,151,90,.14);--border-l:rgba(26,58,92,.12);
+  --card-d:#101F31;--card-l:#FFFFFF;
+}
+[data-theme="dark"]{--bg:var(--bg-d);--bg3:var(--bg3-d);--text:var(--text-d);--sub:var(--sub-d);--muted:var(--muted-d);--border:var(--border-d);--card:var(--card-d);--greenTx:#4caf50;--redTx:#ef5350}
+[data-theme="light"]{--bg:var(--bg-l);--bg3:var(--bg3-l);--text:var(--text-l);--sub:var(--sub-l);--muted:var(--muted-l);--border:var(--border-l);--card:var(--card-l);--greenTx:#2E7D32;--redTx:#C62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;min-height:100vh}
+a{color:inherit}
+nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px clamp(16px,4vw,52px);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:50}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand-name{font-family:'Cormorant Garamond',serif;font-size:19px;letter-spacing:.14em;text-transform:uppercase}
+.brand-name em{color:var(--gold);font-style:normal}
+.nav-links{display:flex;gap:20px;align-items:center;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.nav-links a{text-decoration:none;color:var(--sub)}
+.nav-links a:hover{color:var(--gold)}
+.theme-btn{width:36px;height:20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;position:relative;flex-shrink:0}
+.theme-btn::after{content:'';position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--gold);transition:transform .2s}
+[data-theme="light"] .theme-btn::after{transform:translateX(16px)}
+.top-volver{max-width:1080px;margin:0 auto;padding:20px clamp(16px,3vw,40px) 0}
+.volver{font-family:'Jost',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);background:none;border:1px solid var(--border);border-radius:7px;padding:8px 14px;cursor:pointer}
+.volver:hover{color:var(--gold);border-color:var(--gold)}
+main{max-width:1080px;margin:0 auto;padding:34px clamp(16px,3vw,40px) 70px}
+.eye{font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.eye::before{content:'';display:block;width:32px;height:1px;background:var(--gold);opacity:.6}
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,4.5vw,46px);font-weight:400;line-height:1.1;margin-bottom:12px}
+h1 em{font-style:italic;color:var(--gold2)}
+.sub{color:var(--sub);font-size:15px;line-height:1.75;max-width:680px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-top:36px}
+.plan{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:26px 26px 28px;display:flex;flex-direction:column;gap:0}
+.plan.pro{border-color:var(--gold)}
+.plan .tag{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:9px}
+.plan .tag .rec{font-size:8.5px;background:var(--gold);color:#0D1B2A;border-radius:99px;padding:3px 9px;letter-spacing:.08em}
+.plan .precio{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:600;line-height:1}
+.plan .precio small{font-family:'Jost',sans-serif;font-size:12.5px;font-weight:400;color:var(--muted)}
+.plan .nota{font-size:12px;color:var(--muted);margin:6px 0 18px;line-height:1.5}
+.plan .cta{display:block;text-align:center;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:13px;border-radius:9px;text-decoration:none;cursor:pointer;border:none;font-family:'Jost',sans-serif}
+.cta.dorada{background:var(--gold);color:#0D1B2A}
+.cta.dorada:hover{background:var(--gold2)}
+.cta.suave{background:var(--bg3);color:var(--text)}
+.cta.suave:hover{color:var(--gold)}
+.plan ul{list-style:none;margin-top:20px;padding-top:18px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:11px}
+.plan li{font-size:13.5px;color:var(--sub);line-height:1.55;padding-left:22px;position:relative}
+.plan li::before{content:'✓';position:absolute;left:0;color:var(--gold);font-weight:600}
+.wl{display:flex;gap:8px}
+.wl input{flex:1;min-width:0;padding:12px 13px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:'Jost',sans-serif;font-size:14px;outline:none}
+.wl input:focus{border-color:var(--gold)}
+.wl button{white-space:nowrap;padding:12px 16px;border-radius:9px}
+#wl-msg{font-size:12.5px;margin-top:9px;line-height:1.5}
+.sec{display:flex;align-items:center;gap:12px;margin:48px 0 16px;font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+.sec::before{content:'';display:block;width:32px;height:1px;background:var(--gold);opacity:.6}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+details{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:16px 20px;margin-bottom:10px}
+summary{cursor:pointer;font-size:14.5px;font-weight:500;list-style:none}
+summary::-webkit-details-marker{display:none}
+details p{font-size:13.5px;color:var(--sub);line-height:1.7;margin-top:10px;max-width:70ch}
+footer{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;font-size:11px;color:var(--muted);line-height:1.9;max-width:900px}
+</style>
+</head>
+<body>
+<nav>
+  <a class="brand" href="index.html">
+    <svg width="30" height="30" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <span class="brand-name">VAL<em>T</em>IA</span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Inicio</a>
+    <a href="cartera.html">Carteras</a>
+    <a href="disciplina.html">Disciplina</a>
+    <a href="noticias.html">Noticias</a>
+    <a href="informes.html">Informes</a>
+    <a href="herramientas.html">Herramientas</a>
+    <a href="planes.html" style="color:var(--gold)">Planes</a>
+    <button class="theme-btn" onclick="tg()" title="Cambiar tema"></button>
+  </div>
+</nav>
+<div class="top-volver"><button class="volver" onclick="volver()">← Volver</button></div>
+<main>
+  <div class="eye">Planes y precios</div>
+  <h1>Elegí tu acceso <em>a Valtia</em></h1>
+  <p class="sub">Empezá gratis y subí cuando el research te haga falta. Sin permanencia, sin backtests inflados:
+  todo lo que ves —carteras, radar, informes— se construye con precios reales desde el día del lanzamiento.</p>
+
+  <div class="grid">
+    <div class="plan">
+      <div class="tag" style="color:var(--greenTx)">Gratis</div>
+      <div class="precio">USD 0 <small>para siempre</small></div>
+      <div class="nota">Sin tarjeta, sin vencimiento</div>
+      <a class="cta suave" href="index.html?login=crear">Crear mi cuenta gratis</a>
+      <ul>
+        <li>Cartera Top 10 S&amp;P 500 completa, con tesis y rotaciones</li>
+        <li>Mi Cartera: seguimiento de tus posiciones con la lectura Valtia</li>
+        <li>Plan de Disciplina mensual guiado por el radar</li>
+        <li>Noticias, fichas de activo y newsletter diario</li>
+        <li>Cotizaciones en vivo y calculadoras base</li>
+      </ul>
+    </div>
+    <div class="plan pro">
+      <div class="tag" style="color:var(--gold2)">Valtia PRO <span class="rec">Recomendado</span></div>
+      <div class="precio">USD 19 <small>/ mes</small></div>
+      <div class="nota">Suscripciones online muy pronto — anotándote congelás el precio de lanzamiento</div>
+      <div class="wl">
+        <input type="email" id="wl-email" placeholder="tu@email.com" autocomplete="email" inputmode="email">
+        <button class="cta dorada" onclick="waitlistPro(event)">Anotarme</button>
+      </div>
+      <div id="wl-msg"></div>
+      <ul>
+        <li>Todas las carteras vivas, con cada rotación fechada y justificada</li>
+        <li>Radar de valuación completo: 34 activos con puntaje y veredicto diario</li>
+        <li>Informes de research completos</li>
+        <li>Panel de bonos completo: curva soberana con TIR, paridad y duration</li>
+        <li>Fichas de activo destapadas, con informe y radar</li>
+        <li>Historial completo de decisiones</li>
+      </ul>
+    </div>
+    <div class="plan">
+      <div class="tag" style="color:var(--gold)">Cartera a medida</div>
+      <div class="precio">A consultar</div>
+      <div class="nota">Cupos limitados: atención directa del gestor</div>
+      <a class="cta suave" href="mailto:valtyaanalytics@gmail.com?subject=Entrevista%20cartera%20a%20medida">Solicitar entrevista</a>
+      <ul>
+        <li>Todo lo de Valtia PRO incluido</li>
+        <li>Cartera armada según tu perfil y broker</li>
+        <li>Revisión periódica de la cartera</li>
+        <li>Línea directa con el equipo</li>
+        <li>Reunión 1 a 1 mensual</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sec">Preguntas frecuentes</div>
+  <details open><summary>¿Cómo pago Valtia PRO hoy?</summary>
+    <p>Estamos terminando la pasarela de cobro online. Mientras tanto, anotándote en la lista te reservamos el
+    precio de lanzamiento de USD 19 y te escribimos apenas abra — el alta inicial se gestiona directo con nosotros.</p></details>
+  <details><summary>¿Cómo cancelo?</summary>
+    <p>Sin permanencia y sin dar explicaciones: hoy con un mail alcanza. Cuando lancemos las suscripciones online
+    vas a poder cancelar desde tu cuenta, manteniendo el acceso hasta el final del período pagado.</p></details>
+  <details><summary>¿Garantizan resultados?</summary>
+    <p>No. Los mercados implican riesgo y los rendimientos pasados no garantizan resultados futuros. Lo que ofrecemos
+    es análisis riguroso y decisiones fundamentadas, fechadas y verificables — nunca backtests.</p></details>
+
+  <footer>Valtia Analytics — Análisis de carácter general y educativo. No constituye asesoramiento financiero
+  personalizado ni oferta pública de valores. Invertir implica riesgo de pérdida del capital.</footer>
+</main>
+
+<script>
+const saved = localStorage.getItem('valtia-theme');
+if (saved) document.documentElement.dataset.theme = saved;
+function tg() {
+  const h = document.documentElement;
+  h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('valtia-theme', h.dataset.theme);
+}
+function volver() {
+  try {
+    if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
+      history.back();
+      return;
+    }
+  } catch (e) {}
+  location.href = 'index.html';
+}
+</script>
+<script type="module">
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, addDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const app = getApps().length ? getApp() : initializeApp({
+  apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
+  authDomain: 'valtia-analytics.firebaseapp.com',
+  projectId: 'valtia-analytics',
+});
+const db = getFirestore(app);
+window.waitlistPro = async function (e) {
+  if (e) e.preventDefault();
+  const inp = document.getElementById('wl-email');
+  const msg = document.getElementById('wl-msg');
+  const email = (inp.value || '').trim();
+  if (!/.+@.+\..+/.test(email) || email.length > 119) {
+    msg.style.color = 'var(--redTx)';
+    msg.textContent = 'Escribí un email válido.';
+    inp.focus();
+    return;
+  }
+  try {
+    await addDoc(collection(db, 'waitlistPro'), {
+      email, fecha: new Date().toISOString().slice(0, 10), origen: 'planes',
+    });
+    msg.style.color = 'var(--greenTx)';
+    msg.textContent = 'Listo, sos parte de la lista ✓ Te escribimos apenas abra el cobro, con el precio congelado.';
+    inp.value = '';
+  } catch (err) {
+    msg.style.color = 'var(--redTx)';
+    msg.textContent = 'No se pudo guardar — probá de nuevo en un rato.';
+  }
+};
+</script>
+<script type="module" src="nav-auth.js?v=5"></script>
+<script src="nav-menu.js?v=1"></script>
+</body>
+</html>

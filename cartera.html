@@ -107,7 +107,9 @@ footer{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;font-
     <a href="cartera.html">Carteras</a>
     <a href="disciplina.html">Disciplina</a>
     <a href="noticias.html">Noticias</a>
+    <a href="informes.html">Informes</a>
     <a href="herramientas.html">Herramientas</a>
+    <a href="planes.html">Planes</a>
     <button class="theme-btn" onclick="tg()" title="Cambiar tema"></button>
   </div>
 </nav>
@@ -250,7 +252,7 @@ function gateCard() {
       <span class="badge" style="background:rgba(184,151,90,.14);color:var(--gold)">Suscriptores</span>
       <h3 style="margin:0">Cartera IA y Semiconductores</h3>
       <p style="margin:0">Las carteras temáticas —con sus posiciones, tesis y cada rotación fechada— están reservadas para cuentas registradas.</p>
-      <a class="go" href="index.html" style="margin-top:4px">Ingresá o creá tu cuenta →</a>
+      <a class="go" href="index.html?login=crear" style="margin-top:4px">Ingresá o creá tu cuenta →</a>
     </div>`;
 }
 
@@ -394,7 +396,7 @@ async function render() {
       $("#main").innerHTML = _user
         ? `<div class="state">No encontramos esa cartera. <a href="cartera.html" style="color:var(--gold)">Ver todas →</a></div>`
         : `<div class="state">Esta cartera es para suscriptores.<br>
-             <a href="index.html" style="color:var(--gold)">Ingresá con tu cuenta</a> para verla, o
+             <a href="index.html?login=1" style="color:var(--gold)">Ingresá con tu cuenta</a> para verla, o
              <a href="cartera.html" style="color:var(--gold)">mirá las abiertas →</a></div>`;
       return;
     }
@@ -406,6 +408,7 @@ async function render() {
 // el catálogo cambia según haya sesión: se re-renderiza al resolver el auth
 onAuthStateChanged(getAuth(app), u => { _user = u; render(); });
 </script>
-<script type="module" src="nav-auth.js?v=4"></script>
+<script type="module" src="nav-auth.js?v=5"></script>
+<script src="nav-menu.js?v=1"></script>
 </body>
 </html>
