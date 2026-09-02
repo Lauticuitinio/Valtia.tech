@@ -173,8 +173,10 @@ export function calcular(posiciones, precios, cur = _cur, fx = _fx) {
     const actual = px && px.precio != null ? px.precio : null;
     // factor de lámina: los bonos cotizan cada 100 nominales (factor 0,01),
     // las acciones y CEDEARs 1 a 1. Los precios se muestran como cotizan;
-    // el factor solo entra en los totales.
-    const fac = Number(p.factor) > 0 ? Number(p.factor) : 1;
+    // el factor solo entra en los totales. Si la posición no lo trae, se usa
+    // el del doc de precios (el sync lo marca para la renta fija BYMA).
+    const fac = Number(p.factor) > 0 ? Number(p.factor)
+              : (px && Number(px.factor) > 0 ? Number(px.factor) : 1);
     const costo = (Number(p.cantidad) || 0) * (Number(p.precioCompra) || 0) * fac;
     const valor = actual != null ? (Number(p.cantidad) || 0) * actual * fac : null;
     const c = v => convertir(v, moneda, cur, fx);   // a la moneda elegida
