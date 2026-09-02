@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ficha de bono — Valtia Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0D1B2A;--gold:#B8975A;--gold2:#D4AF6E;
+  --text-d:#F0EDE8;--sub-d:rgba(240,237,232,.55);--muted-d:rgba(240,237,232,.35);
+  --text-l:#1A2B3C;--sub-l:#4A5A6C;--muted-l:#8A9BAD;
+  --bg-d:#0D1B2A;--bg3-d:#152336;--bg-l:#F5F2EC;--bg3-l:#EDE9E0;
+  --border-d:rgba(184,151,90,.14);--border-l:rgba(26,58,92,.12);
+  --card-d:#101F31;--card-l:#FFFFFF;
+}
+[data-theme="dark"]{--bg:var(--bg-d);--bg3:var(--bg3-d);--text:var(--text-d);--sub:var(--sub-d);--muted:var(--muted-d);--border:var(--border-d);--card:var(--card-d);--greenTx:#4caf50;--redTx:#ef5350}
+[data-theme="light"]{--bg:var(--bg-l);--bg3:var(--bg3-l);--text:var(--text-l);--sub:var(--sub-l);--muted:var(--muted-l);--border:var(--border-l);--card:var(--card-l);--greenTx:#2E7D32;--redTx:#C62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;min-height:100vh}
+a{color:inherit}
+nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px clamp(16px,4vw,52px);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:50}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand-name{font-family:'Cormorant Garamond',serif;font-size:19px;letter-spacing:.14em;text-transform:uppercase}
+.brand-name em{color:var(--gold);font-style:normal}
+.nav-links{display:flex;gap:20px;align-items:center;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.nav-links a{text-decoration:none;color:var(--sub)}
+.nav-links a:hover{color:var(--gold)}
+.theme-btn{width:36px;height:20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;position:relative;flex-shrink:0}
+.theme-btn::after{content:'';position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--gold);transition:transform .2s}
+[data-theme="light"] .theme-btn::after{transform:translateX(16px)}
+.top-volver{max-width:980px;margin:0 auto;padding:20px clamp(16px,3vw,40px) 0;display:flex;gap:10px;align-items:center}
+.volver{font-family:'Jost',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);background:none;border:1px solid var(--border);border-radius:7px;padding:8px 14px;cursor:pointer}
+.volver:hover{color:var(--gold);border-color:var(--gold)}
+main{max-width:980px;margin:0 auto;padding:26px clamp(16px,3vw,40px) 70px}
+.eye{font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;display:flex;align-items:center;gap:12px}
+.eye::before{content:'';display:block;width:32px;height:1px;background:var(--gold);opacity:.6}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,4.5vw,46px);font-weight:500;line-height:1.05}
+.ley{font-size:9.5px;font-weight:700;letter-spacing:.08em;border:1px solid var(--border);border-radius:4px;padding:3px 8px;color:var(--sub);vertical-align:middle;margin-left:10px}
+.ley.ny{color:var(--gold);border-color:rgba(184,151,90,.5)}
+.px{text-align:right}
+.px .v{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,3.6vw,40px);font-weight:600;font-variant-numeric:tabular-nums;line-height:1}
+.px .s{font-size:12px;color:var(--sub);margin-top:5px}
+.pos{color:var(--greenTx)!important}.neg{color:var(--redTx)!important}.mut{color:var(--muted)!important}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:26px}
+.tile{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px 16px;position:relative}
+.tile::before{content:'';position:absolute;top:0;left:16px;width:22px;height:2px;background:var(--gold)}
+.tile .l{font-size:9px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase;font-weight:600;margin-bottom:7px}
+.tile .v{font-family:'Cormorant Garamond',serif;font-size:clamp(20px,2vw,26px);font-weight:500;font-variant-numeric:tabular-nums;line-height:1}
+.tile .s{font-size:10.5px;color:var(--sub);margin-top:5px}
+.sec{display:flex;align-items:center;gap:12px;margin:30px 0 14px;font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+.sec::before{content:'';display:block;width:32px;height:1px;background:var(--gold);opacity:.6}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.dos{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;align-items:start}
+@media(max-width:760px){.dos{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:9.5px;letter-spacing:.15em;color:var(--muted);padding:11px 16px;border-bottom:1px solid var(--border);text-transform:uppercase;font-weight:600}
+td{padding:9px 16px;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:none}
+.num{text-align:right}
+.calc{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:0 12px 12px 0;padding:18px 20px}
+.calc label{display:block;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.calc input{width:100%;max-width:180px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'Jost',sans-serif;font-size:15px;outline:none}
+.calc input:focus{border-color:var(--gold)}
+.calc .out{margin-top:14px;font-size:13.5px;color:var(--sub);line-height:1.8}
+.calc .out b{color:var(--text);font-size:15px}
+.state{border:1px dashed var(--border);border-radius:14px;text-align:center;padding:60px 20px;color:var(--sub);margin-top:30px}
+.nota{font-size:12px;color:var(--muted);line-height:1.7;margin-top:10px;max-width:70ch}
+footer{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;font-size:11px;color:var(--muted);line-height:1.9;max-width:900px}
+</style>
+</head>
+<body>
+<nav>
+  <a class="brand" href="index.html">
+    <svg width="30" height="30" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <span class="brand-name">VAL<em>T</em>IA</span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Inicio</a>
+    <a href="cartera.html">Carteras</a>
+    <a href="disciplina.html">Disciplina</a>
+    <a href="noticias.html">Noticias</a>
+    <a href="informes.html">Informes</a>
+    <a href="herramientas.html">Herramientas</a>
+    <a href="planes.html">Planes</a>
+    <button class="theme-btn" onclick="tg()" title="Cambiar tema"></button>
+  </div>
+</nav>
+<div class="top-volver">
+  <button class="volver" onclick="volver()">← Volver</button>
+  <a href="herramientas.html" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);text-decoration:none">Panel de bonos completo →</a>
+</div>
+<main id="main">
+  <div class="state">Cargando la ficha…</div>
+</main>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
+  authDomain: 'valtia-analytics.firebaseapp.com',
+  projectId: 'valtia-analytics',
+});
+const db = getFirestore(app);
+
+const saved = localStorage.getItem('valtia-theme');
+if (saved) document.documentElement.dataset.theme = saved;
+window.tg = () => {
+  const h = document.documentElement;
+  h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('valtia-theme', h.dataset.theme);
+};
+window.volver = () => {
+  try {
+    if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
+      history.back();
+      return;
+    }
+  } catch (e) {}
+  location.href = 'herramientas.html';
+};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+const n2 = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const n1 = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const fmtPct = v => (v >= 0 ? "+" : "") + n2.format(v) + "%";
+const cls = v => v > 0.004 ? "pos" : v < -0.004 ? "neg" : "mut";
+const fverde = f => { const [a, m, d] = String(f).slice(0, 10).split("-"); return `${d}/${m}/${a.slice(2)}`; };
+
+/* TIR anual efectiva por bisección sobre los flujos (espejo de bonos_lib.xirr) */
+function xirr(fls, precio, hoyMs) {
+  if (!fls.length || !(precio > 0)) return null;
+  const van = y => fls.reduce((s, [f, m]) =>
+    s + m / Math.pow(1 + y, (new Date(f) - hoyMs) / 86400000 / 365), 0) - precio;
+  let lo = -0.6, hi = 8.0;
+  if (van(lo) < 0 || van(hi) > 0) return null;
+  for (let i = 0; i < 200; i++) {
+    const mid = (lo + hi) / 2;
+    if (van(mid) > 0) lo = mid; else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+/* tasas de una letra a descuento (espejo de bonos_lib.metricas_letra) */
+function tasasLetra(precio, vpv, dias) {
+  if (!(precio > 0) || !(vpv > 0) || !(dias >= 5)) return null;
+  const r = vpv / precio;
+  return { tem: (Math.pow(r, 30 / dias) - 1) * 100,
+           tna: (r - 1) * 365 / dias * 100,
+           tirea: (Math.pow(r, 365 / dias) - 1) * 100 };
+}
+
+const tile = (l, v, s) => `<div class="tile"><div class="l">${l}</div><div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`;
+
+async function render() {
+  const e = (new URLSearchParams(location.search).get("e") || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (!e) { $("#main").innerHTML = `<div class="state">Elegí una especie desde el <a href="herramientas.html" style="color:var(--gold)">panel de bonos →</a></div>`; return; }
+  document.title = e + " — Ficha de bono · Valtia Analytics";
+
+  let panel = null, flujos = null, asof = null;
+  try {
+    const [p, f] = await Promise.all([
+      getDoc(doc(db, "bonosPanel", "latest")),
+      getDoc(doc(db, "bonosFlujos", "latest")),
+    ]);
+    if (p.exists()) { panel = JSON.parse(p.data().json || "{}"); asof = p.data().actualizado_utc; }
+    if (f.exists()) flujos = JSON.parse(f.data().json || "{}");
+  } catch (err) {}
+  if (!panel) { $("#main").innerHTML = `<div class="state">No se pudo cargar el panel de bonos. Probá de nuevo en un rato.</div>`; return; }
+
+  const TIPOS = [
+    ["soberanos", "Bono soberano · USD"],
+    ["bopreal", "Bopreal (BCRA) · USD"],
+    ["tasa_fija", "Letra / Boncap a tasa fija · $"],
+    ["cer", "Bono CER · $ ajusta por inflación"],
+    ["dolar_linked", "Dólar linked · $ ajusta por A3500"],
+  ];
+  let b = null, tipo = null, tipoNombre = "";
+  for (const [k, nom] of TIPOS) {
+    const hit = (panel[k] || []).find(x => x.s === e);
+    if (hit) { b = hit; tipo = k; tipoNombre = nom; break; }
+  }
+  if (!b) { $("#main").innerHTML = `<div class="state">No encontramos la especie <b>${esc(e)}</b> en el panel.<br><br><a href="herramientas.html" style="color:var(--gold)">Ver el panel completo →</a></div>`; return; }
+
+  const enUSD = tipo === "soberanos" || tipo === "bopreal";
+  const mon = enUSD ? "US$" : "$";
+  const fls = (flujos && (flujos[e] || (e.endsWith("D") ? flujos[e.slice(0, -1)] : null))) || null;
+  const hoyMs = Date.now();
+
+  let tiles = "";
+  if (tipo === "tasa_fija") {
+    tiles = [
+      b.tirea != null ? tile("TIREA", n1.format(b.tirea) + "%", "efectiva anual, de mercado") : "",
+      b.tem != null ? tile("TEM", n2.format(b.tem) + "%", "efectiva mensual") : "",
+      b.tna != null ? tile("TNA", n1.format(b.tna) + "%", "simple, 365 días") : "",
+      b.vpv != null ? tile("Paga al vencimiento", "$" + n2.format(b.vpv), "por cada 100 VN") : "",
+      b.dias != null ? tile("Días", b.dias, "al " + fverde(b.vence)) : tile("Vence", fverde(b.vence), ""),
+      b.tem_lic ? tile("TEM de licitación", n2.format(b.tem_lic) + "%", "tasa de emisión") : "",
+    ].join("");
+  } else if (enUSD) {
+    tiles = [
+      b.tir != null ? tile("TIR", n1.format(b.tir) + "%", "efectiva anual (TIREA)") : "",
+      b.paridad != null ? tile("Paridad", n1.format(b.paridad) + "%", "precio / valor técnico") : "",
+      b.md != null ? tile("Duration mod.", n2.format(b.md), "sensibilidad a la tasa") : "",
+      b.dur != null ? tile("Duration", n2.format(b.dur), "Macaulay, años") : "",
+      b.cy != null ? tile("Current yield", n1.format(b.cy) + "%", "cupón vigente / precio") : "",
+      tile("Vence", fverde(b.vence), ""),
+    ].join("");
+  } else {
+    tiles = [
+      tile("Último", mon + n2.format(b.p), "por 100 VN"),
+      b.vence ? tile("Vence", fverde(b.vence), "") : "",
+    ].join("");
+  }
+
+  const filasFlujo = fls ? (() => {
+    let acum = 0;
+    return fls.flujos.map(([f, m]) => {
+      acum += m;
+      return `<tr><td>${fverde(f)}</td><td class="num">US$ ${n2.format(m)}</td><td class="num mut">US$ ${n2.format(acum)}</td></tr>`;
+    }).join("");
+  })() : "";
+
+  const calc = (tipo === "tasa_fija" && b.vpv != null) || (enUSD && fls) ? `
+    <div class="calc">
+      <label>TIR a mi precio — ¿y si pago otra cosa?</label>
+      <input type="number" step="any" min="0" id="mi-precio" value="${b.p}">
+      <div class="out" id="mi-out"></div>
+      <div class="nota">Misma matemática del panel: ${tipo === "tasa_fija" ? "tasas sobre el pago final oficial de la letra" : "TIR efectiva anual (act/365) por bisección sobre los flujos oficiales"}, valuada a hoy.</div>
+    </div>` : "";
+
+  $("#main").innerHTML = `
+    <div class="eye">${tipoNombre}</div>
+    <div class="head">
+      <h1>${esc(e)}${b.ley ? `<span class="ley${b.ley === "NY" ? " ny" : ""}">Ley ${b.ley === "NY" ? "Nueva York" : "Argentina"}</span>` : ""}</h1>
+      <div class="px">
+        <div class="v">${mon}${n2.format(b.p)}</div>
+        <div class="s"><span class="${cls(b.v)}">${fmtPct(b.v)} hoy</span> · por 100 VN${asof ? " · " + new Date(asof.seconds ? asof.seconds * 1000 : asof).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + " hs" : ""}</div>
+      </div>
+    </div>
+    <div class="tiles">${tiles}</div>
+    ${tipo === "cer" || tipo === "dolar_linked" ? `<p class="nota">Las tasas reales de los ${tipo === "cer" ? "bonos CER" : "dólar linked"} van a aparecer acá cuando haya una fuente oficial de condiciones de emisión — en Valtia no se estiman a mano.</p>` : ""}
+    ${fls || calc ? `<div class="sec">${fls ? "Flujos de fondos y calculadora" : "Calculadora"}</div>
+    <div class="dos">
+      ${fls ? `<div class="panel"><table>
+        <thead><tr><th>Fecha de pago</th><th class="num">Por 100 VN</th><th class="num">Acumulado</th></tr></thead>
+        <tbody>${filasFlujo}</tbody></table></div>` : ""}
+      ${calc}
+    </div>
+    ${fls ? `<p class="nota">Cronograma oficial (Dto. 701/2020 / prospecto BCRA): cupones + amortizaciones futuras por cada 100 de valor nominal.</p>` : ""}` : ""}
+    <footer>Análisis de carácter general y educativo — no constituye asesoramiento financiero ni recomendación de compra o venta.
+    Datos: BYMA vía IOL · condiciones de letras de la Secretaría de Finanzas vía ArgentinaDatos.
+    · <a href="terminos.html" style="text-decoration:underline">Términos</a> · <a href="privacidad.html" style="text-decoration:underline">Privacidad</a></footer>`;
+
+  const inp = $("#mi-precio"), out = $("#mi-out");
+  if (inp && out) {
+    const recalc = () => {
+      const px = parseFloat(inp.value);
+      if (!(px > 0)) { out.innerHTML = "Poné un precio mayor a cero."; return; }
+      if (tipo === "tasa_fija") {
+        const t = tasasLetra(px, b.vpv, b.dias);
+        out.innerHTML = t
+          ? `A $${n2.format(px)}: TIREA <b>${n1.format(t.tirea)}%</b> · TEM <b>${n2.format(t.tem)}%</b> · TNA <b>${n1.format(t.tna)}%</b>`
+          : "Sin tasa: la letra está al borde del vencimiento.";
+      } else {
+        const y = xirr(fls.flujos, px, hoyMs);
+        out.innerHTML = y != null
+          ? `A US$${n2.format(px)}: TIR efectiva anual <b>${n1.format(y * 100)}%</b>`
+          : "La TIR no converge con ese precio.";
+      }
+    };
+    inp.addEventListener("input", recalc);
+    recalc();
+  }
+}
+render();
+</script>
+<script type="module" src="nav-auth.js?v=5"></script>
+<script src="nav-menu.js?v=2"></script>
+</body>
+</html>

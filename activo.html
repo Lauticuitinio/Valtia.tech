@@ -425,27 +425,61 @@ try {
   });
   const bxInput = document.getElementById("bx-input");
   const bxPanel = document.getElementById("bx-panel");
+  // bonos y letras en el buscador: se cargan del panel público la primera vez
+  let BONOS_BX = null;
+  async function cargarBonosBx() {
+    if (BONOS_BX) return;
+    BONOS_BX = [];
+    try {
+      const snap = await getDoc(doc(db, "bonosPanel", "latest"));
+      if (!snap.exists()) return;
+      const p = JSON.parse(snap.data().json || "{}");
+      const meter = (arr, nom) => (arr || []).forEach(b =>
+        BONOS_BX.push({ t: b.s, n: nom + (b.vence ? " · vence " + String(b.vence).slice(0, 10) : "") }));
+      meter(p.soberanos, "Soberano USD");
+      meter(p.bopreal, "Bopreal USD");
+      meter(p.tasa_fija, "Lecap / Boncap $");
+      meter(p.cer, "Bono CER $");
+      meter(p.dolar_linked, "Dólar linked $");
+    } catch (e) {}
+  }
   const pintarLista = q => {
     q = (q || "").trim().toLowerCase();
     const items = EMPRESAS.filter(e => !q || e.ticker.toLowerCase().includes(q) || e.nombre.toLowerCase().includes(q));
-    bxPanel.innerHTML = SECTORES.map(s => {
+    const empHtml = SECTORES.map(s => {
       const del = items.filter(e => e.sector === s.k);
       if (!del.length) return "";
       return `<div class="bx-g">${s.n}</div>` + del.map(e =>
         `<div class="bx-it" data-t="${e.ticker}"><span>${esc(e.nombre)}</span><span class="tk">${e.ticker}</span></div>`).join("");
-    }).join("") || '<div class="bx-it">Sin resultados — probá con el ticker</div>';
+    }).join("");
+    const bonosDel = (BONOS_BX || []).filter(b => !q || b.t.toLowerCase().includes(q));
+    const lim = q ? bonosDel : bonosDel.slice(0, 8);
+    const bonosHtml = lim.length
+      ? `<div class="bx-g">Bonos y letras</div>` + lim.map(b =>
+        `<div class="bx-it" data-b="${b.t}"><span>${esc(b.n)}</span><span class="tk">${b.t}</span></div>`).join("")
+      : "";
+    bxPanel.innerHTML = (empHtml + bonosHtml) || '<div class="bx-it">Sin resultados — probá con el ticker (AL30, S30O6…)</div>';
     bxPanel.querySelectorAll(".bx-it[data-t]").forEach(it => it.addEventListener("mousedown", ev => {
       ev.preventDefault();
       location.href = "activo.html?t=" + it.dataset.t;
     }));
+    bxPanel.querySelectorAll(".bx-it[data-b]").forEach(it => it.addEventListener("mousedown", ev => {
+      ev.preventDefault();
+      location.href = "bono.html?e=" + it.dataset.b;
+    }));
   };
-  bxInput.addEventListener("focus", () => { pintarLista(bxInput.value); bxPanel.classList.add("open"); });
-  bxInput.addEventListener("input", () => { pintarLista(bxInput.value); bxPanel.classList.add("open"); });
+  const abrirLista = () => {
+    pintarLista(bxInput.value);
+    bxPanel.classList.add("open");
+    cargarBonosBx().then(() => { if (bxPanel.classList.contains("open")) pintarLista(bxInput.value); });
+  };
+  bxInput.addEventListener("focus", abrirLista);
+  bxInput.addEventListener("input", abrirLista);
   bxInput.addEventListener("blur", () => setTimeout(() => bxPanel.classList.remove("open"), 160));
   bxInput.addEventListener("keydown", ev => {
     if (ev.key === "Enter") {
-      const it = bxPanel.querySelector(".bx-it[data-t]");
-      if (it) location.href = "activo.html?t=" + it.dataset.t;
+      const it = bxPanel.querySelector(".bx-it[data-t], .bx-it[data-b]");
+      if (it) location.href = it.dataset.t ? "activo.html?t=" + it.dataset.t : "bono.html?e=" + it.dataset.b;
     }
     if (ev.key === "Escape") bxPanel.classList.remove("open");
   });

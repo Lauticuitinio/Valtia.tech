@@ -381,26 +381,24 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
           <th>Especie</th><th>Venc.</th><th>Último USD</th><th>% Día</th><th>TIR</th><th>MD</th>
         </tr></thead><tbody></tbody></table></div>
       </div>
+      <div class="widget-box" style="margin-top:16px">
+        <div class="widget-header"><span class="widget-title">Tasa fija (Lecap / Boncap) — la curva en pesos</span><span class="widget-source">$ · por 100 VN · tasas de mercado sobre el pago final oficial</span></div>
+        <div class="bp-table-wrap"><table class="bp-table" id="bp-tasafija"><thead><tr>
+          <th>Especie</th><th>Venc.</th><th>Días</th><th>Último</th><th>% Día</th><th>TEM</th><th>TNA</th><th>TIREA</th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px" class="bp-2col">
         <div class="widget-box" style="margin-top:0">
-          <div class="widget-header"><span class="widget-title">Tasa fija (Lecap / Boncap)</span><span class="widget-source">$ · por 100 VN</span></div>
-          <div class="bp-table-wrap"><table class="bp-table" id="bp-tasafija"><thead><tr>
-            <th>Especie</th><th>Venc.</th><th>Último</th><th>% Día</th>
+          <div class="widget-header"><span class="widget-title">Bonos CER</span><span class="widget-source">$ · ajustan por inflación</span></div>
+          <div class="bp-table-wrap"><table class="bp-table" id="bp-cer"><thead><tr>
+            <th>Especie</th><th>Último</th><th>% Día</th>
           </tr></thead><tbody></tbody></table></div>
         </div>
-        <div>
-          <div class="widget-box" style="margin-top:0">
-            <div class="widget-header"><span class="widget-title">Bonos CER</span><span class="widget-source">$ · ajustan por inflación</span></div>
-            <div class="bp-table-wrap"><table class="bp-table" id="bp-cer"><thead><tr>
-              <th>Especie</th><th>Último</th><th>% Día</th>
-            </tr></thead><tbody></tbody></table></div>
-          </div>
-          <div class="widget-box" style="margin-top:16px">
-            <div class="widget-header"><span class="widget-title">Dólar linked</span><span class="widget-source">$ · ajustan por A3500</span></div>
-            <div class="bp-table-wrap"><table class="bp-table" id="bp-dl"><thead><tr>
-              <th>Especie</th><th>Último</th><th>% Día</th>
-            </tr></thead><tbody></tbody></table></div>
-          </div>
+        <div class="widget-box" style="margin-top:0">
+          <div class="widget-header"><span class="widget-title">Dólar linked</span><span class="widget-source">$ · ajustan por A3500</span></div>
+          <div class="bp-table-wrap"><table class="bp-table" id="bp-dl"><thead><tr>
+            <th>Especie</th><th>Último</th><th>% Día</th>
+          </tr></thead><tbody></tbody></table></div>
         </div>
       </div>
       <div class="widget-box" style="margin-top:16px">
@@ -777,7 +775,8 @@ loadRadar();
 
   const fila = tds => `<tr>${tds.join("")}</tr>`;
   const c = h => `<td>${h}</td>`;
-  const sym = b => c(`<span class="bp-sym">${b.s}</span>` +
+  // cada especie linkea a su ficha (precio, tasas, flujos y "TIR a mi precio")
+  const sym = b => c(`<a href="bono.html?e=${b.s}" style="text-decoration:none;color:inherit"><span class="bp-sym" style="border-bottom:1px dotted var(--gold)">${b.s}</span></a>` +
     (b.ley ? `<span class="bp-ley${b.ley === "NY" ? " ny" : ""}">${b.ley === "NY" ? "NY" : "ARG"}</span>` : ""));
 
   const sob = data.soberanos || [];
@@ -802,7 +801,13 @@ loadRadar();
     if (el) el.innerHTML = (arr || []).map(b => fila([sym(b),
       ...(conVenc ? [c(venc(b.vence))] : []), c(num(b.p)), c(pct(b.v))])).join("");
   };
-  simple("#bp-tasafija", data.tasa_fija);
+  // tasa fija con tasas de mercado (TEM/TNA/TIREA sobre el pago final oficial)
+  const tTf = document.querySelector("#bp-tasafija tbody");
+  if (tTf) tTf.innerHTML = (data.tasa_fija || []).map(b => fila([sym(b),
+    c(venc(b.vence)), c(b.dias != null ? b.dias : "—"), c(num(b.p)), c(pct(b.v)),
+    c(b.tem != null ? `<span class="bp-tir">${b.tem.toFixed(2).replace(".", ",")}%</span>` : "—"),
+    c(b.tna != null ? n1.format(b.tna) + "%" : "—"),
+    c(b.tirea != null ? `<span class="bp-tir">${n1.format(b.tirea)}%</span>` : "—")])).join("");
   simple("#bp-cer", data.cer, false);
   simple("#bp-dl", data.dolar_linked, false);
 
@@ -810,7 +815,7 @@ loadRadar();
     const d = new Date(asof);
     const el = document.getElementById("bp-asof");
     if (el) el.textContent =
-      "Datos: BYMA vía IOL + Ámbito · TIR efectiva anual calculada sobre flujos oficiales (Dto. 701/2020) · Actualizado " +
+      "Datos: BYMA vía IOL + Ámbito · TIR sobre flujos oficiales (Dto. 701/2020) · Tasas de letras sobre condiciones de emisión (Sec. de Finanzas vía ArgentinaDatos) · Actualizado " +
       d.toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + " hs";
   }
 
