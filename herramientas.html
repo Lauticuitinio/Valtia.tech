@@ -386,6 +386,7 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
         <div class="bp-table-wrap"><table class="bp-table" id="bp-tasafija"><thead><tr>
           <th>Especie</th><th>Venc.</th><th>Días</th><th>Último</th><th>% Día</th><th>TEM</th><th>TNA</th><th>TIREA</th>
         </tr></thead><tbody></tbody></table></div>
+        <div class="bp-curva-box" style="height:260px;padding:10px 14px 6px"><canvas id="bp-curva-tem"></canvas></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px" class="bp-2col">
         <div class="widget-box" style="margin-top:0">
@@ -823,10 +824,33 @@ loadRadar();
   const canvas = document.getElementById("bp-curva");
   if (!canvas) return;
   if (typeof Chart === "undefined") {
-    canvas.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:12px;color:var(--sub);padding:0 24px;text-align:center">El gráfico no pudo cargarse (el navegador bloqueó la librería). Los datos de la curva están en la tabla de arriba.</div>';
+    const aviso = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:12px;color:var(--sub);padding:0 24px;text-align:center">El gráfico no pudo cargarse (el navegador bloqueó la librería). Los datos de la curva están en la tabla.</div>';
+    canvas.parentElement.innerHTML = aviso;
+    const ct = document.getElementById("bp-curva-tem");
+    if (ct) ct.parentElement.innerHTML = aviso;
     return;
   }
   const puntos = sob.filter(b => b.tir != null && b.md != null);
+  // curva suave: ajuste cuadrático por mínimos cuadrados sobre ln(x) — la
+  // forma clásica de una curva de rendimientos. Compartida por las dos curvas.
+  const curvaSuave = pts => {
+    if (pts.length < 3) return [];
+    let n = pts.length, sx = 0, sx2 = 0, sx3 = 0, sx4 = 0, sy = 0, sxy = 0, sx2y = 0;
+    pts.forEach(pt => { const x = Math.log(pt.x), y = pt.y;
+      sx += x; sx2 += x*x; sx3 += x*x*x; sx4 += x*x*x*x; sy += y; sxy += x*y; sx2y += x*x*y; });
+    const M = [[n, sx, sx2, sy], [sx, sx2, sx3, sxy], [sx2, sx3, sx4, sx2y]];
+    for (let i = 0; i < 3; i++) {
+      if (!M[i][i]) return [];
+      for (let j = 3; j >= i; j--) M[i][j] /= M[i][i];
+      for (let k = 0; k < 3; k++) { if (k === i) continue;
+        const f = M[k][i]; for (let j = i; j < 4; j++) M[k][j] -= f * M[i][j]; }
+    }
+    const a = M[0][3], b = M[1][3], c = M[2][3];
+    const xs = pts.map(pt => pt.x), x0 = Math.min(...xs), x1 = Math.max(...xs), out = [];
+    for (let i = 0; i <= 48; i++) { const x = x0 + (x1 - x0) * i / 48; const u = Math.log(x);
+      out.push({ x, y: a + b * u + c * u * u }); }
+    return out;
+  };
   let chart;
   const dibujar = () => {
     const css = getComputedStyle(document.documentElement);
@@ -836,26 +860,6 @@ loadRadar();
     const text = css.getPropertyValue("--text").trim() || "#EAE6DD";
     if (chart) chart.destroy();
     const serie = ley => puntos.filter(b => b.ley === ley).map(b => ({ x: b.md, y: b.tir, s: b.s }));
-    // curva suave: ajuste cuadrático por mínimos cuadrados sobre los puntos de cada ley
-    const curvaSuave = pts => {
-      if (pts.length < 3) return [];
-      // ajuste sobre ln(duration): la forma clásica de una curva de rendimientos
-      let n = pts.length, sx = 0, sx2 = 0, sx3 = 0, sx4 = 0, sy = 0, sxy = 0, sx2y = 0;
-      pts.forEach(pt => { const x = Math.log(pt.x), y = pt.y;
-        sx += x; sx2 += x*x; sx3 += x*x*x; sx4 += x*x*x*x; sy += y; sxy += x*y; sx2y += x*x*y; });
-      const M = [[n, sx, sx2, sy], [sx, sx2, sx3, sxy], [sx2, sx3, sx4, sx2y]];
-      for (let i = 0; i < 3; i++) {
-        if (!M[i][i]) return [];
-        for (let j = 3; j >= i; j--) M[i][j] /= M[i][i];
-        for (let k = 0; k < 3; k++) { if (k === i) continue;
-          const f = M[k][i]; for (let j = i; j < 4; j++) M[k][j] -= f * M[i][j]; }
-      }
-      const a = M[0][3], b = M[1][3], c = M[2][3];
-      const xs = pts.map(pt => pt.x), x0 = Math.min(...xs), x1 = Math.max(...xs), out = [];
-      for (let i = 0; i <= 48; i++) { const x = x0 + (x1 - x0) * i / 48; const u = Math.log(x);
-        out.push({ x, y: a + b * u + c * u * u }); }
-      return out;
-    };
     const dLoc = serie("AR"), dNY = serie("NY");
     chart = new Chart(canvas, {
       type: "scatter",
@@ -895,10 +899,58 @@ loadRadar();
       }],
     });
   };
+  // curva de tasa fija en pesos: TEM de mercado vs días al vencimiento
+  const canvasTem = document.getElementById("bp-curva-tem");
+  let chartTem;
+  const dibujarTem = () => {
+    if (!canvasTem || typeof Chart === "undefined") return;
+    const pts = (data.tasa_fija || []).filter(b => b.tem != null && b.dias != null)
+      .map(b => ({ x: b.dias, y: b.tem, s: b.s }));
+    if (pts.length < 2) { canvasTem.parentElement.style.display = "none"; return; }
+    const css = getComputedStyle(document.documentElement);
+    const gold = css.getPropertyValue("--gold").trim() || "#B8975A";
+    const sub = css.getPropertyValue("--sub").trim() || "#8A94A6";
+    const border = css.getPropertyValue("--border").trim() || "rgba(184,151,90,.15)";
+    const text = css.getPropertyValue("--text").trim() || "#EAE6DD";
+    if (chartTem) chartTem.destroy();
+    chartTem = new Chart(canvasTem, {
+      type: "scatter",
+      data: { datasets: [
+        { label: "TEM", data: pts, backgroundColor: gold, pointRadius: 5, pointHoverRadius: 7 },
+        { label: "fit-tem", type: "line", data: curvaSuave(pts), borderColor: gold, borderWidth: 1.5,
+          pointRadius: 0, pointHitRadius: 0, fill: false, order: 10 },
+      ]},
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { filter: ctx => !!(ctx.raw && ctx.raw.s),
+            callbacks: { label: ctx => `${ctx.raw.s}: TEM ${ctx.raw.y.toFixed(2).replace(".", ",")}% · ${ctx.raw.x} días · TIREA ${n1.format((data.tasa_fija.find(b => b.s === ctx.raw.s) || {}).tirea || 0)}%` } },
+        },
+        scales: {
+          x: { title: { display: true, text: "Días al vencimiento", color: sub, font: { family: "Jost", size: 11 } },
+               grid: { color: border }, ticks: { color: sub } },
+          y: { title: { display: true, text: "TEM de mercado %", color: sub, font: { family: "Jost", size: 11 } },
+               grid: { color: border }, ticks: { color: sub, callback: v => Number(v).toFixed(2).replace(".", ",") } },
+        },
+      },
+      plugins: [{
+        id: "bpLabelsTem",
+        afterDatasetsDraw(ch) {
+          const { ctx } = ch;
+          ctx.save(); ctx.font = "10px Jost"; ctx.fillStyle = text; ctx.textAlign = "center";
+          ch.data.datasets.forEach((ds, di) => ch.getDatasetMeta(di).data.forEach((pt, i) => {
+            if (ds.data[i] && ds.data[i].s) ctx.fillText(ds.data[i].s, pt.x, pt.y - 9);
+          }));
+          ctx.restore();
+        },
+      }],
+    });
+  };
   // dibujo perezoso: el canvas nace oculto (pestaña display:none) y Chart.js
   // no puede medirlo — mismo motivo por el que los heatmaps se inician lazy.
   let dibujado = false;
-  const intentar = () => { if (!dibujado && canvas.offsetParent) { dibujado = true; dibujar(); } };
+  const intentar = () => { if (!dibujado && canvas.offsetParent) { dibujado = true; dibujar(); dibujarTem(); } };
   intentar();
   const io = new IntersectionObserver(es => {
     if (es.some(e => e.isIntersecting)) { intentar(); if (dibujado) io.disconnect(); }
@@ -906,7 +958,7 @@ loadRadar();
   io.observe(canvas);
   document.querySelectorAll(".tool-tab").forEach(t =>
     t.addEventListener("click", () => setTimeout(intentar, 50)));
-  new MutationObserver(() => { if (dibujado) dibujar(); }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  new MutationObserver(() => { if (dibujado) { dibujar(); dibujarTem(); } }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 })();
 </script>
 <script type="module" src="nav-auth.js?v=5"></script>
