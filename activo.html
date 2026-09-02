@@ -304,6 +304,10 @@ try {
     fila("P/E", ra.per != null ? n1.format(ra.per) + "x" : "—", "precio / ganancias"),
     fila("P/Libro", ra.pb != null ? n1.format(ra.pb) + "x" : "—", ""),
     fila("P/Ventas", ra.ps != null ? n1.format(ra.ps) + "x" : "—", ""),
+    fila("EV/EBITDA", ra.evebitda != null ? n1.format(ra.evebitda) + "x" : "—", "valor empresa / EBITDA"),
+    fila("FCF yield", ra.fcfy != null ? n1.format(ra.fcfy) + "%" : "—", "caja libre / market cap"),
+    fila("Crec. ingresos", ra.growth != null ? (ra.growth >= 0 ? "+" : "") + n1.format(ra.growth) + "%" : "—", "interanual"),
+    fila("Margen op.", ra.margen != null ? n1.format(ra.margen) + "%" : "—", ""),
     fila("Div. yield", ra.divYield != null ? n1.format(ra.divYield) + "%" : "—", ""),
     fila("Market cap", ra.mktcap ? "US$" + compacto.format(ra.mktcap) : "—", ""),
   ].join("") : "";

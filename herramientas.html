@@ -279,12 +279,12 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
   <div style="position:relative;margin-top:22px">
     <div class="preview-blur">
       <div class="widget-box">
-        <div class="widget-header"><span class="widget-title">Radar completo — 20 activos</span><span class="widget-source" id="radar-asof">Lectura Valtia</span></div>
+        <div class="widget-header"><span class="widget-title" id="radar-title">Radar completo</span><span class="widget-source" id="radar-asof">Lectura Valtia</span></div>
         <div style="overflow-x:auto">
           <table class="radar-table">
             <thead><tr>
               <th class="l">Activo</th><th>Precio</th><th>PER</th><th>P/L</th><th>P/V</th>
-              <th>Valor</th><th>Calidad</th><th>RSI</th><th class="l">Veredicto</th>
+              <th>EV/EBITDA</th><th>FCF yield</th><th>Valor</th><th>Calidad</th><th>RSI</th><th class="l">Veredicto</th>
             </tr></thead>
             <tbody id="radar-full"></tbody>
           </table>
@@ -294,7 +294,7 @@ footer{background:#040c14;padding:24px 48px;border-top:1px solid rgba(184,151,90
     <div class="pro-overlay">
       <div class="pro-lock-icon">🔒</div>
       <h4>Radar completo PRO</h4>
-      <p>Los 20 activos con puntaje de valor, calidad, RSI y veredicto Valtia. Se actualiza todos los días.</p>
+      <p>El radar completo — 34 activos con puntaje de valor y calidad por familia sectorial, EV/EBITDA, FCF yield, RSI y veredicto Valtia. Se actualiza todos los días.</p>
       <a href="planes.html" class="btn">Ver planes →</a>
     </div>
   </div>
@@ -719,6 +719,8 @@ async function loadRadar() {
   // PRO: tabla completa, ordenada por valor (más barato primero, sin cobertura al final)
   const orden = [...activos].sort((a, b) =>
     (a.score == null) - (b.score == null) || (b.score || 0) - (a.score || 0));
+  const rt = document.getElementById('radar-title');
+  if (rt) rt.textContent = 'Radar completo — ' + activos.length + ' activos';
   document.getElementById('radar-full').innerHTML = orden.map(a => {
     const z = zonaMap[a.rsiZona] || 'db';
     const w = a.score == null ? 0 : a.score;
@@ -728,6 +730,8 @@ async function loadRadar() {
       <td>${a.per == null ? '—' : num1(a.per)}</td>
       <td>${a.pb == null ? '—' : num1(a.pb)}</td>
       <td>${a.ps == null ? '—' : num1(a.ps)}</td>
+      <td>${a.evebitda == null ? '—' : num1(a.evebitda)}</td>
+      <td>${a.fcfy == null ? '—' : num1(a.fcfy) + '%'}</td>
       <td><span class="rbar"><span>${a.valorScore == null ? '—' : a.valorScore}</span><span class="rbar-track"><span class="rbar-fill" style="width:${w}%;background:${barColor(a.veredicto)}"></span></span></span></td>
       <td>${a.calidadScore == null ? '—' : a.calidadScore}</td>
       <td><span class="rzona ${z}">${a.rsi == null ? '—' : num1(a.rsi)}</span></td>
