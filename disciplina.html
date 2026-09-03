@@ -161,6 +161,9 @@ const fmtPct = n => (n >= 0 ? "+" : "") + n.toFixed(2).replace(".", ",") + "%";
 const cls = n => n > 0.004 ? "pos" : n < -0.004 ? "neg" : "mut";
 const verCls = v => v === "Infravalorada" ? "infra" : v === "Estirada" ? "cara" : "precio";
 const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const BROKERS = ["IOL", "PPI", "Balanz", "Bull Market", "Cocos", "Binance", "Lemon", "Belo", "Otro"];
+const brokerPref = () => { try { return localStorage.getItem("valtia-mc-broker") || ""; } catch (e) { return ""; } };
+const guardarBrokerPref = b => { try { if (b) localStorage.setItem("valtia-mc-broker", b); } catch (e) {} };
 const hoyISO = () => new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);   // hora argentina (UTC-3)
 const mesDe = f => String(f || "").slice(0, 7);
 const mesNombre = m => { const [a, mm] = m.split("-"); return MESES[Number(mm) - 1] + " " + a; };
@@ -236,14 +239,15 @@ function chipsMeses() {
 }
 
 /* ── escrituras: la compra queda en Mi Cartera Y en el plan (una sola carga) ── */
-async function registrarCompra(tickerFicha, cantidad, precio) {
+async function registrarCompra(tickerFicha, cantidad, precio, broker = "") {
   const f = hoyISO(), ahora = new Date().toISOString();
   const suf = Date.now().toString(36);
+  guardarBrokerPref(broker);
   await setDoc(doc(db, "inversores", _user.email, "cartera", tickerFicha + "-" + suf), {
-    ticker: tickerFicha, cantidad, precioCompra: precio, fecha: f, creado: ahora,
+    ticker: tickerFicha, cantidad, precioCompra: precio, fecha: f, broker, creado: ahora,
   });
   await setDoc(doc(db, "inversores", _user.email, "disciplina", "c-" + suf), {
-    tipo: "compra", ticker: tickerFicha, cantidad, precio, fecha: f, mes: mesDe(f), creado: ahora,
+    tipo: "compra", ticker: tickerFicha, cantidad, precio, fecha: f, mes: mesDe(f), broker, creado: ahora,
   });
 }
 
@@ -286,6 +290,7 @@ function filaCandidata(a) {
     <td class="num">
       <div class="compra-form" data-form="${a.sym}" style="display:none">
         <input type="number" step="any" min="0" value="${sug}" data-cant="${a.sym}" title="Cantidad">
+        <input list="d-brokers" data-brk="${a.sym}" value="${esc(brokerPref())}" placeholder="Broker" title="Broker / cuenta" maxlength="24" style="width:104px">
         <button class="btn mini" data-ok="${a.sym}">Confirmar</button>
       </div>
       <button class="btn mini sec2" data-compre="${a.sym}" ${px == null ? "disabled" : ""}>La compré ✓</button>
@@ -345,6 +350,7 @@ function vistaPlan() {
     <div class="msg" id="msg-compra"></div>
     <p class="nom" style="margin-top:10px">El puntaje y la lectura salen del <a href="herramientas.html" style="color:var(--gold)">radar de valuación Valtia</a> (valor relativo dentro del radar, no recomendación). Precio del día con actualización de rueda.</p>
 
+    <datalist id="d-brokers">${BROKERS.map(b => `<option value="${b}">`).join("")}</datalist>
     <div class="card" style="margin-top:18px">
       <b style="font-size:13.5px">¿Compraste otra cosa o reforzaste una posición?</b>
       <div class="nom" style="margin-top:3px">Contala igual para tu plan del mes — también se agrega a Mi Cartera.</div>
@@ -352,6 +358,7 @@ function vistaPlan() {
         <div><label>Ticker</label><input id="o-tk" placeholder="AAPL" maxlength="12"></div>
         <div><label>Cantidad</label><input id="o-cant" type="number" step="any" min="0" placeholder="2"></div>
         <div><label>Precio pagado (USD)</label><input id="o-px" type="number" step="any" min="0" placeholder="315.50"></div>
+        <div><label>Broker / cuenta</label><input id="o-brk" list="d-brokers" value="${esc(brokerPref())}" placeholder="IOL, PPI…" maxlength="24"></div>
         <div><button class="btn" id="o-ok" style="width:100%">Registrar compra</button></div>
       </div>
       <div class="msg" id="msg-otra"></div>
@@ -398,7 +405,8 @@ function enganchar() {
     if (!(cant > 0)) { msg.innerHTML = '<span class="neg">Poné la cantidad que compraste.</span>'; return; }
     b.disabled = true;
     try {
-      await registrarCompra(fichaDe(sym), cant, px);
+      const brk = ((document.querySelector(`[data-brk="${sym}"]`) || {}).value || "").trim();
+      await registrarCompra(fichaDe(sym), cant, px, brk);
       await cargarUsuario(); vistaPlan();
       $("#msg-compra").innerHTML = `<span class="pos">${fichaDe(sym)} registrada en tu plan y en Mi Cartera al precio del día (${fmtUSD(px)}).</span>`;
     } catch (e) { b.disabled = false; msg.innerHTML = `<span class="neg">No se pudo registrar: ${esc(String(e).slice(0, 90))}</span>`; }
@@ -413,7 +421,7 @@ function enganchar() {
     if (!tk || !(cant > 0)) { msg.innerHTML = '<span class="neg">Completá ticker y cantidad.</span>'; return; }
     if (!(px > 0)) { msg.innerHTML = '<span class="neg">No tenemos precio de ese activo: poné el precio que pagaste.</span>'; return; }
     try {
-      await registrarCompra(tk, cant, px);
+      await registrarCompra(tk, cant, px, (($("#o-brk") || {}).value || "").trim());
       await cargarUsuario(); vistaPlan();
       $("#msg-otra") && ($("#msg-otra").innerHTML = "");
       $("#msg-compra").innerHTML = `<span class="pos">${tk} registrada en tu plan y en Mi Cartera.</span>`;
@@ -459,6 +467,6 @@ async function render() {
 onAuthStateChanged(getAuth(app), u => { _user = u; render(); });
 </script>
 <script type="module" src="nav-auth.js?v=5"></script>
-<script src="nav-menu.js?v=2"></script>
+<script src="nav-menu.js?v=3"></script>
 </body>
 </html>

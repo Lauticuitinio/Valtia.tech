@@ -1,7 +1,8 @@
-// nav-menu.js — menú hamburguesa mobile compartido por todas las páginas.
-// Bajo 880px el nav de escritorio se oculta (regla histórica de cada página);
-// este script inyecta el botón ☰ y un panel lateral con la navegación
-// canónica completa, para que desde el celular se llegue a todo el sitio.
+// nav-menu.js — navegación lateral compartida por todas las páginas.
+// · Desktop: una franja invisible en el borde izquierdo (con un hilo dorado
+//   como pista) abre el panel al pasar el cursor; se cierra al salir de él.
+// · Mobile (<880px): el nav de escritorio se oculta y el botón ☰ abre el
+//   mismo panel desde la derecha.
 // Sin dependencias: se sirve como script clásico en cada página.
 (function () {
   var nav = document.querySelector('nav');
@@ -14,6 +15,7 @@
     ['noticias.html', 'Noticias'],
     ['informes.html', 'Informes'],
     ['herramientas.html', 'Herramientas'],
+    ['calendario.html', 'Calendario'],
     ['planes.html', 'Planes'],
   ];
   var aca = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
@@ -29,7 +31,7 @@
     'pointer-events:none;transition:opacity .2s}',
     '#vnav-menu{position:fixed;top:0;right:0;height:100%;width:min(78vw,300px);z-index:999;',
     'background:#0D1B2A;color:#F0EDE8;box-shadow:-12px 0 40px rgba(0,0,0,.35);',
-    'transform:translateX(105%);transition:transform .22s ease;display:flex;flex-direction:column;',
+    'transform:translateX(105%);visibility:hidden;transition:transform .22s ease,visibility .22s;display:flex;flex-direction:column;',
     "padding:18px 0 24px;font-family:'Jost','IBM Plex Sans',sans-serif}",
     '#vnav-menu .vn-top{display:flex;align-items:center;justify-content:space-between;padding:0 20px 14px;',
     'border-bottom:1px solid rgba(184,151,90,.18)}',
@@ -41,9 +43,19 @@
     '#vnav-menu a.vn-cta{margin:18px 20px 0;text-align:center;background:#B8975A;color:#0D1B2A;',
     'font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:13px 10px;',
     'border-radius:8px;text-decoration:none}',
-    'body.vnav-open{overflow:hidden}',
+    '@media(max-width:880px){body.vnav-open{overflow:hidden}}',
     'body.vnav-open #vnav-back{opacity:1;pointer-events:auto}',
-    'body.vnav-open #vnav-menu{transform:translateX(0)}',
+    'body.vnav-open #vnav-menu{transform:translateX(0);visibility:visible}',
+    // desktop: barra lateral oculta que aparece al pasar el cursor por el borde
+    '#vnav-hot{position:fixed;left:0;top:0;width:16px;height:100%;z-index:997;display:none;cursor:pointer;',
+    'border:none;background:transparent;padding:0;margin:0;outline:none}',
+    '#vnav-hot:focus-visible::before{opacity:1;height:110px}',
+    '#vnav-hot::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:72px;',
+    'border-radius:0 3px 3px 0;background:#B8975A;opacity:.4;transition:opacity .2s,height .2s}',
+    '#vnav-hot:hover::before{opacity:.95;height:110px}',
+    '@media(min-width:881px){#vnav-hot{display:block}#vnav-back{display:none}',
+    '#vnav-menu{left:0;right:auto;width:250px;transform:translateX(-105%);box-shadow:12px 0 40px rgba(0,0,0,.35)}',
+    'body.vnav-open #vnav-menu{transform:translateX(0)}}',
   ].join('');
   document.head.appendChild(st);
 
@@ -53,6 +65,13 @@
   btn.innerHTML = '<svg width="18" height="14" viewBox="0 0 18 14" fill="none">' +
     '<path d="M1 1h16M1 7h16M1 13h16" stroke="#B8975A" stroke-width="1.8" stroke-linecap="round"/></svg>';
   nav.appendChild(btn);
+
+  var hot = document.createElement('button');
+  hot.id = 'vnav-hot';
+  hot.type = 'button';
+  hot.setAttribute('aria-label', 'Abrir menú');
+  hot.title = 'Menú';
+  document.body.appendChild(hot);
 
   var back = document.createElement('div');
   back.id = 'vnav-back';
@@ -92,9 +111,34 @@
     document.body.classList.add('vnav-open');
   }
   function cerrar() { document.body.classList.remove('vnav-open'); }
+  var esDesktop = function () { return window.matchMedia('(min-width:881px)').matches; };
   btn.addEventListener('click', abrir);
   back.addEventListener('click', cerrar);
   menu.querySelector('.vn-x').addEventListener('click', cerrar);
+  // desktop: abrir al entrar en la franja del borde (con 120ms de intención,
+  // para que un roce no lo dispare), cerrar al salir del panel; si el cursor
+  // pasó por la franja pero nunca entró al panel, se cierra solo; y un clic
+  // afuera también cierra.
+  var tAbrir = null, dentro = false;
+  hot.addEventListener('mouseenter', function () {
+    if (!esDesktop()) return;
+    clearTimeout(tAbrir);
+    tAbrir = setTimeout(abrir, 120);
+  });
+  hot.addEventListener('mouseleave', function () {
+    clearTimeout(tAbrir);
+    if (!esDesktop()) return;
+    setTimeout(function () { if (!dentro) cerrar(); }, 320);
+  });
+  hot.addEventListener('click', abrir);
+  hot.addEventListener('focus', function () { if (esDesktop()) abrir(); });
+  menu.addEventListener('mouseenter', function () { dentro = true; });
+  menu.addEventListener('mouseleave', function () { dentro = false; if (esDesktop()) cerrar(); });
+  document.addEventListener('pointerdown', function (e) {
+    if (esDesktop() && document.body.classList.contains('vnav-open') &&
+        !menu.contains(e.target) && !hot.contains(e.target)) cerrar();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') cerrar(); });
   var tema = menu.querySelector('#vnav-tema');
   if (tema) tema.addEventListener('click', function (e) {
     e.preventDefault();

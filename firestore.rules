@@ -143,6 +143,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── CALENDARIO DEL INVERSOR (próximos resultados del radar) ──
+    // Dato público de mercado, escrito por fondo_sync (Admin SDK).
+    match /calendario/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // ── SEÑALES Y RÉGIMEN DE MERCADO (sistema de rotación) ──
     // Calculado a diario por fondo_sync.py. Privado del gestor por ahora
     // (a futuro: producto PRO con visibilidad por plan).

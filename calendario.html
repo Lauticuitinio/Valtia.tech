@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendario del inversor — Valtia Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0D1B2A;--gold:#B8975A;--gold2:#D4AF6E;
+  --text-d:#F0EDE8;--sub-d:rgba(240,237,232,.55);--muted-d:rgba(240,237,232,.35);
+  --text-l:#1A2B3C;--sub-l:#4A5A6C;--muted-l:#8A9BAD;
+  --bg-d:#0D1B2A;--bg3-d:#152336;--bg-l:#F5F2EC;--bg3-l:#EDE9E0;
+  --border-d:rgba(184,151,90,.14);--border-l:rgba(26,58,92,.12);
+  --card-d:#101F31;--card-l:#FFFFFF;
+}
+[data-theme="dark"]{--bg:var(--bg-d);--bg3:var(--bg3-d);--text:var(--text-d);--sub:var(--sub-d);--muted:var(--muted-d);--border:var(--border-d);--card:var(--card-d);--greenTx:#4caf50;--redTx:#ef5350}
+[data-theme="light"]{--bg:var(--bg-l);--bg3:var(--bg3-l);--text:var(--text-l);--sub:var(--sub-l);--muted:var(--muted-l);--border:var(--border-l);--card:var(--card-l);--greenTx:#2E7D32;--redTx:#C62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;min-height:100vh}
+a{color:inherit}
+nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px clamp(16px,4vw,52px);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:50}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand-name{font-family:'Cormorant Garamond',serif;font-size:19px;letter-spacing:.14em;text-transform:uppercase}
+.brand-name em{color:var(--gold);font-style:normal}
+.nav-links{display:flex;gap:20px;align-items:center;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.nav-links a{text-decoration:none;color:var(--sub)}
+.nav-links a:hover{color:var(--gold)}
+.theme-btn{width:36px;height:20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;position:relative;flex-shrink:0}
+.theme-btn::after{content:'';position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--gold);transition:transform .2s}
+[data-theme="light"] .theme-btn::after{transform:translateX(16px)}
+.top-volver{max-width:960px;margin:0 auto;padding:20px clamp(16px,3vw,40px) 0}
+.volver{font-family:'Jost',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);background:none;border:1px solid var(--border);border-radius:7px;padding:8px 14px;cursor:pointer}
+.volver:hover{color:var(--gold);border-color:var(--gold)}
+main{max-width:960px;margin:0 auto;padding:30px clamp(16px,3vw,40px) 70px}
+.eye{font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:12px}
+.eye::before{content:'';display:block;width:32px;height:1px;background:var(--gold);opacity:.6}
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,4.5vw,46px);font-weight:400;line-height:1.1;margin-bottom:12px}
+h1 em{font-style:italic;color:var(--gold2)}
+.sub{color:var(--sub);font-size:15px;line-height:1.75;max-width:700px}
+.filtros{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0 8px}
+.ftr{font-family:'Jost',sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:8px 14px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--sub);cursor:pointer}
+.ftr.on{background:var(--gold);border-color:var(--gold);color:#0D1B2A}
+.dia{margin-top:22px}
+.dia .fecha{display:flex;align-items:baseline;gap:12px;margin-bottom:8px}
+.dia .fecha b{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500}
+.dia .fecha span{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.dia .fecha.hoy b{color:var(--gold2)}
+.ev{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:12px 16px;margin-bottom:8px;text-decoration:none}
+.ev:hover{border-color:var(--gold)}
+.ev .ic{font-size:18px;width:26px;text-align:center;flex-shrink:0}
+.ev .t{flex:1;font-size:14px;line-height:1.45}
+.ev .t small{display:block;font-size:11.5px;color:var(--sub)}
+.ev .tipo{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:4px;white-space:nowrap}
+.tipo.ear{color:var(--gold);background:rgba(184,151,90,.14)}
+.tipo.cup{color:var(--greenTx);background:rgba(76,175,80,.12)}
+.tipo.let{color:#7FA8C9;background:rgba(127,168,201,.14)}
+.state{border:1px dashed var(--border);border-radius:14px;text-align:center;padding:50px 20px;color:var(--sub);margin-top:24px}
+.nota{font-size:12px;color:var(--muted);line-height:1.7;margin-top:8px;max-width:70ch}
+footer{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;font-size:11px;color:var(--muted);line-height:1.9;max-width:900px}
+</style>
+</head>
+<body>
+<nav>
+  <a class="brand" href="index.html">
+    <svg width="30" height="30" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <span class="brand-name">VAL<em>T</em>IA</span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Inicio</a>
+    <a href="cartera.html">Carteras</a>
+    <a href="disciplina.html">Disciplina</a>
+    <a href="noticias.html">Noticias</a>
+    <a href="informes.html">Informes</a>
+    <a href="herramientas.html">Herramientas</a>
+    <a href="planes.html">Planes</a>
+    <button class="theme-btn" onclick="tg()" title="Cambiar tema"></button>
+  </div>
+</nav>
+<div class="top-volver"><button class="volver" onclick="volver()">← Volver</button></div>
+<main>
+  <div class="eye">Calendario del inversor</div>
+  <h1>Lo que viene en <em>tu mercado</em></h1>
+  <p class="sub">Resultados de las empresas del radar, cupones y amortizaciones de los bonos, y vencimientos de las
+  letras — en una sola agenda, con los próximos 120 días. Cada evento lleva a su ficha.</p>
+  <div class="filtros">
+    <button class="ftr on" data-f="ear">📄 Resultados</button>
+    <button class="ftr on" data-f="cup">💵 Cupones y amortizaciones</button>
+    <button class="ftr on" data-f="let">⏳ Vencen letras</button>
+  </div>
+  <div id="lista"><div class="state">Armando la agenda…</div></div>
+  <p class="nota" id="nota"></p>
+  <footer>Fechas de resultados según los calendarios corporativos publicados (pueden cambiar); pagos de bonos según
+  cronogramas oficiales (Dto. 701/2020 y prospectos BCRA); vencimientos de letras según condiciones de emisión.
+  Análisis de carácter general y educativo, no constituye asesoramiento financiero.
+  · <a href="terminos.html" style="text-decoration:underline">Términos</a> · <a href="privacidad.html" style="text-decoration:underline">Privacidad</a></footer>
+</main>
+
+<script>
+const saved = localStorage.getItem('valtia-theme');
+if (saved) document.documentElement.dataset.theme = saved;
+function tg() {
+  const h = document.documentElement;
+  h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('valtia-theme', h.dataset.theme);
+}
+function volver() {
+  try {
+    if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
+      history.back();
+      return;
+    }
+  } catch (e) {}
+  location.href = 'index.html';
+}
+</script>
+<script type="module">
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const app = getApps().length ? getApp() : initializeApp({
+  apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
+  authDomain: 'valtia-analytics.firebaseapp.com',
+  projectId: 'valtia-analytics',
+});
+const db = getFirestore(app);
+const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+const n2 = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const DIAS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+// hoy en hora argentina (UTC-3)
+const hoyISO = new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);
+const limiteISO = new Date(Date.now() + 120 * 86400000).toISOString().slice(0, 10);
+const relativa = f => {
+  const d = Math.round((new Date(f) - new Date(hoyISO)) / 86400000);
+  return d === 0 ? "hoy" : d === 1 ? "mañana" : `en ${d} días`;
+};
+const fechaLarga = f => {
+  const [a, m, d] = f.split("-").map(Number);
+  const dt = new Date(a, m - 1, d);
+  return `${DIAS[dt.getDay()]} ${d} ${MESES[m - 1]}`;
+};
+
+let eventos = [], filtros = { ear: true, cup: true, let: true }, faltan = [];
+
+// cada fuente falla por su cuenta: una caída no vacía la agenda entera
+const leer = async col => {
+  try { const s = await getDoc(doc(db, col, "latest")); return s.exists() ? s : null; }
+  catch (e) { return null; }
+};
+
+async function cargar() {
+  const [cal, flj, pan] = await Promise.all([leer("calendario"), leer("bonosFlujos"), leer("bonosPanel")]);
+  faltan = [["ear", cal], ["cup", flj], ["let", pan]].filter(([, s]) => !s).map(([t]) => t);
+  if (faltan.length === 3) {
+    document.getElementById("lista").innerHTML = `<div class="state">No se pudo cargar la agenda. Probá de nuevo en un rato.</div>`;
+    return;
+  }
+  const ev = [];
+  if (cal) {
+    (JSON.parse(cal.data().json || "{}").earnings || []).forEach(e => ev.push({
+      tipo: "ear", fecha: e.fecha, href: "activo.html?t=" + e.ficha,
+      titulo: `Resultados de ${e.nombre}`, sub: `${e.sym} · fecha estimada por la empresa`,
+    }));
+  }
+  if (flj) {
+    const f = JSON.parse(flj.data().json || "{}");
+    Object.keys(f).forEach(par => {
+      const esp = par.endsWith("D") ? par : par + "D";
+      (f[par].flujos || []).forEach(([fecha, monto]) => ev.push({
+        tipo: "cup", fecha, href: "bono.html?e=" + esp,
+        titulo: `${esp} paga US$ ${n2.format(monto)} por cada 100 VN`,
+        sub: `bono ${f[par].ley === "NY" ? "ley Nueva York" : "ley Argentina"} · cupón y/o amortización`,
+      }));
+    });
+  }
+  if (pan) {
+    (JSON.parse(pan.data().json || "{}").tasa_fija || []).forEach(l => {
+      if (!l.vence) return;
+      ev.push({
+        tipo: "let", fecha: String(l.vence).slice(0, 10), href: "bono.html?e=" + l.s,
+        titulo: `Vence ${l.s}${l.vpv ? ` · paga $ ${n2.format(l.vpv)} por cada 100 VN` : ""}`,
+        sub: l.tirea != null ? `letra a tasa fija · TIREA de mercado ${String(l.tirea).replace(".", ",")}%` : "letra a tasa fija",
+      });
+    });
+  }
+  eventos = ev.filter(e => e.fecha >= hoyISO && e.fecha <= limiteISO)
+              .sort((a, b) => a.fecha.localeCompare(b.fecha) || a.titulo.localeCompare(b.titulo));
+  const act = cal && cal.data().actualizado_utc;
+  const NOMBRE = { ear: "los resultados de empresas", cup: "los pagos de bonos", let: "los vencimientos de letras" };
+  const aviso = faltan.length ? " ⚠ Por ahora no están disponibles " + faltan.map(t => NOMBRE[t]).join(" ni ") + "." : "";
+  document.getElementById("nota").textContent = (act
+    ? "Agenda actualizada el " + new Date(act.seconds ? act.seconds * 1000 : act).toLocaleDateString("es-AR") + " · los pagos de bonos se recalculan cada 15 min en rueda."
+    : "") + aviso;
+  faltan.forEach(t => {
+    const b = document.querySelector(`.ftr[data-f="${t}"]`);
+    if (b) { b.classList.remove("on"); b.disabled = true; b.style.opacity = ".45"; filtros[t] = false; }
+  });
+  pintar();
+}
+
+function pintar() {
+  const lista = document.getElementById("lista");
+  const vis = eventos.filter(e => filtros[e.tipo]);
+  if (!vis.length) {
+    lista.innerHTML = `<div class="state">${eventos.length
+      ? "Encendé al menos un filtro para ver la agenda."
+      : "Nada en la agenda en los próximos 120 días."}</div>`;
+    return;
+  }
+  const porDia = new Map();
+  vis.forEach(e => { if (!porDia.has(e.fecha)) porDia.set(e.fecha, []); porDia.get(e.fecha).push(e); });
+  const ICO = { ear: "📄", cup: "💵", let: "⏳" }, TIPO = { ear: "resultados", cup: "pago", let: "vencimiento" };
+  lista.innerHTML = [...porDia.entries()].map(([f, evs]) => `
+    <div class="dia">
+      <div class="fecha${f === hoyISO ? " hoy" : ""}"><b>${fechaLarga(f)}</b><span>${relativa(f)}</span></div>
+      ${evs.map(e => `<a class="ev" href="${e.href}">
+        <span class="ic">${ICO[e.tipo]}</span>
+        <span class="t">${esc(e.titulo)}<small>${esc(e.sub)}</small></span>
+        <span class="tipo ${e.tipo}">${TIPO[e.tipo]}</span></a>`).join("")}
+    </div>`).join("");
+}
+
+document.querySelectorAll(".ftr").forEach(b => b.addEventListener("click", () => {
+  filtros[b.dataset.f] = !filtros[b.dataset.f];
+  b.classList.toggle("on", filtros[b.dataset.f]);
+  pintar();
+}));
+cargar().catch(e => {
+  document.getElementById("lista").innerHTML = `<div class="state">No se pudo cargar la agenda (${esc(String(e).slice(0, 120))}).</div>`;
+});
+</script>
+<script type="module" src="nav-auth.js?v=5"></script>
+<script src="nav-menu.js?v=3"></script>
+</body>
+</html>

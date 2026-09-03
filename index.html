@@ -1419,8 +1419,8 @@ function updateChartTheme(){
         docs.forEach(d => items.push(fila('📄',
           `Informe: <b>${String(d.titulo).replace(/</g, '&lt;')}</b> · ${String(d.fecha).slice(0, 10)} →`, 'informes.html')));
       } catch (e) {}
-      box.innerHTML = items.join('') ||
-        '<p style="color:var(--muted);font-size:13px">Sin novedades grandes estos días — el radar y las carteras se actualizan a diario.</p>';
+      items.push(fila('📅', 'Calendario del inversor: resultados, cupones y vencimientos de letras, en una sola agenda →', 'calendario.html'));
+      box.innerHTML = items.join('');
     })();
   }
 
@@ -1558,6 +1558,6 @@ function updateChartTheme(){
 </script>
 <script type="module" src="fondo-live.js?v=23"></script>
 
-<script src="nav-menu.js?v=2"></script>
+<script src="nav-menu.js?v=3"></script>
 </body>
 </html>
