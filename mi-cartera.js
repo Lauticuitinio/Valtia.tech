@@ -5,7 +5,7 @@
 //
 // Diseño separado a propósito: renderMiCartera() es puro (datos -> HTML) para
 // poder verificarlo con datos de prueba sin tocar Firestore.
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc }
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 
@@ -80,7 +80,73 @@ const STYLE = `
 .mc-cur button+button{border-left:1px solid var(--border)}
 .mc-cur button.on{background:var(--gold);color:var(--navy)}
 .mc-curwrap{display:flex;flex-direction:column;align-items:flex-end;gap:7px}
+.mc-form select{width:100%;padding:10px 12px;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:6px;color:var(--text);font-family:'Jost',sans-serif;font-size:13.5px;outline:none}
+[data-theme="light"] .mc-form select{background:var(--bg3)}
+.mc-form select:focus{border-color:var(--gold)}
+.mc-grp td{background:rgba(184,151,90,.07);font-size:12px;color:var(--text);padding:9px 12px;text-align:left;
+  border-top:1px solid var(--border);white-space:normal}
+.mc-grp td b{color:var(--gold);letter-spacing:.06em;text-transform:uppercase;font-size:11px}
+.mc-grp td span{color:var(--muted);margin-left:8px}
+.mc-brk{display:inline-block;font-size:9.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--muted);border:1px solid var(--border);border-radius:4px;padding:1px 6px;margin-top:4px;cursor:pointer}
+.mc-brk:hover{color:var(--gold);border-color:var(--gold)}
+.mc-brk-in{font:400 12px 'Jost',sans-serif;padding:3px 6px;background:var(--bg3);border:1px solid var(--gold);
+  border-radius:4px;color:var(--text);width:120px;outline:none}
+.mc-brks{display:flex;gap:8px;flex-wrap:wrap;margin:-8px 0 18px}
+.mc-brks .b{font-size:12px;color:var(--sub);border:1px solid var(--border);border-radius:999px;padding:4px 11px}
+.mc-brks .b b{color:var(--text)}
 `;
+
+/* ── brokers y mercados ──
+   El inversor argentino tiene las tenencias repartidas (IOL, PPI, Binance…):
+   cada posición lleva su broker y la tabla se agrupa con subtotales. El
+   mercado define cómo se guarda el ticker: en BYMA "GGAL" es la acción local
+   en pesos (GGAL.BA), en el exterior es el ADR en dólares. */
+const BROKERS = ["IOL", "PPI", "Balanz", "Bull Market", "Cocos", "Binance", "Lemon", "Belo", "Otro"];
+const MERCADOS = [["byma", "BYMA · pesos (acciones, CEDEARs, bonos)"],
+                  ["ext", "Exterior · dólares (NYSE / Nasdaq)"],
+                  ["cripto", "Cripto"]];
+const pref = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
+const setPref = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+
+/* Ticker canónico según el mercado. Los bonos y letras (AL30, S30O6, GD30D…)
+   se reconocen contra el panel de bonos y quedan tal cual. */
+export function normalizarTicker(ticker, mercado, bonosSet = new Set()) {
+  const t = String(ticker || "").trim().toUpperCase().replace(/[^A-Z0-9.\-]/g, "");
+  if (!t) return "";
+  if (mercado === "byma") return (t.endsWith(".BA") || bonosSet.has(t)) ? t : t + ".BA";
+  if (mercado === "cripto") return t.endsWith("-USD") ? t : t + "-USD";
+  return t;
+}
+
+/* Subtotales por broker sobre las filas ya calculadas. */
+export function agruparPorBroker(filas, total) {
+  const m = new Map();
+  filas.forEach(f => {
+    const k = String(f.broker || "").trim() || "Sin broker";
+    if (!m.has(k)) m.set(k, []);
+    m.get(k).push(f);
+  });
+  return [...m.entries()].map(([broker, fs]) => {
+    const valor = fs.reduce((a, f) => a + (f.dValor ?? 0), 0);
+    const costo = fs.reduce((a, f) => a + (f.dValor != null ? (f.dCosto ?? 0) : 0), 0);
+    return { broker, filas: fs, valor, costo, pl: valor - costo,
+             plPct: costo > 0 ? (valor - costo) / costo * 100 : null,
+             peso: total > 0 ? valor / total * 100 : null };
+  }).sort((a, b) => b.valor - a.valor || a.broker.localeCompare(b.broker));
+}
+
+let _bonosSet = null;
+async function bonosSet() {
+  if (_bonosSet) return _bonosSet;
+  _bonosSet = new Set();
+  try {
+    const snap = await getDoc(doc(getFirestore(getApp()), "bonosPanel", "latest"));
+    if (snap.exists()) _bonosSet = new Set(Object.keys(JSON.parse(snap.data().json || "{}").todos || {}));
+  } catch (e) {}
+  return _bonosSet;
+}
 
 const money = (n, cur) => (Number(n) < 0 ? "−" : "") + (cur === "ARS" ? "$" : "US$") +
   Math.abs(Number(n) || 0).toLocaleString("es-AR", { maximumFractionDigits: Math.abs(n) < 1000 ? 2 : 0 });
@@ -257,20 +323,28 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
         <button class="mc-tab on" data-modo="uno">Agregar una</button>
         <button class="mc-tab" data-modo="imp">Importar desde Excel</button>
       </div>
+      <datalist id="mc-brokers">${BROKERS.map(b => `<option value="${b}">`).join("")}</datalist>
       <div id="mc-modo-uno">
         <div class="row">
-          <div><label>Ticker</label><input id="mc-ticker" placeholder="AAPL, BTC-USD, GGAL" maxlength="12" autocomplete="off"></div>
+          <div><label>Mercado</label><select id="mc-mercado">${MERCADOS.map(([k, n]) => `<option value="${k}"${pref("valtia-mc-mercado", "byma") === k ? " selected" : ""}>${n}</option>`).join("")}</select></div>
+          <div><label>Ticker</label><input id="mc-ticker" placeholder="GGAL, AL30, NVDA…" maxlength="12" autocomplete="off"></div>
           <div><label>Cantidad</label><input id="mc-cant" type="number" step="any" min="0" placeholder="10"></div>
-          <div><label>Precio de compra</label><input id="mc-precio" type="number" step="any" min="0" placeholder="180.50"></div>
+          <div><label>Precio de compra</label><input id="mc-precio" type="number" step="any" min="0" placeholder="en la moneda del mercado"></div>
+          <div><label>Broker / cuenta</label><input id="mc-broker" list="mc-brokers" placeholder="IOL, PPI, Binance…" maxlength="24" value="${esc(pref("valtia-mc-broker", ""))}"></div>
           <div><label>Fecha (opcional)</label><input id="mc-fecha" type="date"></div>
           <div><button class="mc-btn" id="mc-add">Agregar posición</button></div>
         </div>
       </div>
       <div id="mc-modo-imp" class="mc-imp" style="display:none">
-        <div class="mc-hint">Copiá las filas de tu planilla o del broker y pegalas acá: una posición por línea, en el orden
+        <div class="row" style="margin-bottom:12px">
+          <div><label>¿De qué mercado es este resumen?</label><select id="mc-imp-mercado">${MERCADOS.map(([k, n]) => `<option value="${k}"${pref("valtia-mc-mercado", "byma") === k ? " selected" : ""}>${n}</option>`).join("")}</select></div>
+          <div><label>Broker / cuenta</label><input id="mc-imp-broker" list="mc-brokers" placeholder="IOL, PPI, Binance…" maxlength="24" value="${esc(pref("valtia-mc-broker", ""))}"></div>
+        </div>
+        <div class="mc-hint">Copiá las filas del resumen de tu broker y pegalas acá: una posición por línea, en el orden
           <b>ticker · cantidad · precio de compra · fecha</b>. Sirven tabulaciones, comas o punto y coma, y los números
-          pueden venir como 1.900,50 o 1900.50. El encabezado de la planilla se ignora solo.</div>
-        <textarea id="mc-paste" placeholder="NVDA	20	150,50	2026-03-10&#10;MELI	2	1.900&#10;KO;50;70"></textarea>
+          pueden venir como 1.900,50 o 1900.50. El encabezado se ignora solo. Si elegís BYMA, "GGAL" se guarda como la
+          acción local en pesos (GGAL.BA); los bonos y letras quedan tal cual.</div>
+        <textarea id="mc-paste" placeholder="GGAL	100	4.500	2026-03-10&#10;AL30	1000	85.400&#10;NVDA;20;38.000"></textarea>
         <div id="mc-prev"></div>
         <button class="mc-btn" id="mc-imp-btn" style="margin-top:12px">Revisar</button>
       </div>
@@ -303,12 +377,13 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   const th = (col, label, extra = "") =>
     `<th class="${extra}" data-col="${col}">${label}${_orden.col === col ? (_orden.desc ? " ↓" : " ↑") : ""}</th>`;
 
-  const rows = filas.map(f => {
+  const fila = f => {
     const px = f.px || {};
     return `<tr>
       <td class="l"><span class="mc-tk">${esc(String(f.ticker).replace(/\.BA$/, ""))}</span>${
         String(f.ticker).endsWith(".BA") ? '<span class="mc-nm" style="display:inline;color:var(--gold);opacity:.7"> BYMA</span>' : ""}
-        <span class="mc-nm">${esc(px.nombre && px.nombre !== f.ticker ? px.nombre : "")}</span></td>
+        <span class="mc-nm">${esc(px.nombre && px.nombre !== f.ticker ? px.nombre : "")}</span>
+        <span class="mc-brk" data-brk="${esc(f.id)}" title="Cambiar broker">${esc(f.broker || "sin broker")}</span></td>
       <td>${num(f.cantidad, 4).replace(/,0+$/, "")}</td>
       <td>${f.dCompra != null ? money(f.dCompra, cur) : "—"}</td>
       <td>${f.dActual != null ? money(f.dActual, cur) : "—"}</td>
@@ -323,7 +398,18 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
         : `<span class="mc-ver ${verCls(px.veredicto)}">${esc(px.veredicto || (f.actual == null ? "Buscando precio…" : "Sin dato"))}</span>`}</td>
       <td><button class="mc-del" data-del="${esc(f.id)}" title="Quitar">✕</button></td>
     </tr>`;
-  }).join("");
+  };
+  // vista por broker: si alguna posición tiene broker, la tabla se agrupa
+  // con subtotales (el orden de columna elegido se respeta dentro del grupo)
+  const grupos = agruparPorBroker(filas, r.total);
+  const agrupada = grupos.length > 1 || (grupos.length === 1 && grupos[0].broker !== "Sin broker");
+  const rows = agrupada
+    ? grupos.map(g => `<tr class="mc-grp"><td colspan="12"><b>${esc(g.broker)}</b>
+        <span>${g.filas.length} ${g.filas.length === 1 ? "posición" : "posiciones"} · ${money(g.valor, cur)}${g.plPct != null ? ` · <span class="${g.pl >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(g.pl, cur)} (${pct(g.plPct)})</span>` : ""}${g.peso != null ? ` · ${num(g.peso)}% de tu cartera` : ""}</span></td></tr>`
+        + g.filas.map(fila).join("")).join("")
+    : filas.map(fila).join("");
+  const reparto = agrupada ? `<div class="mc-brks">${grupos.map(g =>
+    `<span class="b"><b>${esc(g.broker)}</b> ${g.peso != null ? num(g.peso) + "%" : "—"} · ${money(g.valor, cur)}</span>`).join("")}</div>` : "";
 
   el.innerHTML = `<div class="mc-wrap">
     ${cabecera}${avisoFx}
@@ -333,6 +419,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
       <div class="mc-k"><div class="l">Resultado</div><div class="v ${r.plTot >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(r.plTot, cur)}</div><div class="s">ganancia / pérdida no realizada</div></div>
       <div class="mc-k"><div class="l">Rendimiento</div><div class="v ${(r.plTotPct || 0) >= 0 ? "mc-pos" : "mc-neg"}">${r.plTotPct == null ? "—" : pct(r.plTotPct)}</div><div class="s">sobre lo invertido</div></div>
     </div>
+    ${reparto}
     ${form}
     <div class="mc-tblwrap"><table class="mc-tbl">
       <thead><tr>
@@ -400,6 +487,17 @@ function enganchar() {
   const add = _el.querySelector("#mc-add");
   if (add) add.onclick = agregar;
   _el.querySelectorAll("[data-del]").forEach(b => b.onclick = () => quitar(b.dataset.del));
+  _el.querySelectorAll(".mc-brk[data-brk]").forEach(chip => chip.onclick = () => {
+    const id = chip.dataset.brk;
+    const inp = document.createElement("input");
+    inp.className = "mc-brk-in"; inp.setAttribute("list", "mc-brokers"); inp.maxLength = 24;
+    inp.value = chip.textContent === "sin broker" ? "" : chip.textContent;
+    chip.replaceWith(inp); inp.focus();
+    let listo = false;
+    const cerrar = () => { if (listo) return; listo = true; guardarBroker(id, inp.value.trim()); };
+    inp.addEventListener("keydown", ev => { if (ev.key === "Enter") cerrar(); if (ev.key === "Escape") { listo = true; pintar(); } });
+    inp.addEventListener("blur", cerrar);
+  });
   _el.querySelectorAll(".mc-tab").forEach(t => t.onclick = () => {
     _el.querySelectorAll(".mc-tab").forEach(x => x.classList.toggle("on", x === t));
     const imp = t.dataset.modo === "imp";
@@ -429,8 +527,11 @@ async function cargarFx() {
 /* ── importar: primero muestra qué entendió, después confirma ── */
 let _porImportar = null;
 
-function revisarImport() {
+async function revisarImport() {
   const txt = _el.querySelector("#mc-paste").value;
+  const mercado = (_el.querySelector("#mc-imp-mercado") || {}).value || "byma";
+  const broker = ((_el.querySelector("#mc-imp-broker") || {}).value || "").trim();
+  setPref("valtia-mc-mercado", mercado); if (broker) setPref("valtia-mc-broker", broker);
   const { filas, errores } = parseImport(txt);
   const prev = _el.querySelector("#mc-prev");
   if (!filas.length) {
@@ -438,12 +539,21 @@ function revisarImport() {
       ${errores.slice(0, 4).map(esc).join("<br>")}</div>`;
     return;
   }
+  const bonos = await bonosSet();
+  filas.forEach(f => {
+    f.ticker = normalizarTicker(f.ticker, mercado, bonos);
+    f.broker = broker;
+    // moneda en la que cotiza lo que se está importando (solo para mostrar)
+    f.monedaHint = mercado === "byma" && !/[DC]$/.test(f.ticker.replace(/\.BA$/, "")) ? "ARS"
+                 : mercado === "byma" && bonos.has(f.ticker) ? "USD" : "USD";
+    if (mercado === "byma" && !bonos.has(f.ticker)) f.monedaHint = "ARS";
+  });
   _porImportar = filas;
   prev.innerHTML = `
     <div class="mc-prev"><table>
-      <thead><tr><th>Ticker</th><th>Cantidad</th><th>Precio compra</th><th>Fecha</th></tr></thead>
+      <thead><tr><th>Se guarda como</th><th>Cantidad</th><th>Precio compra</th><th>Fecha</th><th>Broker</th></tr></thead>
       <tbody>${filas.map(f => `<tr><td><b>${esc(f.ticker)}</b></td><td>${num(f.cantidad, 4).replace(/,0+$/, "")}</td>
-        <td>${f.precioCompra ? money(f.precioCompra, "USD") : "—"}</td><td>${esc(f.fecha || "—")}</td></tr>`).join("")}</tbody>
+        <td>${f.precioCompra ? money(f.precioCompra, f.monedaHint) : "—"}</td><td>${esc(f.fecha || "—")}</td><td>${esc(broker || "—")}</td></tr>`).join("")}</tbody>
     </table></div>
     ${errores.length ? `<div class="mc-hint mc-bad">${errores.length} línea(s) que no pude leer:<br>${errores.slice(0, 4).map(esc).join("<br>")}</div>` : ""}
     <button class="mc-btn" id="mc-imp-ok" style="margin-top:12px">Importar ${filas.length} ${filas.length === 1 ? "posición" : "posiciones"}</button>`;
@@ -461,42 +571,60 @@ async function confirmarImport() {
       const id = f.ticker + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
       await setDoc(doc(db, "inversores", _user.email, "cartera", id), {
         ticker: f.ticker, cantidad: f.cantidad, precioCompra: f.precioCompra,
-        fecha: f.fecha, creado: new Date().toISOString(),
+        fecha: f.fecha, broker: f.broker || "", creado: new Date().toISOString(),
       });
       ok++;
     } catch (e) { fallo++; }
   }
   _porImportar = null;
-  msg.innerHTML = `<span style="color:#4caf50">${ok} posición(es) importadas.</span>` +
-    (fallo ? ` <span style="color:#ef5350">${fallo} fallaron.</span>` : "") +
-    ` <span style="color:var(--muted)">Los precios aparecen en la próxima actualización.</span>`;
   await leerTodo();
   pintar();
+  const msg2 = _el.querySelector("#mc-msg");
+  if (msg2) msg2.innerHTML = `<span style="color:#4caf50">${ok} ${ok === 1 ? "posición importada" : "posiciones importadas"}.</span>` +
+    (fallo ? ` <span style="color:#ef5350">${fallo} fallaron.</span>` : "") +
+    ` <span style="color:var(--muted)">Los precios aparecen en la próxima actualización (cada 15 min en rueda).</span>`;
 }
 
 async function agregar() {
   const msg = _el.querySelector("#mc-msg");
-  const tk = (_el.querySelector("#mc-ticker").value || "").trim().toUpperCase();
+  const mercado = (_el.querySelector("#mc-mercado") || {}).value || "byma";
+  const broker = ((_el.querySelector("#mc-broker") || {}).value || "").trim();
+  const crudo = (_el.querySelector("#mc-ticker").value || "").trim().toUpperCase();
   const cant = parseFloat(_el.querySelector("#mc-cant").value);
   const pc = parseFloat(_el.querySelector("#mc-precio").value);
   const fecha = _el.querySelector("#mc-fecha").value || "";
-  if (!tk || !(cant > 0)) {
+  if (!crudo || !(cant > 0)) {
     msg.innerHTML = `<span style="color:#ef5350">Completá al menos el ticker y la cantidad.</span>`;
     return;
   }
   try {
+    const tk = normalizarTicker(crudo, mercado, await bonosSet());
+    setPref("valtia-mc-mercado", mercado); if (broker) setPref("valtia-mc-broker", broker);
     const db = getFirestore(getApp());
     const id = tk + "-" + Date.now().toString(36);
     await setDoc(doc(db, "inversores", _user.email, "cartera", id), {
       ticker: tk, cantidad: cant, precioCompra: isFinite(pc) ? pc : 0, fecha,
-      creado: new Date().toISOString(),
+      broker, creado: new Date().toISOString(),
     });
-    msg.innerHTML = `<span style="color:#4caf50">${tk} agregado. El precio aparece con la actualización de mañana.</span>`;
+    const donde = mercado === "byma" ? "BYMA, en pesos" : mercado === "cripto" ? "cripto, en dólares" : "exterior, en dólares";
     await leerTodo();
     pintar();
+    // el repintado recrea el formulario: el mensaje se escribe recién ahora
+    const msg2 = _el.querySelector("#mc-msg");
+    if (msg2) msg2.innerHTML = `<span style="color:#4caf50">${esc(tk)} agregado (${donde}${broker ? ", " + esc(broker) : ""}). El precio aparece en la próxima actualización — cada 15 min en rueda.</span>`;
   } catch (e) {
     msg.innerHTML = `<span style="color:#ef5350">No se pudo guardar: ${esc(String(e).slice(0, 90))}</span>`;
   }
+}
+
+async function guardarBroker(id, broker) {
+  try {
+    const db = getFirestore(getApp());
+    await setDoc(doc(db, "inversores", _user.email, "cartera", id), { broker }, { merge: true });
+    if (broker) setPref("valtia-mc-broker", broker);
+    await leerTodo();
+  } catch (e) {}
+  pintar();
 }
 
 async function quitar(id) {

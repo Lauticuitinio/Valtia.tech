@@ -1344,7 +1344,7 @@ function updateChartTheme(){
     // sesión, admin incluido). Se carga aparte para no demorar el portal.
     const mcTab = document.getElementById('micartera-tab');
     if (mcTab) mcTab.style.display = 'inline';
-    import('./mi-cartera.js?v=9')
+    import('./mi-cartera.js?v=10')
       .then(m => m.initMiCartera(user, document.getElementById('tab-micartera')))
       .catch(() => {});
   }
