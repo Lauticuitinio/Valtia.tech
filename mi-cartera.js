@@ -83,7 +83,7 @@ const STYLE = `
 `;
 
 const money = (n, cur) => (Number(n) < 0 ? "−" : "") + (cur === "ARS" ? "$" : "US$") +
-  Math.abs(Number(n) || 0).toLocaleString("es-AR", { maximumFractionDigits: Math.abs(n) < 10 ? 2 : 0 });
+  Math.abs(Number(n) || 0).toLocaleString("es-AR", { maximumFractionDigits: Math.abs(n) < 1000 ? 2 : 0 });
 // con signo explícito (para resultados): +US$930 / −US$160
 const moneyS = (n, cur) => (Number(n) >= 0 ? "+" : "") + money(n, cur);
 
@@ -126,9 +126,11 @@ export function parseNum(s) {
   } else if (coma > -1) {
     t = t.replace(",", ".");                       // 1900,50
   } else if (punto > -1) {
-    // solo punto: "1.900" son miles, "180.50" es decimal
+    // solo punto: "1.900" son miles, "180.50" es decimal — pero un número
+    // que empieza en "0." nunca es miles (cantidades cripto: 0.125 BTC)
     const dec = t.length - punto - 1;
-    if (dec === 3 && t.replace(/[.-]/g, "").length > 3) t = t.replace(/\./g, "");
+    if (dec === 3 && t.replace(/[.-]/g, "").length > 3
+        && !t.startsWith("0.") && !t.startsWith("-0.")) t = t.replace(/\./g, "");
   }
   return parseFloat(t);
 }
@@ -246,7 +248,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
         <button data-cur="CCL" class="${_cur === "CCL" ? "on" : ""}">USD CCL</button>
         <button data-cur="MEP" class="${_cur === "MEP" ? "on" : ""}">USD MEP</button>
       </div>
-      ${opts.frescura ? `<div class="mc-live"><span class="mc-dot"></span>${esc(opts.frescura)}${fxTxt ? " · " + fxTxt : ""}</div>` : ""}
+      ${opts.frescura ? `<div class="mc-live"><span class="mc-dot"${String(opts.frescura).startsWith("Precios del") ? ' style="background:#E0A93E"' : ""}></span>${esc(opts.frescura)}${fxTxt ? " · " + fxTxt : ""}</div>` : ""}
     </div></div>`;
 
   const form = `
@@ -274,6 +276,11 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
       </div>
       <div class="mc-msg" id="mc-msg"></div>
     </div>`;
+
+  const fxFalta = posiciones.length && (
+    (_cur === "ARS" && !_fx.ccl && r.filas.some(f => f.moneda !== "ARS")) ||
+    (_cur === "CCL" && !_fx.ccl) || (_cur === "MEP" && !_fx.mep));
+  const avisoFx = fxFalta ? `<div style="background:rgba(224,169,62,.12);border:1px solid rgba(224,169,62,.45);border-left:3px solid #E0A93E;border-radius:8px;padding:10px 14px;font-size:12.5px;line-height:1.6;margin-bottom:16px;color:var(--text)">⚠ No pudimos traer la cotización del dólar: los totales de abajo <b>excluyen tus posiciones en USD</b>. Recargá la página en unos minutos.</div>` : "";
 
   if (!posiciones.length) {
     el.innerHTML = `<div class="mc-wrap">${cabecera}${form}
@@ -319,9 +326,9 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   }).join("");
 
   el.innerHTML = `<div class="mc-wrap">
-    ${cabecera}
+    ${cabecera}${avisoFx}
     <div class="mc-kpis">
-      <div class="mc-k"><div class="l">Valor actual</div><div class="v">${money(r.total, cur)}</div><div class="s">${r.filas.length} posicion${r.filas.length === 1 ? "" : "es"}</div></div>
+      <div class="mc-k"><div class="l">Valor actual</div><div class="v">${money(r.total, cur)}</div><div class="s">${r.filas.length} ${r.filas.length === 1 ? "posición" : "posiciones"}</div></div>
       <div class="mc-k"><div class="l">Invertido</div><div class="v">${money(r.costoTot, cur)}</div><div class="s">a precio de compra</div></div>
       <div class="mc-k"><div class="l">Resultado</div><div class="v ${r.plTot >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(r.plTot, cur)}</div><div class="s">ganancia / pérdida no realizada</div></div>
       <div class="mc-k"><div class="l">Rendimiento</div><div class="v ${(r.plTotPct || 0) >= 0 ? "mc-pos" : "mc-neg"}">${r.plTotPct == null ? "—" : pct(r.plTotPct)}</div><div class="s">sobre lo invertido</div></div>
@@ -439,7 +446,7 @@ function revisarImport() {
         <td>${f.precioCompra ? money(f.precioCompra, "USD") : "—"}</td><td>${esc(f.fecha || "—")}</td></tr>`).join("")}</tbody>
     </table></div>
     ${errores.length ? `<div class="mc-hint mc-bad">${errores.length} línea(s) que no pude leer:<br>${errores.slice(0, 4).map(esc).join("<br>")}</div>` : ""}
-    <button class="mc-btn" id="mc-imp-ok" style="margin-top:12px">Importar ${filas.length} posición${filas.length === 1 ? "" : "es"}</button>`;
+    <button class="mc-btn" id="mc-imp-ok" style="margin-top:12px">Importar ${filas.length} ${filas.length === 1 ? "posición" : "posiciones"}</button>`;
   const ok = _el.querySelector("#mc-imp-ok");
   if (ok) ok.onclick = confirmarImport;
 }
@@ -524,6 +531,9 @@ export async function initMiCartera(user, el) {
         if (document.hidden || !_el || _el.offsetParent === null) return;
         const act = document.activeElement;
         if (act && _el.contains(act) && /INPUT|TEXTAREA/.test(act.tagName)) return;
+        // pestaña Importar abierta = el usuario está armando el paste: no pisar
+        const imp = _el.querySelector("#mc-modo-imp");
+        if (imp && imp.style.display !== "none") return;
         try { await Promise.all([leerTodo(), cargarFx()]); pintar(); } catch (e) {}
       }, 120000);
     }

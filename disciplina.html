@@ -161,7 +161,7 @@ const fmtPct = n => (n >= 0 ? "+" : "") + n.toFixed(2).replace(".", ",") + "%";
 const cls = n => n > 0.004 ? "pos" : n < -0.004 ? "neg" : "mut";
 const verCls = v => v === "Infravalorada" ? "infra" : v === "Estirada" ? "cara" : "precio";
 const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-const hoyISO = () => new Date().toISOString().slice(0, 10);
+const hoyISO = () => new Date(Date.now() - 3 * 3600 * 1000).toISOString().slice(0, 10);   // hora argentina (UTC-3)
 const mesDe = f => String(f || "").slice(0, 7);
 const mesNombre = m => { const [a, mm] = m.split("-"); return MESES[Number(mm) - 1] + " " + a; };
 const mesAnterior = m => { let [a, mm] = m.split("-").map(Number); mm--; if (!mm) { mm = 12; a--; } return a + "-" + String(mm).padStart(2, "0"); };
@@ -409,7 +409,7 @@ function enganchar() {
     const cant = parseFloat($("#o-cant").value);
     let px = parseFloat($("#o-px").value);
     const msg = $("#msg-otra");
-    if (!isFinite(px) || px <= 0) px = precioDe(norm(tk));
+    if ((!isFinite(px) || px <= 0) && !tk.endsWith(".BA")) px = precioDe(norm(tk));   // .BA cotiza en pesos: el radar no tiene ese precio
     if (!tk || !(cant > 0)) { msg.innerHTML = '<span class="neg">Completá ticker y cantidad.</span>'; return; }
     if (!(px > 0)) { msg.innerHTML = '<span class="neg">No tenemos precio de ese activo: poné el precio que pagaste.</span>'; return; }
     try {

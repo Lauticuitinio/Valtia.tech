@@ -199,7 +199,7 @@ async function render() {
       b.tem != null ? tile("TEM", n2.format(b.tem) + "%", "efectiva mensual") : "",
       b.tna != null ? tile("TNA", n1.format(b.tna) + "%", "simple, 365 días") : "",
       b.vpv != null ? tile("Paga al vencimiento", "$" + n2.format(b.vpv), "por cada 100 VN") : "",
-      b.dias != null ? tile("Días", b.dias, "al " + fverde(b.vence)) : tile("Vence", fverde(b.vence), ""),
+      b.dias != null ? tile("Días", b.dias, b.vence ? "al " + fverde(b.vence) : "") : (b.vence ? tile("Vence", fverde(b.vence), "") : ""),
       b.tem_lic ? tile("TEM de licitación", n2.format(b.tem_lic) + "%", "tasa de emisión") : "",
     ].join("");
   } else if (enUSD) {

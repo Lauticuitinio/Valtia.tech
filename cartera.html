@@ -142,8 +142,8 @@ window.tg = () => {
 };
 
 const $ = s => document.querySelector(s);
-const fmtUSD = n => "US$" + Number(n).toLocaleString("es-AR", {maximumFractionDigits: 2});
-const fmtPct = n => (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
+const fmtUSD = n => n == null || !isFinite(Number(n)) ? "—" : "US$" + Number(n).toLocaleString("es-AR", {maximumFractionDigits: 2});
+const fmtPct = n => n == null || !isFinite(n) ? "—" : (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
 const cls = n => n > 0.004 ? "pos" : n < -0.004 ? "neg" : "mut";
 const pill = (n, t) => `<span class="pill ${n>0.004?"p":n<-0.004?"n":"m"}">${n>0.004?"▲":n<-0.004?"▼":"—"} ${t}</span>`;
 const tok = name => getComputedStyle(document.body).getPropertyValue(name).trim();
