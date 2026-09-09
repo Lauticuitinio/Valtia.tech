@@ -76,6 +76,14 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 
 /* grilla radar + informe */
 .dos{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
+.dp-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin:18px 0}
+.dp-t{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.dp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:12px}
+.dp-chip{text-align:center}
+.dp-l{font-size:10.5px;color:var(--muted);margin-bottom:4px}
+.dp-v{font-family:'Cormorant Garamond',serif;font-size:21px;line-height:1}
+.dp-v.pos{color:#4caf50}.dp-v.neg{color:#ef5350}
+.dp-nota{font-size:11.5px;color:var(--muted);line-height:1.6;margin-top:12px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line)}
 .stats .st{background:#fff;padding:14px 16px}
 .stats .l{font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
@@ -246,7 +254,7 @@ import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebase
 import { getFirestore, collection, getDocs, doc, getDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { EMPRESAS, SECTORES } from './empresas.js?v=3';
-import { radarSym, tickerFicha } from './activos.js?v=2';
+import { radarSym, tickerFicha } from './activos.js?v=4';
 
 const app = getApps().length ? getApp() : initializeApp({
   apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
@@ -274,12 +282,13 @@ document.title = `${emp.nombre} (${t}) — Valtia Analytics`;
 const sectorN = (SECTORES.find(s => s.k === emp.sector) || {}).n || "";
 
 try {
-  const [pxSnap, histSnap, radarSnap, infSnap, notSnap] = await Promise.all([
+  const [pxSnap, histSnap, radarSnap, infSnap, notSnap, desgSnap] = await Promise.all([
     getDoc(doc(db, "preciosInformes", "latest")).catch(() => null),
     getDoc(doc(db, "historialInformes", t)).catch(() => null),
     getDoc(doc(db, "radar", "latest")).catch(() => null),
     emp.slug ? getDoc(doc(db, "informes", emp.slug)).catch(() => null) : Promise.resolve(null),
     getDocs(query(collection(db, "noticias"), where("estado", "==", "publicado"))).catch(() => null),
+    getDoc(doc(db, "desglosePeriodos", "latest")).catch(() => null),
   ]);
 
   // precio en vivo
@@ -311,6 +320,23 @@ try {
     fila("Margen op.", ra.margen != null ? n1.format(ra.margen) + "%" : "—", ""),
     fila("Div. yield", ra.divYield != null ? n1.format(ra.divYield) + "%" : "—", ""),
     fila("Market cap", ra.mktcap ? "US$" + compacto.format(ra.mktcap) : "—", ""),
+    // rentabilidad y solidez: ratios del balance, no los afecta la moneda
+    fila("ROE", ra.roe != null ? n1.format(ra.roe) + "%" : "—", "ganancia / patrimonio"),
+    fila("ROA", ra.roa != null ? n1.format(ra.roa) + "%" : "—", "ganancia / activos"),
+    fila("Margen neto", ra.margenNeto != null ? n1.format(ra.margenNeto) + "%" : "—", ""),
+    fila("Deuda / EBITDA", ra.deudaEbitda != null ? n1.format(ra.deudaEbitda) + "x" : "—", "años de EBITDA para cancelar la deuda"),
+    fila("Liquidez", ra.liquidez != null ? n1.format(ra.liquidez) + "x" : "—", "activo corriente / pasivo corriente"),
+    // beta: SIEMPRE con su R2 al lado. Una beta que explica el 3% de la
+    // variación no dice nada, y sin el R2 se lee como si dijera todo.
+    fila("Beta (2 años)",
+      ra.beta != null && ra.betaR2 != null && ra.betaR2 >= 0.10 ? n1.format(ra.beta) : "—",
+      ra.beta == null ? "" : ra.betaR2 < 0.10
+        ? "no sigue al S&P (explica " + Math.round(ra.betaR2 * 100) + "%)"
+        : "el S&P explica el " + Math.round(ra.betaR2 * 100) + "%"),
+    fila("Volatilidad", ra.volAnual != null ? n1.format(ra.volAnual) + "%" : "—", "anualizada, 2 años"),
+    fila("Consenso", ra.upside != null ? (ra.upside >= 0 ? "+" : "") + n1.format(ra.upside) + "%" : "—",
+      ra.nAnalistas ? "objetivo de " + ra.nAnalistas + " analistas" : ""),
+    ra.monedaBalance === "ARS" ? `<div class="st" style="grid-column:1/-1"><div class="z" style="margin:0">Balance en pesos: P/Ventas, EV/EBITDA y crecimiento no se publican porque mezclarían un precio en dólares con números en pesos.</div></div>` : "",
   ].join("") : "";
 
   const verClase = ra && ra.veredicto === "Infravalorada" ? " infra" : ra && ra.veredicto === "Estirada" ? " cara" : "";
@@ -366,6 +392,7 @@ try {
   <div class="dos">
     <div class="card-w">
       <div class="card-h"><span class="t">Radar de valuación</span><span class="s">Lectura propia Valtia · diaria</span></div>
+      <div id="desglose-periodos"></div>
       ${ra ? `<div class="stats">${statsHtml}</div>${veredictoHtml}` : '<div class="vacio">Este activo todavía no está en el radar de valuación.</div>'}
     </div>
     <div class="card-w">
@@ -396,6 +423,29 @@ try {
     <div class="card-h"><span class="t">Noticias de ${esc(emp.nombre)}</span><a class="s" href="noticias.html">Ver todas →</a></div>
     <div id="act-news-list"><div class="vacio">Buscando noticias…</div></div>
   </div>`;
+
+  // ── cuánto rindió, por período ──
+  // Es la variación del PRECIO, no "lo que ganaste": eso depende de cuándo
+  // compraste y va en "Tu posición".
+  (() => {
+    const box = document.getElementById("desglose-periodos");
+    const dp = desgSnap && desgSnap.exists() ? JSON.parse(desgSnap.data().json || "{}") : {};
+    const d = dp[t];
+    if (!box || !d) return;
+    const P = [["semana", "Semana"], ["mes", "Mes"], ["tresM", "3 meses"],
+               ["ytd", "En el año"], ["anio", "1 año"], ["dosA", "2 años"]];
+    const chips = P.filter(([k]) => d[k] != null).map(([k, l]) => {
+      const v = d[k];
+      return `<div class="dp-chip"><div class="dp-l">${l}</div>
+        <div class="dp-v ${v >= 0 ? "pos" : "neg"}">${v >= 0 ? "+" : ""}${n1.format(v)}%</div></div>`;
+    }).join("");
+    if (!chips) return;
+    box.innerHTML = `<div class="dp-wrap"><div class="dp-t">Cuánto rindió el activo</div>
+      <div class="dp-grid">${chips}</div>
+      <div class="dp-nota">Variación del precio en dólares, con datos desde el ${String(d.desde).split("-").reverse().join("/")}.
+        Si lo tenés en pesos (CEDEAR o acción local), el porcentaje de tu posición es otro: lo ves en Mi cartera.</div></div>`;
+  })();
+
 
   // ── informe embebido en la ficha (una sola página por activo) ──
   const renderInforme = d => {

@@ -8,7 +8,7 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { base, linkDe, esRentaFija, parBono, sectorDe, mercadoDe } from './activos.js?v=2';
+import { base, linkDe, esRentaFija, parBono, sectorDe, mercadoDe, desglose } from './activos.js?v=4';
 
 const STYLE = `
 .mc-wrap{width:100%}
@@ -518,6 +518,9 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
 
   const fila = f => {
     const px = f.px || {};
+    // variación del precio por período (no es "lo que ganaste": eso es la
+    // columna Resultado, que sale del precio de compra)
+    const dg = desglose(f.ticker, opts.desg || {}, px, f);
     return `<tr>
       <td class="l">${(h => h ? `<a class="mc-tk" href="${h}" style="text-decoration:none">${esc(base(f.ticker))}</a>` : `<span class="mc-tk">${esc(base(f.ticker))}</span>`)(linkDe(f.ticker))}${
         String(f.ticker).endsWith(".BA") ? '<span class="mc-nm" style="display:inline;color:var(--gold);opacity:.7"> BYMA</span>' : ""}
@@ -530,6 +533,12 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
       <td class="${f.dPl == null ? "mc-mut" : f.dPl >= 0 ? "mc-pos" : "mc-neg"}">${f.dPl == null ? "—" : moneyS(f.dPl, cur)}</td>
       <td class="${f.plPct == null ? "mc-mut" : f.plPct >= 0 ? "mc-pos" : "mc-neg"}" style="font-weight:600">${f.plPct == null ? "—" : pct(f.plPct)}</td>
       <td>${f.peso != null ? num(f.peso) + "%" : "—"}</td>
+      ${["dia", "mes", "anio"].map(k => {
+        const d = (dg.find(x => x.clave === k) || {});
+        return d.pct == null
+          ? `<td class="mc-mut" title="${esc(d.nota || "")}">—</td>`
+          : `<td class="${d.pct >= 0 ? "mc-pos" : "mc-neg"}" title="${esc(d.nota || (d.plata != null ? "sobre lo que tenés hoy" : ""))}">${pct(d.pct)}${d.nota ? "*" : ""}</td>`;
+      }).join("")}
       <td>${num(px.per)}</td>
       <td>${num(px.rsi)}</td>
       <td class="l">${px.sinDatos
@@ -564,7 +573,8 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
       <thead><tr>
         ${th("ticker", "Activo", "l")}${th("cantidad", "Cant.")}${th("dCompra", "Compra")}
         ${th("dActual", "Actual")}${th("dValor", "Valor")}${th("dPl", "Resultado")}${th("plPct", "%")}
-        ${th("peso", "Peso")}<th>PER</th><th>RSI</th><th class="l">Lectura Valtia</th><th></th>
+        ${th("peso", "Peso")}<th title="Variación del precio en el período, no tu resultado">Día</th><th>Mes</th><th>Año</th>
+        <th>PER</th><th>RSI</th><th class="l">Lectura Valtia</th><th></th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table></div>
@@ -618,14 +628,22 @@ function frescura() {
   return "Precios del " + new Date(ms).toLocaleDateString("es-AR");
 }
 
-let _bonos = new Set(), _panel = null, _flujos = null;
+let _bonos = new Set(), _panel = null, _flujos = null, _desg = null;
 
 function pintar() {
   const hoy = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
   const rf = _panel ? analisisRentaFija(calcular(_pos, _precios), _bonos, _panel, _flujos || {}, hoy) : "";
   renderMiCartera(_el, _pos, _precios, { frescura: frescura(), onRerender: enganchar,
-                                         bonos: _bonos, rentaFija: rf });
+                                         bonos: _bonos, rentaFija: rf, desg: _desg });
   enganchar();
+}
+
+/* variaciones por período ya calculadas por el sync (doc público) */
+async function cargarDesglose() {
+  try {
+    const s2 = await getDoc(doc(getFirestore(getApp()), "desglosePeriodos", "latest"));
+    if (s2.exists()) _desg = JSON.parse(s2.data().json || "{}");
+  } catch (e) {}
 }
 
 /* panel de bonos y flujos: solo se piden si la cartera tiene renta fija */
@@ -821,7 +839,7 @@ export async function initMiCartera(user, el) {
   try {
     await Promise.all([leerTodo(), cargarFx()]);
     _bonos = await bonosSet();
-    await cargarRentaFija();
+    await Promise.all([cargarRentaFija(), cargarDesglose()]);
     pintar();
     // el sync intradía reescribe los precios cada ~15 min: se releen solos
     // (sin pisar lo que el usuario esté escribiendo ni si la pestaña no se ve)

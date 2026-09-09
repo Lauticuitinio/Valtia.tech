@@ -7,10 +7,10 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { calcular, agruparPorBroker, normalizarTicker } from './mi-cartera.js?v=13';
+import { calcular, agruparPorBroker, normalizarTicker } from './mi-cartera.js?v=15';
 import { EMPRESAS } from './empresas.js?v=3';
-import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe }
-  from './activos.js?v=2';
+import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose }
+  from './activos.js?v=4';
 
 /* ───────────────────────── estilos ───────────────────────── */
 const CSS = `
@@ -166,6 +166,7 @@ const calendario = () => cached('cal', async () => ((await docJson('calendario')
 const flujos = () => cached('flujos', async () => (await docJson('bonosFlujos')) || {});
 const panelBonos = () => cached('bp', async () => (await docJson('bonosPanel')) || {});
 const preciosInf = () => cached('pi', async () => (await docJson('preciosInformes')) || {});
+const desglosePer = () => cached('dg', async () => (await docJson('desglosePeriodos')) || {});
 const bonosSet = () => cached('bset', async () => new Set(Object.keys((await panelBonos()).todos || {})));
 const fx = () => cached('fx', async () => {
   const r = await fetch('https://dolarapi.com/v1/dolares'); const d = await r.json();
@@ -733,7 +734,7 @@ async function renderEmpresas() {
       <div class="vp-card" style="max-width:520px"><h4>Todavía no cargaste posiciones</h4><p>Cargá tu cartera y esta sección se arma sola.</p><a class="vp-ir" href="#panel/micartera" data-go="micartera">Ir a Mi cartera →</a></div>`;
     return;
   }
-  const [cal, bset, bp, fl, inf, pi] = await Promise.all([calendario(), bonosSet(), panelBonos(), flujos(), informes(), preciosInf()]);
+  const [cal, bset, bp, fl, inf, pi, dg] = await Promise.all([calendario(), bonosSet(), panelBonos(), flujos(), informes(), preciosInf(), desglosePer()]);
   const m = curMoneda(cc.cur), hoy = hoyAR();
   // agrupar lotes por activo
   const grupos = new Map();
@@ -784,6 +785,14 @@ async function renderEmpresas() {
     return `<div class="vp-card" data-emp="${esc(g.k)}"><div class="l">${esc(g.k)}${ver ? ` · <span class="vp-tag ${verCls(ver)}" style="padding:1px 6px">${esc(ver)}</span>` : ''}</div>
       <h4>${link ? `<a href="${link}" style="color:inherit;text-decoration:none">${esc(nombre)}</a>` : esc(nombre)}</h4>
       <p>${cant.toLocaleString('es-AR')} ${g.rf ? 'VN' : 'unid.'}${g.tieneValor ? ` · <b>${money(g.valor, m)}</b> · <span class="${cls(g.pl)}">${moneyS(g.pl, m)}</span>` : ' · esperando precio'}</p>
+      ${(() => {
+        // variación del PRECIO por período (no es el resultado de la persona)
+        if (g.rf) return '';
+        const d = desglose(g.filas[0].ticker, dg, g.filas[0].px, g.filas[0]);
+        const ver = ['dia', 'mes', 'anio'].map(k => d.find(x => x.clave === k)).filter(x => x && x.pct != null);
+        return ver.length ? `<p class="vp-mut" style="font-size:12px;margin-top:4px">El activo: ${ver.map(x =>
+          `${x.label.toLowerCase()} <b class="${x.pct >= 0 ? 'vp-pos' : 'vp-neg'}">${pct(x.pct)}</b>`).join(' · ')}</p>` : '';
+      })()}
       ${extra}
       ${evento ? `<p style="margin-top:6px">${evento}</p>` : ''}
       <div data-noticias="${esc(g.rf ? '' : (tickerFicha(g.k) || ''))}"></div>

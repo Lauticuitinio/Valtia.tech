@@ -168,6 +168,13 @@ service cloud.firestore {
 
     // ── PRECIOS EN VIVO DE LOS INFORMES (banda del lector) ──
     // Solo precio y variación del día por ticker: dato de mercado puro.
+    // Desglose por periodo (dia/semana/mes/año) de cada ticker: son
+    // variaciones de precios publicos, calculadas por el sync.
+    match /desglosePeriodos/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /preciosInformes/{docId} {
       allow read: if true;
       allow write: if false;

@@ -978,7 +978,7 @@ function updateChartTheme(){
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   import { getDatabase, ref, push, onValue, serverTimestamp as dbTimestamp }
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-  import { iniciarPanel } from './panel.js?v=4';
+  import { iniciarPanel } from './panel.js?v=6';
 
   
   // ── FIREBASE CONFIG ──
@@ -1312,7 +1312,7 @@ function updateChartTheme(){
 
     // "Mi cartera": seguimiento de las posiciones propias (todo usuario con
     // sesión, admin incluido). Se carga aparte para no demorar el portal.
-    import('./mi-cartera.js?v=13')
+    import('./mi-cartera.js?v=15')
       .then(m => m.initMiCartera(user, document.getElementById('tab-micartera')))
       .catch(() => {});
   }

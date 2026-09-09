@@ -101,6 +101,77 @@ export function monedaProbable(tk, bonosSet) {
   return 'USD';
 }
 
+/* ── desglose por período ────────────────────────────────────────────────
+   Un solo lugar para las reglas de honestidad: si esto se escribe tres veces
+   (ficha, cartera, panel), en alguna queda el número crudo sin su asterisco.
+
+   dp  = doc desglosePeriodos/latest (variaciones ya calculadas por el sync)
+   px  = doc precios/{ticker} (de ahí sale la variación del día)
+   pos = {cantidad, precioCompra, fecha, factor} — opcional
+
+   Reglas:
+   - el "hoy" sale del ticker que la persona TIENE (el CEDEAR en pesos), no
+     del ADR: son dos precios distintos;
+   - si no hay serie del .BA se usa la del ADR y se dice "en dólares";
+   - la plata solo se calcula cuando el período empieza DESPUÉS de la compra;
+     si no, es la variación del activo y no "lo que ganaste". */
+export const PERIODOS = [['dia', 'Hoy'], ['semana', 'Semana'], ['mes', 'Mes'],
+                         ['tresM', '3 meses'], ['ytd', 'En el año'],
+                         ['anio', '1 año'], ['dosA', '2 años']];
+
+export function desglose(ticker, dp, px, pos) {
+  const t = String(ticker || '').toUpperCase();
+  const propio = (dp || {})[t] || null;            // serie del ticker que tiene
+  const f = tickerFicha(t);
+  const adr = !propio && f ? (dp || {})[f] : null; // respaldo: el ADR en USD
+  const d = propio || adr;
+  const hoyPct = px && px.d != null ? Number(px.d) : null;
+  const compra = pos && pos.fecha ? String(pos.fecha).slice(0, 10) : null;
+  const valor = pos && px && px.precio != null
+    ? (Number(pos.cantidad) || 0) * Number(px.precio) * (Number(pos.factor) > 0 ? Number(pos.factor) : 1)
+    : null;
+  const DIAS = { dia: 1, semana: 7, mes: 30, tresM: 91, ytd: null, anio: 365, dosA: 730 };
+  const hoy = new Date(Date.now() - 3 * 3600e3);
+  return PERIODOS.map(([k, label]) => {
+    const pct = k === 'dia' ? hoyPct : (d ? d[k] : null);
+    if (pct == null) {
+      return { clave: k, label, pct: null,
+               nota: d ? (d.desde ? 'la serie arranca el ' + d.desde.split('-').reverse().join('/') : 'sin serie')
+                       : 'sin serie de precios' };
+    }
+    // ¿el período empieza antes de que lo comprara?
+    let recorte = null;
+    if (compra) {
+      const ini = k === 'ytd' ? new Date(hoy.getFullYear(), 0, 1)
+                              : new Date(hoy.getTime() - (DIAS[k] || 0) * 86400e3);
+      if (new Date(compra) > ini) recorte = compra;
+    }
+    // La plata solo se afirma cuando SE SABE que la posición existía todo el
+    // período. Sin fecha de compra no se sabe: ahí el número es la variación
+    // del activo y decir "ganaste tanto" sería inventar (en la cartera real
+    // del fondo esa cuenta sobreestima el resultado del año al doble).
+    const plata = (valor != null && compra && !recorte && pct != null)
+      ? valor - valor / (1 + pct / 100) : null;
+    return { clave: k, label, pct, plata,
+             enDolares: !propio && !!adr,
+             nota: recorte ? 'lo compraste el ' + recorte.split('-').reverse().join('/')
+                 : (!propio && adr) ? 'variación del ADR en dólares'
+                 : !compra ? 'variación del activo (no sabemos desde cuándo lo tenés)' : null };
+  });
+}
+
+/* Lo único que se puede afirmar como resultado propio: desde la compra. */
+export function desdeLaCompra(pos, px) {
+  if (!pos || !px || px.precio == null) return null;
+  const pc = Number(pos.precioCompra) || 0;
+  if (!(pc > 0)) return null;
+  const fac = Number(pos.factor) > 0 ? Number(pos.factor) : 1;
+  const cant = Number(pos.cantidad) || 0;
+  const costo = cant * pc * fac, valor = cant * Number(px.precio) * fac;
+  return { pct: (valor / costo - 1) * 100, plata: valor - costo, costo, valor,
+           desde: pos.fecha ? String(pos.fecha).slice(0, 10) : null };
+}
+
 /* mercado según el ticker guardado: byma / ext / cripto / renta fija */
 export function mercadoDe(tk, bonosSet) {
   const t = String(tk || '').trim().toUpperCase();
