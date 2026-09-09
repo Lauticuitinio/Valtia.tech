@@ -8,7 +8,7 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { base, linkDe } from './activos.js?v=1';
+import { base, linkDe, esRentaFija, parBono, sectorDe, mercadoDe } from './activos.js?v=2';
 
 const STYLE = `
 .mc-wrap{width:100%}
@@ -54,6 +54,27 @@ const STYLE = `
 .mc-empty h4{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--text);margin-bottom:8px}
 .mc-empty p{font-size:13px;color:var(--sub);line-height:1.7;max-width:520px;margin:0 auto}
 .mc-foot{font-size:11px;color:var(--muted);line-height:1.7;margin-top:14px}
+.mc-an{margin-top:26px}
+.mc-an h4{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:400;color:var(--text);margin:0 0 4px}
+.mc-an .sub{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+.mc-angrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.mc-anbox{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
+.mc-anbox .t{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.mc-bar{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12.5px}
+.mc-bar .n{flex:none;width:104px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-bar .t2{flex:1;height:7px;border-radius:4px;background:rgba(120,130,140,.16);overflow:hidden}
+.mc-bar .t2 i{display:block;height:100%;background:var(--gold);border-radius:4px}
+.mc-bar .p{flex:none;width:46px;text-align:right;color:var(--sub);font-variant-numeric:tabular-nums}
+.mc-anbox .nota{font-size:11.5px;color:var(--muted);line-height:1.6;margin-top:10px}
+.mc-alerta{background:rgba(224,169,62,.08);border:1px solid rgba(224,169,62,.4);border-left:3px solid #E0A93E;
+  border-radius:0 8px 8px 0;padding:11px 14px;font-size:12.5px;color:var(--sub);line-height:1.6;margin-top:12px}
+.mc-rf{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+.mc-rf th{font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);padding:7px 8px;
+  border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+.mc-rf th:first-child,.mc-rf td:first-child{text-align:left}
+.mc-rf td{padding:7px 8px;border-bottom:.5px solid var(--border);color:var(--text);text-align:right;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.mc-rf tr:last-child td{border-bottom:none}
 .mc-lect{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--gold);
   border-radius:0 10px 10px 0;padding:14px 18px;margin-top:18px;font-size:13px;color:var(--sub);line-height:1.7}
 .mc-lect b{color:var(--text)}
@@ -289,6 +310,118 @@ function lectura(r) {
   return `<div class="mc-lect">Lectura Valtia: ${partes.join(" y ")}.${extra}</div>`;
 }
 
+/* ── Análisis de la cartera: cómo está repartida y qué riesgo tiene ──
+   Todo se calcula en el navegador sobre las filas ya valuadas: no hace
+   falta ningún dato nuevo. Lo que no se puede clasificar se declara. */
+function barras(titulo, partes, total, nota) {
+  const vis = partes.filter(p => p.v > 0).sort((a, b) => b.v - a.v);
+  if (!vis.length) return "";
+  return `<div class="mc-anbox"><div class="t">${titulo}</div>
+    ${vis.map(p => {
+      const q = total > 0 ? p.v / total * 100 : 0;
+      return `<div class="mc-bar"><span class="n" title="${esc(p.n)}">${esc(p.n)}</span>
+        <span class="t2"><i style="width:${q.toFixed(1)}%"></i></span>
+        <span class="p">${q.toFixed(0)}%</span></div>`;
+    }).join("")}
+    ${nota ? `<div class="nota">${nota}</div>` : ""}</div>`;
+}
+
+const MERCADO_NOMBRE = { byma: "BYMA (pesos)", ext: "Exterior (dólares)", cripto: "Cripto", rf: "Renta fija" };
+
+function analisis(r, cur, bonos, extra) {
+  const con = r.filas.filter(f => f.dValor != null && f.dValor > 0);
+  if (con.length < 2) return "";
+  const total = con.reduce((s, f) => s + f.dValor, 0);
+  const suma = fn => {
+    const m = new Map();
+    con.forEach(f => { const k = fn(f); if (k) m.set(k, (m.get(k) || 0) + f.dValor); });
+    return [...m.entries()].map(([n, v]) => ({ n, v }));
+  };
+  const porMoneda = suma(f => f.moneda === "ARS" ? "En pesos" : "En dólares");
+  const porMercado = suma(f => MERCADO_NOMBRE[mercadoDe(f.ticker, bonos)] || "Otro");
+  const sectores = suma(f => sectorDe(f.ticker, bonos));
+  const clasif = sectores.reduce((s, x) => s + x.v, 0);
+  const sinSector = total - clasif;
+  const porBroker = suma(f => String(f.broker || "").trim() || "Sin broker");
+
+  // concentración: cuánto pesan las posiciones más grandes
+  const pesos = con.map(f => f.dValor / total * 100).sort((a, b) => b - a);
+  const topN = n => pesos.slice(0, n).reduce((s, x) => s + x, 0);
+  const mayor = con.slice().sort((a, b) => b.dValor - a.dValor)[0];
+  const pesoMayor = mayor.dValor / total * 100;
+
+  const alerta = pesoMayor > 25
+    ? `<div class="mc-alerta"><b>${esc(base(mayor.ticker))}</b> pesa el <b>${pesoMayor.toFixed(0)}%</b> de tu cartera.
+       Es una concentración alta: lo que le pase a ese activo mueve la cartera entera.</div>` : "";
+
+  return `<div class="mc-an">
+    <h4>Análisis de tu cartera</h4>
+    <div class="sub">Cómo está repartido lo que tenés, sumando todos tus brokers. Calculado sobre
+      ${con.length} de ${r.filas.length} posiciones (las que ya tienen precio).</div>
+    <div class="mc-angrid">
+      ${barras("Por moneda", porMoneda, total,
+        porMoneda.length > 1 ? "El % en pesos es tu exposición al peso, aunque lo mires en dólares." : "")}
+      ${barras("Por mercado", porMercado, total, "")}
+      ${barras("Por broker", porBroker, total,
+        porBroker.some(b => b.n === "Sin broker") ? "Poné el broker desde la tabla de arriba para completar el reparto." : "")}
+      ${barras("Por sector", sectores, total,
+        sinSector > 0 ? `${(sinSector / total * 100).toFixed(0)}% sin sector asignado: son activos que Valtia todavía no cubre.` : "")}
+      <div class="mc-anbox"><div class="t">Concentración</div>
+        <div class="mc-bar"><span class="n">Mayor posición</span><span class="t2"><i style="width:${Math.min(100, pesos[0]).toFixed(1)}%"></i></span><span class="p">${pesos[0].toFixed(0)}%</span></div>
+        ${pesos.length >= 3 ? `<div class="mc-bar"><span class="n">Top 3</span><span class="t2"><i style="width:${Math.min(100, topN(3)).toFixed(1)}%"></i></span><span class="p">${topN(3).toFixed(0)}%</span></div>` : ""}
+        ${pesos.length >= 5 ? `<div class="mc-bar"><span class="n">Top 5</span><span class="t2"><i style="width:${Math.min(100, topN(5)).toFixed(1)}%"></i></span><span class="p">${topN(5).toFixed(0)}%</span></div>` : ""}
+        <div class="nota">${con.length} posiciones con precio. La mayor es <b>${esc(base(mayor.ticker))}</b>.</div>
+      </div>
+      ${extra || ""}
+    </div>
+    ${alerta}
+  </div>`;
+}
+
+/* Renta fija: qué rinde cada especie y qué vas a cobrar en los próximos meses */
+function analisisRentaFija(r, bonos, panel, flujos, hoy) {
+  const rf = r.filas.filter(f => esRentaFija(f.ticker, bonos));
+  if (!rf.length) return "";
+  const sob = [...(panel.soberanos || []), ...(panel.bopreal || [])];
+  const filas = rf.map(f => {
+    const esp = base(f.ticker), par = parBono(esp);
+    const b = sob.find(x => x.s === esp) || sob.find(x => parBono(x.s) === par && /D$/.test(x.s));
+    const l = (panel.tasa_fija || []).find(x => x.s === esp);
+    const tasa = b && b.tir != null ? `TIR ${b.tir.toFixed(1).replace(".", ",")}%`
+               : l && l.tem != null ? `TEM ${l.tem.toFixed(2).replace(".", ",")}%` : "—";
+    const vence = (b && b.vence) || (l && l.vence) || "";
+    return `<tr><td><b>${esc(esp)}</b></td><td>${Number(f.cantidad).toLocaleString("es-AR")}</td>
+      <td>${tasa}</td><td>${b && b.paridad != null ? b.paridad.toFixed(1).replace(".", ",") : "—"}</td>
+      <td>${vence ? vence.split("-").reverse().join("/") : "—"}</td></tr>`;
+  }).join("");
+  // próximos cobros a 90 días (cupones, amortizaciones y vencimientos)
+  const corte = new Date(Date.parse(hoy) + 90 * 86400e3).toISOString().slice(0, 10);
+  const cobros = [];
+  rf.forEach(f => {
+    const esp = base(f.ticker), par = parBono(esp);
+    const d = flujos[esp] || flujos[par];
+    if (d && d.flujos) {
+      d.flujos.filter(([fe]) => fe >= hoy && fe <= corte)
+        .forEach(([fe, m]) => cobros.push({ f: fe, tk: esp, usd: (Number(f.cantidad) || 0) * Number(m) / 100 }));
+    }
+    const l = (panel.tasa_fija || []).find(x => x.s === esp);
+    if (l && l.vence >= hoy && l.vence <= corte && l.vpv)
+      cobros.push({ f: l.vence, tk: esp, ars: (Number(f.cantidad) || 0) * Number(l.vpv) / 100 });
+  });
+  cobros.sort((a, b) => a.f.localeCompare(b.f));
+  const totalUsd = cobros.reduce((s, c) => s + (c.usd || 0), 0);
+  return `<div class="mc-anbox" style="grid-column:1/-1">
+    <div class="t">Tu renta fija</div>
+    <table class="mc-rf"><thead><tr><th>Especie</th><th>Nominales</th><th>Tasa</th><th>Paridad</th><th>Vence</th></tr></thead>
+      <tbody>${filas}</tbody></table>
+    ${cobros.length ? `<div class="nota"><b>Próximos 90 días:</b> ${cobros.slice(0, 4).map(c =>
+        `${c.tk} el ${c.f.slice(8, 10)}/${c.f.slice(5, 7)}${c.usd ? ` (~US$${Math.round(c.usd).toLocaleString("es-AR")})` : ""}`).join(" · ")}${cobros.length > 4 ? ` y ${cobros.length - 4} más` : ""}.
+      ${totalUsd > 0 ? `Total estimado a cobrar: <b>US$${Math.round(totalUsd).toLocaleString("es-AR")}</b>.` : ""}
+      Son estimaciones sobre los nominales que tenés cargados.</div>`
+      : `<div class="nota">Sin pagos previstos en los próximos 90 días.</div>`}
+  </div>`;
+}
+
 let _orden = { col: "dValor", desc: true };
 
 /* los estilos se aseguran acá (y no solo al iniciar) para que cualquier
@@ -436,6 +569,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
       <tbody>${rows}</tbody>
     </table></div>
     ${lectura(r)}
+    ${analisis(r, cur, opts.bonos || new Set(), opts.rentaFija || "")}
     <div class="mc-foot">Los precios se actualizan cada 15 minutos durante la rueda; los ratios y la lectura, una vez por día.
       El resultado es sobre el precio de compra que cargaste.
       ${_cur !== "ARS" ? `Los valores en pesos se convierten al ${_cur === "CCL" ? "contado con liqui" : "dólar MEP"} de hoy —
@@ -484,9 +618,26 @@ function frescura() {
   return "Precios del " + new Date(ms).toLocaleDateString("es-AR");
 }
 
+let _bonos = new Set(), _panel = null, _flujos = null;
+
 function pintar() {
-  renderMiCartera(_el, _pos, _precios, { frescura: frescura(), onRerender: enganchar });
+  const hoy = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+  const rf = _panel ? analisisRentaFija(calcular(_pos, _precios), _bonos, _panel, _flujos || {}, hoy) : "";
+  renderMiCartera(_el, _pos, _precios, { frescura: frescura(), onRerender: enganchar,
+                                         bonos: _bonos, rentaFija: rf });
   enganchar();
+}
+
+/* panel de bonos y flujos: solo se piden si la cartera tiene renta fija */
+async function cargarRentaFija() {
+  if (!_pos.some(p => esRentaFija(p.ticker, _bonos))) return;
+  const db = getFirestore(getApp());
+  for (const [col, set] of [["bonosPanel", v => { _panel = v; }], ["bonosFlujos", v => { _flujos = v; }]]) {
+    try {
+      const s2 = await getDoc(doc(db, col, "latest"));
+      if (s2.exists()) set(JSON.parse(s2.data().json || "{}"));
+    } catch (e) {}
+  }
 }
 
 function enganchar() {
@@ -669,6 +820,8 @@ export async function initMiCartera(user, el) {
   };
   try {
     await Promise.all([leerTodo(), cargarFx()]);
+    _bonos = await bonosSet();
+    await cargarRentaFija();
     pintar();
     // el sync intradía reescribe los precios cada ~15 min: se releen solos
     // (sin pisar lo que el usuario esté escribiendo ni si la pestaña no se ve)

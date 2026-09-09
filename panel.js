@@ -7,10 +7,10 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { calcular, agruparPorBroker, normalizarTicker } from './mi-cartera.js?v=12';
+import { calcular, agruparPorBroker, normalizarTicker } from './mi-cartera.js?v=13';
 import { EMPRESAS } from './empresas.js?v=3';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe }
-  from './activos.js?v=1';
+  from './activos.js?v=2';
 
 /* ───────────────────────── estilos ───────────────────────── */
 const CSS = `

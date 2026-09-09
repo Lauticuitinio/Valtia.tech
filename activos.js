@@ -37,6 +37,18 @@ export function tickerFicha(tk) {
   return FICHAS.has(f) ? f : null;
 }
 
+const SECTORES = Object.fromEntries(EMPRESAS.map(e => [String(e.ticker).toUpperCase(), e.sector]));
+const NOMBRE_SECTOR = { arg: 'Argentina', tech: 'Tecnología', consumo: 'Consumo',
+                        fin: 'Financieras', salud: 'Salud', cripto: 'Cripto', etf: 'ETF' };
+
+/* sector de la ficha (null si Valtia no lo cubre) */
+export function sectorDe(tk, bonosSet) {
+  if (esRentaFija(tk, bonosSet)) return 'Renta fija';
+  const f = tickerFicha(tk);
+  const s = f && SECTORES[f];
+  return s ? (NOMBRE_SECTOR[s] || s) : null;
+}
+
 export function nombreDe(tk) {
   const f = tickerFicha(tk);
   return (f && NOMBRES[f]) || base(tk);
