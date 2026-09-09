@@ -254,7 +254,7 @@ import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebase
 import { getFirestore, collection, getDocs, doc, getDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { EMPRESAS, SECTORES } from './empresas.js?v=3';
-import { radarSym, tickerFicha } from './activos.js?v=5';
+import { radarSym, tickerFicha, mergeRadar } from './activos.js?v=6';
 
 const app = getApps().length ? getApp() : initializeApp({
   apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
@@ -282,10 +282,11 @@ document.title = `${emp.nombre} (${t}) — Valtia Analytics`;
 const sectorN = (SECTORES.find(s => s.k === emp.sector) || {}).n || "";
 
 try {
-  const [pxSnap, histSnap, radarSnap, infSnap, notSnap, desgSnap] = await Promise.all([
+  const [pxSnap, histSnap, radarSnap, radarProSnap, infSnap, notSnap, desgSnap] = await Promise.all([
     getDoc(doc(db, "preciosInformes", "latest")).catch(() => null),
     getDoc(doc(db, "historialInformes", t)).catch(() => null),
     getDoc(doc(db, "radar", "latest")).catch(() => null),
+    getDoc(doc(db, "radarPro", "latest")).catch(() => null),   // 403 si no es cliente
     emp.slug ? getDoc(doc(db, "informes", emp.slug)).catch(() => null) : Promise.resolve(null),
     getDocs(query(collection(db, "noticias"), where("estado", "==", "publicado"))).catch(() => null),
     getDoc(doc(db, "desglosePeriodos", "latest")).catch(() => null),
@@ -297,8 +298,13 @@ try {
   const ts = pxSnap && pxSnap.exists() ? pxSnap.data().actualizado_utc : null;
   const hora = ts && ts.toDate ? ts.toDate().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false }) : "";
 
-  // radar
-  const radar = radarSnap && radarSnap.exists() ? JSON.parse(radarSnap.data().json || "{}") : {};
+  // radar: lo público (veredicto, precio, RSI) más lo PRO (múltiplos y
+  // fundamentals) cuando las reglas dejaron leerlo
+  const radarPub = radarSnap && radarSnap.exists() ? JSON.parse(radarSnap.data().json || "{}") : {};
+  const radarProDoc = radarProSnap && radarProSnap.exists() ? JSON.parse(radarProSnap.data().json || "{}") : null;
+  const _m = mergeRadar(radarPub, radarProDoc);
+  const radar = { ..._m, activos: _m.activos };
+  const conRatios = _m.pro;
   const ra = (radar.activos || []).find(a => a.sym === radarSym(t));
 
   // informe (si las reglas lo dejan leer; si no, tarjeta genérica bloqueada)
@@ -311,6 +317,7 @@ try {
   const fila = (l, v, z) => `<div class="st"><div class="l">${l}</div><div class="v">${v}</div>${z ? `<div class="z">${z}</div>` : ""}</div>`;
   const statsHtml = ra ? [
     fila("RSI (14)", ra.rsi != null ? n1.format(ra.rsi) : "—", esc(ra.rsiZona || "")),
+    fila("Puntaje de valor", ra.score != null ? ra.score + "/100" : "—", "qué tan barata cotiza en su familia"),
     fila("P/E", ra.per != null ? n1.format(ra.per) + "x" : "—", "precio / ganancias"),
     fila("P/Libro", ra.pb != null ? n1.format(ra.pb) + "x" : "—", ""),
     fila("P/Ventas", ra.ps != null ? n1.format(ra.ps) + "x" : "—", ""),
@@ -337,7 +344,21 @@ try {
     fila("Consenso", ra.upside != null ? (ra.upside >= 0 ? "+" : "") + n1.format(ra.upside) + "%" : "—",
       ra.nAnalistas ? "objetivo de " + ra.nAnalistas + " analistas" : ""),
     ra.monedaBalance === "ARS" ? `<div class="st" style="grid-column:1/-1"><div class="z" style="margin:0">Balance en pesos: P/Ventas, EV/EBITDA y crecimiento no se publican porque mezclarían un precio en dólares con números en pesos.</div></div>` : "",
-  ].join("") : "";
+  ].filter(Boolean)
+   // sin acceso PRO esas métricas no llegaron: mostrar veinte guiones parece
+   // un error de datos, y lo que hay es un límite de plan explicado abajo
+   .filter(h => conRatios || !/<div class="v">—<\/div>/.test(h))
+   .join("") : "";
+
+  // sin acceso PRO los múltiplos NO están en la página: no hay blur que
+  // sacar con devtools ni JSON que pedir por REST — el dato no viajó
+  const proHtml = `<div class="card-w" style="text-align:center;padding:22px">
+      <div style="font:400 20px 'Playfair Display',serif;color:var(--text)">Los números detrás de la lectura son PRO</div>
+      <p style="font-size:12.5px;color:var(--sub);max-width:420px;margin:6px auto 12px;line-height:1.6">
+        El veredicto, la zona de compra, el puntaje y el precio son gratis. Con PRO ves PER, P/Libro, EV/EBITDA,
+        FCF yield, ROE, ROA, deuda sobre EBITDA, beta y el consenso de analistas.</p>
+      <a class="btn" href="planes.html" style="display:inline-block;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:var(--gold);color:#fff;padding:10px 22px;text-decoration:none;border-radius:4px">Ver planes</a>
+    </div>`;
 
   const verClase = ra && ra.veredicto === "Infravalorada" ? " infra" : ra && ra.veredicto === "Estirada" ? " cara" : "";
   const veredictoHtml = ra && ra.veredicto && ra.veredicto !== "Sin cobertura" ? `
@@ -393,7 +414,7 @@ try {
     <div class="card-w">
       <div class="card-h"><span class="t">Radar de valuación</span><span class="s">Lectura propia Valtia · diaria</span></div>
       <div id="desglose-periodos"></div>
-      ${ra ? `<div class="stats">${statsHtml}</div>${veredictoHtml}` : '<div class="vacio">Este activo todavía no está en el radar de valuación.</div>'}
+      ${ra ? `<div class="stats">${statsHtml}</div>${conRatios ? "" : proHtml}${veredictoHtml}` : '<div class="vacio">Este activo todavía no está en el radar de valuación.</div>'}
     </div>
     <div class="card-w">
       <div class="card-h"><span class="t">Informe Valtia</span>

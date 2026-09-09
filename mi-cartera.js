@@ -8,7 +8,7 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { base, linkDe, esRentaFija, parBono, sectorDe, mercadoDe, desglose } from './activos.js?v=5';
+import { base, linkDe, esRentaFija, parBono, sectorDe, mercadoDe, desglose } from './activos.js?v=6';
 
 const STYLE = `
 .mc-wrap{width:100%}
@@ -539,7 +539,6 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
           ? `<td class="mc-mut" title="${esc(d.nota || "")}">—</td>`
           : `<td class="${d.pct >= 0 ? "mc-pos" : "mc-neg"}" title="${esc(d.nota || (d.plata != null ? "sobre lo que tenés hoy" : ""))}">${pct(d.pct)}${d.nota ? "*" : ""}</td>`;
       }).join("")}
-      <td>${num(px.per)}</td>
       <td>${num(px.rsi)}</td>
       <td class="l">${px.sinDatos
         ? `<span class="mc-ver sin" title="Revisá que el ticker esté bien escrito">Ticker no encontrado</span>`
@@ -574,7 +573,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
         ${th("ticker", "Activo", "l")}${th("cantidad", "Cant.")}${th("dCompra", "Compra")}
         ${th("dActual", "Actual")}${th("dValor", "Valor")}${th("dPl", "Resultado")}${th("plPct", "%")}
         ${th("peso", "Peso")}<th title="Variación del precio en el período, no tu resultado">Día</th><th>Mes</th><th>Año</th>
-        <th>PER</th><th>RSI</th><th class="l">Lectura Valtia</th><th></th>
+        <th>RSI</th><th class="l">Lectura Valtia</th><th></th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table></div>

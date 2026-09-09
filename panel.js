@@ -7,10 +7,10 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { calcular, agruparPorBroker, normalizarTicker } from './mi-cartera.js?v=15';
+import { calcular, agruparPorBroker, normalizarTicker } from './mi-cartera.js?v=16';
 import { EMPRESAS } from './empresas.js?v=3';
-import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose }
-  from './activos.js?v=5';
+import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
+  from './activos.js?v=6';
 
 /* ───────────────────────── estilos ───────────────────────── */
 const CSS = `
@@ -159,8 +159,15 @@ async function docJson(col) {
   try { const s = await getDoc(doc(db(), col, 'latest')); return s.exists() ? { ...JSON.parse(s.data().json || '{}'), _ts: s.data().actualizado_utc || null } : null; }
   catch (e) { return null; }
 }
-const radarDoc = () => cached('radar', async () => (await docJson('radar')) || { activos: [] });
+const radarDoc = () => cached('radar', async () => {
+  // el doc PRO puede dar permission-denied: eso NO es un error, es el gate
+  const [pub, pro] = await Promise.all([docJson('radar'), docJson('radarPro')]);
+  const m = mergeRadar(pub, pro);
+  return { ...m, _ts: (pub || {})._ts };
+});
 const radar = async () => (await radarDoc()).activos || [];
+/* ¿pudo leer los fundamentals? Es el gate REAL, no el plan declarado */
+const radarPro = async () => !!(await radarDoc()).pro;
 const teaser = () => cached('teaser', async () => ((await docJson('carterasTeaser')) || {}).carteras || []);
 const calendario = () => cached('cal', async () => ((await docJson('calendario')) || {}).earnings || []);
 const flujos = () => cached('flujos', async () => (await docJson('bonosFlujos')) || {});
@@ -668,11 +675,13 @@ async function renderComprar() {
   const el = $('tab-comprar');
   el.innerHTML = titulo('Qué comprar hoy') + '<p class="vp-cargando">Cargando el radar…</p>';
   const [rd, cc, pi] = await Promise.all([radarDoc(), carteraCalc(), preciosInf()]);
+  // el gate lo define lo que Firestore dejó leer, no una variable del cliente
+  const conRatios = !!rd.pro;
   const ten = tenencias(cc);
   const lista = ordenComprar(rd.activos || []);
   const enCarteras = await mapaCarteras();
   const fecha = rd._ts ? new Date(rd._ts.seconds ? rd._ts.seconds * 1000 : rd._ts).toLocaleDateString('es-AR') : (rd.snapshot || '');
-  const LIBRES = 5;
+  const LIBRES = lista.length;   // la lista es gratis; lo que se paga son los múltiplos
   const fila = (a, i) => {
     const f = tickerFicha(a.sym), p = f && pi[f] && pi[f].p != null ? pi[f].p : a.precio;
     const tengo = ten.radar.has(a.sym);
@@ -684,7 +693,7 @@ async function renderComprar() {
       <td>${a.score ?? '—'}</td>
       <td>${p != null ? 'US$' + num(p, 2) : '—'}</td>
       <td>${a.rsi != null ? a.rsi.toFixed(0) : '—'}<span class="nm">${esc(a.rsiZona || '')}</span></td>
-      ${S.pro ? `<td>${a.per != null ? num(a.per, 1) + 'x' : '—'}</td><td>${a.evebitda != null ? num(a.evebitda, 1) + 'x' : '—'}</td><td>${a.fcfy != null ? num(a.fcfy, 1) + '%' : '—'}</td><td>${a.calidadScore ?? '—'}</td>` : ''}
+      ${conRatios ? `<td>${a.per != null ? num(a.per, 1) + 'x' : '—'}</td><td>${a.evebitda != null ? num(a.evebitda, 1) + 'x' : '—'}</td><td>${a.fcfy != null ? num(a.fcfy, 1) + '%' : '—'}</td><td>${a.roe != null ? num(a.roe, 0) + '%' : '—'}</td><td>${a.calidadScore ?? '—'}</td>` : ''}
       <td data-host><button class="vp-btn mini sec" data-compra="${esc(a.sym)}" data-px="${p != null && f ? p : ''}" ${blur ? 'disabled' : ''}>La compré</button></td>
     </tr>`;
   };
@@ -692,9 +701,12 @@ async function renderComprar() {
     <p class="vp-sub">Una sola lista, con el criterio a la vista: primero lo que está en <b>zona de compra</b> (puntaje de valor ≥ 60 y RSI &lt; 45), después por puntaje de valor. Es la lectura propia de Valtia sobre ${lista.length} activos${fecha ? ', radar del ' + fecha : ''}; no es una recomendación personalizada. Los precios son en dólares (las argentinas por su ADR).</p>
     ${DATALIST}
     <div class="vp-tblwrap"><table class="vp-tbl"><thead><tr>
-      <th class="l">Activo</th><th class="l">Lectura Valtia</th><th>Valor</th><th>Precio</th><th>RSI</th>${S.pro ? '<th>PER</th><th>EV/EBITDA</th><th>FCF yield</th><th>Calidad</th>' : ''}<th></th></tr></thead>
+      <th class="l">Activo</th><th class="l">Lectura Valtia</th><th>Valor</th><th>Precio</th><th>RSI</th>${conRatios ? '<th>PER</th><th>EV/EBITDA</th><th>FCF yield</th><th>ROE</th><th>Calidad</th>' : ''}<th></th></tr></thead>
       <tbody>${lista.map(fila).join('')}</tbody></table>
-      ${!S.pro && lista.length > LIBRES ? `<div class="vp-lock"><b>Con PRO ves los ${lista.length} activos con PER, EV/EBITDA, FCF yield y calidad</b><p>Gratis ves los 5 mejor puntuados con su veredicto y la zona de compra.</p><a class="vp-btn" href="planes.html">Ver planes</a></div>` : ''}
+      ${!conRatios ? `<div style="border-top:1px solid var(--border);padding:16px 18px;text-align:center">
+        <b style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--text);display:block">Los números detrás de la lectura son PRO</b>
+        <p style="font-size:12.5px;color:var(--sub);margin:4px 0 10px">La lista completa, el veredicto y la zona de compra son gratis. Con PRO ves el PER, EV/EBITDA, FCF yield, ROE y el puntaje de calidad de cada uno.</p>
+        <a class="vp-btn" href="planes.html">Ver planes</a></div>` : ''}
     </div>
     <p class="vp-nota">"La compré" registra la compra en Mi cartera y en tu plan de Disciplina, con el mercado, la cantidad, el precio que pagaste y el broker. Si compraste en BYMA (CEDEAR o acción local), el precio va en pesos.</p>`;
 }
@@ -993,6 +1005,9 @@ async function renderHerramientas() {
   el.innerHTML = titulo('Herramientas y datos') + '<p class="vp-cargando">Cargando…</p>';
   const cc = await carteraCalc();
   const bp = await panelBonos(), bset = await bonosSet();
+  const rd = await radarDoc();
+  const porSym = {};
+  (rd.activos || []).forEach(a => { porSym[a.sym] = a; });
   const m = curMoneda(cc.cur);
   const cards = HERRAMIENTAS.map(([id, t, p, pro]) => `<div class="vp-card"><div class="l">${pro ? `<span class="vp-tag ${S.pro ? 'gratis' : 'pro'}" style="padding:1px 6px">${S.pro ? 'incluida' : 'PRO'}</span>` : '<span class="vp-tag gratis" style="padding:1px 6px">gratis</span>'}</div>
       <h4>${t}</h4><p>${p}</p><a class="vp-ir" href="herramientas.html#${id}">${pro && !S.pro ? 'Ver con PRO →' : 'Abrir →'}</a></div>`).join('');
@@ -1007,18 +1022,19 @@ async function renderHerramientas() {
       return `<tr><td class="l">${link ? `<a class="tk" href="${link}">${esc(base(f.ticker))}</a>` : `<span class="tk">${esc(base(f.ticker))}</span>`}<span class="nm">${esc(px.nombre || nombreDe(f.ticker))}</span></td>
         <td>${px.precio != null ? num(px.precio, 2) : '—'} <span class="vp-mut">${esc(px.moneda || '')}</span></td>
         <td class="l">${px.veredicto ? `<span class="vp-tag ${verCls(px.veredicto)}">${esc(px.veredicto)}</span>` : '—'}</td>
-        ${S.pro ? `<td>${rf ? (sob ? 'TIR ' + num(sob.tir, 1) + '%' : letra && letra.tem != null ? 'TEM ' + num(letra.tem, 2) + '%' : '—') : (px.per != null ? num(px.per, 1) + 'x' : '—')}</td>
-        <td>${rf ? (sob ? 'MD ' + num(sob.md, 1) : letra ? 'vence ' + fmtF(letra.vence) : '—') : (px.pb != null ? num(px.pb, 1) + 'x' : '—')}</td>
-        <td>${rf ? (sob ? 'paridad ' + num(sob.paridad, 1) : '—') : (px.ps != null ? num(px.ps, 1) + 'x' : '—')}</td>
-        <td>${rf ? '—' : (px.debtcap != null ? num(px.debtcap * 100, 0) + '%' : '—')}</td>
-        <td>${rf ? '—' : (px.divYield != null ? num(px.divYield, 2) + '%' : '—')}</td>
-        <td>${px.valorScore ?? '—'}</td>` : `<td>${px.rsi != null ? num(px.rsi, 0) : '—'}</td>`}
+        ${rd.pro ? (() => { const ra = porSym[radarSym(f.ticker)] || {};
+          return `<td>${rf ? (sob ? 'TIR ' + num(sob.tir, 1) + '%' : letra && letra.tem != null ? 'TEM ' + num(letra.tem, 2) + '%' : '—') : (ra.per != null ? num(ra.per, 1) + 'x' : '—')}</td>
+        <td>${rf ? (sob ? 'MD ' + num(sob.md, 1) : letra ? 'vence ' + fmtF(letra.vence) : '—') : (ra.pb != null ? num(ra.pb, 1) + 'x' : '—')}</td>
+        <td>${rf ? (sob ? 'paridad ' + num(sob.paridad, 1) : '—') : (ra.roe != null ? num(ra.roe, 1) + '%' : '—')}</td>
+        <td>${rf ? '—' : (ra.deudaEbitda != null ? num(ra.deudaEbitda, 1) + 'x' : '—')}</td>
+        <td>${rf ? '—' : (ra.beta != null && ra.betaR2 >= 0.10 ? num(ra.beta, 2) : '—')}</td>
+        <td>${ra.valorScore ?? '—'}</td>`; })() : `<td>${px.rsi != null ? num(px.rsi, 0) : '—'}</td>`}
       </tr>`;
     };
     datos = `<div class="vp-sec">Datos de tus activos<small>lo que el sync sabe de cada uno${S.pro ? '' : ' · ratios completos con PRO'}</small></div>
-      <div class="vp-tblwrap"><table class="vp-tbl"><thead><tr><th class="l">Activo</th><th>Precio</th><th class="l">Lectura</th>${S.pro ? '<th>PER / TIR</th><th>P/Libro / MD</th><th>P/Ventas / paridad</th><th>Deuda/cap</th><th>Div. yield</th><th>Valor</th>' : '<th>RSI</th>'}</tr></thead>
+      <div class="vp-tblwrap"><table class="vp-tbl"><thead><tr><th class="l">Activo</th><th>Precio</th><th class="l">Lectura</th>${rd.pro ? '<th>PER / TIR</th><th>P/Libro / MD</th><th>ROE / paridad</th><th>Deuda/EBITDA</th><th>Beta</th><th>Valor</th>' : '<th>RSI</th>'}</tr></thead>
       <tbody>${filas.map(fila).join('') || '<tr><td colspan="9" class="l vp-mut">Tus posiciones todavía no tienen datos del sync (9:00).</td></tr>'}</tbody></table></div>
-      ${!S.pro ? `<p class="vp-nota">Con PRO ves PER, P/Libro, P/Ventas, deuda y dividendos de tus acciones, y TIR, duration y paridad de tus bonos. <a href="planes.html" style="color:var(--gold)">Ver planes →</a></p>` : `<p class="vp-nota">Múltiplos de yfinance al último cierre; para renta fija, la matemática propia del panel de bonos (cada 15 min en rueda).</p>`}`;
+      ${!rd.pro ? `<p class="vp-nota">Con PRO ves PER, P/Libro, ROE, deuda sobre EBITDA y beta de tus acciones, y TIR, duration y paridad de tus bonos. <a href="planes.html" style="color:var(--gold)">Ver planes →</a></p>` : `<p class="vp-nota">Múltiplos de yfinance al último cierre; para renta fija, la matemática propia del panel de bonos (cada 15 min en rueda).</p>`}`;
   }
   el.innerHTML = titulo('Herramientas y datos') + `<div class="vp-grid">${cards}</div>${datos}`;
 }

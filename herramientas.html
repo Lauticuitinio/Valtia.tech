@@ -670,6 +670,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <script type="module">
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { mergeRadar } from './activos.js?v=6';
 const app = getApps().length ? getApp() : initializeApp({
   apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
   authDomain: 'valtia-analytics.firebaseapp.com', projectId: 'valtia-analytics' });
@@ -690,9 +691,18 @@ function fecha(iso) {
 async function loadRadar() {
   let data;
   try {
-    const snap = await getDoc(doc(db, 'radar', 'latest'));
+    // el doc público trae la lectura; el PRO, los múltiplos. El segundo da
+    // permission-denied si no sos cliente: ahí la tabla muestra el aviso.
+    const [snap, snapPro] = await Promise.all([
+      getDoc(doc(db, 'radar', 'latest')),
+      getDoc(doc(db, 'radarPro', 'latest')).catch(() => null),
+    ]);
     if (!snap.exists()) throw new Error('vacío');
-    data = JSON.parse(snap.data().json);
+    const pub = JSON.parse(snap.data().json);
+    const pro = snapPro && snapPro.exists() ? JSON.parse(snapPro.data().json || '{}') : null;
+    const m = mergeRadar(pub, pro);
+    data = { ...pub, activos: m.activos };
+    window.__radarPro = m.pro;
   } catch (e) {
     const s = document.getElementById('radar-strip');
     if (s) s.innerHTML = '<p style="font-size:13px;color:var(--muted);padding:20px 0">El radar se está actualizando. Volvé en unos minutos.</p>';

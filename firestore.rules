@@ -216,8 +216,20 @@ service cloud.firestore {
     // Fundamentals objetivos + lectura propia Valtia. Solo dato de mercado,
     // sin posiciones ni etiquetas de terceros: lectura pública. Escrito por
     // seed_radar.py / fondo_sync.py (Admin SDK).
+    // Radar publico: la lectura Valtia (veredicto, zona de compra, puntaje),
+    // precio y RSI. Lo lee cualquiera — tambien la barra de cotizaciones,
+    // que corre sin sesion.
     match /radar/{docId} {
       allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Radar PRO: los multiplos y los fundamentals que sostienen la lectura
+    // (PER, EV/EBITDA, FCF yield, ROE, ROA, beta, calidad). Esto es lo que
+    // se paga: antes vivia en el doc publico y el candado de la web era solo
+    // visual — cualquiera pedia el JSON por REST y lo tenia entero.
+    match /radarPro/{docId} {
+      allow read: if esCliente();
       allow write: if isAdmin();
     }
 

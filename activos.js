@@ -101,6 +101,21 @@ export function monedaProbable(tk, bonosSet) {
   return 'USD';
 }
 
+/* El radar vive en dos documentos: radar/latest (público) trae la lectura
+   —veredicto, zona de compra, puntaje, precio, RSI— y radarPro/latest trae
+   los múltiplos y fundamentals que la sostienen, y lo lee solo un cliente.
+   Acá se juntan: si radarPro no se pudo leer, las páginas simplemente no
+   tienen esos campos y muestran el candado real, sin datos en el HTML. */
+export function mergeRadar(pub, pro) {
+  const a = (pub && pub.activos) || [];
+  const p = (pro && pro.activos) || [];
+  if (!p.length) return { activos: a, pro: false, metodologia: (pub || {}).metodologia };
+  const porSym = {};
+  p.forEach(x => { porSym[x.sym] = x; });
+  return { activos: a.map(x => ({ ...x, ...(porSym[x.sym] || {}) })),
+           pro: true, metodologia: (pub || {}).metodologia };
+}
+
 /* ── desglose por período ────────────────────────────────────────────────
    Un solo lugar para las reglas de honestidad: si esto se escribe tres veces
    (ficha, cartera, panel), en alguna queda el número crudo sin su asterisco.
