@@ -218,7 +218,9 @@ function diasCalendario(c) {
 function anualizada(c) {
   const last = c.valores[c.valores.length - 1];
   const dias = diasCalendario(c);
-  if (!last || dias < 21) return null;      // muy joven para anualizar
+  // menos de un año no se anualiza: elevar 61 días a la 365/61 convierte un
+  // +12% en "+101% anual", que es una extrapolación, no una medición
+  if (!last || dias < 365) return null;
   return (Math.pow(last.indice / 100, 365 / dias) - 1) * 100;
 }
 function volatilidad(c) {
@@ -260,9 +262,11 @@ const linkFicha = tk => { const h = linkDe(tk); return h
    el argumento de venta; lo que se paga es composición, tesis e historial. */
 let _teaserCache = null;
 // TIR publicada por el sync para la parte en bonos de cada cartera
-let _teaserTir = {};
+let _teaserTir = {}, _teaserPorId = {};
 const tirDe = id => (_teaserTir[id] || {}).tir ?? null;
 const tirPesoDe = id => (_teaserTir[id] || {}).tirPeso ?? null;
+/* métricas que el sync ya calculó para esta cartera (vol, drawdown, composición) */
+const tsr = id => _teaserPorId[id] || null;
 
 async function teaserMapa() {
   if (_teaserCache) return _teaserCache;
@@ -270,7 +274,10 @@ async function teaserMapa() {
   try {
     const snap = await getDoc(doc(db, "carterasTeaser", "latest"));
     if (snap.exists()) _teaserCache = JSON.parse(snap.data().json || "{}").carteras || [];
-    _teaserCache.forEach(t => { _teaserTir[t.id] = { tir: t.tir ?? null, tirPeso: t.tirPeso ?? null }; });
+    _teaserCache.forEach(t => {
+      _teaserTir[t.id] = { tir: t.tir ?? null, tirPeso: t.tirPeso ?? null };
+      _teaserPorId[t.id] = t;
+    });
   } catch (e) {}
   return _teaserCache;
 }
@@ -384,12 +391,28 @@ async function renderDetalle(c) {
         <h1 style="margin-bottom:6px">${c.nombre}</h1></div>
     </div>
     <div class="dmeta">Lanzada ${inicio} · Rebalanceo ${c.rebalanceo || "mensual"} · ${c.modo === "automatico" ? "Reglas automáticas" : "Curada por el equipo"} · Benchmark ${c.benchmark || "—"}<br>${c.criterio || ""}</div>
+    ${(() => {
+      const t = tsr(c.id), k = t && t.composicion;
+      if (!k || (k.per == null && k.roe == null)) return "";
+      const it = (l, v, cob, suf) => v == null ? "" :
+        `<div class="kpi"><div class="l">${l}</div><div class="v">${typeof v === "number" ? v.toFixed(v >= 100 ? 0 : 1).replace(".", ",") : v}${suf || ""}</div>` +
+        `<div class="s">${cob != null && cob < 100 ? "sobre el " + cob + "% de la cartera" : "de las posiciones de hoy"}</div></div>`;
+      return `<div class="eye" style="margin:26px 0 10px">Composición · cómo se ven sus posiciones hoy</div>
+        <div class="kpis">
+          ${it("P/E ponderado", k.per, k.perCobertura, "x")}
+          ${it("ROE", k.roe, k.roeCobertura, "%")}
+          ${it("ROA", k.roa, k.roaCobertura, "%")}
+          ${it("Beta vs S&P", k.beta, k.betaCobertura, "")}
+        </div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.7;margin:-14px 0 22px">Promedio ponderado por peso objetivo de los activos que la cartera tiene hoy (el P/E es media armónica). No depende del historial: es la foto de la composición actual.</p>`;
+    })()}
     <div class="kpis">
       <div class="kpi"><div class="l">Retorno desde inicio</div><div class="v ${r!=null?cls(r):"mut"}">${r!=null?fmtPct(r):"—"}</div><div class="s">desde ${inicio}</div></div>
       ${rb != null ? `<div class="kpi"><div class="l">${c.benchmark} en igual período</div><div class="v ${cls(rb)}">${fmtPct(rb)}</div><div class="s">misma ventana temporal</div></div>` : ""}
       ${dif != null ? `<div class="kpi"><div class="l">Diferencia vs benchmark</div><div class="v ${cls(dif)}">${fmtPct(dif)}</div><div class="s">alpha desde lanzamiento</div></div>` : ""}
       ${anual != null ? `<div class="kpi"><div class="l">Rentabilidad anualizada</div><div class="v ${cls(anual)}">${fmtPct(anual)}</div><div class="s">extrapolada · cartera de ${diasCalendario(c)} días</div></div>` : ""}
       ${riesgo != null ? `<div class="kpi"><div class="l">Calificación de riesgo</div><div class="v">${riesgo}</div><div class="s">volatilidad anualizada ${vol.toFixed(0)}%</div></div>` : ""}
+      ${tsr(c.id) && tsr(c.id).maxDD != null ? `<div class="kpi"><div class="l">Peor caída</div><div class="v neg">${fmtPct(tsr(c.id).maxDD)}</div><div class="s">desde su máximo · ${tsr(c.id).nPuntos} ruedas</div></div>` : ""}
       <div class="kpi"><div class="l">Posiciones</div><div class="v">${c.posiciones.length}</div><div class="s">${c.rebalanceo || "mensual"} · pesos equitativos</div></div>
     </div>
     <div class="sec">Evolución · base 100 al lanzamiento</div>

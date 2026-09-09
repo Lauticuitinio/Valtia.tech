@@ -343,7 +343,7 @@ try {
   const veredictoHtml = ra && ra.veredicto && ra.veredicto !== "Sin cobertura" ? `
     <div class="veredicto">
       <div class="inner preview-blur">
-        <span class="ver-tag${verClase}">${esc(ra.veredicto)}</span>
+        <span class="ver-tag${verClase}">${esc(ra.veredicto)}</span>${ra.pierdePlata ? ' <span class="ver-tag" style="background:rgba(224,169,62,.15);color:#E0A93E" title="El puntaje mide qué tan barata cotiza, no si gana dinero">Hoy no gana plata</span>' : ""}
         <div class="scores">
           <div class="sc"><div class="n">${ra.valorScore != null ? Math.round(ra.valorScore) : "—"}</div><div class="e">Puntaje valor</div></div>
           <div class="sc"><div class="n">${ra.calidadScore != null ? Math.round(ra.calidadScore) : "—"}</div><div class="e">Calidad</div></div>

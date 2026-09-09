@@ -649,7 +649,7 @@ async function renderComprar() {
     const blur = !S.pro && i >= LIBRES;
     return `<tr class="${blur ? 'vp-blur' : ''}">
       <td class="l">${f ? `<a class="tk" href="activo.html?t=${f}">${esc(a.sym)}</a>` : `<span class="tk">${esc(a.sym)}</span>`}<span class="nm">${esc(a.nombre)} · ${esc(a.sector || '')}</span></td>
-      <td class="l"><span class="vp-tag ${verCls(a.veredicto)}">${esc(a.veredicto)}</span> ${a.entrada ? '<span class="vp-tag zona">◎ zona de compra</span>' : ''} ${tengo ? '<span class="vp-tag tengo">lo tenés</span>' : ''} ${enC}</td>
+      <td class="l"><span class="vp-tag ${verCls(a.veredicto)}">${esc(a.veredicto)}</span> ${a.entrada ? '<span class="vp-tag zona">◎ zona de compra</span>' : ''} ${a.pierdePlata ? '<span class="vp-tag" style="color:#E0A93E;border:1px solid rgba(224,169,62,.5)" title="El puntaje mide qué tan barata cotiza; esta empresa hoy no gana dinero">no gana plata</span>' : ''} ${tengo ? '<span class="vp-tag tengo">lo tenés</span>' : ''} ${enC}</td>
       <td>${a.score ?? '—'}</td>
       <td>${p != null ? 'US$' + num(p, 2) : '—'}</td>
       <td>${a.rsi != null ? a.rsi.toFixed(0) : '—'}<span class="nm">${esc(a.rsiZona || '')}</span></td>
