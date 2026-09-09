@@ -118,20 +118,28 @@ service cloud.firestore {
     // Escritas por el admin / fondo_sync (Admin SDK). Las de visibilidad
     // "publico" las ve cualquiera; el resto requiere login (PRO a futuro).
     match /carterasModelo/{id} {
-      allow read: if resource.data.visibilidad == 'publico' || esCliente();
+      // publico: cualquiera · clientes: PRO/clientes del fondo · borrador
+      // (propuestas sin aprobar): solo el admin
+      allow read: if resource.data.visibilidad == 'publico'
+                  || (resource.data.visibilidad == 'clientes' && esCliente())
+                  || isAdmin();
       allow write: if isAdmin();
 
       // El contenido de la cartera (posiciones, rotaciones y serie de valores)
       // hereda la visibilidad de la cartera padre. Antes estaba en "true" y
       // las posiciones de las carteras de suscriptores se podían leer sin
       // login pegándole directo a la API — el candado era solo visual.
-      function carteraPublica() {
-        return get(/databases/$(database)/documents/carterasModelo/$(id))
-                 .data.visibilidad == 'publico';
+      function visCartera() {
+        return get(/databases/$(database)/documents/carterasModelo/$(id)).data.visibilidad;
       }
-      match /posiciones/{p} { allow read: if carteraPublica() || esCliente(); allow write: if isAdmin(); }
-      match /historial/{h}  { allow read: if carteraPublica() || esCliente(); allow write: if isAdmin(); }
-      match /valores/{v}    { allow read: if carteraPublica() || esCliente(); allow write: if isAdmin(); }
+      function carteraLegible() {
+        return visCartera() == 'publico'
+               || (visCartera() == 'clientes' && esCliente())
+               || isAdmin();
+      }
+      match /posiciones/{p} { allow read: if carteraLegible(); allow write: if isAdmin(); }
+      match /historial/{h}  { allow read: if carteraLegible(); allow write: if isAdmin(); }
+      match /valores/{v}    { allow read: if carteraLegible(); allow write: if isAdmin(); }
     }
 
     // ── VIDRIERA DE CARTERAS (teaser público) ──

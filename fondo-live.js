@@ -114,47 +114,7 @@ const CSS = `
 .fl-reader .disclaimer { margin-top:40px; padding:16px 20px; background:var(--flPanel2); border-radius:8px; font-size:11px; color:var(--flMut); line-height:1.7; }
 .fl-back { display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--flGoldDeep); cursor:pointer; margin-bottom:14px; }
 
-/* ── shell 2a: MODO APP — el panel toma la pantalla, la barra de precios queda ── */
-body.fl-app-on nav:not(.portal-nav) { display:none !important; }
-body.fl-app-on #portal-view { padding:0 !important; margin:0 !important; }
-.fl-layout { display:flex; align-items:stretch; gap:0; min-height:calc(100vh - 34px); }
-.fl-layout .portal-nav { flex-direction:column; align-items:stretch; width:216px; flex:none; box-sizing:border-box;
-  height:100vh !important; gap:2px !important; border-bottom:none !important;
-  background:#14213D !important; border:none; border-radius:0; padding:18px 12px !important;
-  position:sticky; top:0; align-self:flex-start; max-height:100vh; overflow:auto; }
-.fl-layout .portal-nav a { display:block !important; padding:10px 12px !important; margin:0 0 2px !important; border-radius:8px;
-  color:rgba(255,255,255,.62) !important; font:500 11px 'IBM Plex Sans',sans-serif !important; letter-spacing:.12em !important;
-  text-transform:uppercase; text-decoration:none; border-bottom:none !important; }
-.fl-layout .portal-nav a:hover { background:rgba(255,255,255,.06); color:#fff !important; }
-.fl-layout .portal-nav a.active { background:rgba(176,138,62,.18); color:#E8CE96 !important; border-left:2px solid #B08A3E; font-weight:600 !important; }
-.fl-layout .portal-nav #portal-user-name { color:rgba(255,255,255,.85); font:600 11px 'IBM Plex Sans',sans-serif; padding:14px 12px 3px; margin:0 !important; border-top:1px solid rgba(255,255,255,.12); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.fl-layout .portal-nav #portal-user-name::after { content:'Gestor · Admin'; display:block; font:400 9px 'IBM Plex Sans',sans-serif; color:rgba(255,255,255,.45); letter-spacing:.06em; margin-top:2px; }
-.fl-layout .portal-nav button { color:#B08A3E !important; text-align:left; padding:6px 12px 2px !important; font:600 10px 'IBM Plex Sans',sans-serif !important; letter-spacing:.12em !important; }
-.fl-main { flex:1; min-width:0; display:flex; flex-direction:column; }
-.fl-topbar { display:flex; align-items:center; gap:4px; padding:9px 14px 9px 0; margin-left:22px; border-bottom:1px solid rgba(0,0,0,.08);
-  background:#FBF9F3; position:sticky; top:0; z-index:60; overflow-x:auto; }
-[data-theme="dark"] .fl-topbar { background:#0F1B30; border-bottom-color:rgba(255,255,255,.08); }
-.fl-topbar a { font:600 10.5px 'IBM Plex Sans',sans-serif; letter-spacing:.1em; text-transform:uppercase; color:#6B6456;
-  padding:7px 13px; border-radius:8px; text-decoration:none; white-space:nowrap; cursor:pointer; }
-[data-theme="dark"] .fl-topbar a { color:rgba(240,237,232,.6); }
-.fl-topbar a:hover { background:rgba(176,138,62,.1); color:#8A6A2F; }
-[data-theme="dark"] .fl-topbar a:hover { background:rgba(232,206,150,.1); color:#E8CE96; }
-.fl-topbar .sep { flex:1; }
-.fl-topbar .dom { font:600 9.5px 'IBM Plex Mono',monospace; letter-spacing:.12em; color:#B08A3E; white-space:nowrap; }
-@media (max-width:840px) { .fl-topbar { margin-left:0; padding:8px 12px; } }
-.fl-sbbrand { display:flex; align-items:center; gap:10px; padding:2px 10px 20px; }
-.fl-sbbrand .lg { width:30px; height:30px; border:1.5px solid #B08A3E; border-radius:6px; display:flex; align-items:center; justify-content:center; flex:none; }
-.fl-sbbrand .nm { font:500 15px 'Playfair Display',serif; letter-spacing:.18em; color:#fff; }
-.fl-sbbrand .sb { font:500 7.5px 'IBM Plex Sans',sans-serif; letter-spacing:.3em; color:#B08A3E; }
-.fl-layout .portal-content { flex:1; min-width:0; padding-left:22px; }
-@media (max-width:920px) {
-  .fl-layout { flex-direction:column; min-height:0; }
-  .fl-layout .portal-nav { width:100%; flex-direction:row; flex-wrap:wrap; position:static; height:auto !important; max-height:none; align-items:center; gap:2px; border-radius:0; }
-  .fl-sbbrand { padding:2px 10px; }
-  .fl-layout .portal-nav a { display:inline-block !important; }
-  .fl-layout .portal-content { padding:18px 0 0; }
-}
-
+/* (la CSS del shell — sidebar/topbar — vive en panel.js desde la fase 1 del panel) */
 /* ── dashboard 2a: filas, moneda, donut, objetivos, flujo ── */
 .fl-cur { display:inline-flex; gap:3px; background:var(--flTrack); border-radius:8px; padding:3px; }
 .fl-cur button { border:none; padding:5px 14px; border-radius:6px; cursor:pointer; font:600 11px 'IBM Plex Sans',sans-serif; color:var(--flInk2); background:transparent; }

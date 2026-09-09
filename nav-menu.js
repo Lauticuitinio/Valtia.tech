@@ -91,6 +91,24 @@
   document.body.appendChild(back);
   document.body.appendChild(menu);
 
+  // "Volver al panel": si el usuario vino del panel (index.html#panel/...) a
+  // una pagina del sitio, una pastilla fija lo devuelve a la misma seccion.
+  try {
+    var tabPanel = sessionStorage.getItem('valtia-panel-tab');
+    var ref = document.referrer || '';
+    var deIndex = ref.indexOf(location.host) > -1 && /\/(index\.html)?(#|\?|$)/.test(ref.split(location.host)[1] || '');
+    if (tabPanel && deIndex && !/index\.html$/.test(aca) && aca !== '') {
+      var st2 = document.createElement('style');
+      st2.textContent = '#vnav-volver{position:fixed;left:18px;bottom:18px;z-index:996;background:#14213D;color:#E8CE96;border:1px solid #B08A3E;' +
+        'border-radius:20px;padding:9px 16px;font:600 11px "IBM Plex Sans",sans-serif;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;' +
+        'box-shadow:0 6px 24px rgba(0,0,0,.35)}#vnav-volver:hover{background:#B08A3E;color:#14213D}';
+      document.head.appendChild(st2);
+      var v = document.createElement('a');
+      v.id = 'vnav-volver'; v.href = 'index.html#panel/' + tabPanel; v.textContent = '← Volver al panel';
+      document.body.appendChild(v);
+    }
+  } catch (e) {}
+
   // el CTA del panel refleja el estado de sesion VIGENTE cada vez que se abre
   // (mismo criterio que nav-auth: "Mi Panel" con sesion, login sin ella)
   function syncCta() {
@@ -100,7 +118,7 @@
     var logged = !!document.getElementById('nav-mipanel') ||
                  (navCta && navCta.textContent.indexOf('Mi Panel') > -1);
     cta.textContent = logged ? 'Mi Panel' : 'Ingresar / Crear cuenta';
-    cta.setAttribute('href', logged ? 'index.html' : 'index.html?login=1');
+    cta.setAttribute('href', logged ? 'index.html#panel/inicio' : 'index.html?login=1');
   }
   function abrir() {
     syncCta();

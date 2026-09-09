@@ -8,6 +8,7 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { base, linkDe } from './activos.js?v=1';
 
 const STYLE = `
 .mc-wrap{width:100%}
@@ -153,6 +154,11 @@ const money = (n, cur) => (Number(n) < 0 ? "−" : "") + (cur === "ARS" ? "$" : 
 // con signo explícito (para resultados): +US$930 / −US$160
 const moneyS = (n, cur) => (Number(n) >= 0 ? "+" : "") + money(n, cur);
 
+/* el panel (panel.js) cachea la cartera: cuando cambia acá, se le avisa */
+function avisarPanel() {
+  try { if (window.valtiaPanel && window.valtiaPanel.refrescar) window.valtiaPanel.refrescar(); } catch (e) {}
+}
+
 /* ── moneda de visualización (como el portafolio de IOL) ──
    Las posiciones se guardan en la moneda en la que cotizan (los CEDEARs y
    acciones locales en pesos, las de EE.UU. en dólares) y acá se convierten
@@ -273,7 +279,7 @@ function lectura(r) {
   const partes = [];
   if (est > 0) partes.push(`<b>${est.toFixed(0)}%</b> de tu cartera está en activos que nuestra lectura marca <b>estirados</b>`);
   if (inf > 0) partes.push(`<b>${inf.toFixed(0)}%</b> en activos <b>infravalorados</b>`);
-  const corto = f => String(f.ticker).replace(/\.BA$/, "");
+  const corto = f => base(f.ticker);
   const sobrev = conVer.filter(f => f.px.rsi != null && f.px.rsi > 70).map(corto);
   const sobrec = conVer.filter(f => f.px.rsi != null && f.px.rsi < 30).map(corto);
   let extra = "";
@@ -380,7 +386,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   const fila = f => {
     const px = f.px || {};
     return `<tr>
-      <td class="l"><span class="mc-tk">${esc(String(f.ticker).replace(/\.BA$/, ""))}</span>${
+      <td class="l">${(h => h ? `<a class="mc-tk" href="${h}" style="text-decoration:none">${esc(base(f.ticker))}</a>` : `<span class="mc-tk">${esc(base(f.ticker))}</span>`)(linkDe(f.ticker))}${
         String(f.ticker).endsWith(".BA") ? '<span class="mc-nm" style="display:inline;color:var(--gold);opacity:.7"> BYMA</span>' : ""}
         <span class="mc-nm">${esc(px.nombre && px.nombre !== f.ticker ? px.nombre : "")}</span>
         <span class="mc-brk" data-brk="${esc(f.id)}" title="Cambiar broker">${esc(f.broker || "sin broker")}</span></td>
@@ -602,9 +608,13 @@ async function agregar() {
     setPref("valtia-mc-mercado", mercado); if (broker) setPref("valtia-mc-broker", broker);
     const db = getFirestore(getApp());
     const id = tk + "-" + Date.now().toString(36);
+    // moneda y factor: el formulario los sabe (mercado elegido). Sin ellos,
+    // hasta la próxima corrida del sync una compra en pesos se lee en dólares
     await setDoc(doc(db, "inversores", _user.email, "cartera", id), {
       ticker: tk, cantidad: cant, precioCompra: isFinite(pc) ? pc : 0, fecha,
-      broker, creado: new Date().toISOString(),
+      broker, moneda: mercado === "byma" ? "ARS" : "USD",
+      factor: (await bonosSet()).has(tk) ? 0.01 : 1,
+      creado: new Date().toISOString(),
     });
     const donde = mercado === "byma" ? "BYMA, en pesos" : mercado === "cripto" ? "cripto, en dólares" : "exterior, en dólares";
     await leerTodo();
@@ -612,6 +622,7 @@ async function agregar() {
     // el repintado recrea el formulario: el mensaje se escribe recién ahora
     const msg2 = _el.querySelector("#mc-msg");
     if (msg2) msg2.innerHTML = `<span style="color:#4caf50">${esc(tk)} agregado (${donde}${broker ? ", " + esc(broker) : ""}). El precio aparece en la próxima actualización — cada 15 min en rueda.</span>`;
+    avisarPanel();
   } catch (e) {
     msg.innerHTML = `<span style="color:#ef5350">No se pudo guardar: ${esc(String(e).slice(0, 90))}</span>`;
   }
@@ -625,6 +636,7 @@ async function guardarBroker(id, broker) {
     await leerTodo();
   } catch (e) {}
   pintar();
+  avisarPanel();
 }
 
 async function quitar(id) {
@@ -633,6 +645,7 @@ async function quitar(id) {
     await deleteDoc(doc(db, "inversores", _user.email, "cartera", id));
     await leerTodo();
     pintar();
+    avisarPanel();
   } catch (e) {}
 }
 
@@ -649,6 +662,11 @@ export async function initMiCartera(user, el) {
     return;
   }
   el.innerHTML = `<div class="portal-title">Mi cartera</div><p style="color:var(--sub);font-size:14px">Cargando tus posiciones…</p>`;
+  // el panel (panel.js) avisa cuando registra una compra o cambia la moneda
+  window.__mcRecargar = async () => {
+    _cur = pref("valtia-mc-cur", "ARS");
+    try { await Promise.all([leerTodo(), cargarFx()]); pintar(); } catch (e) {}
+  };
   try {
     await Promise.all([leerTodo(), cargarFx()]);
     pintar();

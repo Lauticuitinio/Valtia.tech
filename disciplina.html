@@ -117,6 +117,7 @@ footer{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;font-
     <button class="theme-btn" onclick="tg()" title="Cambiar tema"></button>
   </div>
 </nav>
+<div id="valtia-cot"></div>
 <div class="top-volver"><button class="volver" onclick="volver()">← Volver</button></div>
 <main id="main">
   <div class="state">Cargando tu plan…</div>
@@ -128,6 +129,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { EMPRESAS } from './empresas.js?v=3';
+import { radarSym, tickerFicha } from './activos.js?v=1';
 
 const app = initializeApp({
   apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
@@ -170,13 +172,9 @@ const mesNombre = m => { const [a, mm] = m.split("-"); return MESES[Number(mm) -
 const mesAnterior = m => { let [a, mm] = m.split("-").map(Number); mm--; if (!mm) { mm = 12; a--; } return a + "-" + String(mm).padStart(2, "0"); };
 
 // símbolo del radar (local BYMA) ↔ ticker de las fichas (ADR, empresas.js)
-const A_RADAR = { PAM: "PAMP", YPF: "YPFD" };
-const A_FICHA = { PAMP: "PAM", YPFD: "YPF" };
-const norm = t => {
-  const x = String(t || "").toUpperCase().replace(/\.BA$/, "").replace(/-USD$/, "");
-  return A_RADAR[x] || x;
-};
-const fichaDe = sym => A_FICHA[sym] || sym;
+// (mapa único en activos.js)
+const norm = t => radarSym(t);
+const fichaDe = sym => tickerFicha(sym) || sym;
 const linkTk = sym => {
   const tk = fichaDe(sym);
   return EMPRESAS.some(e => e.ticker === tk)
@@ -466,7 +464,8 @@ async function render() {
 }
 onAuthStateChanged(getAuth(app), u => { _user = u; render(); });
 </script>
-<script type="module" src="nav-auth.js?v=5"></script>
-<script src="nav-menu.js?v=3"></script>
+<script type="module" src="nav-auth.js?v=6"></script>
+<script type="module" src="cotizaciones.js?v=3"></script>
+<script src="nav-menu.js?v=4"></script>
 </body>
 </html>

@@ -51,14 +51,14 @@ onAuthStateChanged(getAuth(app), async user => {
   if (user) {
     if (cta) {
       cta.textContent = 'Mi Panel';
-      cta.setAttribute('href', 'index.html');
+      cta.setAttribute('href', 'index.html#panel/inicio');
       cta.removeAttribute('onclick');
     } else {
       // páginas sin CTA (ej. cartera.html): agregar el acceso al panel
       const wrap = document.querySelector('.nav-links');
       if (wrap && !document.getElementById('nav-mipanel')) {
         wrap.insertAdjacentHTML('beforeend',
-          `<a id="nav-mipanel" href="index.html" style="color:var(--gold);font-weight:600">Mi Panel</a>`);
+          `<a id="nav-mipanel" href="index.html#panel/inicio" style="color:var(--gold);font-weight:600">Mi Panel</a>`);
       }
     }
     mkt.forEach(a => { a.style.display = 'none'; });

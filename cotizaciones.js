@@ -1,3 +1,4 @@
+import { tickerFicha } from './activos.js?v=1';
 // cotizaciones.js — barra de cotizaciones en vivo, única para todo el sitio.
 // Monta en cualquier <div id="valtia-cot"></div> (index, noticias,
 // herramientas). Inyecta su propio CSS y hace marquee infinito.
@@ -56,9 +57,8 @@ function put(key, grp, n, v, c) {
 
 // cada precio lleva a su lugar: acciones y BTC/ETH a la ficha del activo,
 // los dólares al histórico de Herramientas. El resto no linkea.
-const ADR_FICHA = { PAMP: "PAM", YPFD: "YPF" };
 function linkDe(k) {
-  if (k.startsWith("s-")) return "activo.html?t=" + (ADR_FICHA[k.slice(2)] || k.slice(2));
+  if (k.startsWith("s-")) return "activo.html?t=" + (tickerFicha(k.slice(2)) || k.slice(2));
   if (k === "c-bitcoin") return "activo.html?t=BTC";
   if (k === "c-ethereum") return "activo.html?t=ETH";
   if (k.startsWith("d-")) return "herramientas.html";

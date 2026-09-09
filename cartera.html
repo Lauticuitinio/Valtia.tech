@@ -113,6 +113,7 @@ footer{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;font-
     <button class="theme-btn" onclick="tg()" title="Cambiar tema"></button>
   </div>
 </nav>
+<div id="valtia-cot"></div>
 <main id="main">
   <div class="state">Cargando carteras…</div>
 </main>
@@ -122,6 +123,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { tickerFicha, linkDe } from './activos.js?v=1';
 import { EMPRESAS } from './empresas.js?v=3';
 
 const app = initializeApp({
@@ -142,12 +144,15 @@ window.tg = () => {
 };
 
 const $ = s => document.querySelector(s);
-const fmtUSD = n => n == null || !isFinite(Number(n)) ? "—" : "US$" + Number(n).toLocaleString("es-AR", {maximumFractionDigits: 2});
+// las lecaps valuadas en dolares son centavos por 100 VN: mas decimales
+const fmtUSD = n => n == null || !isFinite(Number(n)) ? "—" : "US$" + Number(n).toLocaleString("es-AR",
+  { maximumFractionDigits: Math.abs(Number(n)) > 0 && Math.abs(Number(n)) < 1 ? 4 : 2 });
 const fmtPct = n => n == null || !isFinite(n) ? "—" : (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
 const cls = n => n > 0.004 ? "pos" : n < -0.004 ? "neg" : "mut";
 const pill = (n, t) => `<span class="pill ${n>0.004?"p":n<-0.004?"n":"m"}">${n>0.004?"▲":n<-0.004?"▼":"—"} ${t}</span>`;
 const tok = name => getComputedStyle(document.body).getPropertyValue(name).trim();
 const RIESGO = { conservador: "Riesgo bajo", moderado: "Riesgo medio", agresivo: "Riesgo alto" };
+const PERFIL = { "renta-fija": "Renta fija", "renta-mixta": "Renta mixta", "renta-variable": "Renta variable" };
 // fechas: acepta string ISO o Timestamp de Firestore
 const fdate = v => !v ? "—" : (v.toDate ? v.toDate().toISOString().slice(0,10) : String(v).slice(0,10));
 
@@ -169,9 +174,13 @@ async function loadAll(user) {
   // sin acceso PRO solo se listan las públicas (la regla exige el filtro);
   // con acceso se ven todas, incluidas las de suscriptores
   const pro = await esPro(user);
-  const cartSnap = await getDocs(pro
+  const admin = !!user && user.email === "valtyaanalytics@gmail.com";
+  // el admin ve tambien los borradores (propuestas sin aprobar); PRO ve
+  // publicas + de suscriptores (la regla exige el filtro); anonimo solo publicas
+  const cartSnap = await getDocs(admin
     ? collection(db, "carterasModelo")
-    : query(collection(db, "carterasModelo"), where("visibilidad", "==", "publico")));
+    : pro ? query(collection(db, "carterasModelo"), where("visibilidad", "in", ["publico", "clientes"]))
+          : query(collection(db, "carterasModelo"), where("visibilidad", "==", "publico")));
   const carteras = [];
   for (const d of cartSnap.docs) {
     const c = { id: d.id, ...d.data() };
@@ -233,28 +242,35 @@ async function radarMapa() {
   try {
     const snap = await getDoc(doc(db, "radar", "latest"));
     if (snap.exists()) {
-      const alias = { PAMP: "PAM", YPFD: "YPF" };   // símbolo local → ADR
+      const alias = sym => tickerFicha(sym) || sym;   // símbolo local → ADR (activos.js)
       (JSON.parse(snap.data().json || "{}").activos || []).forEach(a => {
-        _radar[alias[a.sym] || a.sym] = a;
+        _radar[alias(a.sym)] = a;
       });
     }
   } catch (e) {}
   return _radar;
 }
-const linkFicha = tk => EMPRESAS.some(e => e.ticker === tk)
-  ? `<a href="activo.html?t=${tk}" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--gold)">${tk}</a>` : tk;
+// acciones a su ficha, bonos y letras a bono.html (activos.js decide)
+const linkFicha = tk => { const h = linkDe(tk); return h
+  ? `<a href="${h}" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--gold)">${tk}</a>` : tk; };
 
 /* vidriera: las carteras PRO no se pueden LEER sin acceso (regla de
    Firestore), pero sus agregados —retorno real, curva, última rotación—
    son públicos vía carterasTeaser (fondo_sync). El retorno a la vista es
    el argumento de venta; lo que se paga es composición, tesis e historial. */
 let _teaserCache = null;
+// TIR publicada por el sync para la parte en bonos de cada cartera
+let _teaserTir = {};
+const tirDe = id => (_teaserTir[id] || {}).tir ?? null;
+const tirPesoDe = id => (_teaserTir[id] || {}).tirPeso ?? null;
+
 async function teaserMapa() {
   if (_teaserCache) return _teaserCache;
   _teaserCache = [];
   try {
     const snap = await getDoc(doc(db, "carterasTeaser", "latest"));
     if (snap.exists()) _teaserCache = JSON.parse(snap.data().json || "{}").carteras || [];
+    _teaserCache.forEach(t => { _teaserTir[t.id] = { tir: t.tir ?? null, tirPeso: t.tirPeso ?? null }; });
   } catch (e) {}
   return _teaserCache;
 }
@@ -288,13 +304,17 @@ function renderCatalogo(carteras, user, teaser) {
     <div class="ccard">
       <div class="top"><span class="badge">${c.codigo || c.slug}</span>
         <span class="tagx">${RIESGO[c.nivelRiesgo] || c.nivelRiesgo || ""}</span>
-        <span class="tagx">Rebalanceo ${c.rebalanceo || "mensual"}</span>
-        ${priv ? '<span class="tagx" style="color:var(--gold);border-color:rgba(184,151,90,.4)">Suscriptores</span>' : ''}</div>
+        ${PERFIL[c.perfil] ? `<span class="tagx">${PERFIL[c.perfil]}</span>` : ""}
+        ${c.rebalanceo ? `<span class="tagx">Rebalanceo ${c.rebalanceo}</span>` : ""}
+        ${c.visibilidad === "borrador" ? '<span class="tagx" style="color:#E0A93E;border-color:rgba(224,169,62,.5)">Borrador · sin publicar</span>'
+          : priv ? '<span class="tagx" style="color:var(--gold);border-color:rgba(184,151,90,.4)">Suscriptores</span>' : ''}</div>
       <h3>${c.nombre}</h3>
       <p>${c.descripcionCorta || ((c.tesis || "").slice(0, 150) + ((c.tesis||"").length > 150 ? "…" : ""))}</p>
       <div class="mini">
         <div class="mi"><div class="l">Desde inicio (${fdate(c.fechaInicio)})</div><div class="v ${r!=null?cls(r):"mut"}">${r!=null?fmtPct(r):"—"}</div></div>
-        <div class="mi"><div class="l">${rb != null ? "Benchmark " + c.benchmark : "Posiciones"}</div><div class="v">${rb != null ? `<span class="${cls(rb)}">${fmtPct(rb)}</span>` : c.posiciones.length}</div></div>
+        ${tirDe(c.id) != null
+          ? `<div class="mi"><div class="l">TIR a hoy${tirPesoDe(c.id) != null && tirPesoDe(c.id) < 99 ? ` (${tirPesoDe(c.id)}% en bonos)` : ""}</div><div class="v">${tirDe(c.id).toFixed(1).replace(".", ",")}%</div></div>`
+          : `<div class="mi"><div class="l">${rb != null ? "Benchmark " + c.benchmark : "Posiciones"}</div><div class="v">${rb != null ? `<span class="${cls(rb)}">${fmtPct(rb)}</span>` : c.posiciones.length}</div></div>`}
       </div>
       <div class="spark"><canvas id="sp-${c.id}"></canvas></div>
       <div class="cta"><span class="meta">${c.posiciones.length} posiciones · track record real, sin backtest</span>
@@ -360,7 +380,7 @@ async function renderDetalle(c) {
   $("#main").innerHTML = `
     <div class="crumb"><a href="cartera.html">← Todas las carteras</a></div>
     <div class="dhead">
-      <div><div class="eye" style="margin-bottom:10px"><span class="badge">${c.codigo || c.slug}</span> ${RIESGO[c.nivelRiesgo] || ""}</div>
+      <div><div class="eye" style="margin-bottom:10px"><span class="badge">${c.codigo || c.slug}</span> ${RIESGO[c.nivelRiesgo] || ""}${PERFIL[c.perfil] ? " · " + PERFIL[c.perfil] : ""}${c.visibilidad === "borrador" ? ' · <span style="color:#E0A93E">Borrador · sin publicar</span>' : ""}</div>
         <h1 style="margin-bottom:6px">${c.nombre}</h1></div>
     </div>
     <div class="dmeta">Lanzada ${inicio} · Rebalanceo ${c.rebalanceo || "mensual"} · ${c.modo === "automatico" ? "Reglas automáticas" : "Curada por el equipo"} · Benchmark ${c.benchmark || "—"}<br>${c.criterio || ""}</div>
@@ -440,7 +460,8 @@ async function render() {
 // el catálogo cambia según haya sesión: se re-renderiza al resolver el auth
 onAuthStateChanged(getAuth(app), u => { _user = u; render(); });
 </script>
-<script type="module" src="nav-auth.js?v=5"></script>
-<script src="nav-menu.js?v=3"></script>
+<script type="module" src="nav-auth.js?v=6"></script>
+<script type="module" src="cotizaciones.js?v=3"></script>
+<script src="nav-menu.js?v=4"></script>
 </body>
 </html>

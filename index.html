@@ -715,30 +715,19 @@ a.v2plain{color:inherit;text-decoration:none}
 
 <!-- PORTAL VIEW -->
 <div id="portal-view">
+  <!-- el sidebar lo arma panel.js (un solo shell para todos los logueados) -->
   <nav class="portal-nav">
-    <a href="#" class="active" onclick="portalTab(event,'dashboard')">Dashboard</a>
-    <a href="#" onclick="portalTab(event,'rendimientos')">Rendimientos</a>
-    <a href="#" onclick="portalTab(event,'movimientos')">Movimientos</a>
-    <a href="#" onclick="portalTab(event,'informes')">Informes</a>
-    <a href="#" onclick="portalTab(event,'herramientas-p')">Herramientas</a>
-
-    <a href="#" id="micartera-tab" onclick="portalTab(event,'micartera')" style="display:none">Mi cartera</a>
-    <a href="#" id="fondo-tab" onclick="portalTab(event,'fondo')" style="display:none">Fondo</a>
-    <a href="#" id="senales-tab" onclick="portalTab(event,'senales')" style="display:none">Señales</a>
-    <a href="#" id="admin-tab" onclick="portalTab(event,'admin')" style="display:none">Admin ⚙️</a>
-    <a href="#" id="analisis-tab" onclick="portalTab(event,'analisis')" style="display:none">Análisis 📊</a>
     <span style="flex:1"></span>
     <span style="font-size:12px;color:var(--muted);margin-right:16px" id="portal-user-name">—</span>
     <button onclick="logout()" style="font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:none;border:none;cursor:pointer;padding:4px 0">Cerrar sesión</button>
   </nav>
   <div class="portal-content">
-    <div id="tab-dashboard">
-      <div class="portal-title">Tu posición</div>
-      <!-- estado honesto mientras no está cargada la posición del cliente -->
-      <div id="cli-empty" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:26px 28px;max-width:760px">
-        <div style="font-size:15px;color:var(--text);margin-bottom:6px">Estamos preparando tu posición</div>
-        <p style="font-size:13px;color:var(--sub);line-height:1.7">Tu resumen de capital, valor actual y rendimiento va a aparecer acá en cuanto quede vinculada tu cuenta. Si ya sos cliente y no ves tus datos, escribinos a <a href="mailto:valtyaanalytics@gmail.com" style="color:var(--gold)">valtyaanalytics@gmail.com</a>.</p>
-      </div>
+    <!-- Tu panel (panel.js crea comprar / carteras / empresas / disciplina / herramientas al iniciar) -->
+    <div id="tab-inicio"><div class="portal-title">Tu panel</div><p style="color:var(--sub);font-size:14px">Cargando…</p></div>
+    <div id="tab-micartera" style="display:none"></div>
+    <!-- Fondo Valtia · posición del cliente a medida (renderClientDashboard) -->
+    <div id="tab-fondocli" style="display:none">
+      <div class="portal-title">Fondo Valtia · Tu posición</div>
       <div id="cli-dash">
         <div class="portal-kpis">
           <div class="pkpi"><div class="pkpi-label">Valor actual</div><div class="pkpi-value" id="cli-valor">$--</div><div class="pkpi-sub">a precios de mercado</div></div>
@@ -754,29 +743,15 @@ a.v2plain{color:inherit;text-decoration:none}
         </div>
         <p style="font-size:12px;color:var(--muted);line-height:1.7;margin-top:16px;max-width:760px">El <b style="color:var(--sub)">valor actual</b> está calculado a precios de mercado (mark-to-market). La <b style="color:var(--sub)">ganancia</b> se mide sobre tu capital neto —aportes menos el fee y menos los retiros—, repartida por capital y días. Última actualización: <span id="cli-fecha">—</span>.</p>
       </div>
+      <div id="cli-rend-body" style="margin-top:22px"></div>
     </div>
-    <div id="tab-rendimientos" style="display:none">
-      <div class="portal-title">Rendimientos</div>
-      <div id="cli-rend-body"><p style="color:var(--sub);font-size:14px">Cargando tu rendimiento…</p></div>
-    </div>
-    <div id="tab-movimientos" style="display:none">
-      <div class="portal-title">Movimientos</div>
-      <p style="color:var(--sub);font-size:14px;line-height:1.7;max-width:640px">Acá vas a ver el detalle de tus aportes y retiros. Si necesitás el detalle completo de tu cuenta, escribinos a <a href="mailto:valtyaanalytics@gmail.com" style="color:var(--gold)">valtyaanalytics@gmail.com</a> y te lo pasamos.</p>
-    </div>
-    <div id="tab-informes" style="display:none">
-      <div class="portal-title">Informes de research</div>
-      <p style="color:var(--sub);font-size:14px;line-height:1.7;max-width:640px;margin-bottom:18px">Como cliente tenés acceso completo a los informes de Valtia y a los registros de análisis con las decisiones y rotaciones.</p>
-      <a href="informes.html" class="btn-primary">Ver todos los informes →</a>
-    </div>
-    <div id="tab-herramientas-p" style="display:none">
-      <div class="portal-title">Herramientas</div>
-      <p style="color:var(--sub);font-size:14px">Acceso completo al panel de herramientas según tu plan.</p>
-      <br><a href="herramientas.html" class="btn-primary">Ir al panel de herramientas →</a>
-    </div>
-
-    <!-- TAB SEÑALES -->
+    <!-- Gestión (solo admin; los llena fondo-live.js) -->
+    <div id="tab-dashboard" style="display:none"></div>
+    <div id="tab-rendimientos" style="display:none"></div>
+    <div id="tab-movimientos" style="display:none"></div>
+    <div id="tab-informes" style="display:none"></div>
     <div id="tab-admin" style="display:none">
-      <div class="portal-title">Panel de administrador</div>
+      <div class="portal-title">Inversores</div>
       <p style="color:var(--sub);font-size:14px">Cargando datos...</p>
     </div>
     <div id="tab-senales" style="display:none"></div>
@@ -788,7 +763,6 @@ a.v2plain{color:inherit;text-decoration:none}
       <div class="portal-title">Fondo</div>
       <p style="color:var(--sub);font-size:14px">Cargando el balance consolidado…</p>
     </div>
-    <div id="tab-micartera" style="display:none"></div>
   </div>
 </div>
 
@@ -957,17 +931,7 @@ function updateNavUser(user,isAdmin){
 }
 // loginWithGoogle, loginWithEmail, logout, showHome handled by Firebase module
 
-// ── PORTAL TABS ──
-function portalTab(e,tab){
-  e.preventDefault();
-  document.querySelectorAll('.portal-nav a').forEach(a=>a.classList.remove('active'));
-  e.target.classList.add('active');
-  ['dashboard','rendimientos','movimientos','informes','herramientas-p','admin','analisis','senales','fondo','micartera'].forEach(t=>{
-    const el=document.getElementById('tab-'+t);
-    if(el)el.style.display=t===tab?'block':'none';
-  });
-  if (window.flResizeCharts) window.flResizeCharts();
-}
+// ── PORTAL TABS: los maneja panel.js (window.portalTab) ──
 
 // ── SCROLLTOP ──
 window.addEventListener('scroll',()=>{
@@ -1002,7 +966,7 @@ function updateChartTheme(){
 
 // las cotizaciones en vivo las maneja cotizaciones.js (módulo único del sitio)
 </script>
-<script type="module" src="cotizaciones.js?v=2"></script>
+<script type="module" src="cotizaciones.js?v=3"></script>
 
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -1014,6 +978,7 @@ function updateChartTheme(){
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   import { getDatabase, ref, push, onValue, serverTimestamp as dbTimestamp }
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+  import { iniciarPanel } from './panel.js?v=3';
 
   
   // ── FIREBASE CONFIG ──
@@ -1331,6 +1296,11 @@ function updateChartTheme(){
     currentUserEmail = user.email;
     currentIsAdmin = isAdmin;
 
+    // el panel del inversor (panel.js): un solo sidebar para todos, ruteo por
+    // hash (#panel/<seccion>) y chip de plan. La parte sincrónica arma el
+    // shell antes de que fondo-live.js (admin) o el cliente pinten lo suyo.
+    iniciarPanel({ user, isAdmin, data });
+
     const displayName = user.displayName || user.email.split('@')[0];
     document.getElementById('portal-user-name').textContent = displayName;
 
@@ -1342,87 +1312,12 @@ function updateChartTheme(){
 
     // "Mi cartera": seguimiento de las posiciones propias (todo usuario con
     // sesión, admin incluido). Se carga aparte para no demorar el portal.
-    const mcTab = document.getElementById('micartera-tab');
-    if (mcTab) mcTab.style.display = 'inline';
-    import('./mi-cartera.js?v=10')
+    import('./mi-cartera.js?v=12')
       .then(m => m.initMiCartera(user, document.getElementById('tab-micartera')))
       .catch(() => {});
   }
 
-  // ── PORTAL LIBRE (usuarios gratis / PRO que no son clientes del fondo) ──
-  // Antes aterrizaban en el dashboard del fondo con "Estamos preparando tu
-  // posición": copy de otro producto. Ahora: base de operaciones con accesos
-  // directos y "qué cambió desde tu última visita" (todo dato público).
-  function renderPortalLibre(name) {
-    document.querySelectorAll('.portal-nav a').forEach(a => {
-      const oc = a.getAttribute('onclick') || '';
-      if (oc.includes("'rendimientos'") || oc.includes("'movimientos'")) a.style.display = 'none';
-    });
-    const el = document.getElementById('tab-dashboard');
-    if (!el) return;
-    const n = String(name || '').replace(/</g, '&lt;');
-    const card = (icono, titulo, sub, accion) => `
-      <a href="#" onclick="${accion};return false" class="pkpi" style="text-decoration:none;display:block;cursor:pointer">
-        <div class="pkpi-label">${icono} ${titulo}</div>
-        <div style="font-size:13px;color:var(--sub);line-height:1.6;margin-top:6px">${sub}</div>
-      </a>`;
-    el.innerHTML = `
-      <div class="portal-title">Hola, ${n}</div>
-      <p style="color:var(--sub);font-size:14px;max-width:660px;line-height:1.7;margin-bottom:20px">
-        Tu base de operaciones: seguí tus posiciones, cumplí tu plan del mes y mirá qué cambió desde tu última visita.</p>
-      <div class="portal-kpis">
-        ${card('📊', 'Mi Cartera', 'Tus posiciones con precio vivo y la lectura Valtia.', "document.getElementById('micartera-tab').click()")}
-        ${card('◎', 'Disciplina', 'Tu plan de compras del mes, guiado por el radar.', "location.href='disciplina.html'")}
-        ${card('📈', 'Carteras', 'Las carteras vivas, con cada rotación fechada.', "location.href='cartera.html'")}
-        ${card('🛠', 'Herramientas', 'Radar de valuación, bonos, dólar histórico.', "location.href='herramientas.html'")}
-      </div>
-      <div class="portal-title" style="margin-top:26px">Qué cambió</div>
-      <div id="pl-cambios" style="display:flex;flex-direction:column;gap:10px;max-width:760px">
-        <p style="color:var(--muted);font-size:13px">Buscando novedades…</p>
-      </div>
-      <p style="color:var(--muted);font-size:12px;margin-top:22px">¿Sos cliente del fondo y no ves tu posición acá?
-        Escribinos a <a href="mailto:valtyaanalytics@gmail.com" style="color:var(--gold)">valtyaanalytics@gmail.com</a>.</p>`;
-
-    (async () => {
-      const box = document.getElementById('pl-cambios');
-      if (!box) return;
-      const items = [];
-      const fila = (icono, txt, href) => `
-        <a href="${href}" style="display:flex;gap:10px;align-items:baseline;text-decoration:none;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:11px 14px">
-          <span>${icono}</span><span style="font-size:13px;color:var(--text);line-height:1.5">${txt}</span></a>`;
-      try {
-        const snap = await getDoc(doc(db, 'carterasTeaser', 'latest'));
-        if (snap.exists()) {
-          const corte = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
-          (JSON.parse(snap.data().json || '{}').carteras || []).forEach(t => {
-            const u = t.ultimaRotacion;
-            if (u && u.fecha >= corte) items.push(fila('🔄',
-              `<b>${t.nombre}</b> rotó el ${u.fecha}: ${u.accion} ${u.ticker} — ver el razonamiento →`,
-              'cartera.html?c=' + t.id));
-          });
-        }
-      } catch (e) {}
-      try {
-        const snap = await getDoc(doc(db, 'radar', 'latest'));
-        if (snap.exists()) {
-          const zona = (JSON.parse(snap.data().json || '{}').activos || []).filter(a => a.entrada);
-          if (zona.length) items.push(fila('◎',
-            `<b>${zona.length} activo${zona.length > 1 ? 's' : ''} en zona de compra</b> hoy según el radar: ${zona.map(a => a.sym).slice(0, 5).join(', ')} →`,
-            'disciplina.html'));
-        }
-      } catch (e) {}
-      try {
-        const q7 = query(collection(db, 'informes'), where('visibilidad', '==', 'publico'));
-        const docs = (await getDocs(q7)).docs.map(d => d.data())
-          .filter(d => d.titulo && d.fecha)
-          .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 2);
-        docs.forEach(d => items.push(fila('📄',
-          `Informe: <b>${String(d.titulo).replace(/</g, '&lt;')}</b> · ${String(d.fecha).slice(0, 10)} →`, 'informes.html')));
-      } catch (e) {}
-      items.push(fila('📅', 'Calendario del inversor: resultados, cupones y vencimientos de letras, en una sola agenda →', 'calendario.html'));
-      box.innerHTML = items.join('');
-    })();
-  }
+  // (el portal libre de antes es ahora la sección Inicio de panel.js)
 
   // ── CLIENT DASHBOARD ──
   function renderClientDashboard(data, name) {
@@ -1436,14 +1331,7 @@ function updateChartTheme(){
     const rendBody = document.getElementById('cli-rend-body');
     const hasPos = data.valorActual != null || data.capitalNeto != null;
 
-    if (!hasPos) {
-      // no es cliente del fondo (o su posición aún no está vinculada):
-      // portal libre en vez del empty state del fondo
-      if (dash) dash.style.display = 'none';
-      if (empty) empty.style.display = 'none';
-      renderPortalLibre(name);
-      return;
-    }
+    if (!hasPos) return;   // no es cliente del fondo: su panel es el de panel.js
     if (dash) dash.style.display = 'block';
     if (empty) empty.style.display = 'none';
 
@@ -1556,8 +1444,8 @@ function updateChartTheme(){
   // Expose to global scope for onclick handlers
   window.showHome = showHome;
 </script>
-<script type="module" src="fondo-live.js?v=23"></script>
+<script type="module" src="fondo-live.js?v=24"></script>
 
-<script src="nav-menu.js?v=3"></script>
+<script src="nav-menu.js?v=4"></script>
 </body>
 </html>

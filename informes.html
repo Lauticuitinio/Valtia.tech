@@ -330,7 +330,7 @@ function openInforme(id){
 function closeInforme(){document.getElementById('informeModal').classList.remove('open');document.body.style.overflow=''}
 function closeIfOverlay(e){if(e.target===document.getElementById('informeModal'))closeInforme()}
 </script>
-<script type="module" src="cotizaciones.js?v=2"></script>
+<script type="module" src="cotizaciones.js?v=3"></script>
 <script type="module">
 /* ── Registros de análisis (Firestore) + lector integrado — misma lógica,
      estética nueva. Los estilos fsr-* viven en el CSS de la página. ── */
@@ -556,7 +556,7 @@ onAuthStateChanged(getAuth(app), user => {
   else catalogo(user);
 });
 </script>
-<script type="module" src="nav-auth.js?v=5"></script>
-<script src="nav-menu.js?v=3"></script>
+<script type="module" src="nav-auth.js?v=6"></script>
+<script src="nav-menu.js?v=4"></script>
 </body>
 </html>
