@@ -238,14 +238,17 @@ async function precioHoy(sym) {
 }
 
 /* ───────────────────────── shell: sidebar + topbar + ruteo ───────────────────────── */
+// El orden es el del inversor mirando SU plata: primero cómo viene, después
+// qué hacer con ella, y al final las herramientas. Antes "Qué comprar" y las
+// carteras se metían entre el resumen y la cartera propia.
 const TABS = [
-  { g: 'Tu panel', id: 'inicio', t: 'Inicio' },
-  { g: 'Tu panel', id: 'comprar', t: 'Qué comprar' },
-  { g: 'Tu panel', id: 'carteras', t: 'Carteras Valtia' },
-  { g: 'Tu panel', id: 'micartera', t: 'Mi cartera' },
-  { g: 'Tu panel', id: 'empresas', t: 'Mis empresas' },
-  { g: 'Tu panel', id: 'disciplina', t: 'Disciplina' },
-  { g: 'Tu panel', id: 'herramientas', t: 'Herramientas y datos' },
+  { g: 'Tus inversiones', id: 'inicio', t: 'Resumen' },
+  { g: 'Tus inversiones', id: 'micartera', t: 'Mi cartera' },
+  { g: 'Tus inversiones', id: 'empresas', t: 'Mis empresas' },
+  { g: 'Para decidir', id: 'comprar', t: 'Qué comprar' },
+  { g: 'Para decidir', id: 'carteras', t: 'Carteras Valtia' },
+  { g: 'Para decidir', id: 'disciplina', t: 'Disciplina' },
+  { g: 'Herramientas', id: 'herramientas', t: 'Herramientas y datos' },
   { g: 'Fondo Valtia', id: 'fondocli', t: 'Tu posición', cliente: true },
   { g: 'Gestión', id: 'dashboard', t: 'Fondo · Dashboard', admin: true },
   { g: 'Gestión', id: 'rendimientos', t: 'Rendimientos', admin: true },
@@ -522,15 +525,17 @@ async function renderInicio() {
   const tiene = cc.pos.length > 0;
   let h = titulo('Hola, ' + nombre);
   if (tiene) h += bloqueKpis(cc); else h += bloqueCamino(cc, disc);
+  // la posición en el fondo va ACÁ, con el resto de sus números: es parte
+  // del pantallazo de cómo vienen sus inversiones, no un anexo del final
+  if (S.cliente) {
+    const v = Number(S.data.valorActual) || 0;
+    h += `<div class="vp-card" style="max-width:420px;margin-bottom:22px"><div class="l">Tu posición en el Fondo Valtia (a medida)</div>
+      <h4>$${Math.round(v).toLocaleString('es-AR')}</h4><p>a precios de mercado${S.data.actualizado_utc ? ' · actualizada el ' + new Date(S.data.actualizado_utc.seconds ? S.data.actualizado_utc.seconds * 1000 : S.data.actualizado_utc).toLocaleDateString('es-AR') : ''}</p>
+      <a class="vp-ir" href="#panel/fondocli" data-go="fondocli">Ver el detalle →</a></div>`;
+  }
   h += `<div class="vp-sec">Qué cambió${tiene ? ' en tu cartera' : ''}</div><div id="vp-cambios"><p class="vp-cargando">Buscando novedades…</p></div>`;
   h += `<div class="vp-sec">Qué comprar hoy<small>lectura Valtia · <a href="#panel/comprar" data-go="comprar" style="color:var(--gold)">ver la lista completa →</a></small></div><div id="vp-top3" class="vp-grid"><p class="vp-cargando">Cargando el radar…</p></div>`;
   h += `<div class="vp-sec">Carteras Valtia<small><a href="#panel/carteras" data-go="carteras" style="color:var(--gold)">ver todas →</a></small></div><div id="vp-cart3" class="vp-grid"></div>`;
-  if (S.cliente) {
-    const v = Number(S.data.valorActual) || 0;
-    h += `<div class="vp-sec">Fondo Valtia</div><div class="vp-card" style="max-width:420px"><div class="l">Tu posición en el fondo (a medida)</div>
-      <h4>$${Math.round(v).toLocaleString('es-AR')}</h4><p>a precios de mercado · ${S.data.actualizado_utc ? 'actualizada el ' + new Date(S.data.actualizado_utc.seconds ? S.data.actualizado_utc.seconds * 1000 : S.data.actualizado_utc).toLocaleDateString('es-AR') : ''}</p>
-      <a class="vp-ir" href="#panel/fondocli" data-go="fondocli">Ver el detalle →</a></div>`;
-  }
   el.innerHTML = h;
   cambios(cc, disc); top3(cc); carterasMini(cc);
 }
