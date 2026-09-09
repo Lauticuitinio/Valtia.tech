@@ -126,7 +126,10 @@ export function desglose(ticker, dp, px, pos) {
   const adr = !propio && f ? (dp || {})[f] : null; // respaldo: el ADR en USD
   const d = propio || adr;
   const hoyPct = px && px.d != null ? Number(px.d) : null;
-  const compra = pos && pos.fecha ? String(pos.fecha).slice(0, 10) : null;
+  // `fecha` viene de una compra registrada (dato exacto); `desde` es la
+  // primera vez que el sync vio la posición (cota: "al menos desde")
+  const compra = pos ? String(pos.fecha || pos.desde || '').slice(0, 10) || null : null;
+  const aprox = !!(pos && !pos.fecha && pos.desde);
   const valor = pos && px && px.precio != null
     ? (Number(pos.cantidad) || 0) * Number(px.precio) * (Number(pos.factor) > 0 ? Number(pos.factor) : 1)
     : null;
@@ -154,7 +157,7 @@ export function desglose(ticker, dp, px, pos) {
       ? valor - valor / (1 + pct / 100) : null;
     return { clave: k, label, pct, plata,
              enDolares: !propio && !!adr,
-             nota: recorte ? 'lo compraste el ' + recorte.split('-').reverse().join('/')
+             nota: recorte ? (aprox ? 'la tenés al menos desde el ' : 'la compraste el ') + recorte.split('-').reverse().join('/')
                  : (!propio && adr) ? 'variación del ADR en dólares'
                  : !compra ? 'variación del activo (no sabemos desde cuándo lo tenés)' : null };
   });
@@ -169,7 +172,8 @@ export function desdeLaCompra(pos, px) {
   const cant = Number(pos.cantidad) || 0;
   const costo = cant * pc * fac, valor = cant * Number(px.precio) * fac;
   return { pct: (valor / costo - 1) * 100, plata: valor - costo, costo, valor,
-           desde: pos.fecha ? String(pos.fecha).slice(0, 10) : null };
+           desde: String(pos.fecha || pos.desde || '').slice(0, 10) || null,
+           aprox: !!(!pos.fecha && pos.desde) };
 }
 
 /* mercado según el ticker guardado: byma / ext / cripto / renta fija */

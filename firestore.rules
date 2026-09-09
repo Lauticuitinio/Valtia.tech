@@ -61,6 +61,16 @@ service cloud.firestore {
         allow read, delete: if esDuenio();
         allow create, update: if esDuenio();
       }
+
+      // ── CARTERAS QUE EL USUARIO SIGUE ──
+      // Solo el id de la cartera y desde cuándo la sigue: con eso el panel
+      // le filtra las novedades y le compara su cartera contra el modelo.
+      // El contenido de la cartera lo sigue gobernando carterasModelo.
+      match /carterasSeguidas/{cid} {
+        allow read, delete: if esDuenio();
+        allow create, update: if esDuenio()
+          && request.resource.data.keys().hasOnly(['desde', 'nombre']);
+      }
     }
 
     // ── PRECIOS Y FUNDAMENTALS DE LOS TICKERS DE CLIENTES ──

@@ -1,4 +1,4 @@
-import { tickerFicha } from './activos.js?v=4';
+import { tickerFicha } from './activos.js?v=5';
 // cotizaciones.js — barra de cotizaciones en vivo, única para todo el sitio.
 // Monta en cualquier <div id="valtia-cot"></div> (index, noticias,
 // herramientas). Inyecta su propio CSS y hace marquee infinito.

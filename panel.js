@@ -4,13 +4,13 @@
 // → Mis empresas → Disciplina → Herramientas y datos. Fondo Valtia aparece
 // solo para clientes del fondo y Gestión solo para el admin (fondo-live.js).
 // Mi cartera vive en mi-cartera.js; acá se reutilizan su cálculo y sus tipos.
-import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, where }
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { calcular, agruparPorBroker, normalizarTicker } from './mi-cartera.js?v=15';
 import { EMPRESAS } from './empresas.js?v=3';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose }
-  from './activos.js?v=4';
+  from './activos.js?v=5';
 
 /* ───────────────────────── estilos ───────────────────────── */
 const CSS = `
@@ -206,6 +206,15 @@ const noticias = () => cached('not', async () => {
   return snap.docs.map(d => ({ id: d.id, titulo: d.data().titulo, fecha: d.data().fecha, resumen: d.data().resumen, categoria: d.data().categoria }))
     .filter(n => n.titulo).sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 200);
 });
+/* las carteras que el usuario decidió seguir (solo id + desde) */
+const seguidas = () => cached('seg', async () => {
+  if (!S.verificado) return {};
+  const snap = await getDocs(collection(db(), 'inversores', S.email, 'carterasSeguidas'));
+  const out = {};
+  snap.docs.forEach(d => { out[d.id] = d.data() || {}; });
+  return out;
+});
+
 const posicionesCartera = id => cached('cm-' + id, async () => {
   const snap = await getDocs(collection(db(), 'carterasModelo', id, 'posiciones'));
   return snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => !p.estado || p.estado === 'activa');
@@ -418,6 +427,19 @@ async function registrarCompra(sym, form) {
   if (window.__mcRecargar) window.__mcRecargar();
 }
 
+async function seguirCartera(id, nombre, seguir) {
+  try {
+    const ref = doc(db(), 'inversores', S.email, 'carterasSeguidas', id);
+    if (seguir) await setDoc(ref, { desde: hoyAR(), nombre: String(nombre || '').slice(0, 60) });
+    else await deleteDoc(ref);
+    toast(seguir ? `Seguís ${nombre}` : `Dejaste de seguir ${nombre}`);
+    invalidar('seg');
+    refrescar('carteras', 'inicio', 'comprar');
+  } catch (e) {
+    toast('No se pudo guardar (' + String(e.code || e).slice(0, 40) + ')');
+  }
+}
+
 /* delegación de eventos de todo el panel */
 // el precio precargado es el de la ficha en dólares: si el usuario pasa el
 // mercado a BYMA (pesos), se limpia — si no, guardaba US$61 como $61
@@ -432,9 +454,14 @@ document.addEventListener('change', e => {
 });
 
 document.addEventListener('click', async e => {
-  const t = e.target.closest('[data-go],[data-compra],[data-ok],[data-cancel],.vp-cur button');
+  const t = e.target.closest('[data-go],[data-compra],[data-ok],[data-cancel],[data-seguir],.vp-cur button');
   if (!t) return;
   if (t.dataset.go) { e.preventDefault(); portalTab(t.dataset.go); return; }
+  if (t.dataset.seguir) {
+    e.preventDefault(); t.disabled = true;
+    await seguirCartera(t.dataset.seguir, t.dataset.nombre, t.dataset.on !== '1');
+    return;
+  }
   if (t.dataset.compra) {
     e.preventDefault();
     const sym = t.dataset.compra, host = t.closest('[data-host]') || t.parentElement;
@@ -590,9 +617,13 @@ async function cambios(cc, disc) {
   } catch (e) {}
   try {
     const corte = new Date(Date.now() - 14 * 86400e3).toISOString().slice(0, 10);
+    const seg = (await seguidas()) || {};
+    const hayseg = Object.keys(seg).length > 0;
     ((await teaser()) || []).forEach(t => {
       const u = t.ultimaRotacion;
       if (!u || u.fecha < corte) return;
+      // si el usuario eligió carteras, solo se le avisan las suyas
+      if (hayseg && !seg[t.id]) return;
       // el movimiento (qué y en qué sentido) es contenido de la cartera: si el
       // usuario no la puede abrir, solo se le anuncia que hubo rotación
       const abierta = t.visibilidad === 'publico' || S.pro;
@@ -689,7 +720,7 @@ function sparkline(serie) {
 }
 const RIESGO = { conservador: 'Riesgo bajo', moderado: 'Riesgo medio', agresivo: 'Riesgo alto' };
 const PERFIL = { 'renta-fija': 'Renta fija', 'renta-mixta': 'Renta mixta', 'renta-variable': 'Renta variable' };
-function cardCartera(t, extra) {
+function cardCartera(t, extra, sigue) {
   const priv = t.visibilidad && t.visibilidad !== 'publico', bloqueada = priv && !S.pro;
   return `<div class="vp-card"><div class="l">${esc(t.codigo || t.id)} · ${RIESGO[t.nivelRiesgo] || esc(t.nivelRiesgo || '')}${PERFIL[t.perfil] ? ' · ' + PERFIL[t.perfil] : ''}${priv ? ` · <span class="vp-tag pro" style="padding:1px 6px">PRO</span>` : ''}</div>
     <h4>${esc(t.nombre)}</h4>
@@ -697,13 +728,17 @@ function cardCartera(t, extra) {
     <p>Desde ${t.fechaInicio ? fmtF(t.fechaInicio) : 'inicio'}: <b class="${cls(t.retorno)}">${pct(t.retorno, 2)}</b>${t.retornoBench != null ? ` · ${esc(t.benchmark || 'SPY')} ${pct(t.retornoBench, 2)}` : ''} · ${t.posiciones} posiciones${t.ultimaRotacion ? ` · última rotación ${fmtF(t.ultimaRotacion.fecha)}` : ''}</p>
     ${t.tir != null ? `<p style="margin-top:4px">Rinde <b>${num(t.tir, 1)}% anual en dólares</b> si se mantiene a vencimiento${t.tirPeso != null && t.tirPeso < 99 ? ` (sobre el ${t.tirPeso}% en bonos)` : ''}.</p>` : ''}
     ${extra || ''}
-    ${bloqueada ? `<a class="vp-ir" href="planes.html">Composición y rotaciones con PRO →</a>` : `<a class="vp-ir" href="cartera.html?c=${esc(t.id)}">Ver composición y tesis →</a>`}</div>`;
+    ${bloqueada ? `<a class="vp-ir" href="planes.html">Composición y rotaciones con PRO →</a>`
+      : `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">
+          <a class="vp-ir" style="margin:0" href="cartera.html?c=${esc(t.id)}">Ver composición y tesis →</a>
+          ${S.verificado && sigue != null ? `<button class="vp-btn mini ${sigue ? '' : 'sec'}" data-seguir="${esc(t.id)}" data-nombre="${esc(t.nombre)}" data-on="${sigue ? '1' : '0'}">${sigue ? '✓ Siguiendo' : 'Seguir'}</button>` : ''}
+        </div>`}</div>`;
 }
 
 async function renderCarteras() {
   const el = $('tab-carteras');
   el.innerHTML = titulo('Carteras Valtia') + '<p class="vp-cargando">Cargando…</p>';
-  const [ts, cc, bset] = await Promise.all([teaser(), carteraCalc(), bonosSet()]);
+  const [ts, cc, bset, seg] = await Promise.all([teaser(), carteraCalc(), bonosSet(), seguidas()]);
   const ten = tenencias(cc, bset);
   const cards = await Promise.all((ts || []).map(async t => {
     let extra = '';
@@ -712,16 +747,81 @@ async function renderCarteras() {
       if (pos.length) {
         // un bono se cuenta como tenido en cualquiera de sus especies
         // (AL30 y AL30D son el mismo título): se compara por el par
-        const faltan = pos.map(p => String(p.ticker || '').toUpperCase()).filter(k =>
-          esRentaFija(k, bset) ? !ten.pares.has(parBono(base(k)))
-                               : !ten.fichas.has(k) && !ten.radar.has(radarSym(k)));
+        const tenido = k => esRentaFija(k, bset) ? ten.pares.has(parBono(base(k)))
+                                                 : ten.fichas.has(k) || ten.radar.has(radarSym(k));
+        const faltan = pos.map(p => String(p.ticker || '').toUpperCase()).filter(k => !tenido(k));
         extra = `<p style="margin-top:6px">Tenés <b>${pos.length - faltan.length} de ${pos.length}</b>${faltan.length ? ` · te faltan ${faltan.slice(0, 4).map(esc).join(', ')}${faltan.length > 4 ? ' y ' + (faltan.length - 4) + ' más' : ''}` : ' · la tenés completa'}.</p>`;
       }
     }
-    return cardCartera(t, extra);
+    return cardCartera(t, extra, !!seg[t.id]);
   }));
-  el.innerHTML = titulo('Carteras Valtia') + `<p class="vp-sub">Carteras vivas con track record real desde su lanzamiento, sin backtests: cada rotación queda fechada con su razonamiento. Elegí la que va con vos y compará con lo que ya tenés.</p>
-    <div class="vp-grid">${cards.join('') || '<p class="vp-nota">Las carteras no están disponibles ahora.</p>'}</div>`;
+  el.innerHTML = titulo('Carteras Valtia') + `<p class="vp-sub">Carteras vivas con track record real desde su lanzamiento, sin backtests: cada rotación queda fechada con su razonamiento. Seguí la que va con vos y el panel te avisa sus rotaciones y te compara contra lo que ya tenés.</p>
+    <div class="vp-grid">${cards.join('') || '<p class="vp-nota">Las carteras no están disponibles ahora.</p>'}</div>
+    <div id="vp-comparar"></div>`;
+  compararSeguidas(ts || [], cc, bset, seg);
+}
+
+/* Comparación contra las carteras que sigue: qué le falta y con qué peso.
+   Solo de las que puede leer (la regla de Firestore manda). */
+async function compararSeguidas(ts, cc, bset, seg) {
+  const box = $('vp-comparar');
+  if (!box) return;
+  const ids = Object.keys(seg || {});
+  if (!ids.length) {
+    box.innerHTML = `<p class="vp-nota">Todavía no seguís ninguna. Al seguir una cartera, el panel te avisa cuando rota y te muestra acá qué te falta para replicarla.</p>`;
+    return;
+  }
+  const total = cc.r.total || 0;
+  const bloques = await Promise.all(ids.map(async id => {
+    const t = ts.find(x => x.id === id);
+    const nombre = (t && t.nombre) || (seg[id] || {}).nombre || id;
+    if (t && t.visibilidad !== 'publico' && !S.pro) {
+      return `<div class="vp-card"><h4>${esc(nombre)}</h4><p>Seguís esta cartera. Su composición es de Valtia PRO.</p>
+        <a class="vp-ir" href="planes.html">Ver planes →</a></div>`;
+    }
+    const pos = (await posicionesCartera(id)) || [];
+    if (!pos.length) return '';
+    const ten = tenencias(cc, bset);
+    const filas = pos.map(p => {
+      const k = String(p.ticker || '').toUpperCase();
+      const rf = esRentaFija(k, bset);
+      const tengo = rf ? ten.pares.has(parBono(base(k))) : (ten.fichas.has(k) || ten.radar.has(radarSym(k)));
+      // peso real de ese activo en la cartera del usuario
+      const fk = tickerFicha(k), rk = radarSym(k);
+      const mio = cc.r.filas.filter(f => {
+        if (rf) return esRentaFija(f.ticker, bset) && parBono(base(f.ticker)) === parBono(base(k));
+        if (esRentaFija(f.ticker, bset)) return false;
+        // ojo: tickerFicha devuelve null para lo que Valtia no cubre, y
+        // null === null daba "es el mismo activo" para dos cosas distintas
+        return (fk && tickerFicha(f.ticker) === fk) || radarSym(f.ticker) === rk;
+      }).reduce((a, f) => a + (f.dValor || 0), 0);
+      const pesoMio = total > 0 ? mio / total * 100 : null;
+      const objetivo = Number(p.pesoObjetivo || 0) * 100;
+      return { k, tengo, pesoMio, objetivo, dif: pesoMio != null ? pesoMio - objetivo : null };
+    }).sort((a, b) => b.objetivo - a.objetivo);
+    const faltan = filas.filter(f => !f.tengo);
+    return `<div class="vp-card" style="grid-column:1/-1">
+      <div class="l">Comparación · ${esc(nombre)}</div>
+      <h4>Tenés ${filas.length - faltan.length} de ${filas.length}</h4>
+      <div class="vp-tblwrap" style="margin-top:10px;background:transparent;border:none">
+        <table class="vp-tbl" style="min-width:420px"><thead><tr>
+          <th class="l">Activo</th><th>Peso objetivo</th><th>Tu peso</th><th class="l">Estado</th></tr></thead>
+        <tbody>${filas.map(f => `<tr>
+          <td class="l">${(h => h ? `<a class="tk" href="${h}">${esc(base(f.k))}</a>` : `<span class="tk">${esc(base(f.k))}</span>`)(linkDe(f.k, bset))}</td>
+          <td>${f.objetivo ? f.objetivo.toFixed(0) + '%' : '—'}</td>
+          <td>${f.pesoMio != null && f.pesoMio > 0 ? f.pesoMio.toFixed(1) + '%' : '—'}</td>
+          <td class="l">${f.tengo
+            ? (f.dif != null && Math.abs(f.dif) > 5
+                ? `<span class="vp-tag ${f.dif > 0 ? 'cara' : 'precio'}">${f.dif > 0 ? 'te pasás' : 'te falta'} ${Math.abs(f.dif).toFixed(0)} pts</span>`
+                : '<span class="vp-tag tengo">en línea</span>')
+            : '<span class="vp-tag zona">no la tenés</span>'}</td></tr>`).join('')}
+        </tbody></table>
+      </div>
+      <p class="vp-nota">Tu peso se calcula sobre el total de tu cartera, incluidas las posiciones que no son de esta cartera modelo. Por eso los porcentajes propios suelen dar más bajos que el objetivo.</p>
+    </div>`;
+  }));
+  const html = bloques.filter(Boolean).join('');
+  box.innerHTML = html ? `<div class="vp-sec">Comparación con lo que seguís</div><div class="vp-grid">${html}</div>` : '';
 }
 
 /* ───────────────────────── MIS EMPRESAS ───────────────────────── */
