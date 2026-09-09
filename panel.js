@@ -122,6 +122,77 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 .vp-spark{width:100%;height:36px;display:block;margin:8px 0 4px}
 .vp-pos{color:#4caf50}.vp-neg{color:#ef5350}.vp-mut{color:var(--muted)}
 .vp-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px}
+/* Resumen: cabecera, bloque de estado, composicion y avisos */
+.vp-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.vp-head .portal-title{margin-bottom:2px}
+.vp-fecha{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.vp-hero{display:grid;gap:14px;margin-bottom:8px;align-items:stretch}
+@media(min-width:980px){.vp-hero.dos{grid-template-columns:minmax(0,1.85fr) minmax(0,1fr)}}
+.vp-hero:not(.dos) .vp-fondo{max-width:420px}
+.vp-estado{display:flex;flex-direction:column;gap:15px}
+.vp-est-top{display:flex;justify-content:space-between;gap:22px;flex-wrap:wrap}
+.vp-big{font-family:'Cormorant Garamond',serif;font-size:44px;line-height:1.05;font-weight:400;color:var(--text);
+  font-variant-numeric:tabular-nums;letter-spacing:-.01em;margin:3px 0 7px}
+.vp-linea{font-size:13px;color:var(--sub);display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;line-height:1.5}
+.vp-linea b{font-size:18px;font-weight:600}
+.vp-pill{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:5px;white-space:nowrap}
+.vp-pill.pos{color:#2E7D32;background:rgba(76,175,80,.14)}
+.vp-pill.neg{color:#C62828;background:rgba(239,83,80,.14)}
+[data-theme="dark"] .vp-pill.pos{color:#7DD487}
+[data-theme="dark"] .vp-pill.neg{color:#FF8A86}
+.vp-cob{text-align:right;flex:none;max-width:210px}
+.vp-cob .n{font-family:'Cormorant Garamond',serif;font-size:27px;line-height:1.15;color:var(--text)}
+.vp-cob .n small{font-size:14px;color:var(--muted)}
+.vp-cob p{font-size:11.5px;color:var(--muted);margin:0;line-height:1.5}
+.vp-cob .vp-ir{margin-top:8px}
+@media(max-width:640px){.vp-cob{text-align:left;max-width:none}.vp-big{font-size:38px}}
+.vp-comp{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:20px;border-top:1px solid var(--border);padding-top:14px}
+.vp-bar{display:flex;height:7px;border-radius:4px;overflow:hidden;background:var(--bg3);margin:8px 0}
+.vp-bar i{display:block;height:100%}
+.vp-leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11.5px;color:var(--sub)}
+.vp-leg span{display:inline-flex;align-items:center;gap:5px}
+.vp-leg i{width:7px;height:7px;border-radius:2px;display:inline-block;flex:none}
+.vp-leg b{color:var(--text)}
+.vp-avisos{border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.vp-aviso{font-size:12.5px;color:var(--sub);display:flex;gap:10px;align-items:baseline;line-height:1.55}
+.vp-aviso .vp-tag{flex:none}
+.vp-tag.warn{color:#8A6A2F;background:rgba(224,169,62,.18)}
+[data-theme="dark"] .vp-tag.warn{color:#E0A93E}
+.vp-fondo{background:#14213D;border:1px solid #B08A3E;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;justify-content:center}
+.vp-fondo .l{font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#B08A3E}
+.vp-fondo .v{font-family:'Cormorant Garamond',serif;font-size:36px;line-height:1.1;color:#fff;font-variant-numeric:tabular-nums;margin:6px 0 4px}
+.vp-fondo p{font-size:12px;color:rgba(255,255,255,.6);margin:0 0 16px;line-height:1.5}
+.vp-fondo .vp-btn{align-self:flex-start}
+/* dos columnas: lo que cambio a la izquierda, lo que hay para decidir a la derecha */
+.vp-cols{display:grid;gap:8px 30px;align-items:start}
+@media(min-width:980px){.vp-cols{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}}
+.vp-evg{font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
+.vp-evg:first-child{margin-top:0}
+.vp-ev{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:12px;align-items:baseline;text-decoration:none;
+  background:var(--card);border:1px solid var(--border);border-radius:9px;padding:11px 14px;margin-bottom:7px;
+  color:var(--text);font-size:13px;line-height:1.5}
+.vp-ev:hover{border-color:var(--gold)}
+.vp-ev .d{font:600 10.5px 'IBM Plex Mono',monospace;color:var(--muted);white-space:nowrap}
+.vp-ev .a{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);white-space:nowrap}
+/* tarjetas compactas de la columna derecha */
+.vp-buy{display:block;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 15px;margin-bottom:9px;text-decoration:none;color:var(--text)}
+a.vp-buy:hover{border-color:var(--gold)}
+.vp-buy .h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.vp-buy .tk{font-weight:700;color:var(--gold);font-size:14px}
+.vp-buy .nb{font-weight:600;color:var(--text);font-size:14px}
+.vp-buy .nm{font-size:12px;color:var(--muted)}
+.vp-buy .px{font-size:14px;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
+.vp-buy .tg{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0 9px}
+.vp-buy .sc{font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.vp-rsi{display:flex;align-items:center;gap:9px}
+.vp-rsi .t{flex:1;height:4px;border-radius:3px;background:var(--bg3);overflow:hidden}
+.vp-rsi .t i{display:block;height:100%}
+.vp-rsi .v{font:600 10px 'IBM Plex Mono',monospace;color:var(--muted);white-space:nowrap}
+/* contadores del sidebar */
+.fl-layout .portal-nav a .vp-n{float:right;font:600 9.5px 'IBM Plex Mono',monospace;letter-spacing:0;
+  color:rgba(255,255,255,.45);background:rgba(255,255,255,.08);border-radius:4px;padding:1px 5px}
+.fl-layout .portal-nav a.active .vp-n{color:#14213D;background:#E8CE96}
+@media (max-width:920px){.fl-layout .portal-nav a .vp-n{float:none;margin-left:6px}}
 `;
 
 /* ───────────────────────── estado y utilidades ───────────────────────── */
@@ -517,89 +588,159 @@ function frescura(precios) {
 const selectorCur = () => `<span class="vp-cur">${['ARS', 'CCL', 'MEP'].map(c => `<button data-cur="${c}" class="${curVista() === c ? 'on' : ''}">${curEtq(c)}</button>`).join('')}</span>`;
 
 /* ───────────────────────── INICIO ───────────────────────── */
+// El Resumen es el pantallazo de como vienen SUS inversiones: un solo bloque
+// de estado (manda el valor, y de el cuelgan resultado, rendimiento e
+// invertido), la composicion como barras con leyenda y los avisos abajo con
+// etiqueta propia. Antes eran cuatro KPIs sueltos y una fila de chips donde
+// el broker competia con "falta un precio".
+const fmtC = iso => { const [aa, mm, dd] = String(iso || '').slice(0, 10).split('-'); return dd && mm ? `${dd}/${mm}` : String(iso || ''); };
+const COLB = ['#B08A3E', '#4E6E9E', '#6FA287', '#D8B87A', '#9B7BA8', '#8C8477'];
+const COLM = { ARS: '#9EC7A8', USD: '#3F8F63' };
+
+function cabecera(nombre, fresco) {
+  let f = '';
+  try { f = new Date(hoyAR() + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }); } catch (e) {}
+  return `<div class="vp-head"><div>${titulo('Hola, ' + nombre)}
+    <div class="vp-fecha">${esc(f)}${fresco ? ' \u00b7 ' + esc(fresco) : ''}</div></div>${selectorCur()}</div>`;
+}
+
 async function renderInicio() {
   const el = $('tab-inicio');
   const nombre = esc((S.user.displayName || S.email.split('@')[0]).split(' ')[0]);
-  el.innerHTML = titulo('Hola, ' + nombre) + '<p class="vp-cargando">Armando tu panorama…</p>';
-  const [cc, disc] = await Promise.all([carteraCalc(), disciplina()]);
+  el.innerHTML = titulo('Hola, ' + nombre) + '<p class="vp-cargando">Armando tu panorama\u2026</p>';
+  const [cc, disc, bset] = await Promise.all([carteraCalc(), disciplina(), bonosSet()]);
   const tiene = cc.pos.length > 0;
-  let h = titulo('Hola, ' + nombre);
-  if (tiene) h += bloqueKpis(cc); else h += bloqueCamino(cc, disc);
-  // la posición en el fondo va ACÁ, con el resto de sus números: es parte
-  // del pantallazo de cómo vienen sus inversiones, no un anexo del final
-  if (S.cliente) {
-    const v = Number(S.data.valorActual) || 0;
-    h += `<div class="vp-card" style="max-width:420px;margin-bottom:22px"><div class="l">Tu posición en el Fondo Valtia (a medida)</div>
-      <h4>$${Math.round(v).toLocaleString('es-AR')}</h4><p>a precios de mercado${S.data.actualizado_utc ? ' · actualizada el ' + new Date(S.data.actualizado_utc.seconds ? S.data.actualizado_utc.seconds * 1000 : S.data.actualizado_utc).toLocaleDateString('es-AR') : ''}</p>
-      <a class="vp-ir" href="#panel/fondocli" data-go="fondocli">Ver el detalle →</a></div>`;
-  }
-  h += `<div class="vp-sec">Qué cambió${tiene ? ' en tu cartera' : ''}</div><div id="vp-cambios"><p class="vp-cargando">Buscando novedades…</p></div>`;
-  h += `<div class="vp-sec">Qué comprar hoy<small>lectura Valtia · <a href="#panel/comprar" data-go="comprar" style="color:var(--gold)">ver la lista completa →</a></small></div><div id="vp-top3" class="vp-grid"><p class="vp-cargando">Cargando el radar…</p></div>`;
-  h += `<div class="vp-sec">Carteras Valtia<small><a href="#panel/carteras" data-go="carteras" style="color:var(--gold)">ver todas →</a></small></div><div id="vp-cart3" class="vp-grid"></div>`;
+  const fondo = S.cliente ? tarjetaFondo() : '';
+  let h = cabecera(nombre, tiene ? frescura(cc.precios) : '');
+  h += tiene ? `<div class="vp-hero${fondo ? ' dos' : ''}">${bloqueEstado(cc)}${fondo}</div>`
+             : bloqueCamino(cc, disc) + (fondo ? `<div class="vp-hero">${fondo}</div>` : '');
+  h += `<div class="vp-cols">
+      <div><div class="vp-sec">Qu\u00e9 cambi\u00f3${tiene ? ' en tu cartera' : ''}<small id="vp-nov"></small></div>
+        <div id="vp-cambios"><p class="vp-cargando">Buscando novedades\u2026</p></div></div>
+      <div><div class="vp-sec">Qu\u00e9 comprar hoy<small><a href="#panel/comprar" data-go="comprar" style="color:var(--gold)">lista completa \u2192</a></small></div>
+        <div id="vp-top3"><p class="vp-cargando">Cargando el radar\u2026</p></div>
+        <div class="vp-sec">Carteras Valtia<small><a href="#panel/carteras" data-go="carteras" style="color:var(--gold)">ver todas \u2192</a></small></div>
+        <div id="vp-cart3"></div></div>
+    </div>`;
   el.innerHTML = h;
-  cambios(cc, disc); top3(cc); carterasMini(cc);
+  cambios(cc, disc); top3(cc); carterasMini(cc); contadores(cc, disc, bset);
 }
 
-function bloqueKpis(cc) {
-  const r = cc.r, cur = cc.cur, m = curMoneda(cur);
+function tarjetaFondo() {
+  const v = Number(S.data.valorActual) || 0, t = S.data.actualizado_utc;
+  const f = t ? new Date(t.seconds ? t.seconds * 1000 : t).toLocaleDateString('es-AR') : '';
+  return `<div class="vp-fondo"><div class="l">Fondo Valtia \u00b7 a medida</div>
+    <div class="v">$${Math.round(v).toLocaleString('es-AR')}</div>
+    <p>a precios de mercado${f ? ' \u00b7 actualizada el ' + f : ''}</p>
+    <a class="vp-btn" href="#panel/fondocli" data-go="fondocli">Ver el detalle \u2192</a></div>`;
+}
+
+/* una barra de composicion con su leyenda: [{nombre, peso, color}] */
+function barraComp(tit, items) {
+  if (!items.length) return '';
+  return `<div><div class="l">${tit}</div>
+    <div class="vp-bar">${items.map(i => `<i style="width:${i.peso.toFixed(1)}%;background:${i.color}"></i>`).join('')}</div>
+    <div class="vp-leg">${items.map(i => `<span><i style="background:${i.color}"></i>${esc(i.nombre)} <b>${num(i.peso, i.peso >= 10 ? 0 : 1)}%</b></span>`).join('')}</div></div>`;
+}
+
+function bloqueEstado(cc) {
+  const r = cc.r, m = curMoneda(cc.cur), n = r.filas.length;
   // dos causas distintas de "no suma al total": sin precio del sync, o sin
-  // cotización del dólar para convertir. Antes las contaba juntas.
+  // cotizacion del dolar para convertir. Van abajo, separadas de la composicion.
+  const conPx = r.filas.filter(f => f.dValor != null).length;
   const sinPx = r.filas.filter(f => f.actual == null).length;
   const sinFx = r.filas.filter(f => f.actual != null && f.dValor == null).length;
   const brokers = agruparPorBroker(r.filas, r.total);
   const porMoneda = {};
   r.filas.forEach(f => { if (f.dValor != null) porMoneda[f.moneda] = (porMoneda[f.moneda] || 0) + f.dValor; });
-  return `<div class="vp-kpis">
-      <div class="pkpi"><div class="pkpi-label">Valor de tu cartera</div><div class="pkpi-value">${money(r.total, m)}</div><div class="pkpi-sub">${r.filas.filter(f => f.dValor != null).length} de ${r.filas.length} posici${r.filas.length === 1 ? 'ón' : 'ones'} en ${brokers.length} broker${brokers.length === 1 ? '' : 's'}</div></div>
-      <div class="pkpi"><div class="pkpi-label">Invertido</div><div class="pkpi-value">${money(r.costoTot, m)}</div><div class="pkpi-sub">costo de lo que tiene precio</div></div>
-      <div class="pkpi"><div class="pkpi-label">Resultado</div><div class="pkpi-value ${r.plTot >= 0 ? 'pos' : 'neg'}">${moneyS(r.plTot, m)}</div><div class="pkpi-sub">no realizado</div></div>
-      <div class="pkpi"><div class="pkpi-label">Rendimiento</div><div class="pkpi-value ${(r.plTotPct || 0) >= 0 ? 'pos' : 'neg'}">${pct(r.plTotPct)}</div><div class="pkpi-sub">sobre lo invertido</div></div>
+  const barB = brokers.filter(b => b.peso > 0).map((b, i) => ({ nombre: b.broker, peso: b.peso, color: COLB[i % COLB.length] }));
+  const barM = Object.entries(porMoneda).filter(([, v]) => r.total > 0 && v > 0)
+    .map(([k, v]) => ({ nombre: k === 'ARS' ? 'En pesos' : 'En d\u00f3lares', peso: v / r.total * 100, color: COLM[k] || COLM.USD }))
+    .sort((x, y) => y.peso - x.peso);
+  const avisos = [];
+  if (sinPx) avisos.push(['Atenci\u00f3n', `${sinPx} posici${sinPx > 1 ? 'ones esperan' : '\u00f3n espera'} el precio del sync de las 9:00 y qued${sinPx > 1 ? 'an' : 'a'} fuera del total.`]);
+  if (sinFx) avisos.push(['Atenci\u00f3n', `Sin cotizaci\u00f3n del d\u00f3lar: ${sinFx} posici${sinFx > 1 ? 'ones no suman' : '\u00f3n no suma'} al valor convertido.`]);
+  if (cc.cur !== 'ARS') avisos.push(['Nota', 'El costo y el valor se convierten con la cotizaci\u00f3n de hoy, as\u00ed que el rendimiento es el mismo que en pesos: no es tu retorno medido en d\u00f3lares.']);
+  return `<div class="vp-card vp-estado">
+    <div class="vp-est-top">
+      <div><div class="l">Valor de tu cartera</div>
+        <div class="vp-big">${money(r.total, m)}</div>
+        <div class="vp-linea"><b class="${cls(r.plTot)}">${moneyS(r.plTot, m)}</b>
+          ${r.plTotPct != null ? `<span class="vp-pill ${r.plTotPct >= 0 ? 'pos' : 'neg'}">${pct(r.plTotPct)}</span>` : ''}
+          <span>no realizado sobre ${money(r.costoTot, m)} invertidos</span></div></div>
+      <div class="vp-cob"><div class="l">Cobertura</div>
+        <div class="n">${conPx} <small>de</small> ${n}</div>
+        <p>posici${n === 1 ? '\u00f3n' : 'ones'} con precio, en ${brokers.length} broker${brokers.length === 1 ? '' : 's'}</p>
+        <a class="vp-ir" href="#panel/micartera" data-go="micartera">Ver mi cartera \u2192</a></div>
     </div>
-    <div class="vp-chips">${selectorCur()}
-      ${brokers.map(b => `<span class="vp-chip"><b>${esc(b.broker)}</b> ${b.peso != null ? b.peso.toFixed(0) + '%' : ''}</span>`).join('')}
-      ${Object.entries(porMoneda).map(([k, v]) => `<span class="vp-chip">${k === 'ARS' ? 'en pesos' : 'en dólares'} <b>${r.total ? (v / r.total * 100).toFixed(0) : 0}%</b></span>`).join('')}
-      ${frescura(cc.precios) ? `<span class="vp-chip">${frescura(cc.precios)}</span>` : ''}
-      ${sinPx ? `<span class="vp-chip" style="color:#E0A93E">${sinPx} ${sinPx > 1 ? 'esperan' : 'espera'} precio (9:00)</span>` : ''}
-      ${sinFx ? `<span class="vp-chip" style="color:#E0A93E">sin cotización del dólar: ${sinFx} ${sinFx > 1 ? 'posiciones quedan' : 'posición queda'} fuera del total</span>` : ''}
-      <a class="vp-chip" href="#panel/micartera" data-go="micartera" style="text-decoration:none;color:var(--gold)">ver Mi cartera →</a>
-    </div>
-    ${cur !== 'ARS' ? `<p class="vp-nota" style="margin:-12px 0 18px">El costo y el valor se convierten con la cotización de hoy, así que el rendimiento es el mismo que en pesos: no es tu retorno medido en dólares.</p>` : ''}`;
+    ${barB.length || barM.length ? `<div class="vp-comp">${barraComp('Por broker', barB)}${barraComp('Por moneda', barM)}</div>` : ''}
+    ${avisos.length ? `<div class="vp-avisos">${avisos.map(([t, x]) =>
+      `<div class="vp-aviso"><span class="vp-tag ${t === 'Nota' ? 'tengo' : 'warn'}">${t}</span><span>${x}</span></div>`).join('')}</div>` : ''}
+  </div>`;
 }
 
 function bloqueCamino(cc, disc) {
   const compras = (disc && disc.log || []).length;
   const pasos = [
-    { ok: compras > 0, go: 'comprar', t: 'Mirá qué comprar hoy', p: 'La lectura Valtia de 34 activos, con los que están en zona de compra primero.' },
-    { ok: cc.pos.length > 0, go: 'micartera', t: 'Cargá tu cartera', p: 'Lo que ya tenés en IOL, PPI, Balanz o Binance. Se importa pegando desde Excel.' },
-    { ok: !!(disc && disc.config), go: 'disciplina', t: 'Definí tu regla de Disciplina', p: 'Cuánto aportás por mes y en cuántas compras. Te marcamos el ritmo.' },
+    { ok: compras > 0, go: 'comprar', t: 'Mir\u00e1 qu\u00e9 comprar hoy', p: 'La lectura Valtia de 34 activos, con los que est\u00e1n en zona de compra primero.' },
+    { ok: cc.pos.length > 0, go: 'micartera', t: 'Carg\u00e1 tu cartera', p: 'Lo que ya ten\u00e9s en IOL, PPI, Balanz o Binance. Se importa pegando desde Excel.' },
+    { ok: !!(disc && disc.config), go: 'disciplina', t: 'Defin\u00ed tu regla de Disciplina', p: 'Cu\u00e1nto aport\u00e1s por mes y en cu\u00e1ntas compras. Te marcamos el ritmo.' },
   ];
-  return `<p class="vp-sub">Tu panel arma un panorama completo de tus inversiones, estén en el broker que estén. Tres pasos para empezar:</p>
-    <div class="vp-pasos">${pasos.map((s, i) => `<div class="vp-paso${s.ok ? ' ok' : ''}" data-go="${s.go}"><div class="n">${s.ok ? '✓' : '0' + (i + 1)}</div><b>${s.t}</b><p>${s.p}</p></div>`).join('')}</div>
-    ${!S.verificado ? `<p class="vp-nota">Verificá tu email para activar Mi cartera y Disciplina (te mandamos el link al registrarte).</p>` : ''}`;
+  return `<p class="vp-sub">Tu panel arma un panorama completo de tus inversiones, est\u00e9n en el broker que est\u00e9n. Tres pasos para empezar:</p>
+    <div class="vp-pasos">${pasos.map((s, i) => `<div class="vp-paso${s.ok ? ' ok' : ''}" data-go="${s.go}"><div class="n">${s.ok ? '\u2713' : '0' + (i + 1)}</div><b>${s.t}</b><p>${s.p}</p></div>`).join('')}</div>
+    ${!S.verificado ? `<p class="vp-nota">Verific\u00e1 tu email para activar Mi cartera y Disciplina (te mandamos el link al registrarte).</p>` : ''}`;
 }
 
+/* ── contadores del sidebar: cuanto hay detras de cada seccion ── */
+function contadorNav(id, txt, tit) {
+  const a = document.querySelector(`.portal-nav a[data-tab="${id}"]`); if (!a) return;
+  let s = a.querySelector('.vp-n');
+  if (!txt) { if (s) s.remove(); return; }
+  if (!s) { s = document.createElement('span'); s.className = 'vp-n'; a.appendChild(s); }
+  s.textContent = txt;
+  if (tit) a.title = tit;
+}
+async function contadores(cc, disc, bset) {
+  const n = cc.r.filas.length;
+  contadorNav('micartera', n ? String(n) : '', n ? `${n} posici${n === 1 ? '\u00f3n' : 'ones'} cargadas` : '');
+  // "Mis empresas" agrupa los lotes del mismo activo: se cuenta lo mismo que muestra
+  const claves = new Set(cc.r.filas.map(f => esRentaFija(f.ticker, bset) ? base(f.ticker) : (tickerFicha(f.ticker) || base(f.ticker))));
+  contadorNav('empresas', claves.size ? String(claves.size) : '', `${claves.size} activos distintos`);
+  if (disc && disc.config) {
+    const mes = hoyAR().slice(0, 7), obj = Math.max(1, Number(disc.config.compras) || 1);
+    const hechas = (disc.log || []).filter(c => String(c.fecha || '').slice(0, 7) === mes).length;
+    contadorNav('disciplina', `${hechas}/${obj}`, `compras de este mes: ${hechas} de ${obj}`);
+  }
+  try {
+    const z = (await radar()).filter(a => a.entrada).length;
+    contadorNav('comprar', z ? z + ' \u25ce' : '', `${z} activos en zona de compra`);
+  } catch (e) {}
+}
+
+/* ── que cambio: tres bloques con sentido propio ── */
+const GRUPOS = [[1, 'Para actuar hoy'], [2, 'Agenda de tus activos'], [3, 'Research y carteras']];
 async function cambios(cc, disc) {
   const box = $('vp-cambios'); if (!box) return;
   const items = [];
-  const fila = (icono, txt, go, href) => `<a class="vp-fila" ${go ? `href="#panel/${go}" data-go="${go}"` : `href="${href}"`}><span>${icono}</span><span>${txt}</span></a>`;
+  const ev = (g, iso, txt, accion, go, href) => items.push({ g, iso: iso || '', txt, accion, go, href });
   const tiene = cc.pos.length > 0, ten = tenencias(cc), hoy = hoyAR();
   try {
     const act = await radar();
     if (tiene) {
       act.filter(a => ten.radar.has(a.sym)).forEach(a => {
-        if (a.entrada) items.push(fila('◎', `<b>${esc(a.sym)}</b> está hoy en zona de compra según el radar (valor ${a.score ?? '—'}, RSI ${a.rsi != null ? a.rsi.toFixed(0) : '—'}).`, 'comprar'));
-        else if (a.rsi != null && a.rsi > 70) items.push(fila('▲', `<b>${esc(a.sym)}</b> viene sobrecomprado (RSI ${a.rsi.toFixed(0)}).`, 'micartera'));
-        else if (a.rsi != null && a.rsi < 30) items.push(fila('▼', `<b>${esc(a.sym)}</b> está sobrevendido (RSI ${a.rsi.toFixed(0)}).`, 'micartera'));
+        if (a.entrada) ev(1, hoy, `<b>${esc(a.sym)}</b> est\u00e1 hoy en zona de compra seg\u00fan el radar (valor ${a.score ?? '\u2014'}, RSI ${a.rsi != null ? a.rsi.toFixed(0) : '\u2014'}).`, 'Ver', 'comprar');
+        else if (a.rsi != null && a.rsi > 70) ev(1, hoy, `<b>${esc(a.sym)}</b> viene sobrecomprado (RSI ${a.rsi.toFixed(0)}).`, 'Cartera', 'micartera');
+        else if (a.rsi != null && a.rsi < 30) ev(1, hoy, `<b>${esc(a.sym)}</b> est\u00e1 sobrevendido (RSI ${a.rsi.toFixed(0)}).`, 'Cartera', 'micartera');
       });
     } else {
       const zona = act.filter(a => a.entrada);
-      if (zona.length) items.push(fila('◎', `<b>${zona.length} activo${zona.length > 1 ? 's' : ''} en zona de compra</b> hoy: ${zona.map(a => esc(a.sym)).slice(0, 5).join(', ')} →`, 'comprar'));
+      if (zona.length) ev(1, hoy, `<b>${zona.length} activo${zona.length > 1 ? 's' : ''} en zona de compra</b> hoy: ${zona.map(a => esc(a.sym)).slice(0, 5).join(', ')}`, 'Ver', 'comprar');
     }
   } catch (e) {}
   try {
     const cal = await calendario();
     cal.filter(c => c.fecha >= hoy && enDias(c.fecha) <= (tiene ? 7 : 3) && (!tiene || ten.fichas.has(c.ficha)))
-      .forEach(c => items.push(fila('📅', `<b>${esc(c.nombre)}</b> presenta resultados el ${fmtF(c.fecha)}${enDias(c.fecha) === 0 ? ' (hoy)' : ''}.`, null, 'calendario.html')));
+      .forEach(c => ev(2, c.fecha, `<b>${esc(c.nombre)}</b> presenta resultados el ${fmtF(c.fecha)}${enDias(c.fecha) === 0 ? ' (hoy)' : ''}.`, 'Calendario', null, 'calendario.html'));
   } catch (e) {}
   if (tiene && ten.pares.size) {
     try {
@@ -607,17 +748,18 @@ async function cambios(cc, disc) {
       cc.pos.forEach(p => {
         if (!ten.especies.has(base(p.ticker))) return;
         // los soberanos se indexan por el par (AL30) y los Bopreal por su
-        // símbolo completo (BPA7D): se prueban las dos formas
+        // simbolo completo (BPA7D): se prueban las dos formas
         const esp = base(p.ticker), par = fl[esp] ? esp : parBono(esp), d = fl[par];
         if (!d || !d.flujos) return;
         d.flujos.filter(([f]) => f >= hoy && enDias(f) <= 30).slice(0, 1).forEach(([f, monto]) => {
           const est = (Number(p.cantidad) || 0) * Number(monto) / 100;
-          items.push(fila('💵', `<b>${esc(base(p.ticker))}</b> paga el ${fmtF(f)}: ~US$${est.toLocaleString('es-AR', { maximumFractionDigits: 0 })} por tus ${Number(p.cantidad).toLocaleString('es-AR')} VN (estimado).`, null, 'bono.html?e=' + encodeURIComponent(especieBono(par))));
+          ev(2, f, `<b>${esc(base(p.ticker))}</b> paga el ${fmtF(f)}: ~US$${est.toLocaleString('es-AR', { maximumFractionDigits: 0 })} por tus ${Number(p.cantidad).toLocaleString('es-AR')} VN (estimado).`,
+            'Bono', null, 'bono.html?e=' + encodeURIComponent(especieBono(par)));
         });
       });
       const tf = ((await panelBonos()).tasa_fija || []);
       tf.filter(l => ten.especies.has(l.s) && l.vence >= hoy && enDias(l.vence) <= 30)
-        .forEach(l => items.push(fila('⏳', `<b>${esc(l.s)}</b> vence el ${fmtF(l.vence)}${l.vpv ? ` y paga ${l.vpv} por cada 100 VN` : ''}.`, null, 'bono.html?e=' + encodeURIComponent(l.s))));
+        .forEach(l => ev(2, l.vence, `<b>${esc(l.s)}</b> vence el ${fmtF(l.vence)}${l.vpv ? ` y paga ${l.vpv} por cada 100 VN` : ''}.`, 'Bono', null, 'bono.html?e=' + encodeURIComponent(l.s)));
     } catch (e) {}
   }
   try {
@@ -625,7 +767,8 @@ async function cambios(cc, disc) {
     const corte = new Date(Date.now() - 14 * 86400e3).toISOString().slice(0, 10);
     inf.filter(d => String(d.fecha).slice(0, 10) >= corte && (!tiene || (d.ticker && ten.fichas.has(String(d.ticker).toUpperCase()))))
       .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, tiene ? 5 : 2)
-      .forEach(d => items.push(fila('📄', `Informe${d.ticker ? ' de <b>' + esc(d.ticker) + '</b>' : ''}: ${esc(d.titulo)} · ${fmtF(d.fecha)} →`, null, d.ticker ? 'activo.html?t=' + encodeURIComponent(d.ticker) + '#informe' : 'informes.html')));
+      .forEach(d => ev(3, d.fecha, `Informe${d.ticker ? ' de <b>' + esc(d.ticker) + '</b>' : ''}: ${esc(d.titulo)}`,
+        'Leer', null, d.ticker ? 'activo.html?t=' + encodeURIComponent(d.ticker) + '#informe' : 'informes.html'));
   } catch (e) {}
   try {
     const corte = new Date(Date.now() - 14 * 86400e3).toISOString().slice(0, 10);
@@ -634,40 +777,71 @@ async function cambios(cc, disc) {
     ((await teaser()) || []).forEach(t => {
       const u = t.ultimaRotacion;
       if (!u || u.fecha < corte) return;
-      // si el usuario eligió carteras, solo se le avisan las suyas
+      // si el usuario eligio carteras, solo se le avisan las suyas
       if (hayseg && !seg[t.id]) return;
-      // el movimiento (qué y en qué sentido) es contenido de la cartera: si el
-      // usuario no la puede abrir, solo se le anuncia que hubo rotación
+      // el movimiento (que y en que sentido) es contenido de la cartera: si el
+      // usuario no la puede abrir, solo se le anuncia que hubo rotacion
       const abierta = t.visibilidad === 'publico' || S.pro;
-      items.push(fila('🔄', abierta && u.ticker
-        ? `<b>${esc(t.nombre)}</b> rotó el ${fmtF(u.fecha)}: ${esc(u.accion)} ${esc(u.ticker)} →`
-        : `<b>${esc(t.nombre)}</b> rotó el ${fmtF(u.fecha)} →`, null, 'cartera.html?c=' + t.id));
+      ev(3, u.fecha, abierta && u.ticker
+        ? `<b>${esc(t.nombre)}</b> rot\u00f3 el ${fmtF(u.fecha)}: ${esc(u.accion)} ${esc(u.ticker)}.`
+        : `<b>${esc(t.nombre)}</b> rot\u00f3 el ${fmtF(u.fecha)}.`, 'Abrir', null, 'cartera.html?c=' + t.id);
     });
   } catch (e) {}
   if (disc && disc.config) {
     const mes = hoy.slice(0, 7), obj = Math.max(1, Number(disc.config.compras) || 1);
-    const hechas = disc.log.filter(c => String(c.fecha || '').slice(0, 7) === mes).length;
-    if (hechas < obj) items.push(fila('◎', `Disciplina: este mes te falta${obj - hechas > 1 ? 'n' : ''} <b>${obj - hechas} compra${obj - hechas > 1 ? 's' : ''}</b> de ${obj}.`, 'disciplina'));
-    else items.push(fila('✓', `Disciplina: <b>plan del mes cumplido</b> (${hechas} de ${obj}).`, 'disciplina'));
+    const hechas = (disc.log || []).filter(c => String(c.fecha || '').slice(0, 7) === mes).length;
+    if (hechas < obj) ev(1, hoy, `<b>Disciplina</b>: este mes te falta${obj - hechas > 1 ? 'n' : ''} ${obj - hechas} compra${obj - hechas > 1 ? 's' : ''} de ${obj}.`, 'Plan', 'disciplina');
+    else ev(1, hoy, `<b>Disciplina</b>: plan del mes cumplido (${hechas} de ${obj}).`, 'Plan', 'disciplina');
   }
-  box.innerHTML = items.length ? items.join('') : `<p class="vp-nota">${tiene ? 'Nada nuevo sobre tus activos hoy: sin zona de compra, resultados ni pagos en los próximos días.' : 'Sin novedades hoy.'}</p>`;
+  const nov = $('vp-nov');
+  if (nov) nov.textContent = items.length ? `${items.length} novedad${items.length > 1 ? 'es' : ''}` : '';
+  if (!items.length) {
+    box.innerHTML = `<p class="vp-nota">${tiene ? 'Nada nuevo sobre tus activos hoy: sin zona de compra, resultados ni pagos en los pr\u00f3ximos d\u00edas.' : 'Sin novedades hoy.'}</p>`;
+    return;
+  }
+  box.innerHTML = GRUPOS.map(([g, t]) => {
+    const del = items.filter(x => x.g === g);
+    if (!del.length) return '';
+    // la agenda va del evento mas cercano al mas lejano; el research, al reves
+    del.sort((x, y) => g === 3 ? String(y.iso).localeCompare(String(x.iso)) : String(x.iso).localeCompare(String(y.iso)));
+    return `<div class="vp-evg">${t}</div>` + del.map(x =>
+      `<a class="vp-ev" ${x.go ? `href="#panel/${x.go}" data-go="${x.go}"` : `href="${x.href}"`}>
+        <span class="d">${x.g === 1 ? 'hoy' : esc(fmtC(x.iso))}</span><span class="t">${x.txt}</span><span class="a">${x.accion}</span></a>`).join('');
+  }).join('');
 }
 
+/* ── que comprar: veredicto, zona y el nivel de RSI de un vistazo ── */
 async function top3(cc) {
   const box = $('vp-top3'); if (!box) return;
   const ten = tenencias(cc), pi = (await preciosInf()) || {};
   const lista = ordenComprar(await radar()).filter(a => !ten.radar.has(a.sym)).slice(0, 3);
   box.innerHTML = lista.map(a => {
-    const f = tickerFicha(a.sym), p = f && pi[f] && pi[f].p != null ? pi[f].p : a.precio;
-    return `<div class="vp-card"><div class="l">${esc(a.sector || '')}</div><h4>${f ? `<a href="activo.html?t=${f}" style="color:inherit;text-decoration:none">${esc(a.sym)}</a>` : esc(a.sym)} <span style="font-size:13px;color:var(--muted)">${esc(a.nombre)}</span></h4>
-      <p><span class="vp-tag ${verCls(a.veredicto)}">${esc(a.veredicto)}</span> ${a.entrada ? '<span class="vp-tag zona">◎ zona de compra</span>' : ''} · US$${num(p, 2)}${a.rsi != null ? ` · RSI ${a.rsi.toFixed(0)}` : ''}</p></div>`;
-  }).join('') || '<p class="vp-nota">El radar no está disponible ahora.</p>';
+    const f = tickerFicha(a.sym), p = f && pi[f] && pi[f].p != null ? pi[f].p : a.precio, r = a.rsi;
+    const col = r == null ? 'var(--muted)' : r < 30 ? '#4caf50' : r > 70 ? '#ef5350' : '#B08A3E';
+    const cuerpo = `<div class="h"><span><span class="tk">${esc(a.sym)}</span> <span class="nm">${esc(a.nombre)}</span></span>
+        <span class="px">${p != null ? 'US$' + num(p, 2) : '\u2014'}</span></div>
+      <div class="tg"><span class="vp-tag ${verCls(a.veredicto)}">${esc(a.veredicto)}</span>
+        ${a.entrada ? '<span class="vp-tag zona">\u25ce zona de compra</span>' : ''}
+        <span class="sc">${esc(a.sector || '')}</span></div>
+      <div class="vp-rsi"><div class="t"><i style="width:${r == null ? 0 : Math.max(2, Math.min(100, r))}%;background:${col}"></i></div>
+        <span class="v">RSI ${r != null ? r.toFixed(0) : '\u2014'}</span></div>`;
+    return f ? `<a class="vp-buy" href="activo.html?t=${f}">${cuerpo}</a>` : `<div class="vp-buy">${cuerpo}</div>`;
+  }).join('') || '<p class="vp-nota">El radar no est\u00e1 disponible ahora.</p>';
 }
 
 async function carterasMini(cc) {
   const box = $('vp-cart3'); if (!box) return;
   const ts = (await teaser()) || [];
-  box.innerHTML = ts.map(t => cardCartera(t, null)).join('') || '<p class="vp-nota">Las carteras no están disponibles ahora.</p>';
+  box.innerHTML = ts.map(t => {
+    const priv = t.visibilidad && t.visibilidad !== 'publico', abierta = !priv || S.pro;
+    const etq = !priv ? '<span class="vp-tag gratis">Gratis</span>'
+      : S.pro ? '<span class="vp-tag tengo">\u2713 Acceso</span>' : '<span class="vp-tag pro">PRO</span>';
+    const sub = [PERFIL[t.perfil] || '', RIESGO[t.nivelRiesgo] || '', t.ultimaRotacion ? 'rot\u00f3 el ' + fmtC(t.ultimaRotacion.fecha) : ''].filter(Boolean).join(' \u00b7 ');
+    const cuerpo = `<div class="h"><span class="nb">${esc(t.nombre)}</span>${etq}</div>
+      <div class="tg"><span class="sc">${esc(sub)}</span></div>
+      <div style="font-size:12.5px;color:var(--sub)">Desde ${t.fechaInicio ? fmtF(t.fechaInicio) : 'inicio'}: <b class="${cls(t.retorno)}">${pct(t.retorno, 1)}</b>${t.retornoBench != null ? ` \u00b7 ${esc(t.benchmark || 'SPY')} ${pct(t.retornoBench, 1)}` : ''}</div>`;
+    return abierta ? `<a class="vp-buy" href="cartera.html?c=${esc(t.id)}">${cuerpo}</a>` : `<div class="vp-buy">${cuerpo}</div>`;
+  }).join('') || '<p class="vp-nota">Las carteras no est\u00e1n disponibles ahora.</p>';
 }
 
 /* ───────────────────────── QUÉ COMPRAR ───────────────────────── */
