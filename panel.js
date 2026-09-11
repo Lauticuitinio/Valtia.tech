@@ -7,7 +7,8 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { calcular, agruparPorBroker, normalizarTicker } from './mi-cartera.js?v=16';
+import { calcular, agruparPorBroker, normalizarTicker, convertir } from './mi-cartera.js?v=20';
+import { resumenVentas } from './ventas.js?v=2';
 import { EMPRESAS } from './empresas.js?v=3';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
   from './activos.js?v=6';
@@ -261,6 +262,11 @@ const cartera = () => cached('cartera', async () => {
     try { const s = await getDoc(doc(db(), 'precios', tk)); if (s.exists()) precios[tk] = s.data(); } catch (e) {}
   }));
   return { pos, precios };
+});
+const ventas = () => cached('ventas', async () => {
+  if (!S.verificado) return [];
+  const snap = await getDocs(collection(db(), 'inversores', S.email, 'ventas'));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 });
 async function carteraCalc() {
   const c = (await cartera()) || { pos: [], precios: {} };
@@ -608,12 +614,14 @@ async function renderInicio() {
   const el = $('tab-inicio');
   const nombre = esc((S.user.displayName || S.email.split('@')[0]).split(' ')[0]);
   el.innerHTML = titulo('Hola, ' + nombre) + '<p class="vp-cargando">Armando tu panorama\u2026</p>';
-  const [cc, disc, bset] = await Promise.all([carteraCalc(), disciplina(), bonosSet()]);
+  const [cc, disc, bset, vs] = await Promise.all([carteraCalc(), disciplina(), bonosSet(), ventas()]);
   const tiene = cc.pos.length > 0;
   const fondo = S.cliente ? tarjetaFondo() : '';
   let h = cabecera(nombre, tiene ? frescura(cc.precios) : '');
-  h += tiene ? `<div class="vp-hero${fondo ? ' dos' : ''}">${bloqueEstado(cc)}${fondo}</div>`
+  h += tiene ? `<div class="vp-hero${fondo ? ' dos' : ''}">${bloqueEstado(cc, vs || [])}${fondo}</div>`
              : bloqueCamino(cc, disc) + (fondo ? `<div class="vp-hero">${fondo}</div>` : '');
+  // vendió todo: sin posiciones no hay bloque de estado, pero lo realizado se sigue viendo
+  if (!tiene && (vs || []).length) h += tarjetaRealizado(cc, vs);
   h += `<div class="vp-cols">
       <div><div class="vp-sec">Qu\u00e9 cambi\u00f3${tiene ? ' en tu cartera' : ''}<small id="vp-nov"></small></div>
         <div id="vp-cambios"><p class="vp-cargando">Buscando novedades\u2026</p></div></div>
@@ -643,8 +651,22 @@ function barraComp(tit, items) {
     <div class="vp-leg">${items.map(i => `<span><i style="background:${i.color}"></i>${esc(i.nombre)} <b>${num(i.peso, i.peso >= 10 ? 0 : 1)}%</b></span>`).join('')}</div></div>`;
 }
 
-function bloqueEstado(cc) {
+function tarjetaRealizado(cc, vs) {
+  const m = curMoneda(cc.cur), anio = hoyAR().slice(0, 4);
+  const rz = resumenVentas(vs, (v, mon) => convertir(v, mon, cc.cur, cc.fx), anio);
+  const o = rz.delAnio.n || rz.delAnio.sinCosto ? rz.delAnio : rz;
+  const tit = o === rz.delAnio ? `Resultado realizado en ${anio}` : 'Resultado realizado';
+  return `<div class="vp-card" style="max-width:520px;margin-bottom:18px"><div class="l">${tit}</div>
+    <h4 class="${o.n && o.totalCompleto ? cls(o.total) : 'vp-mut'}">${o.n && o.totalCompleto ? moneyS(o.total, m) : '—'}</h4>
+    <p>${[o.n ? `${o.n} ${o.n === 1 ? 'venta' : 'ventas'}` : '', o.sinCosto ? `${o.sinCosto} sin precio de compra` : ''].filter(Boolean).join(' · ')}. No te quedan posiciones abiertas.</p>
+    <a class="vp-ir" href="#panel/micartera" data-go="micartera">Ver tus ventas →</a></div>`;
+}
+
+function bloqueEstado(cc, vs = []) {
   const r = cc.r, m = curMoneda(cc.cur), n = r.filas.length;
+  // lo realizado del año, al lado de lo no realizado (se convierte igual que el resto)
+  const anio = hoyAR().slice(0, 4);
+  const rz = resumenVentas(vs, (v, mon) => convertir(v, mon, cc.cur, cc.fx), anio).delAnio;
   // dos causas distintas de "no suma al total": sin precio del sync, o sin
   // cotizacion del dolar para convertir. Van abajo, separadas de la composicion.
   const conPx = r.filas.filter(f => f.dValor != null).length;
@@ -667,7 +689,8 @@ function bloqueEstado(cc) {
         <div class="vp-big">${money(r.total, m)}</div>
         <div class="vp-linea"><b class="${cls(r.plTot)}">${moneyS(r.plTot, m)}</b>
           ${r.plTotPct != null ? `<span class="vp-pill ${r.plTotPct >= 0 ? 'pos' : 'neg'}">${pct(r.plTotPct)}</span>` : ''}
-          <span>no realizado sobre ${money(r.costoTot, m)} invertidos</span></div></div>
+          <span>no realizado sobre ${money(r.costoTot, m)} invertidos</span>
+          ${rz.n || rz.sinCosto ? `<a href="#panel/micartera" data-go="micartera" style="text-decoration:none;color:inherit">· <b class="${rz.n && rz.totalCompleto ? cls(rz.total) : 'vp-mut'}" style="font-size:13px">${rz.n && rz.totalCompleto ? moneyS(rz.total, m) : '—'}</b> realizado en ${anio}${rz.sinCosto ? ` (sin contar ${rz.sinCosto} sin precio de compra)` : ''}</a>` : ''}</div></div>
       <div class="vp-cob"><div class="l">Cobertura</div>
         <div class="n">${conPx} <small>de</small> ${n}</div>
         <p>posici${n === 1 ? '\u00f3n' : 'ones'} con precio, en ${brokers.length} broker${brokers.length === 1 ? '' : 's'}</p>
@@ -1220,4 +1243,4 @@ async function renderHerramientas() {
 
 /* exposición global para los onclick del HTML */
 window.portalTab = portalTab;
-window.valtiaPanel = { salir, portalTab, iniciarPanel, refrescar: () => { invalidar('cartera', 'disc'); refrescar('inicio', 'comprar', 'disciplina', 'empresas', 'herramientas', 'carteras'); } };
+window.valtiaPanel = { salir, portalTab, iniciarPanel, refrescar: () => { invalidar('cartera', 'disc', 'ventas'); refrescar('inicio', 'comprar', 'disciplina', 'empresas', 'herramientas', 'carteras'); } };

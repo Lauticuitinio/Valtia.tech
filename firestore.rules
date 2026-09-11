@@ -71,6 +71,37 @@ service cloud.firestore {
         allow create, update: if esDuenio()
           && request.resource.data.keys().hasOnly(['desde', 'nombre']);
       }
+
+      // ── VENTAS (resultado realizado) ──
+      // Cada venta guarda el costo de la posición al momento de vender: el
+      // resultado queda fijo aunque después cambie la cartera. "pos" es la
+      // foto de la posición para poder deshacer la venta. Los campos tienen
+      // que coincidir con CAMPOS_VENTA de ventas.js (lo verifica el test).
+      match /ventas/{vid} {
+        allow read: if esDuenio();
+        // solo se borra lo que existe: un "Deshacer" reintentado no puede
+        // volver a sumarle a la posición las mismas unidades
+        allow delete: if esDuenio() && resource != null;
+        // solo alta, nunca edición: un reintento con el mismo id cuenta como
+        // update y se rechaza, así una venta no se registra dos veces
+        allow create: if esDuenio()
+          && request.resource.data.keys().hasOnly(['ticker', 'cantidad', 'precioVenta', 'costoUnitario',
+               'fecha', 'fechaCompra', 'broker', 'moneda', 'factor', 'origen', 'posId', 'pos', 'creado'])
+          && request.resource.data.ticker is string
+          && request.resource.data.ticker.size() > 0
+          && request.resource.data.ticker.size() <= 12
+          && request.resource.data.cantidad is number
+          && request.resource.data.cantidad > 0
+          && request.resource.data.precioVenta is number
+          && request.resource.data.precioVenta > 0
+          && request.resource.data.costoUnitario is number
+          && request.resource.data.costoUnitario >= 0
+          && request.resource.data.fecha is string
+          && request.resource.data.fecha.size() == 10
+          && request.resource.data.moneda in ['ARS', 'USD']
+          && request.resource.data.factor is number
+          && request.resource.data.factor > 0;
+      }
     }
 
     // ── PRECIOS Y FUNDAMENTALS DE LOS TICKERS DE CLIENTES ──

@@ -5,10 +5,12 @@
 //
 // Diseño separado a propósito: renderMiCartera() es puro (datos -> HTML) para
 // poder verificarlo con datos de prueba sin tocar Firestore.
-import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc }
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, runTransaction }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { base, linkDe, esRentaFija, parBono, sectorDe, mercadoDe, desglose } from './activos.js?v=6';
+import { validarVenta, armarVenta, planDeshacer, resultadoVenta, resumenVentas, tenencia, monedaFactor }
+  from './ventas.js?v=2';
 
 const STYLE = `
 .mc-wrap{width:100%}
@@ -38,6 +40,22 @@ const STYLE = `
 .mc-ver.cara{color:#ef5350;background:rgba(239,83,80,.12)}
 .mc-ver.sin{color:var(--muted);background:rgba(120,130,140,.12)}
 .mc-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:2px 6px}
+.mc-vend{background:none;border:1px solid var(--border);color:var(--sub);cursor:pointer;font-size:10px;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;border-radius:5px;padding:3px 8px;margin-right:4px}
+.mc-vend:hover{border-color:var(--gold);color:var(--gold)}
+.mc-vrow td{background:rgba(184,151,90,.06)!important;text-align:left!important;white-space:normal!important}
+.mc-vform{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;padding:4px 0}
+.mc-vform label{display:block;font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.mc-vform input{padding:7px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;width:140px}
+.mc-vform .prev{font-size:12.5px;color:var(--sub);align-self:center;min-width:200px}
+.mc-vform .nota{flex-basis:100%;font-size:11.5px;color:var(--muted);line-height:1.5}
+.mc-ventas{margin-top:26px}
+.mc-ventas h4{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--text);margin:0 0 4px}
+.mc-ventas .sub{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;max-width:780px}
+.mc-ventas .mc-tbl{min-width:720px}
+.mc-ventas .mc-tbl th{cursor:default}
+.mc-undo{background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;text-decoration:underline;padding:0}
+.mc-undo:hover{color:var(--gold)}
 .mc-del:hover{color:#ef5350}
 .mc-form{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:20px}
 .mc-form .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;align-items:end}
@@ -260,6 +278,15 @@ export function parseImport(texto) {
   return { filas, errores };
 }
 
+/* moneda en la que cotiza lo que se carga: BYMA es pesos, salvo las especies
+   en dólares del panel de bonos (AL30D, GD30C); exterior y cripto, dólares.
+   Es lo que se guarda en la posición y lo que hereda una venta registrada
+   antes de que exista el precio. */
+export function monedaMercado(mercado, tk, bonos = new Set()) {
+  if (mercado !== "byma") return "USD";
+  return bonos.has(tk) && /[DC]$/.test(tk) ? "USD" : "ARS";
+}
+
 /* ── cálculo: posiciones + precios → filas con resultado ── */
 export function calcular(posiciones, precios, cur = _cur, fx = _fx) {
   const filas = posiciones.map(p => {
@@ -434,6 +461,66 @@ function asegurarEstilo() {
   document.head.appendChild(st);
 }
 
+/* ── ventas y resultado realizado (el cálculo vive en ventas.js) ── */
+const hoyAR = () => new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+const fmtFecha = iso => {
+  const s = String(iso || "").slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s.split("-").reverse().join("/") : "—";
+};
+const cantTxt = n => num(n, 4).replace(/,0+$/, "");
+
+function seccionVentas(ventas, cur) {
+  if (!ventas.length) return "";
+  const anio = hoyAR().slice(0, 4);
+  const s = resumenVentas(ventas, (v, m) => convertir(v, m, _cur, _fx), anio);
+  const porMon = o => Object.entries(o.porMoneda)
+    .map(([m, v]) => `<span class="${v >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(v, m)}</span>`).join(" · ");
+  // el total convertido solo se afirma si se pudieron convertir todas; las
+  // ventas sin precio de compra no entran en el total, pero se dice cuántas son
+  const kpi = (tit, o) => {
+    const partes = [];
+    if (o.n) partes.push(`${o.n} ${o.n === 1 ? "venta" : "ventas"}`);
+    if (o.n && (Object.keys(o.porMoneda).length > 1 || !o.totalCompleto)) partes.push(porMon(o));
+    if (o.sinCosto) partes.push(`${o.sinCosto} sin precio de compra`);
+    return `<div class="mc-k"><div class="l">${tit}</div>
+      <div class="v ${!o.n || !o.totalCompleto ? "" : o.total >= 0 ? "mc-pos" : "mc-neg"}">${!o.n || !o.totalCompleto ? "—" : moneyS(o.total, cur)}</div>
+      <div class="s">${partes.join(" · ") || "sin ventas"}</div></div>`;
+  };
+  const orden = [...ventas].sort((a, b) => String(b.fecha || "").localeCompare(String(a.fecha || ""))
+                                        || String(b.creado || "").localeCompare(String(a.creado || "")));
+  const filas = orden.map(v => {
+    const { resultado, pct: q } = resultadoVenta(v);
+    const m = v.moneda === "ARS" ? "ARS" : "USD";
+    const t = tenencia(v);
+    const c = x => x == null ? "mc-mut" : x >= 0 ? "mc-pos" : "mc-neg";
+    return `<tr>
+      <td class="l">${fmtFecha(v.fecha)}</td>
+      <td class="l"><span class="mc-tk">${esc(base(v.ticker))}</span><span class="mc-nm">${esc(v.broker || "sin broker")}</span></td>
+      <td>${cantTxt(v.cantidad)}</td>
+      <td>${Number(v.costoUnitario) > 0 ? money(v.costoUnitario, m) : "—"}</td>
+      <td>${money(v.precioVenta, m)}</td>
+      <td class="${c(resultado)}"${resultado == null ? ' title="Sin precio de compra cargado: no se puede calcular"' : ""}>${resultado == null ? "—" : moneyS(resultado, m)}</td>
+      <td class="${c(q)}">${q == null ? "—" : pct(q)}</td>
+      <td${t && t.aprox ? ' title="Desde que el sync vio la posición: la compra puede ser anterior"' : ""}>${t == null ? "—" : (t.aprox ? "≥ " : "") + t.dias + " d"}</td>
+      <td><button class="mc-undo" data-deshacer="${esc(v.id)}" title="Borra la venta y devuelve la posición a tu cartera">Deshacer</button></td>
+    </tr>`;
+  }).join("");
+  const mezcla = Object.keys(s.porMoneda).length > 1 || cur !== (Object.keys(s.porMoneda)[0] || cur);
+  return `<div class="mc-ventas">
+    <h4>Ventas y resultado realizado</h4>
+    <div class="sub">Lo que ya vendiste. La ganancia o pérdida quedó fija al vender, contra el precio de compra de esa
+      posición. Cada operación se muestra en su moneda${mezcla ? `; los totales se pasan a ${cur === "ARS" ? "pesos" : "dólares"}
+      con la cotización de hoy, así que no son tu resultado medido en esa moneda` : ""}.${s.sinCosto
+      ? ` ${s.sinCosto} ${s.sinCosto === 1 ? "venta sin precio de compra no entra" : "ventas sin precio de compra no entran"} en los totales.` : ""}</div>
+    <div class="mc-msg" id="mc-ventas-msg"></div>
+    <div class="mc-kpis">${kpi(`Realizado en ${anio}`, s.delAnio)}${kpi("Realizado total", s)}</div>
+    <div class="mc-tblwrap"><table class="mc-tbl"><thead><tr>
+      <th class="l">Fecha</th><th class="l">Activo</th><th>Cant.</th><th>Compra</th><th>Venta</th>
+      <th>Resultado</th><th>%</th><th title="Días entre la compra y la venta">Tenencia</th><th></th>
+    </tr></thead><tbody>${filas}</tbody></table></div>
+  </div>`;
+}
+
 /* ── render puro: se puede llamar con datos de prueba ── */
 export function renderMiCartera(el, posiciones, precios, opts = {}) {
   asegurarEstilo();
@@ -497,11 +584,12 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
 
   if (!posiciones.length) {
     el.innerHTML = `<div class="mc-wrap">${cabecera}${form}
-      <div class="mc-empty">
+      ${(opts.ventas || []).length ? `<div class="mc-empty"><h4>No te quedan posiciones abiertas</h4>
+        <p>Tus ventas y su resultado están más abajo. Si compraste algo nuevo, cargalo con el formulario.</p></div>` : `<div class="mc-empty">
         <h4>Todavía no cargaste posiciones</h4>
         <p>Agregá lo que tenés —acciones, CEDEARs o cripto— con la cantidad y el precio al que compraste.
            Al día siguiente vas a ver el valor actualizado, tu resultado y la lectura de Valtia sobre cada activo.</p>
-      </div></div>`;
+      </div>`}${seccionVentas(opts.ventas || [], cur)}</div>`;
     return;
   }
 
@@ -521,7 +609,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     // variación del precio por período (no es "lo que ganaste": eso es la
     // columna Resultado, que sale del precio de compra)
     const dg = desglose(f.ticker, opts.desg || {}, px, f);
-    return `<tr>
+    return `<tr data-fila="${esc(f.id)}">
       <td class="l">${(h => h ? `<a class="mc-tk" href="${h}" style="text-decoration:none">${esc(base(f.ticker))}</a>` : `<span class="mc-tk">${esc(base(f.ticker))}</span>`)(linkDe(f.ticker))}${
         String(f.ticker).endsWith(".BA") ? '<span class="mc-nm" style="display:inline;color:var(--gold);opacity:.7"> BYMA</span>' : ""}
         <span class="mc-nm">${esc(px.nombre && px.nombre !== f.ticker ? px.nombre : "")}</span>
@@ -543,7 +631,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
       <td class="l">${px.sinDatos
         ? `<span class="mc-ver sin" title="Revisá que el ticker esté bien escrito">Ticker no encontrado</span>`
         : `<span class="mc-ver ${verCls(px.veredicto)}">${esc(px.veredicto || (f.actual == null ? "Buscando precio…" : "Sin dato"))}</span>`}</td>
-      <td><button class="mc-del" data-del="${esc(f.id)}" title="Quitar">✕</button></td>
+      <td style="white-space:nowrap"><button class="mc-vend" data-vender="${esc(f.id)}" title="Registrar una venta de esta posición">Vendí</button><button class="mc-del" data-del="${esc(f.id)}" title="Quitar (si la cargaste por error)">✕</button></td>
     </tr>`;
   };
   // vista por broker: si alguna posición tiene broker, la tabla se agrupa
@@ -579,8 +667,10 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     </table></div>
     ${lectura(r)}
     ${analisis(r, cur, opts.bonos || new Set(), opts.rentaFija || "")}
+    ${seccionVentas(opts.ventas || [], cur)}
     <div class="mc-foot">Los precios se actualizan cada 15 minutos durante la rueda; los ratios y la lectura, una vez por día.
-      El resultado es sobre el precio de compra que cargaste.
+      El resultado es sobre el precio de compra que cargaste. Si vendiste algo, tocá «Vendí» en su fila:
+      queda registrado abajo, en Ventas y resultado realizado.
       ${_cur !== "ARS" ? `Los valores en pesos se convierten al ${_cur === "CCL" ? "contado con liqui" : "dólar MEP"} de hoy —
         tanto el costo como el valor actual—, así que el rendimiento en % coincide con el de pesos.` : ""}
       Esta información es de carácter general y no constituye asesoramiento financiero personalizado.</div>
@@ -595,12 +685,17 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
 }
 
 /* ── Firestore: carga, alta y baja de posiciones ── */
-let _el = null, _user = null, _pos = [], _precios = {};
+let _el = null, _user = null, _pos = [], _precios = {}, _ventas = [];
 
 async function leerTodo() {
   const db = getFirestore(getApp());
   const snap = await getDocs(collection(db, "inversores", _user.email, "cartera"));
   _pos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // las ventas no pueden trabar la carga de la cartera (p. ej. con reglas viejas)
+  try {
+    const sv = await getDocs(collection(db, "inversores", _user.email, "ventas"));
+    _ventas = sv.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) { _ventas = []; }
   _precios = {};
   const tks = [...new Set(_pos.map(p => String(p.ticker).toUpperCase()))];
   if (tks.length) {
@@ -633,7 +728,7 @@ function pintar() {
   const hoy = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
   const rf = _panel ? analisisRentaFija(calcular(_pos, _precios), _bonos, _panel, _flujos || {}, hoy) : "";
   renderMiCartera(_el, _pos, _precios, { frescura: frescura(), onRerender: enganchar,
-                                         bonos: _bonos, rentaFija: rf, desg: _desg });
+                                         bonos: _bonos, rentaFija: rf, desg: _desg, ventas: _ventas });
   enganchar();
 }
 
@@ -661,6 +756,8 @@ function enganchar() {
   const add = _el.querySelector("#mc-add");
   if (add) add.onclick = agregar;
   _el.querySelectorAll("[data-del]").forEach(b => b.onclick = () => quitar(b.dataset.del));
+  _el.querySelectorAll("[data-vender]").forEach(b => b.onclick = () => abrirVenta(b.dataset.vender));
+  _el.querySelectorAll("[data-deshacer]").forEach(b => b.onclick = () => deshacerVenta(b.dataset.deshacer, b));
   _el.querySelectorAll(".mc-brk[data-brk]").forEach(chip => chip.onclick = () => {
     const id = chip.dataset.brk;
     const inp = document.createElement("input");
@@ -717,10 +814,11 @@ async function revisarImport() {
   filas.forEach(f => {
     f.ticker = normalizarTicker(f.ticker, mercado, bonos);
     f.broker = broker;
-    // moneda en la que cotiza lo que se está importando (solo para mostrar)
-    f.monedaHint = mercado === "byma" && !/[DC]$/.test(f.ticker.replace(/\.BA$/, "")) ? "ARS"
-                 : mercado === "byma" && bonos.has(f.ticker) ? "USD" : "USD";
-    if (mercado === "byma" && !bonos.has(f.ticker)) f.monedaHint = "ARS";
+    // moneda y factor como en "Agregar una": sin esto, una venta de una
+    // posición recién importada podía quedar congelada en dólares
+    f.moneda = monedaMercado(mercado, f.ticker, bonos);
+    f.factor = bonos.has(f.ticker) ? 0.01 : 1;
+    f.monedaHint = f.moneda;   // la vista previa muestra exactamente lo que se guarda
   });
   _porImportar = filas;
   prev.innerHTML = `
@@ -745,7 +843,7 @@ async function confirmarImport() {
       const id = f.ticker + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
       await setDoc(doc(db, "inversores", _user.email, "cartera", id), {
         ticker: f.ticker, cantidad: f.cantidad, precioCompra: f.precioCompra,
-        fecha: f.fecha, broker: f.broker || "", creado: new Date().toISOString(),
+        fecha: f.fecha, broker: f.broker || "", moneda: f.moneda, factor: f.factor, creado: new Date().toISOString(),
       });
       ok++;
     } catch (e) { fallo++; }
@@ -772,7 +870,9 @@ async function agregar() {
     return;
   }
   try {
-    const tk = normalizarTicker(crudo, mercado, await bonosSet());
+    const bonos = await bonosSet();
+    const tk = normalizarTicker(crudo, mercado, bonos);
+    const moneda = monedaMercado(mercado, tk, bonos);
     setPref("valtia-mc-mercado", mercado); if (broker) setPref("valtia-mc-broker", broker);
     const db = getFirestore(getApp());
     const id = tk + "-" + Date.now().toString(36);
@@ -780,11 +880,11 @@ async function agregar() {
     // hasta la próxima corrida del sync una compra en pesos se lee en dólares
     await setDoc(doc(db, "inversores", _user.email, "cartera", id), {
       ticker: tk, cantidad: cant, precioCompra: isFinite(pc) ? pc : 0, fecha,
-      broker, moneda: mercado === "byma" ? "ARS" : "USD",
-      factor: (await bonosSet()).has(tk) ? 0.01 : 1,
+      broker, moneda,
+      factor: bonos.has(tk) ? 0.01 : 1,
       creado: new Date().toISOString(),
     });
-    const donde = mercado === "byma" ? "BYMA, en pesos" : mercado === "cripto" ? "cripto, en dólares" : "exterior, en dólares";
+    const donde = mercado === "byma" ? `BYMA, en ${moneda === "USD" ? "dólares" : "pesos"}` : mercado === "cripto" ? "cripto, en dólares" : "exterior, en dólares";
     await leerTodo();
     pintar();
     // el repintado recrea el formulario: el mensaje se escribe recién ahora
@@ -793,6 +893,177 @@ async function agregar() {
     avisarPanel();
   } catch (e) {
     msg.innerHTML = `<span style="color:#ef5350">No se pudo guardar: ${esc(String(e).slice(0, 90))}</span>`;
+  }
+}
+
+/* ── ventas: formulario en la fila, registro atómico y deshacer ── */
+function abrirVenta(id) {
+  const viejo = _el.querySelector(".mc-vrow");
+  if (viejo) { const era = viejo.dataset.para; viejo.remove(); if (era === id) return; }
+  const tr = [..._el.querySelectorAll("tr[data-fila]")].find(x => x.dataset.fila === id);
+  const p = _pos.find(x => x.id === id);
+  if (!tr || !p) return;
+  const px = _precios[String(p.ticker).toUpperCase()] || null;
+  const esRF = esRentaFija(p.ticker, _bonos);
+  const { moneda, factor } = monedaFactor(p, px, esRF);
+  const unidad = factor !== 1 ? "cada 100 VN" : "por unidad";
+  const hoy = hoyAR();
+  const sync = String(p.origen || "").startsWith("sync");
+  const costo = Number(p.precioCompra) > 0 ? Number(p.precioCompra) : 0;
+  const fila = document.createElement("tr");
+  // sin moneda no hay nada que registrar: la fila es un aviso y el refresco
+  // de 2 min la puede pisar para traer el precio (por eso no se enfoca nada)
+  fila.className = "mc-vrow" + (moneda ? "" : " mc-vrow-espera");
+  fila.dataset.para = id;
+  // un id por formulario: si se reintenta después de un error, no se duplica la venta
+  fila.dataset.vid = base(p.ticker) + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
+  fila.innerHTML = `<td colspan="14"><div class="mc-vform">
+      <div><label>Cantidad vendida</label><input id="mc-v-cant" type="number" step="any" min="0" value="${Number(p.cantidad) || ""}"></div>
+      <div><label>Precio de venta · ${moneda === "ARS" ? "en pesos" : moneda === "USD" ? "en dólares" : "moneda sin confirmar"}, ${unidad}</label><input id="mc-v-px" type="number" step="any" min="0" value="${px && px.precio != null ? px.precio : ""}"></div>
+      <div><label>Fecha de la venta</label><input id="mc-v-fecha" type="date" max="${hoy}" value="${hoy}"></div>
+      <div class="prev" id="mc-v-prev"></div>
+      <div><button class="mc-btn" id="mc-v-ok">Registrar venta</button> <button class="mc-undo" id="mc-v-no">Cancelar</button></div>
+      <div class="nota">Tu costo en esta posición: <b>${costo ? (moneda ? money(costo, moneda) : num(costo, 2)) + " " + unidad
+        : "sin precio de compra cargado, así que el resultado no se va a poder calcular"}</b>.
+        ${px && px.precio != null ? "El precio viene con la última cotización: poné el que te pagaron." : ""}
+        ${sync ? "Esta posición la trae el sync de tu broker: en la próxima corrida la cantidad se ajusta a lo que diga el broker." : ""}
+        ${!moneda ? (px && px.sinDatos
+          ? "<b>No encontramos este ticker</b>, así que no sabemos en qué moneda cotiza: revisá que esté bien escrito (quitalo con ✕ y volvé a cargarlo) para poder registrar la venta."
+          : "<b>Todavía no tenemos la cotización de este activo</b>, así que no sabemos en qué moneda está: esperá a que aparezca su precio (cada 15 min en rueda) para registrar la venta.") : ""}</div>
+      <div class="mc-msg" id="mc-v-msg" style="flex-basis:100%;margin:0"></div>
+    </div></td>`;
+  tr.after(fila);
+  if (!moneda) fila.querySelectorAll("input, #mc-v-ok").forEach(i => { i.disabled = true; });
+  // type=number siempre entrega el valor con punto decimal: parseFloat, no parseNum
+  const leer = () => ({
+    cant: parseFloat(fila.querySelector("#mc-v-cant").value),
+    precio: parseFloat(fila.querySelector("#mc-v-px").value),
+    fecha: fila.querySelector("#mc-v-fecha").value,
+  });
+  const vista = () => {
+    const { cant, precio, fecha } = leer();
+    const out = fila.querySelector("#mc-v-prev");
+    const v = validarVenta(p, cant, precio, fecha, hoyAR(), moneda);
+    if (!v.ok) { out.innerHTML = `<span class="mc-mut">${esc(v.error)}</span>`; return; }
+    const { resultado, pct: q } = resultadoVenta(armarVenta(p, px, cant, precio, fecha, "", esRF));
+    out.innerHTML = resultado == null ? `<span class="mc-mut">Resultado: sin precio de compra</span>`
+      : `Resultado: <b class="${resultado >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(resultado, moneda)}</b> (${pct(q)})`
+        + (v.resto === 0 ? " · vendés toda la posición" : "");
+  };
+  fila.querySelectorAll("input").forEach(i => i.addEventListener("input", vista));
+  fila.querySelector("#mc-v-no").onclick = () => fila.remove();
+  // la posición se toma de _pos al momento del clic: si un intento anterior
+  // falló y releyó, el reintento prevalida contra la cantidad real
+  fila.querySelector("#mc-v-ok").onclick = () => registrarVenta(_pos.find(x => x.id === p.id) || p, px, esRF, leer(), fila);
+  vista();
+  if (moneda) fila.querySelector("#mc-v-px").focus();
+}
+
+async function registrarVenta(p, px, esRF, { cant, precio, fecha }, fila) {
+  const msg = fila.querySelector("#mc-v-msg"), btn = fila.querySelector("#mc-v-ok");
+  const pre = validarVenta(p, cant, precio, fecha, hoyAR(), monedaFactor(p, px, esRF).moneda);
+  if (!pre.ok) { msg.innerHTML = `<span style="color:#ef5350">${esc(pre.error)}</span>`; return; }
+  btn.disabled = true;
+  const db = getFirestore(getApp());
+  const refPos = doc(db, "inversores", _user.email, "cartera", p.id);
+  const refVenta = doc(db, "inversores", _user.email, "ventas", fila.dataset.vid);
+  let venta = null;
+  try {
+    // la posición se relee ADENTRO de la transacción: la que está en memoria
+    // puede tener minutos (otra pestaña, el refresco pausado). Si alguien la
+    // cambia en el medio, Firestore reintenta con los datos nuevos en vez de pisarlos
+    await runTransaction(db, async tx => {
+      const sv = await tx.get(refVenta);
+      const sp = await tx.get(refPos);
+      if (sv.exists()) { venta = sv.data(); return; }       // un reintento de una que ya entró
+      if (!sp.exists()) throw new Error("Esa posición ya no está en tu cartera (¿la vendiste o la borraste desde otra pestaña?). Recargá la página.");
+      const fresca = { id: p.id, ...sp.data() };
+      const v = validarVenta(fresca, cant, precio, fecha, hoyAR(), monedaFactor(fresca, px, esRF).moneda);
+      if (!v.ok) throw new Error(v.error);
+      venta = armarVenta(fresca, px, cant, precio, fecha, new Date().toISOString(), esRF);
+      tx.set(refVenta, venta);
+      if (v.resto === 0) tx.delete(refPos); else tx.update(refPos, { cantidad: v.resto });
+    });
+  } catch (e) {
+    // el commit puede haber entrado aunque acá llegue un error (se cortó la
+    // red justo después de mandarlo). Antes de invitar a reintentar, se relee:
+    // si la venta ya está, es un éxito; si no, el error, con la tabla al día
+    // para que un reintento (o cerrar y reabrir) parta de la cantidad real.
+    let entro = false;
+    try { await leerTodo(); entro = _ventas.some(x => x.id === fila.dataset.vid); } catch (e2) {}
+    if (!entro) {
+      // la fila de arriba muestra la cantidad que acaba de releerse, para que
+      // el error ("no podés vender más de 60") y la tabla digan lo mismo
+      const p2 = _pos.find(x => x.id === p.id);
+      const tr = [..._el.querySelectorAll("tr[data-fila]")].find(x => x.dataset.fila === p.id);
+      if (tr && p2) tr.children[1].textContent = cantTxt(p2.cantidad);
+      btn.disabled = false;
+      msg.innerHTML = `<span style="color:#ef5350">${esc(String((e && e.message) || e).slice(0, 180))}</span>`;
+      return;
+    }
+    venta = _ventas.find(x => x.id === fila.dataset.vid);
+  }
+  // la venta ya quedó guardada: si falla el refresco, NO se invita a reintentar
+  const { resultado } = resultadoVenta(venta);
+  const texto = `Venta registrada: ${cantTxt(venta.cantidad)} ${esc(base(venta.ticker))}`
+    + (resultado != null ? ` con un resultado de ${moneyS(resultado, venta.moneda)}` : "")
+    + ". La ves más abajo, en Ventas y resultado realizado.";
+  try {
+    await leerTodo();
+    pintar();
+    avisarPanel();
+  } catch (e) {
+    msg.innerHTML = `<span style="color:#4caf50">${texto}</span> <span class="mc-mut">No pude actualizar la tabla: recargá la página.</span>`;
+    return;
+  }
+  const m2 = _el.querySelector("#mc-msg");
+  if (m2) m2.innerHTML = `<span style="color:#4caf50">${texto}</span>`;
+}
+
+const _deshaciendo = new Set();
+async function deshacerVenta(vid, btn) {
+  if (_deshaciendo.has(vid)) return;                    // doble clic: manda el primero
+  const v = _ventas.find(x => x.id === vid);
+  if (!v) return;
+  if (!confirm(`¿Deshacer la venta de ${cantTxt(v.cantidad)} ${base(v.ticker)} del ${fmtFecha(v.fecha)}? La posición vuelve a tu cartera.`)) return;
+  _deshaciendo.add(vid);
+  if (btn) { btn.disabled = true; btn.textContent = "Deshaciendo…"; }
+  const db = getFirestore(getApp());
+  const refVenta = doc(db, "inversores", _user.email, "ventas", vid);
+  let error = "";
+  try {
+    // todo se decide con lo que hay en Firestore AHORA, no con la memoria: si
+    // la venta ya se deshizo (otra pestaña, un reintento), no se suma dos veces
+    await runTransaction(db, async tx => {
+      const sv = await tx.get(refVenta);
+      if (!sv.exists()) return;                         // ya estaba deshecha
+      const venta = sv.data();
+      const pid = venta.posId || (base(venta.ticker) + "-" + Date.now().toString(36));
+      const refPos = doc(db, "inversores", _user.email, "cartera", pid);
+      const sp = await tx.get(refPos);
+      tx.delete(refVenta);
+      if (sp.exists()) tx.update(refPos, { cantidad: (Number(sp.data().cantidad) || 0) + Number(venta.cantidad) });
+      else tx.set(refPos, planDeshacer(venta, null).datos);
+    });
+  } catch (e) {
+    error = String((e && e.message) || e).slice(0, 140);
+  } finally {
+    _deshaciendo.delete(vid);
+  }
+  let refrescada = true;
+  try {
+    await leerTodo();
+    // el commit pudo entrar aunque acá llegara un error: si la venta ya no
+    // está, se deshizo, y el mensaje no puede decir lo contrario que la tabla
+    if (error && !_ventas.some(v => v.id === vid)) error = "";
+    pintar(); avisarPanel();
+  } catch (e) { refrescada = false; }
+  const aviso = _el.querySelector("#mc-ventas-msg") || _el.querySelector("#mc-msg");
+  if (error) {
+    if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = "Deshacer"; }
+    if (aviso) aviso.innerHTML = `<span style="color:#ef5350">No se pudo deshacer: ${esc(error)}</span>`;
+  } else if (!refrescada && aviso) {
+    aviso.innerHTML = `<span class="mc-mut">Se deshizo la venta, pero no pude actualizar la tabla: recargá la página.</span>`;
   }
 }
 
@@ -850,6 +1121,9 @@ export async function initMiCartera(user, el) {
         // pestaña Importar abierta = el usuario está armando el paste: no pisar
         const imp = _el.querySelector("#mc-modo-imp");
         if (imp && imp.style.display !== "none") return;
+        // formulario de venta abierto: no pisarlo (salvo el aviso de "esperá el precio",
+        // que justamente necesita el refresco para que el precio llegue)
+        if (_el.querySelector(".mc-vrow:not(.mc-vrow-espera)")) return;
         try { await Promise.all([leerTodo(), cargarFx()]); pintar(); } catch (e) {}
       }, 120000);
     }
