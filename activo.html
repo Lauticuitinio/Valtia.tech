@@ -55,6 +55,42 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .head .px .h{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--mut);margin-top:3px}
 .up{color:var(--up)}.dn{color:var(--dn)}
 
+/* ── ficha v2: estado, dos columnas, puntuación, rendimientos ── */
+.head-meta{font:400 11.5px 'IBM Plex Sans',sans-serif;color:var(--mut);margin-top:8px}
+.head .px .p{font-size:40px;line-height:1}
+.head .px .d{display:inline-block;margin-top:6px;padding:3px 9px;border-radius:4px;font-size:14px}
+.head .px .d.up{background:#E4F3EA}.head .px .d.dn{background:#F8E5E5}
+.estado{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:22px}
+.estado .et{background:#fff;padding:14px 18px;min-width:0;position:relative;overflow:hidden}
+.estado .l{font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.estado .v{font:600 15px 'IBM Plex Sans',sans-serif;margin-top:7px;font-variant-numeric:tabular-nums}
+.estado .s{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--sub);margin-top:5px;line-height:1.5}
+.barra{position:relative;height:6px;background:var(--marfil);border-radius:3px;margin:11px 0 6px}
+.barra i{position:absolute;top:0;bottom:0;left:0;border-radius:3px;background:linear-gradient(90deg,#B23A3A,#B08A3E 50%,#1F7A4D)}
+.barra i.neutra{background:linear-gradient(90deg,#E7E3DA,#B08A3E)}
+.barra b{position:absolute;top:-4px;width:3px;height:14px;background:var(--navy);transform:translateX(-50%);border-radius:1px}
+.barra-l{display:flex;justify-content:space-between;gap:6px;font:500 9.5px 'IBM Plex Mono',monospace;color:var(--mut)}
+.ficha-grid{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,1fr);gap:22px;margin-top:22px;align-items:start}
+.col-main>.card-w+.card-w,.col-side>.card-w+.card-w{margin-top:22px}
+.rend{display:grid;grid-template-columns:repeat(8,1fr);border-top:1px solid var(--line)}
+.rend .r{padding:10px 6px;text-align:center;border-right:1px solid var(--line);min-width:0}
+.rend .r:last-child{border-right:none}
+.rend .rl{font:600 8.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
+.rend .rv{font:600 13px 'IBM Plex Mono',monospace;margin-top:4px;font-variant-numeric:tabular-nums}
+.rend-nota{padding:8px 18px 12px;font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--mut);line-height:1.5;border-top:1px solid var(--line)}
+.punt{padding:4px 18px 8px;position:relative}
+.punt .pr{display:grid;grid-template-columns:1fr 84px;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.punt .lock .pr:last-child{border-bottom:none}
+.punt .pl{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.punt .pv{font:600 15px 'IBM Plex Sans',sans-serif;margin-top:3px}
+.punt .ps{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--sub);margin-top:2px;line-height:1.45}
+.gauge{width:84px;height:50px;display:block}
+.stg{border-top:1px solid var(--line)}
+.stg:first-child{border-top:none}
+.stg-t{font:700 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);padding:12px 18px 8px}
+.lock{position:relative}
+@media(max-width:960px){.ficha-grid{grid-template-columns:1fr}.rend{grid-template-columns:repeat(4,1fr)}.rend .r:nth-child(4){border-right:none}.estado{grid-template-columns:1fr}}
+
 /* tu posición (solo cliente logueado con tenencia) */
 .mi-pos{background:var(--marfil);border:1px solid var(--line);border-left:3px solid var(--gold);padding:15px 20px;margin-bottom:22px;display:flex;flex-wrap:wrap;gap:10px 36px;align-items:baseline}
 .mi-pos .tt{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);width:100%}
@@ -313,46 +349,61 @@ try {
   const desde = inf && inf.precio_pub && px.p ? (px.p / inf.precio_pub - 1) * 100 : null;
 
 
-  // stats del radar (visibles)
+  // histórico de cierres (2 años): gráfico, rango de 52 semanas y rendimiento a 6 meses
+  const serie = histSnap && histSnap.exists() ? JSON.parse(histSnap.data().json || "[]") : [];
+  const ult52 = serie.slice(-252).map(p => Number(p[1])).filter(v => isFinite(v) && v > 0);
+  const r52 = ult52.length >= 20 ? (() => {
+    const min = Math.min(...ult52), max = Math.max(...ult52);
+    return { min, max, pos: px.p && max > min ? Math.max(0, Math.min(100, (px.p - min) / (max - min) * 100)) : null };
+  })() : null;
+  const cierre = i => serie.length > i ? Number(serie[serie.length - 1 - i][1]) : null;
+  const seisM = cierre(0) && cierre(126) ? (cierre(0) / cierre(126) - 1) * 100 : null;
+
+  // estadísticas, agrupadas como se leen: mercado (gratis), y con PRO la
+  // valuación, la rentabilidad y la solidez. Sin PRO esos números NO
+  // viajaron al navegador: se explica el límite, no se tapa con blur.
   const fila = (l, v, z) => `<div class="st"><div class="l">${l}</div><div class="v">${v}</div>${z ? `<div class="z">${z}</div>` : ""}</div>`;
-  const statsHtml = ra ? [
-    fila("RSI (14)", ra.rsi != null ? n1.format(ra.rsi) : "—", esc(ra.rsiZona || "")),
-    fila("Puntaje de valor", ra.score != null ? ra.score + "/100" : "—", "qué tan barata cotiza en su familia"),
-    fila("P/E", ra.per != null ? n1.format(ra.per) + "x" : "—", "precio / ganancias"),
-    fila("P/Libro", ra.pb != null ? n1.format(ra.pb) + "x" : "—", ""),
-    fila("P/Ventas", ra.ps != null ? n1.format(ra.ps) + "x" : "—", ""),
-    fila("EV/EBITDA", ra.evebitda != null ? n1.format(ra.evebitda) + "x" : "—", "valor empresa / EBITDA"),
-    fila("FCF yield", ra.fcfy != null ? n1.format(ra.fcfy) + "%" : "—", "caja libre / market cap"),
-    fila("Crec. ingresos", ra.growth != null ? (ra.growth >= 0 ? "+" : "") + n1.format(ra.growth) + "%" : "—", "interanual"),
-    fila("Margen op.", ra.margen != null ? n1.format(ra.margen) + "%" : "—", ""),
-    fila("Div. yield", ra.divYield != null ? n1.format(ra.divYield) + "%" : "—", ""),
-    fila("Market cap", ra.mktcap ? "US$" + compacto.format(ra.mktcap) : "—", ""),
-    // rentabilidad y solidez: ratios del balance, no los afecta la moneda
-    fila("ROE", ra.roe != null ? n1.format(ra.roe) + "%" : "—", "ganancia / patrimonio"),
-    fila("ROA", ra.roa != null ? n1.format(ra.roa) + "%" : "—", "ganancia / activos"),
-    fila("Margen neto", ra.margenNeto != null ? n1.format(ra.margenNeto) + "%" : "—", ""),
-    fila("Deuda / EBITDA", ra.deudaEbitda != null ? n1.format(ra.deudaEbitda) + "x" : "—", "años de EBITDA para cancelar la deuda"),
-    fila("Liquidez", ra.liquidez != null ? n1.format(ra.liquidez) + "x" : "—", "activo corriente / pasivo corriente"),
-    // beta: SIEMPRE con su R2 al lado. Una beta que explica el 3% de la
-    // variación no dice nada, y sin el R2 se lee como si dijera todo.
-    fila("Beta (2 años)",
-      ra.beta != null && ra.betaR2 != null && ra.betaR2 >= 0.10 ? n1.format(ra.beta) : "—",
-      ra.beta == null ? "" : ra.betaR2 < 0.10
-        ? "no sigue al S&P (explica " + Math.round(ra.betaR2 * 100) + "%)"
-        : "el S&P explica el " + Math.round(ra.betaR2 * 100) + "%"),
-    fila("Volatilidad", ra.volAnual != null ? n1.format(ra.volAnual) + "%" : "—", "anualizada, 2 años"),
-    fila("Consenso", ra.upside != null ? (ra.upside >= 0 ? "+" : "") + n1.format(ra.upside) + "%" : "—",
-      ra.nAnalistas ? "objetivo de " + ra.nAnalistas + " analistas" : ""),
-    ra.monedaBalance === "ARS" ? `<div class="st" style="grid-column:1/-1"><div class="z" style="margin:0">Balance en pesos: P/Ventas, EV/EBITDA y crecimiento no se publican porque mezclarían un precio en dólares con números en pesos.</div></div>` : "",
-  ].filter(Boolean)
-   // sin acceso PRO esas métricas no llegaron: mostrar veinte guiones parece
-   // un error de datos, y lo que hay es un límite de plan explicado abajo
-   .filter(h => conRatios || !/<div class="v">—<\/div>/.test(h))
-   .join("") : "";
+  const grupo = (tit, filas) => filas.length ? `<div class="stg"><div class="stg-t">${tit}</div><div class="stats">${filas.join("")}</div></div>` : "";
+  const pct1 = v => v == null ? "—" : (v >= 0 ? "+" : "") + n1.format(v) + "%";
+  const statsHtml = ra ? grupo("Precio y mercado", [
+      fila("Último precio", px.p ? "US$" + nf.format(px.p) : "—", hora ? "actualizado " + hora + " hs" : ""),
+      fila("Hoy", px.d != null ? `<span class="${clase(px.d)}">${signo(px.d)}</span>` : "—", "contra el cierre anterior"),
+      fila("52 semanas", r52 ? `${nf.format(r52.min)} – ${nf.format(r52.max)}` : "—", "mínimo y máximo, en dólares"),
+      fila("Market cap", ra.mktcap ? "US$" + compacto.format(ra.mktcap) : "—", ""),
+      fila("Div. yield", ra.divYield != null ? n1.format(ra.divYield) + "%" : "—", ""),
+      fila("RSI (14)", ra.rsi != null ? n1.format(ra.rsi) : "—", esc(ra.rsiZona || "")),
+    ]) + (conRatios ? grupo("Valuación", [
+      fila("P/E", ra.per != null ? n1.format(ra.per) + "x" : "—", "precio / ganancias"),
+      fila("P/Libro", ra.pb != null ? n1.format(ra.pb) + "x" : "—", ""),
+      fila("P/Ventas", ra.ps != null ? n1.format(ra.ps) + "x" : "—", ""),
+      fila("EV/EBITDA", ra.evebitda != null ? n1.format(ra.evebitda) + "x" : "—", "valor empresa / EBITDA"),
+      fila("FCF yield", ra.fcfy != null ? n1.format(ra.fcfy) + "%" : "—", "caja libre / market cap"),
+      fila("Puntaje de valor", ra.valorScore != null ? Math.round(ra.valorScore) + "/100" : "—", "múltiplos frente a su familia"),
+    ]) + grupo("Rentabilidad y crecimiento", [
+      fila("ROE", ra.roe != null ? n1.format(ra.roe) + "%" : "—", "ganancia / patrimonio"),
+      fila("ROA", ra.roa != null ? n1.format(ra.roa) + "%" : "—", "ganancia / activos"),
+      fila("Margen operativo", ra.margen != null ? n1.format(ra.margen) + "%" : "—", ""),
+      fila("Margen neto", ra.margenNeto != null ? n1.format(ra.margenNeto) + "%" : "—", ""),
+      fila("Crec. ingresos", pct1(ra.growth), "interanual"),
+      fila("Calidad", ra.calidadScore != null ? Math.round(ra.calidadScore) + "/100" : "—", "deuda, crecimiento y margen"),
+    ]) + grupo("Solidez y riesgo", [
+      fila("Deuda / EBITDA", ra.deudaEbitda != null ? n1.format(ra.deudaEbitda) + "x" : "—", "años de EBITDA para cancelar la deuda"),
+      fila("Liquidez", ra.liquidez != null ? n1.format(ra.liquidez) + "x" : "—", "activo corriente / pasivo corriente"),
+      // beta: SIEMPRE con su R2 al lado. Una beta que explica el 3% de la
+      // variación no dice nada, y sin el R2 se lee como si dijera todo.
+      fila("Beta (2 años)",
+        ra.beta != null && ra.betaR2 != null && ra.betaR2 >= 0.10 ? n1.format(ra.beta) : "—",
+        ra.beta == null ? "" : ra.betaR2 < 0.10
+          ? "no sigue al S&P (explica " + Math.round(ra.betaR2 * 100) + "%)"
+          : "el S&P explica el " + Math.round(ra.betaR2 * 100) + "%"),
+      fila("Volatilidad", ra.volAnual != null ? n1.format(ra.volAnual) + "%" : "—", "anualizada, 2 años"),
+      fila("Consenso", pct1(ra.upside), ra.nAnalistas ? "objetivo de " + ra.nAnalistas + " analistas" : ""),
+    ]) + (ra.monedaBalance === "ARS" ? `<div class="stg"><div class="vacio">Balance en pesos: P/Ventas, EV/EBITDA y crecimiento no se publican porque mezclarían un precio en dólares con números en pesos.</div></div>` : "")
+    : "") : "";
 
   // sin acceso PRO los múltiplos NO están en la página: no hay blur que
   // sacar con devtools ni JSON que pedir por REST — el dato no viajó
-  const proHtml = `<div class="card-w" style="text-align:center;padding:22px">
+  const proHtml = `<div class="stg" style="text-align:center;padding:22px 18px">
       <div style="font:400 20px 'Playfair Display',serif;color:var(--text)">Los números detrás de la lectura son PRO</div>
       <p style="font-size:12.5px;color:var(--sub);max-width:420px;margin:6px auto 12px;line-height:1.6">
         El veredicto, la zona de compra, el puntaje y el precio son gratis. Con PRO ves PER, P/Libro, EV/EBITDA,
@@ -361,23 +412,57 @@ try {
     </div>`;
 
   const verClase = ra && ra.veredicto === "Infravalorada" ? " infra" : ra && ra.veredicto === "Estirada" ? " cara" : "";
-  const veredictoHtml = ra && ra.veredicto && ra.veredicto !== "Sin cobertura" ? `
-    <div class="veredicto">
-      <div class="inner preview-blur">
-        <span class="ver-tag${verClase}">${esc(ra.veredicto)}</span>${ra.pierdePlata ? ' <span class="ver-tag" style="background:rgba(224,169,62,.15);color:#E0A93E" title="El puntaje mide qué tan barata cotiza, no si gana dinero">Hoy no gana plata</span>' : ""}
-        <div class="scores">
-          <div class="sc"><div class="n">${ra.valorScore != null ? Math.round(ra.valorScore) : "—"}</div><div class="e">Puntaje valor</div></div>
-          <div class="sc"><div class="n">${ra.calidadScore != null ? Math.round(ra.calidadScore) : "—"}</div><div class="e">Calidad</div></div>
-          <div class="sc"><div class="n">${ra.score != null ? Math.round(ra.score) : "—"}</div><div class="e">Compuesto</div></div>
-        </div>
-        ${ra.entrada ? '<div class="entrada">● En zona de compra según el radar</div>' : ""}
+  const conVer = !!(ra && ra.veredicto && ra.veredicto !== "Sin cobertura");
+
+  // medidor de medio arco: el punto marca dónde cae el valor entre 0 y 100
+  const gauge = v => {
+    const arco = `<path d="M8 50 A42 42 0 0 1 92 50" fill="none" stroke-width="7" stroke-linecap="round"`;
+    if (v == null || !isFinite(v)) return `<svg class="gauge" viewBox="0 0 100 56">${arco} stroke="#E7E3DA"/></svg>`;
+    const p = Math.max(0, Math.min(1, v / 100)), a = Math.PI * (1 - p);
+    const x = 50 + 42 * Math.cos(a), y = 50 - 42 * Math.sin(a);
+    return `<svg class="gauge" viewBox="0 0 100 56"><defs><linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="#B23A3A"/><stop offset=".5" stop-color="#B08A3E"/><stop offset="1" stop-color="#1F7A4D"/></linearGradient></defs>
+      ${arco} stroke="url(#gg)" opacity=".4"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.5" fill="#0E1830" stroke="#fff" stroke-width="2"/></svg>`;
+  };
+  const rsiTxt = r => r == null ? "—" : r < 30 ? "Sobrevendido" : r > 70 ? "Sobrecomprado" : r < 45 ? "Zona de compra" : "Neutral";
+
+  // ── estado: la lectura, dónde está el precio en el año y el consenso ──
+  const estadoHtml = `<div class="estado">
+    <div class="et"><div class="l">Lectura Valtia</div>
+      ${conVer ? `<div class="v"><span class="ver-tag${verClase}">${esc(ra.veredicto)}</span>${ra.entrada ? '<span class="entrada" style="margin:0 0 0 10px">● zona de compra</span>' : ""}${ra.pierdePlata ? ' <span class="ver-tag" style="background:rgba(224,169,62,.15);color:#E0A93E;margin-left:6px" title="El puntaje mide qué tan barata cotiza, no si gana dinero">no gana plata</span>' : ""}</div>
+        <div class="barra"><i style="width:100%"></i>${ra.score != null ? `<b style="left:${Math.max(0, Math.min(100, ra.score))}%"></b>` : ""}</div>
+        <div class="barra-l"><span>estirada</span><span>puntaje ${ra.score != null ? Math.round(ra.score) : "—"}/100</span><span>barata</span></div>
+        <div class="s">Qué tan barata cotiza frente a su familia sectorial. Lectura propia de Valtia, diaria; no es una recomendación.</div>`
+      : `<div class="v">Sin cobertura</div><div class="s">Este activo todavía no está en el radar de valuación de Valtia.</div>`}
+    </div>
+    <div class="et"><div class="l">Rango de 52 semanas</div>
+      ${r52 ? `<div class="v">US$${nf.format(r52.min)} – US$${nf.format(r52.max)}</div>
+        <div class="barra"><i class="neutra" style="width:100%"></i>${r52.pos != null ? `<b style="left:${r52.pos.toFixed(1)}%"></b>` : ""}</div>
+        <div class="barra-l"><span>mínimo</span><span>${px.p ? "hoy US$" + nf.format(px.p) : ""}</span><span>máximo</span></div>
+        <div class="s">${px.p ? `${signo((px.p / r52.min - 1) * 100)} desde el mínimo · ${signo((px.p / r52.max - 1) * 100)} desde el máximo` : "Cierres diarios de los últimos 12 meses."}</div>`
+      : `<div class="v">—</div><div class="s">El histórico de precios se está generando.</div>`}
+    </div>
+    <div class="et lock"><div class="l">Consenso de analistas</div>
+      ${conRatios
+        ? `<div class="v ${ra && ra.upside != null ? clase(ra.upside) : ""}">${ra && ra.upside != null ? signo(ra.upside) + " al objetivo" : "—"}</div>
+           <div class="s">${ra && ra.nAnalistas ? `Precio objetivo promedio de ${ra.nAnalistas} analistas, contra el precio de hoy.` : "Sin consenso publicado para este activo."}</div>`
+        : `<div class="preview-blur"><div class="v">Objetivo de los analistas</div><div class="s">Distancia al precio objetivo promedio y cuántos analistas lo cubren.</div></div>
+           <div class="pro-overlay" style="gap:4px"><a href="planes.html" class="btn">PRO</a></div>`}
+    </div>
+  </div>`;
+
+  // ── puntuación: cinco lecturas, cada una con su medidor ──
+  const filaP = (l, v, z, g) => `<div class="pr"><div><div class="pl">${l}</div><div class="pv">${v}</div>${z ? `<div class="ps">${z}</div>` : ""}</div>${g}</div>`;
+  const puntHtml = ra ? `<div class="punt">
+      ${filaP("Puntaje Valtia", ra.score != null ? Math.round(ra.score) + "/100" : "—", "compuesto de valor y calidad, frente a su familia sectorial", gauge(ra.score))}
+      ${filaP("Técnico", rsiTxt(ra.rsi), ra.rsi != null ? `RSI (14) ${n1.format(ra.rsi)}${ra.rsiZona ? " · " + esc(ra.rsiZona) : ""}` : "sin RSI publicado", gauge(ra.rsi != null ? 100 - ra.rsi : null))}
+      <div class="lock">${conRatios
+        ? filaP("Valor", ra.valorScore != null ? Math.round(ra.valorScore) + "/100" : "—", "P/E, P/Libro, P/Ventas, EV/EBITDA y FCF yield normalizados", gauge(ra.valorScore))
+          + filaP("Calidad", ra.calidadScore != null ? Math.round(ra.calidadScore) + "/100" : "—", "deuda, crecimiento y margen operativo", gauge(ra.calidadScore))
+          + filaP("Consenso", pct1(ra.upside), ra.nAnalistas ? `objetivo de ${ra.nAnalistas} analistas` : "sin consenso publicado", gauge(ra.upside != null ? (ra.upside + 30) / 90 * 100 : null))
+        : `<div class="preview-blur">${filaP("Valor", "· ·", "múltiplos normalizados por familia", gauge(null))}${filaP("Calidad", "· ·", "deuda, crecimiento y margen", gauge(null))}${filaP("Consenso", "· ·", "objetivo de los analistas", gauge(null))}</div>
+           <div class="pro-overlay"><h4>Con PRO</h4><p>Valor, calidad y consenso, con los números detrás.</p><a href="planes.html" class="btn">Ver planes →</a></div>`}
       </div>
-      <div class="pro-overlay">
-        <h4>Lectura Valtia</h4>
-        <p>El veredicto y los puntajes del radar son parte del plan PRO.</p>
-        <a href="planes.html" class="btn">Ver planes →</a>
-      </div>
-    </div>` : "";
+    </div>` : '<div class="vacio">Este activo todavía no está en el radar de valuación.</div>';
 
   ficha.innerHTML = `
   <div class="top-row">
@@ -391,6 +476,7 @@ try {
     <div>
       <div class="sec">${esc(sectorN)}</div>
       <h1>${esc(emp.nombre)}<span>${t}</span></h1>
+      <div class="head-meta">Cotiza en dólares${emp.slug ? " · con informe Valtia" : ""}${conVer ? " · en el radar de valuación" : ""}</div>
     </div>
     <div class="px">
       <div class="p">${px.p ? "US$" + nf.format(px.p) : "—"}</div>
@@ -400,21 +486,28 @@ try {
   </div>
 
   <div id="mi-pos"></div>
+  ${estadoHtml}
 
-  <div class="card-w">
-    <div class="card-h"><span class="t">Evolución del precio</span>
-      <div class="rangos" id="rangos">
-        <button data-d="22">1M</button><button data-d="126">6M</button><button data-d="9999" class="on">1A</button>
-      </div>
-    </div>
-    <div class="chart-box"><canvas id="chart"></canvas></div>
-  </div>
-
-  <div class="dos">
+  <div class="ficha-grid">
+  <div class="col-main">
     <div class="card-w">
-      <div class="card-h"><span class="t">Radar de valuación</span><span class="s">Lectura propia Valtia · diaria</span></div>
+      <div class="card-h"><span class="t">Evolución del precio</span>
+        <div class="rangos" id="rangos">
+          <button data-d="22">1M</button><button data-d="63">3M</button><button data-d="126">6M</button><button data-d="252" class="on">1A</button><button data-d="9999">Máx</button>
+        </div>
+      </div>
+      <div class="chart-box"><canvas id="chart"></canvas></div>
       <div id="desglose-periodos"></div>
-      ${ra ? `<div class="stats">${statsHtml}</div>${conRatios ? "" : proHtml}${veredictoHtml}` : '<div class="vacio">Este activo todavía no está en el radar de valuación.</div>'}
+    </div>
+    <div class="card-w">
+      <div class="card-h"><span class="t">Estadísticas clave</span><span class="s">Radar de valuación Valtia · diario</span></div>
+      ${ra ? statsHtml + (conRatios ? "" : proHtml) : '<div class="vacio">Este activo todavía no está en el radar de valuación.</div>'}
+    </div>
+  </div>
+  <div class="col-side">
+    <div class="card-w">
+      <div class="card-h"><span class="t">Puntuación Valtia</span><span class="s">Lectura propia</span></div>
+      ${puntHtml}
     </div>
     <div class="card-w">
       <div class="card-h"><span class="t">Informe Valtia</span>
@@ -436,7 +529,7 @@ try {
         `}
       </div>
     </div>
-  </div>
+  </div></div>
 
   <div id="informe-full"></div>
 
@@ -445,28 +538,23 @@ try {
     <div id="act-news-list"><div class="vacio">Buscando noticias…</div></div>
   </div>`;
 
-  // ── cuánto rindió, por período ──
+  // ── cuánto rindió, por período (debajo del gráfico) ──
   // Es la variación del PRECIO, no "lo que ganaste": eso depende de cuándo
-  // compraste y va en "Tu posición".
+  // compraste y va en "Tu posición". El día sale del precio en vivo y los 6
+  // meses del histórico; el resto lo calcula el sync a diario.
   (() => {
     const box = document.getElementById("desglose-periodos");
     const dp = desgSnap && desgSnap.exists() ? JSON.parse(desgSnap.data().json || "{}") : {};
-    const d = dp[t];
-    if (!box || !d) return;
-    const P = [["semana", "Semana"], ["mes", "Mes"], ["tresM", "3 meses"],
-               ["ytd", "En el año"], ["anio", "1 año"], ["dosA", "2 años"]];
-    const chips = P.filter(([k]) => d[k] != null).map(([k, l]) => {
-      const v = d[k];
-      return `<div class="dp-chip"><div class="dp-l">${l}</div>
-        <div class="dp-v ${v >= 0 ? "pos" : "neg"}">${v >= 0 ? "+" : ""}${n1.format(v)}%</div></div>`;
-    }).join("");
-    if (!chips) return;
-    box.innerHTML = `<div class="dp-wrap"><div class="dp-t">Cuánto rindió el activo</div>
-      <div class="dp-grid">${chips}</div>
-      <div class="dp-nota">Variación del precio en dólares, con datos desde el ${String(d.desde).split("-").reverse().join("/")}.
-        Si lo tenés en pesos (CEDEAR o acción local), el porcentaje de tu posición es otro: lo ves en Mi cartera.</div></div>`;
+    const d = dp[t] || {};
+    if (!box) return;
+    const P = [["dia", "1 día", px.d], ["semana", "1 semana", d.semana], ["mes", "1 mes", d.mes], ["tresM", "3 meses", d.tresM],
+               ["seisM", "6 meses", seisM], ["ytd", "En el año", d.ytd], ["anio", "1 año", d.anio], ["dosA", "2 años", d.dosA]];
+    if (!P.some(([, , v]) => v != null)) return;
+    box.innerHTML = `<div class="rend">${P.map(([k, l, v]) => `<div class="r"><div class="rl">${l}</div>
+        <div class="rv ${v == null ? "" : v >= 0 ? "up" : "dn"}">${v == null ? "—" : (v >= 0 ? "+" : "") + n1.format(v) + "%"}</div></div>`).join("")}</div>
+      <div class="rend-nota">Variación del precio en dólares${d.desde ? `, con datos desde el ${String(d.desde).split("-").reverse().join("/")}` : ""}.
+        Si lo tenés en pesos (CEDEAR o acción local), el porcentaje de tu posición es otro: lo ves en Mi cartera.</div>`;
   })();
-
 
   // ── informe embebido en la ficha (una sola página por activo) ──
   const renderInforme = d => {
@@ -576,8 +664,7 @@ try {
     </a>`).join("")
     : '<div class="vacio">Sin noticias recientes de esta empresa. El bot publica a toda hora — volvé pronto.</div>';
 
-  // gráfico
-  const serie = histSnap && histSnap.exists() ? JSON.parse(histSnap.data().json || "[]") : [];
+  // gráfico (la serie se leyó arriba: también alimenta el rango de 52 semanas)
   const canvas = document.getElementById("chart");
   if (serie.length && typeof Chart !== "undefined") {
     let chart;
@@ -607,7 +694,7 @@ try {
         },
       });
     };
-    dibujar(9999);
+    dibujar(252);
     document.querySelectorAll("#rangos button").forEach(b => b.addEventListener("click", () => {
       document.querySelectorAll("#rangos button").forEach(x => x.classList.toggle("on", x === b));
       dibujar(Number(b.dataset.d));
