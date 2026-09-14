@@ -121,6 +121,92 @@ export function planDeshacer(v, posActual) {
   return { tipo: 'recrear', datos };
 }
 
+/* ── ajustes del sync: "en IOL bajó de 96 a 56, ¿vendiste 40?" ──
+   La cantidad del panel YA la ajustó el sync; acá solo se registra el
+   resultado, con la foto de la posición que el sync guardó en el ajuste. */
+export function cantidadAjuste(aj) {
+  const n = (Number(aj && aj.cantidadAntes) || 0) - (Number(aj && aj.cantidadBroker) || 0);
+  return n > EPS ? Math.round(n * 1e8) / 1e8 : 0;   // sin ruido de coma flotante (cripto)
+}
+
+export function validarAjuste(aj, cant, precio, fecha, hoy, moneda) {
+  if (moneda === null) return { ok: false, error: 'Todavía no sabemos en qué moneda cotiza este activo: esperá a que aparezca su precio.' };
+  const total = cantidadAjuste(aj);
+  if (!(total > 0)) return { ok: false, error: 'Este aviso no tiene una baja de cantidad que registrar.' };
+  if (!(cant > 0)) return { ok: false, error: 'Poné cuántas vendiste.' };
+  if (cant > total + EPS) return { ok: false, error: `No podés registrar más de lo que bajó en el broker (${total.toLocaleString('es-AR')}).` };
+  if (!(precio > 0)) return { ok: false, error: 'Poné el precio al que vendiste.' };
+  if (!ISO.test(String(fecha || ''))) return { ok: false, error: 'Poné la fecha de la venta.' };
+  if (hoy && fecha > hoy) return { ok: false, error: 'La fecha de la venta no puede ser futura.' };
+  const compra = dia(aj && aj.pos && aj.pos.fecha);
+  if (ISO.test(compra) && fecha < compra) {
+    return { ok: false, error: `La venta no puede ser anterior a la compra (${compra.split('-').reverse().join('/')}).` };
+  }
+  return { ok: true };
+}
+
+export function ventaDesdeAjuste(aj, cant, px, precio, fecha, ahoraISO, esRF = false) {
+  const pos = { ...(aj.pos || {}) };
+  const { moneda, factor } = monedaFactor(pos, px, esRF);
+  const foto = {};
+  CAMPOS_POS.forEach(k => { if (pos[k] !== undefined && pos[k] !== null) foto[k] = pos[k]; });
+  return {
+    ticker: String(aj.ticker || pos.ticker || ''),
+    cantidad: Math.round((Number(cant) || 0) * 1e8) / 1e8,   // lo que el usuario dice que vendió (puede ser parte)
+    precioVenta: precio,
+    costoUnitario: Number(pos.precioCompra) > 0 ? Number(pos.precioCompra) : 0,
+    fecha,
+    fechaCompra: ISO.test(dia(pos.fecha)) ? dia(pos.fecha) : '',
+    broker: String(aj.broker || pos.broker || ''),
+    moneda,
+    factor,
+    origen: 'broker',
+    posId: String(aj.posId || ''),
+    pos: foto,
+    creado: ahoraISO,
+  };
+}
+
+/* el aviso que queda cuando se registró SOLO una parte de lo que bajó: la
+   misma foto y el mismo "cantidadBroker", con lo ya vendido descontado de
+   "cantidadAntes", para poder responder el resto aparte */
+export function restoDeAjuste(aj, vendida, ahoraISO) {
+  const antes = (Number(aj.cantidadAntes) || 0) - (Number(vendida) || 0);
+  return {
+    tipo: String(aj.tipo || 'bajo'),
+    ticker: String(aj.ticker || ''),
+    posId: String(aj.posId || ''),
+    broker: String(aj.broker || ''),
+    cantidadAntes: Math.round(antes * 1e8) / 1e8,
+    cantidadBroker: Number(aj.cantidadBroker) || 0,
+    fecha: dia(aj.fecha),
+    estado: 'pendiente',
+    pos: { ...(aj.pos || {}) },
+    creado: ahoraISO,
+  };
+}
+
+/* deshacer una venta que salió de un aviso: la venta se borra y el aviso
+   vuelve (con la misma foto) para poder responderlo de nuevo. La cantidad
+   del panel no se toca: la sigue teniendo el broker. */
+export function ajusteDesdeVenta(v) {
+  const pos = { ...(v.pos || {}) };
+  const antes = Number(pos.cantidad) > 0 ? Number(pos.cantidad) : Number(v.cantidad) || 0;
+  const broker = Math.max(0, Math.round((antes - (Number(v.cantidad) || 0)) * 1e8) / 1e8);
+  return {
+    tipo: broker > EPS ? 'bajo' : 'desaparecio',
+    ticker: String(v.ticker || pos.ticker || ''),
+    posId: String(v.posId || ''),
+    broker: String(v.broker || pos.broker || ''),
+    cantidadAntes: antes,
+    cantidadBroker: broker,
+    fecha: dia(v.fecha),
+    estado: 'pendiente',
+    pos,
+    creado: String(v.creado || ''),
+  };
+}
+
 /* totales: por moneda (sin mezclar pesos con dólares) y convertidos con
    conv(valor, moneda) a la moneda que eligió el usuario. Si alguna no se pudo
    convertir (sin cotización), totalCompleto queda en false. Las ventas sin

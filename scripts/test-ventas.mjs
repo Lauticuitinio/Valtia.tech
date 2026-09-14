@@ -98,6 +98,47 @@ ok('lista vacia', V.resumenVentas([], conv, '2026').n === 0);
 const soloSinCosto = V.resumenVentas([ventas[3]], conv, '2026');
 ok('todas sin costo: n 0 pero sinCosto 1 (la UI no dice "sin ventas")', soloSinCosto.n === 0 && soloSinCosto.delAnio.sinCosto === 1, soloSinCosto);
 
+// ── ventas desde un ajuste del sync ──
+const aj = { id: 'GGAL-2026-09-11', tipo: 'bajo', ticker: 'GGAL.BA', posId: 'GGAL', broker: 'IOL',
+             cantidadAntes: 96, cantidadBroker: 56, fecha: '2026-09-11',
+             pos: { ticker: 'GGAL.BA', cantidad: 96, precioCompra: 7970.89, moneda: 'ARS', factor: 1, origen: 'sync IOL', desde: '2026-09-09', fechaAprox: true } };
+ok('cantidad del ajuste', V.cantidadAjuste(aj) === 40);
+ok('cripto sin ruido de coma flotante', V.cantidadAjuste({ cantidadAntes: 0.266468, cantidadBroker: 0.132293 }) === 0.134175);
+ok('desaparecio: vende todo', V.cantidadAjuste({ cantidadAntes: 5, cantidadBroker: 0 }) === 5);
+ok('sin baja: 0', V.cantidadAjuste({ cantidadAntes: 5, cantidadBroker: 5 }) === 0 && V.cantidadAjuste({}) === 0);
+const va = V.ventaDesdeAjuste(aj, 40, null, 9000, '2026-09-11', 'x');
+ok('venta desde ajuste: costo de la foto, moneda del sync, sin fechaCompra ("desde" no es compra)',
+   va.cantidad === 40 && va.costoUnitario === 7970.89 && va.moneda === 'ARS' && va.fechaCompra === '' && va.origen === 'broker' && va.posId === 'GGAL' && va.broker === 'IOL', va);
+ok('solo campos de las reglas', Object.keys(va).every(k => V.CAMPOS_VENTA.includes(k)), Object.keys(va));
+ok('resultado de esa venta', cerca(V.resultadoVenta(va).resultado, 40 * (9000 - 7970.89)));
+ok('la tenencia queda aproximada (solo "desde")', V.tenencia(va) && V.tenencia(va).aprox === true, V.tenencia(va));
+ok('el precio del doc manda sobre la moneda de la foto', V.ventaDesdeAjuste(aj, 40, { moneda: 'USD' }, 9000, '2026-09-11', 'x').moneda === 'USD');
+ok('validar ajuste ok', V.validarAjuste(aj, 40, 9000, '2026-09-11', '2026-09-11', 'ARS').ok);
+ok('validar: una parte tambien', V.validarAjuste(aj, 15, 9000, '2026-09-11', '2026-09-11', 'ARS').ok);
+ok('validar: mas de lo que bajo, no', !V.validarAjuste(aj, 41, 9000, '2026-09-11', '2026-09-11', 'ARS').ok);
+ok('validar: cantidad 0, no', !V.validarAjuste(aj, 0, 9000, '2026-09-11', '2026-09-11', 'ARS').ok);
+ok('validar: sin baja', !V.validarAjuste({ cantidadAntes: 5, cantidadBroker: 5 }, 1, 9000, '2026-09-11', '2026-09-11', 'ARS').ok);
+ok('validar: moneda null', !V.validarAjuste(aj, 40, 9000, '2026-09-11', '2026-09-11', null).ok);
+ok('validar: precio 0', !V.validarAjuste(aj, 40, 0, '2026-09-11', '2026-09-11', 'ARS').ok);
+ok('validar: fecha futura', !V.validarAjuste(aj, 40, 9000, '2026-09-12', '2026-09-11', 'ARS').ok);
+ok('validar: antes de la compra real', !V.validarAjuste({ ...aj, pos: { ...aj.pos, fecha: '2026-09-10' } }, 40, 9000, '2026-09-09', '2026-09-11', 'ARS').ok);
+const parcial = V.ventaDesdeAjuste(aj, 15, null, 9000, '2026-09-11', 'x');
+ok('venta parcial: 15 con el mismo costo', parcial.cantidad === 15 && parcial.costoUnitario === 7970.89);
+const resto = V.restoDeAjuste(aj, 15, 'y');
+ok('el resto del aviso: 81 → 56 (quedan 25), misma foto, pendiente', resto.cantidadAntes === 81 && resto.cantidadBroker === 56 && V.cantidadAjuste(resto) === 25
+   && resto.pos.precioCompra === 7970.89 && resto.estado === 'pendiente' && resto.creado === 'y', resto);
+ok('resto: solo los campos de las reglas', Object.keys(resto).every(k => ['tipo', 'ticker', 'posId', 'broker', 'cantidadAntes', 'cantidadBroker', 'fecha', 'estado', 'pos', 'creado'].includes(k)));
+
+// ── deshacer una venta de aviso: vuelve el aviso ──
+const vuelto = V.ajusteDesdeVenta({ ...va, id: 'aj-GGAL-2026-09-11', creado: '2026-09-11T12:00:00Z' });
+ok('parcial: bajo 96 → 56, misma foto, pendiente', vuelto.tipo === 'bajo' && vuelto.cantidadAntes === 96 && vuelto.cantidadBroker === 56
+   && vuelto.pos.precioCompra === 7970.89 && vuelto.estado === 'pendiente' && vuelto.posId === 'GGAL' && vuelto.broker === 'IOL', vuelto);
+const vTotal = V.ventaDesdeAjuste({ ...aj, cantidadBroker: 0 }, 96, null, 9000, '2026-09-11', 'x');
+ok('total: desaparecio 96 → 0', V.ajusteDesdeVenta(vTotal).tipo === 'desaparecio' && V.ajusteDesdeVenta(vTotal).cantidadBroker === 0);
+ok('sin foto: antes = lo vendido', V.ajusteDesdeVenta({ cantidad: 5, ticker: 'KO.BA' }).cantidadAntes === 5 && V.ajusteDesdeVenta({ cantidad: 5, ticker: 'KO.BA' }).tipo === 'desaparecio');
+const CAMPOS_AVISO = ['tipo', 'ticker', 'posId', 'broker', 'cantidadAntes', 'cantidadBroker', 'fecha', 'estado', 'pos', 'creado'];
+ok('solo los campos que aceptan las reglas de ajustes', Object.keys(vuelto).every(k => CAMPOS_AVISO.includes(k)), Object.keys(vuelto));
+
 // ── las reglas de Firestore ──
 const reglas = readFileSync(new URL('../firestore.rules', import.meta.url), 'utf8');
 const bloque = (reglas.match(/match \/ventas\/\{vid\} \{[\s\S]*?\n      \}/) || [''])[0];

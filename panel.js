@@ -7,8 +7,8 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { calcular, agruparPorBroker, normalizarTicker, convertir } from './mi-cartera.js?v=20';
-import { resumenVentas } from './ventas.js?v=2';
+import { calcular, agruparPorBroker, normalizarTicker, convertir } from './mi-cartera.js?v=23';
+import { resumenVentas, cantidadAjuste } from './ventas.js?v=5';
 import { EMPRESAS } from './empresas.js?v=3';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
   from './activos.js?v=6';
@@ -266,6 +266,11 @@ const cartera = () => cached('cartera', async () => {
 const ventas = () => cached('ventas', async () => {
   if (!S.verificado) return [];
   const snap = await getDocs(collection(db(), 'inversores', S.email, 'ventas'));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+});
+const ajustes = () => cached('aj', async () => {
+  if (!S.verificado) return [];
+  const snap = await getDocs(collection(db(), 'inversores', S.email, 'ajustes'));
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 });
 async function carteraCalc() {
@@ -747,6 +752,12 @@ async function cambios(cc, disc) {
   const items = [];
   const ev = (g, iso, txt, accion, go, href) => items.push({ g, iso: iso || '', txt, accion, go, href });
   const tiene = cc.pos.length > 0, ten = tenencias(cc), hoy = hoyAR();
+  // avisos del sync: una baja en el broker que todavía no se respondió
+  try {
+    const c4 = n => num(n, 4).replace(/,0+$/, '');
+    ((await ajustes()) || []).forEach(a => ev(1, hoy, `<b>${esc(base(a.ticker))}</b> ${a.tipo === 'desaparecio'
+      ? `ya no aparece en ${esc(a.broker)}` : `bajó en ${esc(a.broker)} de ${c4(a.cantidadAntes)} a ${c4(a.cantidadBroker)}`}: ¿vendiste ${c4(cantidadAjuste(a))}?`, 'Cartera', 'micartera'));
+  } catch (e) {}
   try {
     const act = await radar();
     if (tiene) {
@@ -1243,4 +1254,4 @@ async function renderHerramientas() {
 
 /* exposición global para los onclick del HTML */
 window.portalTab = portalTab;
-window.valtiaPanel = { salir, portalTab, iniciarPanel, refrescar: () => { invalidar('cartera', 'disc', 'ventas'); refrescar('inicio', 'comprar', 'disciplina', 'empresas', 'herramientas', 'carteras'); } };
+window.valtiaPanel = { salir, portalTab, iniciarPanel, refrescar: () => { invalidar('cartera', 'disc', 'ventas', 'aj'); refrescar('inicio', 'comprar', 'disciplina', 'empresas', 'herramientas', 'carteras'); } };

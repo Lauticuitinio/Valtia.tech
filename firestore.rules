@@ -50,7 +50,7 @@ service cloud.firestore {
         allow create, update: if esDuenio()
                               && request.resource.data.ticker is string
                               && request.resource.data.ticker.size() > 0
-                              && request.resource.data.ticker.size() <= 12
+                              && request.resource.data.ticker.size() <= 16
                               && request.resource.data.cantidad is number
                               && request.resource.data.cantidad > 0;
       }
@@ -89,7 +89,7 @@ service cloud.firestore {
                'fecha', 'fechaCompra', 'broker', 'moneda', 'factor', 'origen', 'posId', 'pos', 'creado'])
           && request.resource.data.ticker is string
           && request.resource.data.ticker.size() > 0
-          && request.resource.data.ticker.size() <= 12
+          && request.resource.data.ticker.size() <= 16
           && request.resource.data.cantidad is number
           && request.resource.data.cantidad > 0
           && request.resource.data.precioVenta is number
@@ -101,6 +101,30 @@ service cloud.firestore {
           && request.resource.data.moneda in ['ARS', 'USD']
           && request.resource.data.factor is number
           && request.resource.data.factor > 0;
+      }
+
+      // ── AVISOS DEL SYNC (ajustes) ──
+      // El sync diario (Admin SDK) deja acá "en IOL bajó GGAL de 96 a 56" con
+      // la foto de la posición. El usuario responde desde Mi cartera: crea la
+      // venta y borra el aviso, o lo descarta. Nadie más los escribe.
+      match /ajustes/{aid} {
+        allow read, delete: if esDuenio();
+        // el dueño solo puede escribir un aviso con la forma exacta del sync:
+        // es lo que hace "Deshacer" sobre una venta que salió de un aviso
+        // (la venta se borra y el aviso vuelve). Sobre sus propios datos.
+        allow create, update: if isAdmin() || (esDuenio()
+          && request.resource.data.keys().hasOnly(['tipo', 'ticker', 'posId', 'broker', 'cantidadAntes',
+               'cantidadBroker', 'fecha', 'estado', 'pos', 'creado'])
+          && request.resource.data.tipo in ['bajo', 'desaparecio']
+          && request.resource.data.ticker is string
+          && request.resource.data.ticker.size() > 0
+          && request.resource.data.ticker.size() <= 16
+          && request.resource.data.cantidadAntes is number
+          && request.resource.data.cantidadBroker is number
+          && request.resource.data.cantidadAntes > request.resource.data.cantidadBroker
+          && request.resource.data.cantidadBroker >= 0
+          && request.resource.data.estado == 'pendiente'
+          && request.resource.data.pos is map);
       }
     }
 

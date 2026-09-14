@@ -9,8 +9,9 @@ import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, runT
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { base, linkDe, esRentaFija, parBono, sectorDe, mercadoDe, desglose } from './activos.js?v=6';
-import { validarVenta, armarVenta, planDeshacer, resultadoVenta, resumenVentas, tenencia, monedaFactor }
-  from './ventas.js?v=2';
+import { validarVenta, armarVenta, planDeshacer, resultadoVenta, resumenVentas, tenencia, monedaFactor,
+         cantidadAjuste, validarAjuste, ventaDesdeAjuste, ajusteDesdeVenta, restoDeAjuste }
+  from './ventas.js?v=5';
 
 const STYLE = `
 .mc-wrap{width:100%}
@@ -56,6 +57,11 @@ const STYLE = `
 .mc-ventas .mc-tbl th{cursor:default}
 .mc-undo{background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;text-decoration:underline;padding:0}
 .mc-undo:hover{color:var(--gold)}
+.mc-aj{background:rgba(224,169,62,.08);border:1px solid rgba(224,169,62,.45);border-left:3px solid #E0A93E;border-radius:8px;padding:12px 16px;margin-bottom:14px}
+.mc-aj .t{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.mc-aj p{margin:4px 0 8px;font-size:13.5px;color:var(--text);line-height:1.5}
+.mc-btn.sec{background:transparent;color:var(--gold);border:1px solid var(--gold)}
+.mc-btn-mini{padding:7px 12px;font-size:10.5px}
 .mc-del:hover{color:#ef5350}
 .mc-form{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:20px}
 .mc-form .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;align-items:end}
@@ -521,9 +527,69 @@ function seccionVentas(ventas, cur) {
   </div>`;
 }
 
+/* lo que el usuario escribió en un aviso sobrevive a CUALQUIER repintado
+   (responder otro aviso, cambiar la moneda, ordenar una columna, el refresco
+   de 2 min): se guarda antes de armar el HTML y se repone después */
+function escritoEnAvisos(el) {
+  const out = {};
+  if (!el) return out;
+  el.querySelectorAll(".mc-aj").forEach(c => {
+    const v = {};
+    ["cant", "px", "fecha"].forEach(k => {
+      const i = c.querySelector(`[data-aj-${k}]`);
+      if (i && i.value !== i.defaultValue) v[k] = i.value;
+    });
+    if (Object.keys(v).length) out[c.dataset.aj] = v;
+  });
+  return out;
+}
+function reponerEscrito(el, escrito) {
+  Object.entries(escrito || {}).forEach(([id, v]) => {
+    const c = [...el.querySelectorAll(".mc-aj")].find(x => x.dataset.aj === id);
+    if (!c) return;
+    Object.entries(v).forEach(([k, val]) => { const i = c.querySelector(`[data-aj-${k}]`); if (i) i.value = val; });
+  });
+}
+
+/* ── avisos del sync: una tarjeta por baja detectada en el broker ── */
+function bloqueAjustes(ajustes, precios, bonos) {
+  if (!ajustes.length) return "";
+  const hoy = hoyAR();
+  return ajustes.map(a => {
+    const pos = a.pos || {}, px = precios[String(a.ticker || "").toUpperCase()] || null;
+    const esRF = esRentaFija(a.ticker, bonos);
+    const { moneda, factor } = monedaFactor(pos, px, esRF);
+    const unidad = factor !== 1 ? "cada 100 VN" : "por unidad";
+    const n = cantidadAjuste(a), costo = Number(pos.precioCompra) > 0 ? Number(pos.precioCompra) : 0;
+    const que = a.tipo === "desaparecio"
+      ? `ya no aparece en ${esc(a.broker)} (tenías ${cantTxt(a.cantidadAntes)})`
+      : `bajó en ${esc(a.broker)} de ${cantTxt(a.cantidadAntes)} a ${cantTxt(a.cantidadBroker)}`;
+    return `<div class="mc-aj" data-aj="${esc(a.id)}" data-vid="aj-${esc(a.id)}-${Math.random().toString(36).slice(2, 6)}">
+      <div class="t">Movimiento detectado en ${esc(a.broker)} · ${fmtFecha(a.fecha)}</div>
+      <p><b>${esc(base(a.ticker))}</b> ${que}. ¿Vendiste <b>${cantTxt(n)}</b>?</p>
+      <div class="mc-vform">
+        <div><label>Cantidad vendida · de ${cantTxt(n)}</label><input data-aj-cant type="number" step="any" min="0" max="${n}" value="${n}"${moneda ? "" : " disabled"}></div>
+        <div><label>Precio de venta · ${moneda === "ARS" ? "en pesos" : moneda === "USD" ? "en dólares" : "moneda sin confirmar"}, ${unidad}</label>
+          <input data-aj-px type="number" step="any" min="0" placeholder="el que te pagaron"${moneda ? "" : " disabled"}></div>
+        <div><label>Fecha de la venta</label><input data-aj-fecha type="date" max="${hoy}"${moneda ? "" : " disabled"}></div>
+        <div class="prev" data-aj-prev></div>
+        <div><button class="mc-btn" data-aj-ok${moneda ? "" : " disabled"}>Sí, registrar la venta</button>
+          ${a.tipo === "desaparecio" ? `<button class="mc-btn sec mc-btn-mini" data-aj-tengo>La sigo teniendo</button>` : ""}
+          <button class="mc-undo" data-aj-no>No fue una venta</button></div>
+        <div class="nota">Tu costo en esa posición: <b>${costo ? (moneda ? money(costo, moneda) : num(costo, 2)) + " " + unidad : "sin precio de compra, así que el resultado no se va a poder calcular"}</b>.
+          Lo vimos el ${fmtFecha(a.fecha)}, pero la venta pudo ser antes: <b>poné el día y el precio reales</b>.
+          ${px && px.precio != null && moneda ? `Cotización de hoy, como referencia: ${money(px.precio, moneda)}.` : ""}
+          ${a.tipo === "desaparecio" ? `Si la pasaste a otro broker o ${esc(a.broker)} no la mostró ese día, "La sigo teniendo" la devuelve a tu cartera con su costo (si la transferiste, después cambiale el broker en la fila). Si vendiste solo una parte, poné esa cantidad: el resto queda preguntando.` : `La cantidad del panel ya sigue a ${esc(a.broker)}: acá solo se registra el resultado.`}
+          ${!moneda ? "<b>Todavía no tenemos la cotización de este activo</b>: esperá a que aparezca su precio para registrar la venta." : ""}</div>
+        <div class="mc-msg" data-aj-msg style="flex-basis:100%;margin:0"></div>
+      </div></div>`;
+  }).join("");
+}
+
 /* ── render puro: se puede llamar con datos de prueba ── */
 export function renderMiCartera(el, posiciones, precios, opts = {}) {
   asegurarEstilo();
+  const escrito = escritoEnAvisos(el);
   const r = calcular(posiciones, precios);
   const cur = curLabel();
   const fxTxt = _cur === "CCL" ? (_fx.ccl ? `CCL $${_fx.ccl.toLocaleString("es-AR")}` : "")
@@ -583,13 +649,14 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   const avisoFx = fxFalta ? `<div style="background:rgba(224,169,62,.12);border:1px solid rgba(224,169,62,.45);border-left:3px solid #E0A93E;border-radius:8px;padding:10px 14px;font-size:12.5px;line-height:1.6;margin-bottom:16px;color:var(--text)">⚠ No pudimos traer la cotización del dólar: los totales de abajo <b>excluyen tus posiciones en USD</b>. Recargá la página en unos minutos.</div>` : "";
 
   if (!posiciones.length) {
-    el.innerHTML = `<div class="mc-wrap">${cabecera}${form}
+    el.innerHTML = `<div class="mc-wrap">${cabecera}${bloqueAjustes(opts.ajustes || [], precios, opts.bonos || new Set())}${form}
       ${(opts.ventas || []).length ? `<div class="mc-empty"><h4>No te quedan posiciones abiertas</h4>
         <p>Tus ventas y su resultado están más abajo. Si compraste algo nuevo, cargalo con el formulario.</p></div>` : `<div class="mc-empty">
         <h4>Todavía no cargaste posiciones</h4>
         <p>Agregá lo que tenés —acciones, CEDEARs o cripto— con la cantidad y el precio al que compraste.
            Al día siguiente vas a ver el valor actualizado, tu resultado y la lectura de Valtia sobre cada activo.</p>
       </div>`}${seccionVentas(opts.ventas || [], cur)}</div>`;
+    reponerEscrito(el, escrito);
     return;
   }
 
@@ -647,7 +714,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     `<span class="b"><b>${esc(g.broker)}</b> ${g.peso != null ? num(g.peso) + "%" : "—"} · ${money(g.valor, cur)}</span>`).join("")}</div>` : "";
 
   el.innerHTML = `<div class="mc-wrap">
-    ${cabecera}${avisoFx}
+    ${cabecera}${avisoFx}${bloqueAjustes(opts.ajustes || [], precios, opts.bonos || new Set())}
     <div class="mc-kpis">
       <div class="mc-k"><div class="l">Valor actual</div><div class="v">${money(r.total, cur)}</div><div class="s">${r.filas.length} ${r.filas.length === 1 ? "posición" : "posiciones"}</div></div>
       <div class="mc-k"><div class="l">Invertido</div><div class="v">${money(r.costoTot, cur)}</div><div class="s">a precio de compra</div></div>
@@ -675,6 +742,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
         tanto el costo como el valor actual—, así que el rendimiento en % coincide con el de pesos.` : ""}
       Esta información es de carácter general y no constituye asesoramiento financiero personalizado.</div>
   </div>`;
+  reponerEscrito(el, escrito);
 
   el.querySelectorAll("th[data-col]").forEach(h => h.onclick = () => {
     const c = h.dataset.col;
@@ -685,7 +753,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
 }
 
 /* ── Firestore: carga, alta y baja de posiciones ── */
-let _el = null, _user = null, _pos = [], _precios = {}, _ventas = [];
+let _el = null, _user = null, _pos = [], _precios = {}, _ventas = [], _ajustes = [];
 
 async function leerTodo() {
   const db = getFirestore(getApp());
@@ -696,6 +764,11 @@ async function leerTodo() {
     const sv = await getDocs(collection(db, "inversores", _user.email, "ventas"));
     _ventas = sv.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (e) { _ventas = []; }
+  // avisos del sync ("bajó en IOL: ¿vendiste?"); tampoco pueden trabar la carga
+  try {
+    const sa = await getDocs(collection(db, "inversores", _user.email, "ajustes"));
+    _ajustes = sa.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) { _ajustes = []; }
   _precios = {};
   const tks = [...new Set(_pos.map(p => String(p.ticker).toUpperCase()))];
   if (tks.length) {
@@ -728,7 +801,7 @@ function pintar() {
   const hoy = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
   const rf = _panel ? analisisRentaFija(calcular(_pos, _precios), _bonos, _panel, _flujos || {}, hoy) : "";
   renderMiCartera(_el, _pos, _precios, { frescura: frescura(), onRerender: enganchar,
-                                         bonos: _bonos, rentaFija: rf, desg: _desg, ventas: _ventas });
+                                         bonos: _bonos, rentaFija: rf, desg: _desg, ventas: _ventas, ajustes: _ajustes });
   enganchar();
 }
 
@@ -758,6 +831,14 @@ function enganchar() {
   _el.querySelectorAll("[data-del]").forEach(b => b.onclick = () => quitar(b.dataset.del));
   _el.querySelectorAll("[data-vender]").forEach(b => b.onclick = () => abrirVenta(b.dataset.vender));
   _el.querySelectorAll("[data-deshacer]").forEach(b => b.onclick = () => deshacerVenta(b.dataset.deshacer, b));
+  _el.querySelectorAll(".mc-aj").forEach(card => {
+    card.querySelectorAll("input").forEach(i => i.addEventListener("input", () => vistaAjuste(card)));
+    card.querySelector("[data-aj-ok]").onclick = () => confirmarAjuste(card);
+    card.querySelector("[data-aj-no]").onclick = () => descartarAjuste(card);
+    const tengo = card.querySelector("[data-aj-tengo]");
+    if (tengo) tengo.onclick = () => recuperarAjuste(card, tengo);
+    vistaAjuste(card);
+  });
   _el.querySelectorAll(".mc-brk[data-brk]").forEach(chip => chip.onclick = () => {
     const id = chip.dataset.brk;
     const inp = document.createElement("input");
@@ -1025,7 +1106,10 @@ async function deshacerVenta(vid, btn) {
   if (_deshaciendo.has(vid)) return;                    // doble clic: manda el primero
   const v = _ventas.find(x => x.id === vid);
   if (!v) return;
-  if (!confirm(`¿Deshacer la venta de ${cantTxt(v.cantidad)} ${base(v.ticker)} del ${fmtFecha(v.fecha)}? La posición vuelve a tu cartera.`)) return;
+  const deAviso = v.origen === "broker";
+  if (!confirm(deAviso
+    ? `¿Deshacer la venta de ${cantTxt(v.cantidad)} ${base(v.ticker)} del ${fmtFecha(v.fecha)}? Se borra la venta y vuelve el aviso para que la respondas de nuevo (la cantidad del panel sigue a ${v.broker || "tu broker"}).`
+    : `¿Deshacer la venta de ${cantTxt(v.cantidad)} ${base(v.ticker)} del ${fmtFecha(v.fecha)}? La posición vuelve a tu cartera.`)) return;
   _deshaciendo.add(vid);
   if (btn) { btn.disabled = true; btn.textContent = "Deshaciendo…"; }
   const db = getFirestore(getApp());
@@ -1038,6 +1122,17 @@ async function deshacerVenta(vid, btn) {
       const sv = await tx.get(refVenta);
       if (!sv.exists()) return;                         // ya estaba deshecha
       const venta = sv.data();
+      if (venta.origen === "broker") {
+        // salió de un aviso del sync: la cantidad del panel ya la fijó el
+        // broker, así que no se suma nada. La venta se borra y el aviso vuelve,
+        // leyendo antes su lugar: nunca se pisa un aviso nuevo del sync
+        const refBack = doc(db, "inversores", _user.email, "ajustes", vid.replace(/^aj-/, ""));
+        const sb = await tx.get(refBack);
+        if (sb.exists()) throw new Error("Ya hay un aviso pendiente para esta venta: respondelo antes de deshacerla.");
+        tx.delete(refVenta);
+        tx.set(refBack, ajusteDesdeVenta(venta));
+        return;
+      }
       const pid = venta.posId || (base(venta.ticker) + "-" + Date.now().toString(36));
       const refPos = doc(db, "inversores", _user.email, "cartera", pid);
       const sp = await tx.get(refPos);
@@ -1064,6 +1159,136 @@ async function deshacerVenta(vid, btn) {
     if (aviso) aviso.innerHTML = `<span style="color:#ef5350">No se pudo deshacer: ${esc(error)}</span>`;
   } else if (!refrescada && aviso) {
     aviso.innerHTML = `<span class="mc-mut">Se deshizo la venta, pero no pude actualizar la tabla: recargá la página.</span>`;
+  }
+}
+
+/* ── responder un aviso del sync ── */
+function datosAjuste(card) {
+  const a = _ajustes.find(x => x.id === card.dataset.aj);
+  if (!a) return null;
+  const px = _precios[String(a.ticker || "").toUpperCase()] || null;
+  const esRF = esRentaFija(a.ticker, _bonos);
+  return { a, px, esRF, moneda: monedaFactor(a.pos || {}, px, esRF).moneda,
+           cant: parseFloat(card.querySelector("[data-aj-cant]").value),
+           precio: parseFloat(card.querySelector("[data-aj-px]").value),
+           fecha: card.querySelector("[data-aj-fecha]").value };
+}
+
+function vistaAjuste(card) {
+  const d = datosAjuste(card), out = card.querySelector("[data-aj-prev]");
+  if (!d || !out) return;
+  const v = validarAjuste(d.a, d.cant, d.precio, d.fecha, hoyAR(), d.moneda);
+  if (!v.ok) { out.innerHTML = `<span class="mc-mut">${esc(v.error)}</span>`; return; }
+  const { resultado, pct: q } = resultadoVenta(ventaDesdeAjuste(d.a, d.cant, d.px, d.precio, d.fecha, "", d.esRF));
+  out.innerHTML = resultado == null ? `<span class="mc-mut">Resultado: sin precio de compra</span>`
+    : `Resultado: <b class="${resultado >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(resultado, d.moneda)}</b> (${pct(q)})`;
+}
+
+async function confirmarAjuste(card) {
+  const d = datosAjuste(card); if (!d) return;
+  const msg = card.querySelector("[data-aj-msg]"), btn = card.querySelector("[data-aj-ok]");
+  const v = validarAjuste(d.a, d.cant, d.precio, d.fecha, hoyAR(), d.moneda);
+  if (!v.ok) { msg.innerHTML = `<span style="color:#ef5350">${esc(v.error)}</span>`; return; }
+  btn.disabled = true;
+  const db = getFirestore(getApp());
+  const refAj = doc(db, "inversores", _user.email, "ajustes", d.a.id);
+  // un id de venta por TARJETA: un reintento desde la misma tarjeta no registra
+  // dos veces, y dos respuestas al mismo aviso (parciales, o un aviso que el
+  // sync reutilizó el mismo día) nunca chocan entre sí
+  const vid = card.dataset.vid || ("aj-" + d.a.id + "-" + Math.random().toString(36).slice(2, 6));
+  const refVenta = doc(db, "inversores", _user.email, "ventas", vid);
+  let venta = null, resto = 0;
+  try {
+    // la cantidad del panel ya la ajustó el sync: la transacción crea la venta
+    // desde la foto del aviso (fresca, no la de memoria) y, si se respondió
+    // todo lo que bajó, borra el aviso; si fue una parte, deja el resto
+    await runTransaction(db, async tx => {
+      const sv = await tx.get(refVenta);
+      const sa = await tx.get(refAj);
+      if (sv.exists()) { venta = sv.data(); return; }          // un reintento de una que ya entró
+      if (!sa.exists()) throw new Error("Este aviso ya se respondió desde otra pestaña. Recargá la página.");
+      const fresco = { id: d.a.id, ...sa.data() };
+      const v = validarAjuste(fresco, d.cant, d.precio, d.fecha, hoyAR(), d.moneda);
+      if (!v.ok) throw new Error(v.error);
+      venta = ventaDesdeAjuste(fresco, d.cant, d.px, d.precio, d.fecha, new Date().toISOString(), d.esRF);
+      tx.set(refVenta, venta);
+      resto = Math.round((cantidadAjuste(fresco) - d.cant) * 1e8) / 1e8;
+      if (resto > 0) tx.set(refAj, restoDeAjuste(fresco, d.cant, new Date().toISOString()));
+      else tx.delete(refAj);
+    });
+  } catch (e) {
+    let entro = false;
+    try { await leerTodo(); entro = _ventas.some(x => x.id === vid); } catch (e2) {}
+    if (!entro) {
+      btn.disabled = false;
+      msg.innerHTML = `<span style="color:#ef5350">${esc(String((e && e.message) || e).slice(0, 180))}</span>`;
+      return;
+    }
+    venta = _ventas.find(x => x.id === vid);
+  }
+  const { resultado } = resultadoVenta(venta);
+  const texto = `Venta registrada: ${cantTxt(venta.cantidad)} ${esc(base(venta.ticker))}`
+    + (resultado != null ? ` con un resultado de ${moneyS(resultado, venta.moneda)}` : "")
+    + ". La ves más abajo, en Ventas y resultado realizado."
+    + (resto > 0 ? ` Quedan ${cantTxt(resto)} por responder en el aviso.` : "");
+  // lo escrito en ESTA tarjeta ya se usó: si queda un resto, la tarjeta nueva
+  // arranca con el resto como cantidad, no con lo que se acaba de registrar
+  card.querySelectorAll("input").forEach(i => { i.value = i.defaultValue; });
+  try { await leerTodo(); pintar(); avisarPanel(); } catch (e) {
+    msg.innerHTML = `<span style="color:#4caf50">${texto}</span> <span class="mc-mut">No pude actualizar la tabla: recargá la página.</span>`;
+    return;
+  }
+  const m2 = _el.querySelector("#mc-msg");
+  if (m2) m2.innerHTML = `<span style="color:#4caf50">${texto}</span>`;
+}
+
+async function descartarAjuste(card) {
+  const a = _ajustes.find(x => x.id === card.dataset.aj); if (!a) return;
+  const txt = a.tipo === "desaparecio"
+    ? `¿Descartar el aviso de ${base(a.ticker)}? No se registra ninguna venta y la posición NO vuelve al panel: se pierde su precio de compra y su fecha. Si la seguís teniendo, usá "La sigo teniendo".`
+    : `¿Descartar el aviso de ${base(a.ticker)}? No se registra ninguna venta; la cantidad del panel ya sigue a ${a.broker}.`;
+  if (!confirm(txt)) return;
+  try {
+    await deleteDoc(doc(getFirestore(getApp()), "inversores", _user.email, "ajustes", a.id));
+    await leerTodo(); pintar(); avisarPanel();
+  } catch (e) {
+    const msg = card.querySelector("[data-aj-msg]");
+    if (msg && msg.isConnected) msg.innerHTML = `<span style="color:#ef5350">No se pudo descartar: ${esc(String((e && e.message) || e).slice(0, 120))}</span>`;
+  }
+}
+
+/* "La sigo teniendo": la posición vuelve a la cartera desde la foto del aviso
+   (misma cantidad, mismo costo, misma fecha) y el aviso se retira, juntos */
+async function recuperarAjuste(card, btn) {
+  const a = _ajustes.find(x => x.id === card.dataset.aj); if (!a) return;
+  const pos = { ...(a.pos || {}) };
+  if (!pos.ticker || !(Number(a.cantidadAntes) > 0)) return;
+  btn.disabled = true;
+  const db = getFirestore(getApp());
+  const refAj = doc(db, "inversores", _user.email, "ajustes", a.id);
+  const refPos = doc(db, "inversores", _user.email, "cartera", a.posId || (base(a.ticker) + "-" + Date.now().toString(36)));
+  try {
+    await runTransaction(db, async tx => {
+      const sa = await tx.get(refAj);
+      const sp = await tx.get(refPos);
+      if (!sa.exists()) return;                                     // ya respondido en otra pestaña
+      const fresco = sa.data();
+      if (fresco.tipo !== "desaparecio") throw new Error("Este aviso cambió (la posición volvió a aparecer en el broker). Recargá la página.");
+      if (sp.exists()) throw new Error("Esa posición ya está en tu cartera: si el aviso no corresponde, descartalo.");
+      // vuelve SIN el origen del sync: si la transferiste a otro broker, el
+      // sync no la va a dar por vendida otra vez; si sigue en el broker, mañana
+      // la vuelve a adoptar
+      const { origen, ...foto } = fresco.pos || {};
+      tx.set(refPos, { ...foto, ticker: foto.ticker || fresco.ticker, cantidad: Number(fresco.cantidadAntes) });
+      tx.delete(refAj);
+    });
+    await leerTodo(); pintar(); avisarPanel();
+    const m2 = _el.querySelector("#mc-msg");
+    if (m2) m2.innerHTML = `<span style="color:#4caf50">${esc(base(a.ticker))} volvió a tu cartera con su costo. Si la transferiste a otro broker, cambiale el broker en la fila; si sigue en ${esc(a.broker)}, el sync la vuelve a comparar mañana.</span>`;
+  } catch (e) {
+    btn.disabled = false;
+    const msg = card.querySelector("[data-aj-msg]");
+    if (msg && msg.isConnected) msg.innerHTML = `<span style="color:#ef5350">No se pudo recuperar: ${esc(String((e && e.message) || e).slice(0, 120))}</span>`;
   }
 }
 
@@ -1124,6 +1349,8 @@ export async function initMiCartera(user, el) {
         // formulario de venta abierto: no pisarlo (salvo el aviso de "esperá el precio",
         // que justamente necesita el refresco para que el precio llegue)
         if (_el.querySelector(".mc-vrow:not(.mc-vrow-espera)")) return;
+        // un aviso del sync con el precio escrito: tampoco se pisa
+        if (Object.keys(escritoEnAvisos(_el)).length) return;
         try { await Promise.all([leerTodo(), cargarFx()]); pintar(); } catch (e) {}
       }, 120000);
     }
