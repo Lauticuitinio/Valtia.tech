@@ -885,7 +885,7 @@ try {
     <a href="nota.html?n=${encodeURIComponent(nn.id)}">
       <div class="im" style="${nn.imagen ? `background-image:url('${esc(nn.imagen)}')` : ""}"></div>
       <div><div class="tt">${esc(nn.titulo)}</div>
-      <div class="f">${venc(String(nn.fecha))}${nn.fuente ? " · " + esc(nn.fuente) : ""}</div></div>
+      <div class="f">${venc(String(nn.fecha))}</div></div>
     </a>`).join("")
     : '<div class="vacio">Sin noticias recientes de esta empresa. El bot publica a toda hora — volvé pronto.</div>';
 

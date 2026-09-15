@@ -36,8 +36,9 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .art-chip{display:inline-block;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#0E1830;background:#E8CE96;padding:6px 12px;margin-bottom:16px}
 .art-title{font:700 clamp(28px,3.4vw,42px) 'Playfair Display',serif;line-height:1.12;color:var(--ink);margin-bottom:14px;text-wrap:pretty}
 .art-bajada{font:400 17px 'IBM Plex Sans',sans-serif;color:var(--sub);line-height:1.6;margin-bottom:22px;text-wrap:pretty}
-.art-img{background:linear-gradient(135deg,#14213D,#B08A3E)}
+.art-img{background:linear-gradient(135deg,#14213D,#B08A3E);margin-bottom:18px}
 .art-img img{width:100%;display:block;max-height:560px;object-fit:cover}
+.art-legal{font:400 12px 'IBM Plex Sans',sans-serif;color:var(--mut);border-top:1px solid var(--line);padding-top:12px;margin:22px 0 0}
 .art-caption{font:400 11.5px 'IBM Plex Sans',sans-serif;color:var(--mut);padding:9px 0 0;border-bottom:1px solid var(--line);padding-bottom:14px}
 .art-byline{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;padding:16px 0;border-bottom:1px solid var(--line);margin-bottom:26px}
 .art-byline .por{font:600 13px 'IBM Plex Sans',sans-serif;color:var(--ink)}
@@ -198,7 +199,10 @@ try {
 
   const id = new URLSearchParams(location.search).get("n");
   const idx = docs.findIndex(d => d.docId === id);
-  if (idx < 0) { location.replace("noticias.html"); throw new Error("nota inexistente"); }
+  if (idx < 0) {
+    layout.innerHTML = '<div class="empty-state">Esta nota ya no está disponible: las noticias se renuevan todo el día. <a href="noticias.html">Ver las últimas noticias</a></div>';
+    throw new Error("nota inexistente");
+  }
   const a = docs[idx];
   document.title = a.titulo + " — Valtia Analytics";
 
@@ -217,13 +221,13 @@ try {
     <a class="art-chip" href="noticias.html">${esc(catName(cats[0]))}</a>
     <h1 class="art-title">${esc(a.titulo)}</h1>
     <p class="art-bajada">${esc(a.resumen || "")}</p>
-    ${a.imagen ? `<div class="art-img"><img src="${esc(a.imagen)}" alt="${esc(a.titulo)}" onerror="this.parentElement.remove()"></div>
-    <div class="art-caption">${esc(a.titulo)}${a.fuente ? " · Imagen: " + esc(a.fuente) : ""}</div>` : ""}
+    ${a.imagen ? `<div class="art-img"><img src="${esc(a.imagen)}" alt="" onerror="this.parentElement.remove()"></div>` : ""}
     <div class="art-byline">
       <span class="por">Por Redacción Valtia</span>
       <span class="fecha">${fLong(a.fecha)} · ${lectura} min de lectura</span>
     </div>
     <div class="art-content">${a.contenido || ""}</div>
+    ${a.bot ? '<p class="art-legal">Nota informativa elaborada por Valtia a partir de información pública. No constituye recomendación de inversión.</p>' : ""}
     <div class="art-tags">${cats.map(c => `<span class="art-tag" onclick="location.href='noticias.html'">${esc(catName(c))}</span>`).join("")}</div>
     ${(anterior || siguiente) ? `<div class="pn">
       <div>${anterior ? `<a href="nota.html?n=${encodeURIComponent(anterior.docId)}"><span class="flecha">‹</span><span><div class="lbl">Noticia anterior</div><div class="tt">${esc(anterior.titulo)}</div></span></a>` : ""}</div>
@@ -272,7 +276,7 @@ try {
   // contador de vistas (las reglas solo permiten vistas = vistas + 1)
   updateDoc(doc(db, "noticias", a.docId), { vistas: increment(1) }).catch(() => {});
 } catch (e) {
-  if (!layout.innerHTML.includes("art-title")) {
+  if (!layout.innerHTML.includes("art-title") && !layout.innerHTML.includes("empty-state")) {
     layout.innerHTML = '<div class="empty-state">No encontramos esta nota. <a href="noticias.html">Volver a Noticias</a></div>';
   }
 }

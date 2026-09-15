@@ -546,7 +546,7 @@ async function noticiasRelacionadas(d) {
     document.getElementById("rel-news").innerHTML = `<div class="rel-news">
       <div class="h">Últimas noticias de ${esc(emp.nombre)}</div>
       ${rel.map(nn => `<a href="nota.html?n=${encodeURIComponent(nn.id)}">${esc(nn.titulo)}
-        <span class="f">${fdate(nn.fecha)}${nn.fuente ? " · " + esc(nn.fuente) : ""}</span></a>`).join("")}
+        <span class="f">${fdate(nn.fecha)}</span></a>`).join("")}
     </div>`;
   } catch (e) {}
 }
