@@ -1292,6 +1292,23 @@ async function recuperarAjuste(card, btn) {
   }
 }
 
+/* llegada desde la ficha de un activo ("+ Agregar a Mi cartera"): el ticker
+   viene en la URL (?agregar=NVDA); se precarga UNA vez, con el mercado que
+   corresponde a la ficha (dólares), y el cursor queda en la cantidad */
+function prellenarDesdeUrl() {
+  let tk = "";
+  try { tk = (new URLSearchParams(location.search).get("agregar") || "").trim().toUpperCase().slice(0, 12); } catch (e) {}
+  if (!tk || !/^[A-Z0-9.\-]+$/.test(tk)) return;
+  const inp = _el.querySelector("#mc-ticker"), sel = _el.querySelector("#mc-mercado");
+  if (!inp || !sel) return;
+  inp.value = tk;
+  sel.value = /^(BTC|ETH)(-USD)?$/.test(tk) ? "cripto" : "ext";
+  const cant = _el.querySelector("#mc-cant");
+  if (cant) cant.focus();
+  // que un F5 no vuelva a precargar
+  try { history.replaceState(null, "", location.pathname + location.hash); } catch (e) {}
+}
+
 async function guardarBroker(id, broker) {
   try {
     const db = getFirestore(getApp());
@@ -1336,6 +1353,7 @@ export async function initMiCartera(user, el) {
     _bonos = await bonosSet();
     await Promise.all([cargarRentaFija(), cargarDesglose()]);
     pintar();
+    prellenarDesdeUrl();
     // el sync intradía reescribe los precios cada ~15 min: se releen solos
     // (sin pisar lo que el usuario esté escribiendo ni si la pestaña no se ve)
     if (!window.__mcTimer) {

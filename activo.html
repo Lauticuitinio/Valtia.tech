@@ -60,7 +60,7 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .head .px .p{font-size:40px;line-height:1}
 .head .px .d{display:inline-block;margin-top:6px;padding:3px 9px;border-radius:4px;font-size:14px}
 .head .px .d.up{background:#E4F3EA}.head .px .d.dn{background:#F8E5E5}
-.estado{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:22px}
+.estado{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:22px}
 .estado .et{background:#fff;padding:14px 18px;min-width:0;position:relative;overflow:hidden}
 .estado .l{font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
 .estado .v{font:600 15px 'IBM Plex Sans',sans-serif;margin-top:7px;font-variant-numeric:tabular-nums}
@@ -89,7 +89,39 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .stg:first-child{border-top:none}
 .stg-t{font:700 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);padding:12px 18px 8px}
 .lock{position:relative}
-@media(max-width:960px){.ficha-grid{grid-template-columns:1fr}.rend{grid-template-columns:repeat(4,1fr)}.rend .r:nth-child(4){border-right:none}.estado{grid-template-columns:1fr}}
+@media(max-width:960px){.ficha-grid{grid-template-columns:minmax(0,1fr)}.rend{grid-template-columns:repeat(4,1fr)}.rend .r:nth-child(4){border-right:none}.estado{grid-template-columns:1fr 1fr}}
+
+/* ── ficha v3: sub-navegación, rango del día, velas, salud, sentimiento, lo que importa ── */
+.subnav{display:flex;gap:2px;margin:-6px 0 22px;border-bottom:1px solid var(--line);overflow:auto hidden;scrollbar-width:none}
+.subnav a{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);padding:10px 14px;white-space:nowrap;border-bottom:2px solid transparent}
+.subnav a:hover{color:var(--gold)}
+.subnav a.on{color:var(--navy);border-bottom-color:var(--gold)}
+.card-w,#general,#informe{scroll-margin-top:84px}
+.head .acc{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;justify-content:flex-end}
+.btn-acc{display:inline-block;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:9px 16px;border:1px solid var(--navy);color:var(--navy);text-decoration:none;cursor:pointer;background:#fff}
+.btn-acc.prim{background:var(--navy);color:#fff}
+.btn-acc:hover{background:var(--gold);border-color:var(--gold);color:#fff}
+.estado .s b{color:var(--ink);font-weight:600}
+.card-h .der{display:flex;align-items:center;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.rangos.tipo{margin-right:8px;padding-right:10px;border-right:1px solid var(--line)}
+.salud{display:flex;gap:3px;margin:6px 0 5px;max-width:150px}
+.salud i{flex:1;height:7px;background:var(--marfil);border-radius:2px}
+.salud i.on{background:var(--up)}.salud.n1 i.on,.salud.n2 i.on{background:var(--dn)}.salud.n3 i.on{background:var(--gold)}
+.sent{display:flex;gap:8px;margin-top:8px}
+.sent button{flex:1;font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;padding:8px 6px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--sub)}
+.sent button.alc.on{background:#E4F3EA;border-color:var(--up);color:var(--up)}
+.sent button.baj.on{background:#F8E5E5;border-color:var(--dn);color:var(--dn)}
+.sent button:hover{border-color:var(--gold)}
+.sent button:disabled{opacity:.5;cursor:wait}
+.sent-bar{display:flex;height:7px;margin-top:8px;border-radius:3px;overflow:hidden;background:var(--marfil)}
+.sent-bar i{display:block;height:100%}
+.tips{padding:4px 18px 8px}
+.tip{display:grid;grid-template-columns:8px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font:400 12.5px 'IBM Plex Sans',sans-serif;line-height:1.5;color:#2E2A24}
+.tip:last-child{border-bottom:none}
+.tip i{width:8px;height:8px;border-radius:50%;margin-top:6px;background:var(--mut)}
+.tip.b i{background:var(--up)}.tip.m i{background:var(--dn)}.tip.n i{background:var(--gold)}
+.tip b{color:var(--ink);font-weight:600}
+@media(max-width:600px){.estado{grid-template-columns:1fr}.head .acc{justify-content:flex-start}.card-h{flex-wrap:wrap}.card-h .der{justify-content:flex-start}.rangos{flex-wrap:wrap}.rangos button{padding:5px 8px}.rangos.tipo{margin-right:2px;padding-right:6px}}
 
 /* tu posición (solo cliente logueado con tenencia) */
 .mi-pos{background:var(--marfil);border:1px solid var(--line);border-left:3px solid var(--gold);padding:15px 20px;margin-bottom:22px;display:flex;flex-wrap:wrap;gap:10px 36px;align-items:baseline}
@@ -287,7 +319,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 <script type="module">
 /* ── Ficha de activo: precio + gráfico + radar + informe + noticias ── */
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, getDocs, doc, getDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, where, getCountFromServer, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { EMPRESAS, SECTORES } from './empresas.js?v=3';
 import { radarSym, tickerFicha, mergeRadar } from './activos.js?v=6';
@@ -309,8 +341,10 @@ const nf = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFra
 const n1 = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const compacto = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 });
 const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-const signo = v => (v > 0 ? "+" : "") + n1.format(v) + "%";
-const clase = v => v > 0 ? "up" : v < 0 ? "dn" : "";
+// se redondea antes de formatear: -0,04 no puede verse como "-0,0%" en rojo
+const r1 = v => Math.round(v * 10) / 10 || 0;
+const signo = v => { v = r1(v); return (v > 0 ? "+" : "") + n1.format(v) + "%"; };
+const clase = v => r1(v) > 0 ? "up" : r1(v) < 0 ? "dn" : "";
 const venc = v => v ? `${String(v).slice(8, 10)}/${String(v).slice(5, 7)}/${String(v).slice(2, 4)}` : "";
 const fdate = v => v && v.toDate ? v.toDate().toISOString().slice(0, 10) : String(v || "").slice(0, 10);
 
@@ -318,7 +352,7 @@ document.title = `${emp.nombre} (${t}) — Valtia Analytics`;
 const sectorN = (SECTORES.find(s => s.k === emp.sector) || {}).n || "";
 
 try {
-  const [pxSnap, histSnap, radarSnap, radarProSnap, infSnap, notSnap, desgSnap] = await Promise.all([
+  const [pxSnap, histSnap, radarSnap, radarProSnap, infSnap, notSnap, desgSnap, calSnap] = await Promise.all([
     getDoc(doc(db, "preciosInformes", "latest")).catch(() => null),
     getDoc(doc(db, "historialInformes", t)).catch(() => null),
     getDoc(doc(db, "radar", "latest")).catch(() => null),
@@ -326,93 +360,218 @@ try {
     emp.slug ? getDoc(doc(db, "informes", emp.slug)).catch(() => null) : Promise.resolve(null),
     getDocs(query(collection(db, "noticias"), where("estado", "==", "publicado"))).catch(() => null),
     getDoc(doc(db, "desglosePeriodos", "latest")).catch(() => null),
+    getDoc(doc(db, "calendario", "latest")).catch(() => null),
   ]);
 
-  // precio en vivo
+  // precio en vivo: p y d, y desde la ficha v3 también apertura (o), rango
+  // del día (h/l), cierre anterior (pc), volumen (v), volumen promedio 3M
+  // (vp), 52 semanas (h52/l52) y medias de 50 y 200 ruedas (s50/s200)
   const precios = pxSnap && pxSnap.exists() ? JSON.parse(pxSnap.data().json || "{}") : {};
   const px = precios[t] || {};
   const ts = pxSnap && pxSnap.exists() ? pxSnap.data().actualizado_utc : null;
   const hora = ts && ts.toDate ? ts.toDate().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false }) : "";
 
-  // radar: lo público (veredicto, precio, RSI) más lo PRO (múltiplos y
-  // fundamentals) cuando las reglas dejaron leerlo
+  // radar: lo público (veredicto, precio, RSI, recomendación, salud) más lo
+  // PRO (múltiplos, fundamentals, objetivo, precio justo) cuando las reglas
+  // dejaron leerlo. Va en una función porque el primer getDoc puede correr
+  // antes de que Firestore conozca la sesión: al detectar PRO se vuelve a
+  // pedir el doc y se repintan las partes que dependen de él.
   const radarPub = radarSnap && radarSnap.exists() ? JSON.parse(radarSnap.data().json || "{}") : {};
-  const radarProDoc = radarProSnap && radarProSnap.exists() ? JSON.parse(radarProSnap.data().json || "{}") : null;
-  const _m = mergeRadar(radarPub, radarProDoc);
-  const radar = { ..._m, activos: _m.activos };
-  const conRatios = _m.pro;
-  const ra = (radar.activos || []).find(a => a.sym === radarSym(t));
+  let radarProDoc = radarProSnap && radarProSnap.exists() ? JSON.parse(radarProSnap.data().json || "{}") : null;
+  let ra = null, conRatios = false;
+  const armarRadar = () => {
+    const _m = mergeRadar(radarPub, radarProDoc);
+    conRatios = _m.pro;
+    ra = (_m.activos || []).find(a => a.sym === radarSym(t)) || null;
+  };
+  armarRadar();
 
   // informe (si las reglas lo dejan leer; si no, tarjeta genérica bloqueada)
   const inf = infSnap && infSnap.exists() ? infSnap.data() : null;
   const cover = `img/${emp.slug}.svg`;
-  const desde = inf && inf.precio_pub && px.p ? (px.p / inf.precio_pub - 1) * 100 : null;
 
-
-  // histórico de cierres (2 años): gráfico, rango de 52 semanas y rendimiento a 6 meses
+  // histórico (2 años): cada fila es [fecha, cierre, apertura, máximo,
+  // mínimo, volumen]; los docs viejos traen solo [fecha, cierre]
   const serie = histSnap && histSnap.exists() ? JSON.parse(histSnap.data().json || "[]") : [];
-  const ult52 = serie.slice(-252).map(p => Number(p[1])).filter(v => isFinite(v) && v > 0);
-  const r52 = ult52.length >= 20 ? (() => {
-    const min = Math.min(...ult52), max = Math.max(...ult52);
+  // la vela de HOY: el histórico se baja una vez por día (con el cierre de
+  // ayer). Si el precio en vivo es de hoy, se suma la vela de la rueda en curso.
+  (() => {
+    const diaAr = d => new Date(d.getTime() - 3 * 3600e3).toISOString().slice(0, 10);
+    const tsDia = ts && ts.toDate ? diaAr(ts.toDate()) : null;
+    const ultFila = serie.length ? serie[serie.length - 1] : null;
+    if (tsDia && ultFila && ultFila.length >= 5 && tsDia === diaAr(new Date()) && String(ultFila[0]) < tsDia
+        && px.p > 0 && px.o > 0 && px.h > 0 && px.l > 0)
+      serie.push([tsDia, px.p, px.o, Math.max(px.h, px.p, px.o), Math.min(px.l, px.p, px.o), px.v || 0]);
+  })();
+  const haceDias = n => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
+  const ult52 = serie.filter(p => String(p[0]) >= haceDias(365)).map(p => Number(p[1])).filter(v => isFinite(v) && v > 0);
+  // 52 semanas: del precio en vivo (incluye el intradía) si el sync ya lo
+  // publica; si no, de los cierres del histórico
+  const r52 = (() => {
+    const min = Number(px.l52) || (ult52.length >= 20 ? Math.min(...ult52) : 0);
+    const max = Number(px.h52) || (ult52.length >= 20 ? Math.max(...ult52) : 0);
+    if (!(min > 0 && max >= min)) return null;
     return { min, max, pos: px.p && max > min ? Math.max(0, Math.min(100, (px.p - min) / (max - min) * 100)) : null };
-  })() : null;
+  })();
   const cierre = i => serie.length > i ? Number(serie[serie.length - 1 - i][1]) : null;
-  const seisM = cierre(0) && cierre(126) ? (cierre(0) / cierre(126) - 1) * 100 : null;
+  const seisM = (() => {
+    let ancla = null;
+    for (const p of serie) { if (String(p[0]) <= haceDias(182)) ancla = Number(p[1]); else break; }
+    return ancla && cierre(0) ? (cierre(0) / ancla - 1) * 100 : null;
+  })();
+
+  // ── rango del día, medias móviles y análisis técnico ──
+  // El rango, la apertura, el cierre anterior y el volumen vienen del mismo
+  // fast_info que el precio (cero costo). Las medias y el MACD se calculan
+  // acá con el histórico público: no hay nada que ocultar.
+  // la cripto publica el rango de la rueda UTC pero el precio corre las 24 h:
+  // si el precio se escapó del rango, el rango se estira hasta el precio
+  const dia = px.h > 0 && px.l > 0 && px.h >= px.l ? (() => {
+    const min = px.p > 0 ? Math.min(px.l, px.p) : px.l, max = px.p > 0 ? Math.max(px.h, px.p) : px.h;
+    return { min, max, pos: px.p > 0 && max > min ? (px.p - min) / (max - min) * 100 : 50 };
+  })() : null;
+  const esCripto = /^(BTC|ETH)$/.test(t);
+  const volTxt = v => (esCripto ? "US$" : "") + compacto.format(v);
+  // ETF y cripto están en el radar (precio, RSI) pero no tienen balance:
+  // sin veredicto no se muestran filas de fundamentals vacías
+  const fundOk = !!(ra && ra.veredicto && ra.veredicto !== "Sin cobertura");
+  const cierres = serie.map(p => Number(p[1])).filter(v => isFinite(v) && v > 0);
+  const sma = n => cierres.length >= n ? cierres.slice(-n).reduce((a, b) => a + b, 0) / n : null;
+  const s20 = sma(20), s50 = Number(px.s50) || sma(50), s200 = Number(px.s200) || sma(200);
+  const tec = (() => {
+    if (cierres.length < 60) return null;
+    // las medias se comparan contra el precio en vivo, igual que en Estadísticas
+    const ult = px.p > 0 ? px.p : cierres[cierres.length - 1];
+    let rsi = ra && ra.rsi != null ? Number(ra.rsi) : null;
+    if (rsi == null) {
+      let g = 0, l = 0;
+      for (let i = cierres.length - 14; i < cierres.length; i++) { const d = cierres[i] - cierres[i - 1]; if (d > 0) g += d; else l -= d; }
+      rsi = l === 0 ? 100 : 100 - 100 / (1 + g / l);
+    }
+    const ema = (xs, n) => { const k = 2 / (n + 1); let e = xs[0]; const out = [e]; for (let i = 1; i < xs.length; i++) { e = xs[i] * k + e * (1 - k); out.push(e); } return out; };
+    const e12 = ema(cierres, 12), e26 = ema(cierres, 26);
+    const macd = e12.map((v, i) => v - e26[i]);
+    const senal = ema(macd, 9);
+    const histo = macd[macd.length - 1] - senal[senal.length - 1];
+    const sig = [];
+    const medias = [[20, s20], [50, s50], [200, s200]].filter(([, m]) => m);
+    const arriba = medias.filter(([, m]) => ult > m).map(([n]) => n), abajo = medias.filter(([, m]) => ult <= m).map(([n]) => n);
+    if (arriba.length) sig.push({ v: arriba.length, t: `sobre la media de ${arriba.join(", ")} ruedas` });
+    if (abajo.length) sig.push({ v: -abajo.length, t: `bajo la media de ${abajo.join(", ")} ruedas` });
+    // mismas zonas que el radar (35 / 50 / 65) para que la ficha no se
+    // contradiga. Los extremos no suman ni restan (pueden seguir o revertir)
+    // y entre 45 y 55 el RSI no dice nada.
+    const zr = rsi < 35 ? "sobrevendido" : rsi < 50 ? "débil" : rsi <= 65 ? "firme" : "sobrecomprado";
+    sig.push({ v: rsi >= 55 && rsi <= 65 ? 1 : rsi >= 35 && rsi <= 45 ? -1 : 0, t: `RSI ${Math.round(rsi)} ${zr}` });
+    sig.push(histo >= 0 ? { v: 1, t: "MACD positivo" } : { v: -1, t: "MACD negativo" });
+    const score = sig.reduce((a, s) => a + s.v, 0);        // -5 … 5
+    // tendencia, no orden: el resumen describe los indicadores, no dice qué hacer
+    const label = score >= 3 ? "Señales mayormente alcistas" : score >= 1 ? "Sesgo alcista" : score <= -3 ? "Señales mayormente bajistas" : score <= -1 ? "Sesgo bajista" : "Señales mixtas";
+    return { score, label, rsi, detalle: sig.map(s => s.t).join(" · "), gauge: (score + 5) / 10 * 100 };
+  })();
+  const RECO = { strong_buy: "Compra fuerte", buy: "Compra", hold: "Mantener", sell: "Venta", strong_sell: "Venta fuerte" };
+  // por qué no hay precio justo (lo decide el pipeline, radar_core.radar_calcular)
+  const MOTIVO = {
+    moneda: ["balance en otra moneda", "El balance está en otra moneda que la cotización: los múltiplos mezclarían monedas y el número engañaría."],
+    sin_ganancias: ["sin ganancias para comparar", "No tiene ganancias ni EBITDA positivos suficientes para compararla con su familia."],
+    pocos_multiplos: ["pocos comparables", "Hay pocos múltiplos o pocos pares comparables para estimarlo con solidez."],
+    contradictorio: ["múltiplos contradictorios", "Sus múltiplos cuentan historias opuestas: por uno parece barata y por otro cara. Un promedio escondería esa diferencia."],
+    extremo_caro: ["muy por encima de su familia", "Cotiza muy por encima de su familia en todos los múltiplos. Con una distancia así, un número de precio justo sería más ruido que información."],
+    extremo_barato: ["muy por debajo de su familia", "Cotiza muy por debajo de su familia en todos los múltiplos. Suele haber un motivo (riesgo, ciclo, otro tipo de negocio) que un múltiplo no captura."],
+  };
+  const motivoCorto = m => (MOTIVO[m] || ["sin precio justo publicado"])[0];
+  const motivoLargo = m => (MOTIVO[m] || [null, "No hay precio justo publicado para este activo."])[1];
+  const zona = z => z === "Debil" ? "Débil" : (z || "");
+  const dy = v => (v > 0 && v < 1 ? nf : n1).format(v) + "%";
+  // valor razonable en el medidor: -60 % a la izquierda, 0 al centro, +150 % a la derecha
+  const gaugeJusto = up => up == null ? null : up < 0 ? 50 + Math.max(-60, up) / 60 * 50 : 50 + Math.min(150, up) / 150 * 50;
+  const RECO_G = { strong_buy: 92, buy: 72, hold: 50, sell: 30, strong_sell: 8 };
+  const recoTxt = () => ra && RECO[ra.reco] ? RECO[ra.reco] : null;
+  // posición relativa dentro del radar (quintiles), no un diagnóstico de la empresa
+  const SALUD = [null, "Entre las más bajas", "Por debajo del medio", "En el medio", "Por encima del medio", "Entre las más altas"];
+  const nivel = () => ra && ra.calidadNivel >= 1 && ra.calidadNivel <= 5 ? Math.round(ra.calidadNivel) : null;
+  const saludHtml = n => n ? `<div class="salud n${n}">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= n ? "on" : ""}"></i>`).join("")}</div>` : "";
+  const usdC = v => v == null || !isFinite(v) ? "—" : (v < 0 ? "−" : "") + "US$" + compacto.format(Math.abs(v));
+  const numC = v => v == null || !isFinite(v) ? "—" : compacto.format(v);
+  const cal = (() => { try { return calSnap && calSnap.exists() ? (JSON.parse(calSnap.data().json || "{}").earnings || []) : []; } catch (e) { return []; } })();
+  // días calendario de Argentina: "hoy" solo el mismo día y nunca una fecha pasada
+  const hoyAR = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+  const proxRes = cal.find(e => (e.ficha === t || e.sym === radarSym(t) || e.sym === t) && String(e.fecha) >= hoyAR) || null;
+  const enDias = f => Math.round((Date.parse(f) - Date.parse(hoyAR)) / 864e5);
 
   // estadísticas, agrupadas como se leen: mercado (gratis), y con PRO la
   // valuación, la rentabilidad y la solidez. Sin PRO esos números NO
   // viajaron al navegador: se explica el límite, no se tapa con blur.
   const fila = (l, v, z) => `<div class="st"><div class="l">${l}</div><div class="v">${v}</div>${z ? `<div class="z">${z}</div>` : ""}</div>`;
   const grupo = (tit, filas) => filas.length ? `<div class="stg"><div class="stg-t">${tit}</div><div class="stats">${filas.join("")}</div></div>` : "";
-  const pct1 = v => v == null ? "—" : (v >= 0 ? "+" : "") + n1.format(v) + "%";
-  const statsHtml = ra ? grupo("Precio y mercado", [
+  const pct1 = v => v == null ? "—" : signo(v);
+  const desdeMedia = m => m && px.p ? `precio ${signo((px.p / m - 1) * 100)} respecto de la media` : "";
+  // sin acceso PRO los múltiplos NO están en la página: no hay blur que
+  // sacar con devtools ni JSON que pedir por REST — el dato no viajó
+  const proHtml = `<div class="stg" style="text-align:center;padding:22px 18px">
+      <div style="font:400 20px 'Playfair Display',serif;color:var(--text)">Los números detrás de la lectura son PRO</div>
+      <p style="font-size:12.5px;color:var(--sub);max-width:420px;margin:6px auto 12px;line-height:1.6">
+        El precio, el rango, el volumen, la lectura, la calidad relativa y el consenso de los analistas son gratis. Con PRO ves
+        PER, P/Libro, EV/EBITDA, FCF yield, ROE, ROA, ingresos, ganancia, BPA, deuda, beta, el precio justo y el objetivo de los analistas.</p>
+      <a class="btn" href="planes.html" style="display:inline-block;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:var(--gold);color:#fff;padding:10px 22px;text-decoration:none;border-radius:4px">Ver planes</a>
+    </div>`;
+  // beta: SIEMPRE con su R2 al lado. Una beta que explica el 3% de la
+  // variación no dice nada, y sin el R2 se lee como si dijera todo.
+  const filaBeta = () => fila("Beta (2 años)",
+    ra.beta != null && ra.betaR2 != null && ra.betaR2 >= 0.10 ? n1.format(ra.beta) : "—",
+    ra.beta == null ? "" : ra.betaR2 < 0.10
+      ? "no sigue al S&P (explica " + Math.round(ra.betaR2 * 100) + "%)"
+      : "el S&P explica el " + Math.round(ra.betaR2 * 100) + "%");
+  const filaVol = () => fila("Volatilidad", ra.volAnual != null ? n1.format(ra.volAnual) + "%" : "—", "anualizada, 2 años");
+  const statsHtml = () => !ra ? '<div class="vacio">Este activo todavía no está en el radar de valuación.</div>' : grupo("Precio y mercado", [
       fila("Último precio", px.p ? "US$" + nf.format(px.p) : "—", hora ? "actualizado " + hora + " hs" : ""),
       fila("Hoy", px.d != null ? `<span class="${clase(px.d)}">${signo(px.d)}</span>` : "—", "contra el cierre anterior"),
+      fila("Cierre anterior", px.pc ? "US$" + nf.format(px.pc) : "—", ""),
+      fila("Apertura", px.o ? "US$" + nf.format(px.o) : "—", ""),
+      fila("Rango del día", dia ? `${nf.format(dia.min)} – ${nf.format(dia.max)}` : "—", "mínimo y máximo de la rueda"),
       fila("52 semanas", r52 ? `${nf.format(r52.min)} – ${nf.format(r52.max)}` : "—", "mínimo y máximo, en dólares"),
+      fila("Volumen", px.v ? volTxt(px.v) : "—", esCripto ? "en dólares, en el día (UTC)" : "acumulado de la rueda"),
+      fila("Vol. promedio 3M", px.vp ? volTxt(px.vp) : "—", px.v && px.vp ? `hoy lleva ${Math.round(px.v / px.vp * 100)}% de un día promedio` : "por día"),
       fila("Market cap", ra.mktcap ? "US$" + compacto.format(ra.mktcap) : "—", ""),
-      fila("Div. yield", ra.divYield != null ? n1.format(ra.divYield) + "%" : "—", ""),
-      fila("RSI (14)", ra.rsi != null ? n1.format(ra.rsi) : "—", esc(ra.rsiZona || "")),
-    ]) + (conRatios ? grupo("Valuación", [
+      fila("Div. yield", ra.divYield != null ? dy(ra.divYield) : "—", ra.divYield > 0 ? "dividendo anual / precio" : ""),
+      fila("RSI (14)", ra.rsi != null ? n1.format(ra.rsi) : "—", esc(zona(ra.rsiZona))),
+      fila("Media 50 ruedas", s50 ? "US$" + nf.format(s50) : "—", desdeMedia(s50)),
+      fila("Media 200 ruedas", s200 ? "US$" + nf.format(s200) : "—", desdeMedia(s200)),
+      ...(fundOk ? [fila("Próximos resultados", proxRes ? venc(proxRes.fecha) : "—", proxRes ? (enDias(proxRes.fecha) === 0 ? "hoy" : enDias(proxRes.fecha) === 1 ? "mañana" : `en ${enDias(proxRes.fecha)} días`) : "sin fecha publicada")] : []),
+    ]) + (conRatios && !fundOk ? grupo("Riesgo", [filaBeta(), filaVol()])
+      + `<div class="stg"><div class="vacio">${esc(emp.nombre)} no tiene balance que valuar (es un ETF o una cripto): no hay múltiplos, precio justo ni calidad relativa.</div></div>`
+    : conRatios ? grupo("Valuación", [
       fila("P/E", ra.per != null ? n1.format(ra.per) + "x" : "—", "precio / ganancias"),
       fila("P/Libro", ra.pb != null ? n1.format(ra.pb) + "x" : "—", ""),
       fila("P/Ventas", ra.ps != null ? n1.format(ra.ps) + "x" : "—", ""),
       fila("EV/EBITDA", ra.evebitda != null ? n1.format(ra.evebitda) + "x" : "—", "valor empresa / EBITDA"),
       fila("FCF yield", ra.fcfy != null ? n1.format(ra.fcfy) + "%" : "—", "caja libre / market cap"),
-      fila("Puntaje de valor", ra.valorScore != null ? Math.round(ra.valorScore) + "/100" : "—", "múltiplos frente a su familia"),
+      fila("Precio justo", ra.justo ? "US$" + nf.format(ra.justo) : "—", ra.justo ? `${signo(ra.justoUpside)} · entre ${nf.format(ra.justoMin)} y ${nf.format(ra.justoMax)} según el múltiplo` : motivoCorto(ra.justoMotivo)),
     ]) + grupo("Rentabilidad y crecimiento", [
       fila("ROE", ra.roe != null ? n1.format(ra.roe) + "%" : "—", "ganancia / patrimonio"),
       fila("ROA", ra.roa != null ? n1.format(ra.roa) + "%" : "—", "ganancia / activos"),
       fila("Margen operativo", ra.margen != null ? n1.format(ra.margen) + "%" : "—", ""),
       fila("Margen neto", ra.margenNeto != null ? n1.format(ra.margenNeto) + "%" : "—", ""),
       fila("Crec. ingresos", pct1(ra.growth), "interanual"),
+      fila("Ingresos", usdC(ra.ingresos), "últimos 12 meses"),
+      fila("Ganancia neta", usdC(ra.gananciaNeta), "últimos 12 meses"),
+      fila("EBITDA", usdC(ra.ebitda), "últimos 12 meses"),
+      fila("BPA", ra.eps != null ? "US$" + nf.format(ra.eps) : "—", "ganancia por acción, 12 meses"),
       fila("Calidad", ra.calidadScore != null ? Math.round(ra.calidadScore) + "/100" : "—", "deuda, crecimiento y margen"),
     ]) + grupo("Solidez y riesgo", [
       fila("Deuda / EBITDA", ra.deudaEbitda != null ? n1.format(ra.deudaEbitda) + "x" : "—", "años de EBITDA para cancelar la deuda"),
       fila("Liquidez", ra.liquidez != null ? n1.format(ra.liquidez) + "x" : "—", "activo corriente / pasivo corriente"),
-      // beta: SIEMPRE con su R2 al lado. Una beta que explica el 3% de la
-      // variación no dice nada, y sin el R2 se lee como si dijera todo.
-      fila("Beta (2 años)",
-        ra.beta != null && ra.betaR2 != null && ra.betaR2 >= 0.10 ? n1.format(ra.beta) : "—",
-        ra.beta == null ? "" : ra.betaR2 < 0.10
-          ? "no sigue al S&P (explica " + Math.round(ra.betaR2 * 100) + "%)"
-          : "el S&P explica el " + Math.round(ra.betaR2 * 100) + "%"),
-      fila("Volatilidad", ra.volAnual != null ? n1.format(ra.volAnual) + "%" : "—", "anualizada, 2 años"),
-      fila("Consenso", pct1(ra.upside), ra.nAnalistas ? "objetivo de " + ra.nAnalistas + " analistas" : ""),
-    ]) + (ra.monedaBalance === "ARS" ? `<div class="stg"><div class="vacio">Balance en pesos: P/Ventas, EV/EBITDA y crecimiento no se publican porque mezclarían un precio en dólares con números en pesos.</div></div>` : "")
-    : "") : "";
+      filaBeta(),
+      filaVol(),
+      fila("Acciones en circulación", numC(ra.acciones), ""),
+      fila("Dividendo en alza", ra.divAnios ? ra.divAnios + (ra.divAnios === 1 ? " año" : " años") : ra.divYield > 0 && ra.divAnios === 0 ? "no" : "—",
+        ra.divAnios || ra.divYield > 0 ? "años seguidos subiendo el dividendo anual" : "no paga dividendos o no hay datos"),
+      fila("Consenso", pct1(ra.upside), ra.nAnalistas && ra.target ? `objetivo US$${nf.format(ra.target)} de ${ra.nAnalistas} analistas${ra.targetBajo && ra.targetAlto ? ` (${nf.format(ra.targetBajo)} – ${nf.format(ra.targetAlto)})` : ""}` : ra.nAnalistas ? "objetivo de " + ra.nAnalistas + " analistas" : ""),
+    ]) + (ra.monedaBalance === "ARS" ? `<div class="stg"><div class="vacio">Balance en pesos: P/Ventas, EV/EBITDA, ingresos, ganancia y crecimiento no se publican porque mezclarían un precio en dólares con números en pesos.</div></div>` : "")
+    : fundOk ? proHtml : "");
 
-  // sin acceso PRO los múltiplos NO están en la página: no hay blur que
-  // sacar con devtools ni JSON que pedir por REST — el dato no viajó
-  const proHtml = `<div class="stg" style="text-align:center;padding:22px 18px">
-      <div style="font:400 20px 'Playfair Display',serif;color:var(--text)">Los números detrás de la lectura son PRO</div>
-      <p style="font-size:12.5px;color:var(--sub);max-width:420px;margin:6px auto 12px;line-height:1.6">
-        El veredicto, la zona de compra, el puntaje y el precio son gratis. Con PRO ves PER, P/Libro, EV/EBITDA,
-        FCF yield, ROE, ROA, deuda sobre EBITDA, beta y el consenso de analistas.</p>
-      <a class="btn" href="planes.html" style="display:inline-block;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:var(--gold);color:#fff;padding:10px 22px;text-decoration:none;border-radius:4px">Ver planes</a>
-    </div>`;
-
-  const verClase = ra && ra.veredicto === "Infravalorada" ? " infra" : ra && ra.veredicto === "Estirada" ? " cara" : "";
-  const conVer = !!(ra && ra.veredicto && ra.veredicto !== "Sin cobertura");
+  const verClase = () => ra && ra.veredicto === "Infravalorada" ? " infra" : ra && ra.veredicto === "Estirada" ? " cara" : "";
+  const conVer = () => !!(ra && ra.veredicto && ra.veredicto !== "Sin cobertura");
 
   // medidor de medio arco: el punto marca dónde cae el valor entre 0 y 100
   const gauge = v => {
@@ -423,16 +582,25 @@ try {
     return `<svg class="gauge" viewBox="0 0 100 56"><defs><linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="#B23A3A"/><stop offset=".5" stop-color="#B08A3E"/><stop offset="1" stop-color="#1F7A4D"/></linearGradient></defs>
       ${arco} stroke="url(#gg)" opacity=".4"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.5" fill="#0E1830" stroke="#fff" stroke-width="2"/></svg>`;
   };
-  const rsiTxt = r => r == null ? "—" : r < 30 ? "Sobrevendido" : r > 70 ? "Sobrecomprado" : r < 45 ? "Zona de compra" : "Neutral";
 
-  // ── estado: la lectura, dónde está el precio en el año y el consenso ──
-  const estadoHtml = `<div class="estado">
-    <div class="et"><div class="l">Lectura Valtia</div>
-      ${conVer ? `<div class="v"><span class="ver-tag${verClase}">${esc(ra.veredicto)}</span>${ra.entrada ? '<span class="entrada" style="margin:0 0 0 10px">● zona de compra</span>' : ""}${ra.pierdePlata ? ' <span class="ver-tag" style="background:rgba(224,169,62,.15);color:#E0A93E;margin-left:6px" title="El puntaje mide qué tan barata cotiza, no si gana dinero">no gana plata</span>' : ""}</div>
+  // ── estado: valor razonable, rango del día, 52 semanas y consenso ──
+  const estadoHtml = () => `<div class="estado">
+    <div class="et"><div class="l">Valor razonable · Lectura Valtia</div>
+      ${conVer() ? `<div class="v"><span class="ver-tag${verClase()}">${esc(ra.veredicto)}</span>${ra.entrada ? '<span class="entrada" style="margin:0 0 0 10px" title="Puntaje de valor de 60 o más y RSI debajo de 45. Lectura automática, no una recomendación.">● barata y con RSI bajo</span>' : ""}${ra.pierdePlata ? ' <span class="ver-tag" style="background:rgba(224,169,62,.15);color:#E0A93E;margin-left:6px" title="El puntaje mide qué tan barata cotiza, no si gana dinero">no gana plata</span>' : ""}</div>
         <div class="barra"><i style="width:100%"></i>${ra.score != null ? `<b style="left:${Math.max(0, Math.min(100, ra.score))}%"></b>` : ""}</div>
         <div class="barra-l"><span>estirada</span><span>puntaje ${ra.score != null ? Math.round(ra.score) : "—"}/100</span><span>barata</span></div>
-        <div class="s">Qué tan barata cotiza frente a su familia sectorial. Lectura propia de Valtia, diaria; no es una recomendación.</div>`
-      : `<div class="v">Sin cobertura</div><div class="s">Este activo todavía no está en el radar de valuación de Valtia.</div>`}
+        <div class="s">${conRatios
+          ? (ra.justo ? `Precio justo <b>US$${nf.format(ra.justo)}</b> (<span class="${clase(ra.justoUpside)}">${signo(ra.justoUpside)}</span>): lo que valdría a los múltiplos medianos de su familia. Entre ${nf.format(ra.justoMin)} y ${nf.format(ra.justoMax)} según el múltiplo.`
+                      : `Sin precio justo. ${motivoLargo(ra.justoMotivo)}`) + " Lectura automática, no una recomendación."
+          : `Qué tan barata cotiza frente a su familia sectorial, según el modelo de Valtia. Lectura automática, no una recomendación. El precio justo por múltiplos es <a href="planes.html">PRO</a>.`}</div>`
+      : `<div class="v">Sin cobertura</div><div class="s">${ra ? "No aplica: es un ETF o una cripto, sin balance que valuar." : "Este activo todavía no está en el radar de valuación de Valtia."}</div>`}
+    </div>
+    <div class="et"><div class="l">Rango del día</div>
+      ${dia ? `<div class="v">US$${nf.format(dia.min)} – US$${nf.format(dia.max)}</div>
+        <div class="barra"><i class="neutra" style="width:100%"></i><b style="left:${dia.pos.toFixed(1)}%"></b></div>
+        <div class="barra-l"><span>mínimo</span><span>${px.p ? "hoy US$" + nf.format(px.p) : ""}</span><span>máximo</span></div>
+        <div class="s">${px.o ? `Abrió en US$${nf.format(px.o)}` : ""}${px.pc ? `${px.o ? " · " : ""}cierre anterior US$${nf.format(px.pc)}` : ""}${px.v ? ` · volumen ${volTxt(px.v)}${px.vp ? ` (prom. 3M ${volTxt(px.vp)})` : ""}` : ""}</div>`
+      : `<div class="v">—</div><div class="s">El rango de la rueda se completa con la próxima actualización de precios (cada 15 min en rueda).</div>`}
     </div>
     <div class="et"><div class="l">Rango de 52 semanas</div>
       ${r52 ? `<div class="v">US$${nf.format(r52.min)} – US$${nf.format(r52.max)}</div>
@@ -441,28 +609,65 @@ try {
         <div class="s">${px.p ? `${signo((px.p / r52.min - 1) * 100)} desde el mínimo · ${signo((px.p / r52.max - 1) * 100)} desde el máximo` : "Cierres diarios de los últimos 12 meses."}</div>`
       : `<div class="v">—</div><div class="s">El histórico de precios se está generando.</div>`}
     </div>
-    <div class="et lock"><div class="l">Consenso de analistas</div>
+    <div class="et"><div class="l">Consenso de analistas</div>
+      ${recoTxt() ? `<div class="v"><span class="ver-tag${/buy/.test(ra.reco) ? " infra" : /sell/.test(ra.reco) ? " cara" : ""}">${recoTxt()}</span></div>` : `<div class="v">${ra ? "Sin consenso publicado" : "—"}</div>`}
       ${conRatios
-        ? `<div class="v ${ra && ra.upside != null ? clase(ra.upside) : ""}">${ra && ra.upside != null ? signo(ra.upside) + " al objetivo" : "—"}</div>
-           <div class="s">${ra && ra.nAnalistas ? `Precio objetivo promedio de ${ra.nAnalistas} analistas, contra el precio de hoy.` : "Sin consenso publicado para este activo."}</div>`
-        : `<div class="preview-blur"><div class="v">Objetivo de los analistas</div><div class="s">Distancia al precio objetivo promedio y cuántos analistas lo cubren.</div></div>
-           <div class="pro-overlay" style="gap:4px"><a href="planes.html" class="btn">PRO</a></div>`}
+        ? `<div class="s">${ra && ra.nAnalistas && ra.target ? `Objetivo promedio <b>US$${nf.format(ra.target)}</b> (<span class="${clase(ra.upside)}">${signo(ra.upside)}</span>) de ${ra.nAnalistas} analistas${ra.targetBajo && ra.targetAlto ? `, entre ${nf.format(ra.targetBajo)} y ${nf.format(ra.targetAlto)}` : ""}.`
+            : ra && ra.nAnalistas && ra.upside != null ? `${signo(ra.upside)} al objetivo promedio de ${ra.nAnalistas} analistas.`
+            : recoTxt() ? "Recomendación promedio de los analistas que cubren la acción." : fundOk ? "Ningún consenso publicado para este activo." : "No aplica: este activo no tiene cobertura de analistas."}</div>`
+        : !fundOk ? `<div class="s">${recoTxt() ? "Promedio de las recomendaciones de analistas de terceros." : "No aplica: este activo no tiene cobertura de analistas."}</div>`
+        : `<div class="lock" style="margin-top:6px"><div class="preview-blur"><div class="s">Objetivo promedio US$ ··· (+··%) de ·· analistas, entre ··· y ···.</div></div>
+           <div class="pro-overlay" style="background:transparent"><a href="planes.html" class="btn" style="padding:6px 14px">Objetivo: PRO</a></div></div>`}
     </div>
   </div>`;
 
-  // ── puntuación: cinco lecturas, cada una con su medidor ──
+  // ── puntuación: cada lectura con su medidor ──
   const filaP = (l, v, z, g) => `<div class="pr"><div><div class="pl">${l}</div><div class="pv">${v}</div>${z ? `<div class="ps">${z}</div>` : ""}</div>${g}</div>`;
-  const puntHtml = ra ? `<div class="punt">
-      ${filaP("Puntaje Valtia", ra.score != null ? Math.round(ra.score) + "/100" : "—", "compuesto de valor y calidad, frente a su familia sectorial", gauge(ra.score))}
-      ${filaP("Técnico", rsiTxt(ra.rsi), ra.rsi != null ? `RSI (14) ${n1.format(ra.rsi)}${ra.rsiZona ? " · " + esc(ra.rsiZona) : ""}` : "sin RSI publicado", gauge(ra.rsi != null ? 100 - ra.rsi : null))}
-      <div class="lock">${conRatios
-        ? filaP("Valor", ra.valorScore != null ? Math.round(ra.valorScore) + "/100" : "—", "P/E, P/Libro, P/Ventas, EV/EBITDA y FCF yield normalizados", gauge(ra.valorScore))
-          + filaP("Calidad", ra.calidadScore != null ? Math.round(ra.calidadScore) + "/100" : "—", "deuda, crecimiento y margen operativo", gauge(ra.calidadScore))
-          + filaP("Consenso", pct1(ra.upside), ra.nAnalistas ? `objetivo de ${ra.nAnalistas} analistas` : "sin consenso publicado", gauge(ra.upside != null ? (ra.upside + 30) / 90 * 100 : null))
-        : `<div class="preview-blur">${filaP("Valor", "· ·", "múltiplos normalizados por familia", gauge(null))}${filaP("Calidad", "· ·", "deuda, crecimiento y margen", gauge(null))}${filaP("Consenso", "· ·", "objetivo de los analistas", gauge(null))}</div>
-           <div class="pro-overlay"><h4>Con PRO</h4><p>Valor, calidad y consenso, con los números detrás.</p><a href="planes.html" class="btn">Ver planes →</a></div>`}
-      </div>
-    </div>` : '<div class="vacio">Este activo todavía no está en el radar de valuación.</div>';
+  const puntHtml = () => !ra ? '<div class="vacio">Este activo todavía no está en el radar de valuación.</div>' : `<div class="punt">
+      ${fundOk
+        ? filaP("Puntaje Valtia", ra.score != null ? Math.round(ra.score) + "/100" : "—", "qué tan barata cotiza frente a su familia sectorial: múltiplos y caja libre", gauge(ra.score))
+          + filaP("Calidad relativa", nivel() ? SALUD[nivel()] : "—", nivel() ? saludHtml(nivel()) + (conRatios && ra.calidadScore != null ? `calidad ${Math.round(ra.calidadScore)}/100 · ` : "") + "deuda frente a su familia; crecimiento y margen frente al radar. Es una posición relativa, no un diagnóstico" : "faltan datos: hacen falta 2 de 3 entre deuda, crecimiento y margen", gauge(!nivel() ? null : conRatios && ra.calidadScore != null ? ra.calidadScore : nivel() * 20 - 10))
+        : filaP("Puntaje Valtia", "—", "sin valuación: es un ETF o una cripto, no hay balance que comparar", gauge(null))}
+      ${filaP("Análisis técnico", tec ? tec.label : "—", tec ? tec.detalle + " · resumen automático de indicadores, no es una recomendación" : "hacen falta 60 ruedas de histórico", gauge(tec ? tec.gauge : null))}
+      ${fundOk || recoTxt() ? filaP("Opinión de analistas", recoTxt() || "—", conRatios && ra.nAnalistas && ra.target ? `promedio de ${ra.nAnalistas} analistas de terceros · objetivo US$${nf.format(ra.target)} (${signo(ra.upside)})` : recoTxt() ? `promedio de los analistas que la cubren · el objetivo es <a href="planes.html">PRO</a>` : "sin consenso publicado", gauge(ra.reco ? RECO_G[ra.reco] : null)) : ""}
+      ${!fundOk ? "" : `<div class="lock">${conRatios
+        ? filaP("Valor razonable", ra.justo ? "US$" + nf.format(ra.justo) : "—", ra.justo ? `${signo(ra.justoUpside)} al precio de hoy · múltiplos medianos de su familia · entre ${nf.format(ra.justoMin)} y ${nf.format(ra.justoMax)}` : motivoLargo(ra.justoMotivo), gauge(gaugeJusto(ra.justoUpside)))
+        : `<div class="preview-blur">${filaP("Valor razonable", "US$ · ·", "precio justo por múltiplos frente a su familia", gauge(null))}</div>
+           <div class="pro-overlay" style="background:rgba(246,243,236,.35)"><a href="planes.html" class="btn">Precio justo: PRO</a></div>`}
+      </div>`}
+    </div>`;
+
+  // ── lo que importa: lecturas automáticas en una frase, con los datos de la
+  // ficha. Lo gratis se arma con lo público; con PRO se suman las de valor.
+  const tipsHtml = () => {
+    const tips = [];
+    const tip = (c, h) => tips.push(`<div class="tip ${c}"><i></i><div>${h}</div></div>`);
+    if (r52 && px.p) {
+      const dMax = (px.p / r52.max - 1) * 100, dMin = (px.p / r52.min - 1) * 100;
+      if (dMax >= -5) tip("n", `<b>Cerca del máximo del año.</b> Cotiza a ${signo(dMax)} del techo de 52 semanas. Estar arriba en el año no dice si está cara: eso lo mide la lectura Valtia.`);
+      else if (dMin <= 10) tip("n", `<b>Cerca del mínimo del año.</b> Está a ${signo(dMin)} del piso de 52 semanas. Que esté abajo en el año no significa que esté barata en valor: son lecturas distintas.`);
+    }
+    if (tec) tip(tec.score >= 1 ? "b" : tec.score <= -1 ? "m" : "n", `<b>${tec.label}.</b> ${tec.detalle.charAt(0).toUpperCase() + tec.detalle.slice(1)}. Es un resumen automático de indicadores: describe el precio, no dice qué hacer.`);
+    if (ra && ra.entrada && tec && tec.score <= -1) tip("n", `<b>Valor y precio van por caminos distintos.</b> Frente a su familia cotiza barata, pero el precio viene en baja. Son dos lecturas automáticas distintas y ninguna es una recomendación.`);
+    if (ra && ra.rsi != null && ra.rsi > 70) tip("m", `<b>Sobrecomprado.</b> RSI ${Math.round(ra.rsi)}: subió mucho en pocas ruedas. Después de subas así es común que el precio se tome un respiro, aunque no siempre pasa.`);
+    else if (ra && ra.rsi != null && ra.rsi < 30) tip("b", `<b>Sobrevendido.</b> RSI ${Math.round(ra.rsi)}: cayó mucho en pocas ruedas. A veces rebota y a veces sigue cayendo, si hay un motivo de fondo.`);
+    if (conVer()) tip(ra.veredicto === "Infravalorada" ? "b" : ra.veredicto === "Estirada" ? "m" : "n", `<b>${esc(ra.veredicto)} frente a su familia.</b> ${ra.score != null ? `Puntaje Valtia ${Math.round(ra.score)}/100: ` : ""}qué tan barata cotiza dentro de su estilo, no si es buena empresa.`);
+    if (ra && ra.pierdePlata) tip("m", `<b>No gana plata.</b> ROE o margen neto negativos. El puntaje mide qué tan barata cotiza, no si el negocio es rentable.`);
+    if (nivel()) tip(nivel() >= 4 ? "b" : nivel() <= 2 ? "m" : "n", `<b>Calidad: ${SALUD[nivel()].toLowerCase()} del radar.</b> Deuda frente a su familia, y crecimiento y margen frente al resto del radar${conRatios && ra.calidadScore != null ? ` (${Math.round(ra.calidadScore)}/100)` : ""}. Es una posición relativa, no un diagnóstico de la empresa.`);
+    if (recoTxt()) tip(/buy/.test(ra.reco) ? "b" : /sell/.test(ra.reco) ? "m" : "n", `<b>Consenso de analistas: ${recoTxt().toLowerCase()}.</b> Promedio de las recomendaciones de ${conRatios && ra.nAnalistas ? ra.nAnalistas + " analistas" : "los analistas"} que cubren la acción, no una opinión de Valtia${conRatios && ra.target ? `; objetivo promedio US$${nf.format(ra.target)} (${signo(ra.upside)})` : ""}.`);
+    if (ra && ra.divYield >= 0.1) tip("n", `<b>Paga dividendos.</b> ${dy(ra.divYield)} anual${conRatios && ra.divAnios ? `, y lo subió ${ra.divAnios} ${ra.divAnios === 1 ? "año" : "años"} seguidos` : ""}.`);
+    if (conRatios && fundOk) {
+      if (ra.justo) tip(ra.justoUpside >= 15 ? "b" : ra.justoUpside <= -15 ? "m" : "n", `<b>Precio justo US$${nf.format(ra.justo)} (${signo(ra.justoUpside)}).</b> Lo que valdría a los múltiplos medianos de su familia; entre ${nf.format(ra.justoMin)} y ${nf.format(ra.justoMax)} según el múltiplo. Es relativo: si toda la familia está cara, este número también.`);
+      else if (ra.justoMotivo) tip("n", `<b>Sin precio justo.</b> ${motivoLargo(ra.justoMotivo)}`);
+      if (ra.deudaEbitda != null) tip(ra.deudaEbitda < 1 ? "b" : ra.deudaEbitda > 3 ? "m" : "n", `<b>Deuda ${ra.deudaEbitda < 1 ? "baja" : ra.deudaEbitda > 3 ? "alta" : "manejable"}.</b> ${n1.format(ra.deudaEbitda)} años de EBITDA para cancelarla.`);
+      if (ra.fcfy != null) tip(ra.fcfy >= 5 ? "b" : ra.fcfy < 0 ? "m" : "n", `<b>${ra.fcfy < 0 ? "Quema caja" : ra.fcfy >= 5 ? "Genera mucha caja" : "Genera caja"}.</b> FCF yield ${n1.format(ra.fcfy)}%: caja libre sobre lo que vale en bolsa.`);
+      if (ra.roe != null) tip(ra.roe >= 20 ? "b" : ra.roe < 5 ? "m" : "n", `<b>ROE ${n1.format(ra.roe)}%.</b> ${ra.roe >= 20 ? "Rentabilidad alta" : ra.roe < 5 ? "Rentabilidad baja" : "Rentabilidad razonable"} sobre el patrimonio.`);
+      if (ra.growth != null) tip(ra.growth >= 15 ? "b" : ra.growth < 0 ? "m" : "n", `<b>Ingresos ${ra.growth >= 0 ? "crecen" : "caen"} ${signo(ra.growth)}</b> interanual.`);
+    } else if (fundOk) {
+      tip("n", `<b>Con PRO</b> se suman las lecturas de precio justo, deuda, caja libre, ROE y crecimiento. <a href="planes.html">Ver planes →</a>`);
+    }
+    return tips.length ? tips.join("") : '<div class="vacio">Sin lecturas todavía: faltan datos del radar para este activo.</div>';
+  };
 
   ficha.innerHTML = `
   <div class="top-row">
@@ -476,38 +681,48 @@ try {
     <div>
       <div class="sec">${esc(sectorN)}</div>
       <h1>${esc(emp.nombre)}<span>${t}</span></h1>
-      <div class="head-meta">Cotiza en dólares${emp.slug ? " · con informe Valtia" : ""}${conVer ? " · en el radar de valuación" : ""}</div>
+      <div class="head-meta">Cotiza en dólares${emp.slug ? " · con informe Valtia" : ""}${conVer() ? " · en el radar de valuación" : ""}</div>
     </div>
     <div class="px">
       <div class="p">${px.p ? "US$" + nf.format(px.p) : "—"}</div>
       ${px.d != null ? `<div class="d ${clase(px.d)}">${signo(px.d)} hoy</div>` : ""}
       ${hora ? `<div class="h">Actualizado ${hora} hs · cada 15 min en rueda</div>` : ""}
+      <div class="acc"><a class="btn-acc prim" href="index.html?agregar=${encodeURIComponent(t)}#panel/micartera">+ Agregar a Mi cartera</a></div>
     </div>
   </div>
+  <div class="subnav" id="subnav"><a href="#general" class="on">General</a><a href="#grafico">Gráfico</a><a href="#tecnico">Técnico</a><a href="#estadisticas">Estadísticas</a>${emp.slug ? '<a href="#informe">Informe</a>' : ""}<a href="#noticias">Noticias</a></div>
 
   <div id="mi-pos"></div>
-  ${estadoHtml}
+  <div id="general">${estadoHtml()}</div>
 
   <div class="ficha-grid">
   <div class="col-main">
-    <div class="card-w">
+    <div class="card-w" id="grafico">
       <div class="card-h"><span class="t">Evolución del precio</span>
-        <div class="rangos" id="rangos">
-          <button data-d="22">1M</button><button data-d="63">3M</button><button data-d="126">6M</button><button data-d="252" class="on">1A</button><button data-d="9999">Máx</button>
+        <div class="der">
+          <div class="rangos tipo" id="tipo"><button data-t="velas" class="on">Velas</button><button data-t="linea">Línea</button></div>
+          <div class="rangos" id="rangos">
+            <button data-d="7">1S</button><button data-d="30">1M</button><button data-d="91" class="on">3M</button><button data-d="182">6M</button><button data-d="365">1A</button><button data-d="0">2A</button>
+          </div>
         </div>
       </div>
       <div class="chart-box"><canvas id="chart"></canvas></div>
       <div id="desglose-periodos"></div>
     </div>
-    <div class="card-w">
-      <div class="card-h"><span class="t">Estadísticas clave</span><span class="s">Radar de valuación Valtia · diario</span></div>
-      ${ra ? statsHtml + (conRatios ? "" : proHtml) : '<div class="vacio">Este activo todavía no está en el radar de valuación.</div>'}
+    <div class="card-w" id="estadisticas">
+      <div class="card-h"><span class="t">Estadísticas clave</span><span class="s">Precio en vivo · radar Valtia diario</span></div>
+      <div id="stats-box">${statsHtml()}</div>
     </div>
   </div>
   <div class="col-side">
-    <div class="card-w">
-      <div class="card-h"><span class="t">Puntuación Valtia</span><span class="s">Lectura propia</span></div>
-      ${puntHtml}
+    <div class="card-w" id="tecnico">
+      <div class="card-h"><span class="t">Puntuación</span><span class="s">Lecturas automáticas · no son recomendaciones</span></div>
+      <div id="punt-box">${puntHtml()}</div>
+      <div class="punt" id="sentimiento" style="border-top:1px solid var(--line)"></div>
+    </div>
+    <div class="card-w" id="importa">
+      <div class="card-h"><span class="t">Lo que importa</span><span class="s">Lecturas automáticas</span></div>
+      <div class="tips" id="tips-box">${tipsHtml()}</div>
     </div>
     <div class="card-w">
       <div class="card-h"><span class="t">Informe Valtia</span>
@@ -533,10 +748,20 @@ try {
 
   <div id="informe-full"></div>
 
-  <div class="card-w act-news">
+  <div class="card-w act-news" id="noticias">
     <div class="card-h"><span class="t">Noticias de ${esc(emp.nombre)}</span><a class="s" href="noticias.html">Ver todas →</a></div>
     <div id="act-news-list"><div class="vacio">Buscando noticias…</div></div>
   </div>`;
+
+  // las partes que cambian cuando aparece el doc PRO (ver onAuthStateChanged)
+  const repintarPro = () => {
+    for (const [id, fn] of [["general", estadoHtml], ["punt-box", puntHtml], ["stats-box", statsHtml], ["tips-box", tipsHtml]]) {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = fn();
+    }
+  };
+  document.querySelectorAll("#subnav a").forEach(a => a.addEventListener("click", () =>
+    document.querySelectorAll("#subnav a").forEach(x => x.classList.toggle("on", x === a))));
 
   // ── cuánto rindió, por período (debajo del gráfico) ──
   // Es la variación del PRECIO, no "lo que ganaste": eso depende de cuándo
@@ -551,7 +776,7 @@ try {
                ["seisM", "6 meses", seisM], ["ytd", "En el año", d.ytd], ["anio", "1 año", d.anio], ["dosA", "2 años", d.dosA]];
     if (!P.some(([, , v]) => v != null)) return;
     box.innerHTML = `<div class="rend">${P.map(([k, l, v]) => `<div class="r"><div class="rl">${l}</div>
-        <div class="rv ${v == null ? "" : v >= 0 ? "up" : "dn"}">${v == null ? "—" : (v >= 0 ? "+" : "") + n1.format(v) + "%"}</div></div>`).join("")}</div>
+        <div class="rv ${v == null ? "" : clase(v)}">${v == null ? "—" : signo(v)}</div></div>`).join("")}</div>
       <div class="rend-nota">Variación del precio en dólares${d.desde ? `, con datos desde el ${String(d.desde).split("-").reverse().join("/")}` : ""}.
         Si lo tenés en pesos (CEDEAR o acción local), el porcentaje de tu posición es otro: lo ves en Mi cartera.</div>`;
   })();
@@ -664,47 +889,127 @@ try {
     </a>`).join("")
     : '<div class="vacio">Sin noticias recientes de esta empresa. El bot publica a toda hora — volvé pronto.</div>';
 
-  // gráfico (la serie se leyó arriba: también alimenta el rango de 52 semanas)
+  // ── gráfico: velas con volumen (o línea), de 1 semana a 2 años ──
+  // Cada fila del histórico es [fecha, cierre, apertura, máximo, mínimo,
+  // volumen]; si el doc todavía es de cierres solos, se queda en la línea.
   const canvas = document.getElementById("chart");
   if (serie.length && typeof Chart !== "undefined") {
-    let chart;
-    const dibujar = dias => {
-      const datos = serie.slice(-dias);
-      const primera = datos.length ? datos[0][1] : 0;
-      const ultima = datos.length ? datos[datos.length - 1][1] : 0;
-      const color = ultima >= primera ? "#1F7A4D" : "#B23A3A";
+    let chart = null;
+    const conVelas = serie.filter(p => p.length >= 5 && p[2] > 0 && p[3] > 0 && p[4] > 0).length >= 30;
+    let tipo = conVelas ? "velas" : "linea", dias = 91;
+    if (!conVelas) { const bt = document.getElementById("tipo"); if (bt) bt.style.display = "none"; }
+    const dibujar = () => {
+      // los rangos se cortan por FECHA: la cripto cotiza todos los días y 126 filas no son 6 meses
+      const datos = dias ? serie.filter(p => String(p[0]) >= haceDias(dias)) : serie;
+      const labels = datos.map(p => p[0]);
+      const vol = datos.map(p => Number(p[5]) || 0);
+      const hayVol = vol.some(v => v > 0);
+      const ohlc = p => p.length >= 5 && p[2] > 0 && p[3] > 0 && p[4] > 0 ? p : [p[0], p[1], p[1], p[1], p[1]];
+      const sube = p => { const q = ohlc(p); return q[1] >= q[2]; };
       if (chart) chart.destroy();
-      chart = new Chart(canvas, {
-        type: "line",
-        data: { labels: datos.map(p => p[0]), datasets: [{
-          data: datos.map(p => p[1]), borderColor: "#B08A3E", borderWidth: 1.8,
-          pointRadius: 0, pointHitRadius: 8, fill: true,
-          backgroundColor: "rgba(176,138,62,.07)", tension: 0.15 }] },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false },
-            tooltip: { callbacks: {
-              title: items => venc(items[0].label),
-              label: ctx => "US$" + nf.format(ctx.raw) } } },
-          scales: {
-            x: { grid: { display: false }, ticks: { color: "#8B8375", maxTicksLimit: 7,
-                 callback: function (v) { return venc(this.getLabelForValue(v)); }, font: { size: 10 } } },
-            y: { grid: { color: "#EFECE4" }, ticks: { color: "#8B8375", font: { size: 10 },
-                 callback: v => "US$" + compacto.format(v) } } },
-        },
-      });
+      const escalas = {
+        x: { grid: { display: false }, ticks: { color: "#8B8375", maxTicksLimit: 7, maxRotation: 0,
+             callback: function (v) { return venc(this.getLabelForValue(v)); }, font: { size: 10 } } },
+        y: { position: "right", beginAtZero: false, grace: "4%", grid: { color: "#EFECE4" }, ticks: { color: "#8B8375", font: { size: 10 },
+             callback: v => "US$" + compacto.format(v) } },
+      };
+      const extra = [];
+      if (hayVol) {
+        // el volumen va en su propio eje (oculto), aplastado al cuarto inferior
+        escalas.y2 = { display: false, min: 0, max: Math.max(...vol) * 4 };
+        extra.push({ type: "bar", yAxisID: "y2", order: 3, data: vol, grouped: false, barPercentage: 0.8, categoryPercentage: 1,
+          backgroundColor: datos.map(p => sube(p) ? "rgba(31,122,77,.16)" : "rgba(178,58,58,.16)") });
+      }
+      const base = { responsive: true, maintainAspectRatio: false, animation: false,
+        interaction: { mode: "index", intersect: false }, scales: escalas };
+      if (tipo === "velas") {
+        const colores = datos.map(p => sube(p) ? "#1F7A4D" : "#B23A3A");
+        chart = new Chart(canvas, { type: "bar",
+          data: { labels, datasets: [
+            { data: datos.map(p => { const q = ohlc(p); return [q[4], q[3]]; }), backgroundColor: colores, grouped: false, order: 2, barPercentage: 0.16, categoryPercentage: 1, borderWidth: 0 },
+            { data: datos.map(p => { const q = ohlc(p); return [Math.min(q[1], q[2]), Math.max(q[1], q[2])]; }), backgroundColor: colores, grouped: false, order: 1, barPercentage: 0.72, categoryPercentage: 1, minBarLength: 1, borderWidth: 0 },
+            ...extra ] },
+          options: { ...base, plugins: { legend: { display: false }, tooltip: { filter: it => it.datasetIndex === 1, callbacks: {
+            title: items => venc(items[0].label),
+            label: ctx => { const p = datos[ctx.dataIndex], q = ohlc(p);
+              return [`Apertura US$${nf.format(q[2])}`, `Máximo US$${nf.format(q[3])}`, `Mínimo US$${nf.format(q[4])}`, `Cierre US$${nf.format(q[1])}`]
+                .concat(p[5] ? [`Volumen ${compacto.format(p[5])}`] : []); } } } } } });
+      } else {
+        chart = new Chart(canvas, { type: "line",
+          data: { labels, datasets: [{ data: datos.map(p => p[1]), borderColor: "#B08A3E", borderWidth: 1.8, pointRadius: 0, pointHitRadius: 8,
+            fill: true, backgroundColor: "rgba(176,138,62,.07)", tension: 0.15, order: 1 }, ...extra] },
+          options: { ...base, plugins: { legend: { display: false }, tooltip: { filter: it => it.datasetIndex === 0, callbacks: {
+            title: items => venc(items[0].label), label: ctx => "US$" + nf.format(ctx.raw) } } } } });
+      }
     };
-    dibujar(252);
+    dibujar();
     document.querySelectorAll("#rangos button").forEach(b => b.addEventListener("click", () => {
       document.querySelectorAll("#rangos button").forEach(x => x.classList.toggle("on", x === b));
-      dibujar(Number(b.dataset.d));
+      dias = Number(b.dataset.d); dibujar();
+    }));
+    document.querySelectorAll("#tipo button").forEach(b => b.addEventListener("click", () => {
+      document.querySelectorAll("#tipo button").forEach(x => x.classList.toggle("on", x === b));
+      tipo = b.dataset.t; dibujar();
     }));
   } else if (canvas) {
     canvas.parentElement.innerHTML = '<div class="vacio">El histórico de precios se está generando — volvé en unos minutos.</div>';
   }
 
-  // ── tu posición (cliente logueado con tenencia en este activo) ──
+  // ── sentimiento de la comunidad: un voto por persona y activo ──
+  // Se guarda en sentimiento/{ticker}/votos/{uid} (reglas: lee cualquier
+  // usuario logueado, escribe solo el dueño con email verificado).
+  const pintarSentimiento = async user => {
+    const box = document.getElementById("sentimiento");
+    if (!box) return;
+    const cab = `<div class="pl">Sentimiento de la comunidad</div>`;
+    if (!user) {
+      box.innerHTML = `<div class="pr" style="grid-template-columns:1fr;border-bottom:none"><div>${cab}<div class="pv">¿Alcista o bajista?</div>
+        <div class="ps"><a href="index.html?login=1">Ingresá</a> para votar y ver cómo lo ve la comunidad Valtia.</div></div></div>`;
+      return;
+    }
+    // se cuenta con agregaciones (1 lectura cada 1.000 votos) y se lee solo el voto propio
+    const col = collection(db, "sentimiento", t, "votos");
+    let mio = null, alc = 0, baj = 0;
+    try {
+      const [m, a, b] = await Promise.all([
+        getDoc(doc(col, user.uid)),
+        getCountFromServer(query(col, where("voto", "==", "alcista"))),
+        getCountFromServer(query(col, where("voto", "==", "bajista"))),
+      ]);
+      mio = m.exists() ? m.data() : null;
+      alc = a.data().count; baj = b.data().count;
+    } catch (e) {
+      box.innerHTML = `<div class="pr" style="grid-template-columns:1fr;border-bottom:none"><div>${cab}<div class="ps">No se pudo leer la votación ahora.</div></div></div>`;
+      return;
+    }
+    const MIN = 10, tot = alc + baj, pa = tot ? Math.round(alc / tot * 100) : 50;
+    const cuando = mio && mio.fecha && mio.fecha.toMillis ? mio.fecha.toMillis() : 0;
+    const espera = cuando ? Math.max(0, Math.ceil((cuando + 3600e3 - Date.now()) / 60000)) : 0;
+    const votoDe = v => mio && mio.voto === v ? " on" : "";
+    box.innerHTML = `<div class="pr" style="grid-template-columns:1fr;border-bottom:none"><div>${cab}
+      <div class="pv">${tot >= MIN ? `${pa}% alcista <small style="font:400 11px 'IBM Plex Sans',sans-serif;color:var(--mut)">· ${tot} votos</small>` : tot ? `${tot} ${tot === 1 ? "voto" : "votos"} por ahora` : "Todavía nadie votó"}</div>
+      ${tot >= MIN ? `<div class="sent-bar"><i style="width:${pa}%;background:var(--up)"></i><i style="width:${100 - pa}%;background:var(--dn)"></i></div>` : ""}
+      <div class="sent"><button class="alc${votoDe("alcista")}" data-voto="alcista">▲ Alcista${tot >= MIN ? " · " + alc : ""}</button><button class="baj${votoDe("bajista")}" data-voto="bajista">▼ Bajista${tot >= MIN ? " · " + baj : ""}</button></div>
+      <div class="ps" data-sent-msg>${mio ? `Votaste ${mio.voto === "alcista" ? "alcista" : "bajista"}.${espera ? ` Podés cambiarlo en ${espera} min.` : " Podés cambiarlo una vez por hora."}` : "¿Cómo lo ves para las próximas semanas? Un voto por persona."}${tot && tot < MIN ? ` El porcentaje se muestra desde ${MIN} votos.` : ""} Es la opinión de usuarios registrados, no un dato de mercado.</div></div></div>`;
+    box.querySelectorAll("[data-voto]").forEach(btn => btn.onclick = async () => {
+      const msg = box.querySelector("[data-sent-msg]");
+      if (mio && mio.voto === btn.dataset.voto) return;
+      if (!user.emailVerified) { msg.innerHTML = `<span class="dn">Verificá tu email para votar.</span>`; return; }
+      if (espera) { msg.innerHTML = `<span class="dn">Votaste hace poco: podés cambiar el voto en ${espera} min.</span>`; return; }
+      box.querySelectorAll("[data-voto]").forEach(x => x.disabled = true);
+      try {
+        await setDoc(doc(col, user.uid), { voto: btn.dataset.voto, fecha: serverTimestamp() });
+        await pintarSentimiento(user);
+      } catch (e) {
+        box.querySelectorAll("[data-voto]").forEach(x => x.disabled = false);
+        if (msg && msg.isConnected) msg.innerHTML = `<span class="dn">No se pudo guardar el voto. Probá de nuevo en un rato.</span>`;
+      }
+    });
+  };
+
+  // ── sesión: destape PRO, sentimiento y tu posición ──
   onAuthStateChanged(getAuth(app), async user => {
+    pintarSentimiento(user);
     // destape PRO: los candados de esta ficha se crean DESPUÉS de que
     // nav-auth pinta (los datos llegan async), así que acá se re-aplica
     if (user) {
@@ -712,6 +1017,15 @@ try {
       for (let i = 0; i < 20 && !window.valtiaEsPro; i++) await esperar(150);
       try {
         if (window.valtiaEsPro && await window.valtiaEsPro(user)) {
+          // el primer getDoc de radarPro pudo correr antes de que Firestore
+          // conociera la sesión: se vuelve a pedir y se repintan las partes PRO
+          if (!conRatios) {
+            try {
+              const s = await getDoc(doc(db, "radarPro", "latest"));
+              if (s.exists()) { radarProDoc = JSON.parse(s.data().json || "{}"); armarRadar(); }
+            } catch (e) {}
+            if (conRatios) repintarPro();
+          }
           document.querySelectorAll(".pro-overlay").forEach(o => o.style.display = "none");
           document.querySelectorAll(".preview-blur").forEach(b => {
             b.style.filter = "none"; b.style.pointerEvents = ""; b.style.userSelect = "";

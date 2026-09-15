@@ -288,6 +288,29 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ── SENTIMIENTO DE LA COMUNIDAD (ficha de activo: alcista / bajista) ──
+    // Un voto por CUENTA y activo: el id del doc es el uid. El email verificado
+    // no impide tener varias cuentas: por eso la ficha no muestra el
+    // porcentaje hasta los 10 votos. Los logueados
+    // leen (la ficha cuenta con agregaciones y lee el voto propio). Escribe
+    // solo el dueño con email verificado, con la hora del servidor, y el
+    // voto se puede cambiar una vez por hora. No se borra: borrar y volver a
+    // crear saltearía la espera.
+    match /sentimiento/{ticker}/votos/{uid} {
+      allow read: if request.auth != null;
+      allow create: if esVerificado() && request.auth.uid == uid
+        && ticker.matches('^[A-Z0-9.-]{1,12}$')
+        && request.resource.data.keys().hasOnly(['voto', 'fecha'])
+        && request.resource.data.voto in ['alcista', 'bajista']
+        && request.resource.data.fecha == request.time;
+      allow update: if esVerificado() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['voto', 'fecha'])
+        && request.resource.data.voto in ['alcista', 'bajista']
+        && request.resource.data.fecha == request.time
+        && request.time > resource.data.fecha + duration.value(1, 'h');
+      allow delete: if false;
+    }
+
     // ── NOTICIAS PÚBLICAS (sección Noticias del sitio) ──
     // Solo las publicadas son visibles (query con filtro estado). El admin
     // gestiona borradores vía Admin SDK / consola. Cualquiera puede sumar

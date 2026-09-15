@@ -7,7 +7,7 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { calcular, agruparPorBroker, normalizarTicker, convertir } from './mi-cartera.js?v=23';
+import { calcular, agruparPorBroker, normalizarTicker, convertir } from './mi-cartera.js?v=24';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=5';
 import { EMPRESAS } from './empresas.js?v=3';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
