@@ -126,6 +126,14 @@ service cloud.firestore {
           && request.resource.data.estado == 'pendiente'
           && request.resource.data.pos is map);
       }
+
+      // ── EVOLUCIÓN (foto diaria de la cartera: curva contra el S&P 500) ──
+      // La escribe el pipeline (Admin SDK) al cierre de cada rueda con las
+      // cantidades y precios del día. La lee el dueño; nadie la escribe desde la web.
+      match /evolucion/{fecha} {
+        allow read: if esDuenio();
+        allow write: if false;
+      }
     }
 
     // ── PRECIOS Y FUNDAMENTALS DE LOS TICKERS DE CLIENTES ──

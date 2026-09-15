@@ -5,10 +5,11 @@
 //
 // Diseño separado a propósito: renderMiCartera() es puro (datos -> HTML) para
 // poder verificarlo con datos de prueba sin tocar Firestore.
-import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, runTransaction }
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, runTransaction, query, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { base, linkDe, esRentaFija, parBono, sectorDe, mercadoDe, desglose } from './activos.js?v=6';
+import { simular, serieReal, combinar, recortar, resumen, serieDe } from './evolucion.js?v=1';
 import { validarVenta, armarVenta, planDeshacer, resultadoVenta, resumenVentas, tenencia, monedaFactor,
          cantidadAjuste, validarAjuste, ventaDesdeAjuste, ajusteDesdeVenta, restoDeAjuste }
   from './ventas.js?v=5';
@@ -140,6 +141,17 @@ const STYLE = `
 .mc-brk-in{font:400 12px 'Jost',sans-serif;padding:3px 6px;background:var(--bg3);border:1px solid var(--gold);
   border-radius:4px;color:var(--text);width:120px;outline:none}
 .mc-brks{display:flex;gap:8px;flex-wrap:wrap;margin:-8px 0 18px}
+.mc-evo{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin:0 0 22px}
+.mc-evo-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.mc-evo-t{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.mc-evo-r{font-size:13.5px;margin-top:6px;line-height:1.55}
+.mc-evo-rg{display:flex;gap:4px}
+.mc-evo-rg button{font-size:11px;font-weight:600;padding:4px 10px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:6px;cursor:pointer}
+.mc-evo-rg button.on{background:var(--gold);border-color:var(--gold);color:#0E1830}
+.mc-evo-box{position:relative;height:240px}
+.mc-evo-ley{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:8px}
+.mc-evo-ley i{display:inline-block;width:18px;height:0;border-top:2px solid;vertical-align:middle;margin-right:5px}
+.mc-evo-nota{font-size:11.5px;color:var(--muted);line-height:1.6;margin-top:8px}
 .mc-brks .b{font-size:12px;color:var(--sub);border:1px solid var(--border);border-radius:999px;padding:4px 11px}
 .mc-brks .b b{color:var(--text)}
 `;
@@ -657,6 +669,8 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
            Al día siguiente vas a ver el valor actualizado, tu resultado y la lectura de Valtia sobre cada activo.</p>
       </div>`}${seccionVentas(opts.ventas || [], cur)}</div>`;
     reponerEscrito(el, escrito);
+    // sin posiciones no hay curva: el gráfico anterior no puede quedar vivo
+    if (_evoChart) { try { _evoChart.destroy(); } catch (e) {} _evoChart = null; }
     return;
   }
 
@@ -721,6 +735,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
       <div class="mc-k"><div class="l">Resultado</div><div class="v ${r.plTot >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(r.plTot, cur)}</div><div class="s">ganancia / pérdida no realizada</div></div>
       <div class="mc-k"><div class="l">Rendimiento</div><div class="v ${(r.plTotPct || 0) >= 0 ? "mc-pos" : "mc-neg"}">${r.plTotPct == null ? "—" : pct(r.plTotPct)}</div><div class="s">sobre lo invertido</div></div>
     </div>
+    <div class="mc-evo" id="mc-evo"></div>
     ${reparto}
     ${form}
     <div class="mc-tblwrap"><table class="mc-tbl">
@@ -743,12 +758,209 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
       Esta información es de carácter general y no constituye asesoramiento financiero personalizado.</div>
   </div>`;
   reponerEscrito(el, escrito);
+  pintarEvolucion(el);
 
   el.querySelectorAll("th[data-col]").forEach(h => h.onclick = () => {
     const c = h.dataset.col;
     _orden = { col: c, desc: _orden.col === c ? !_orden.desc : true };
     renderMiCartera(el, posiciones, precios, opts);
     if (opts.onRerender) opts.onRerender();
+  });
+}
+
+/* ── evolución contra el S&P 500 (las cuentas viven en evolucion.js) ── */
+const _evo = { email: null, cargado: false, cargando: null, error: false, intento: 0, fotos: [], series: {}, spy: [], ccl: [],
+               pedidos: new Set(), rango: 91 };
+let _evoChart = null, _evoTema = null;
+const RANGOS_EVO = [[30, "1M"], [91, "3M"], [182, "6M"], [365, "1A"]];
+const diaAR = (d = new Date()) => new Date(d.getTime() - 3 * 3600e3).toISOString().slice(0, 10);
+const fechaCorta = f => (f ? `${String(f).slice(8, 10)}/${String(f).slice(5, 7)}` : "");
+// en rangos que cruzan de año, "del 15/09 al 15/09" no dice nada: se agrega el año
+const conAnio = (a, b) => String(a).slice(0, 4) === String(b).slice(0, 4)
+  ? [fechaCorta(a), fechaCorta(b)] : [`${fechaCorta(a)}/${String(a).slice(2, 4)}`, `${fechaCorta(b)}/${String(b).slice(2, 4)}`];
+
+/* fotos del último año (con margen para el día anterior al primer punto),
+   SPY, el CCL histórico y la serie de cada ticker. Un error de red no marca
+   la carga como hecha: se reintenta en un repintado siguiente. */
+async function cargarEvolucion() {
+  if (!_user || !_pos.length) return;
+  if (_evo.cargando) return _evo.cargando;
+  _evo.intento = Date.now();
+  const email = _user.email;
+  const carga = (async () => {
+    const db = getFirestore(getApp());
+    // null: el doc no existe · undefined: falló la lectura
+    const leerSerie = async id => {
+      try {
+        const snap = await getDoc(doc(db, "historialInformes", id));
+        return snap.exists() ? JSON.parse(snap.data().json || "[]") : null;
+      } catch (e) { return undefined; }
+    };
+    let fallo = false;
+    const nuevo = { series: {} };
+    const tareas = [];
+    const completa = !_evo.cargado;
+    if (completa) {
+      tareas.push((async () => {
+        try {
+          const desde = diaAR(new Date(Date.now() - 400 * 864e5));
+          const snap = await getDocs(query(collection(db, "inversores", email, "evolucion"), where("fecha", ">=", desde)));
+          nuevo.fotos = snap.docs.map(d => {
+            const x = d.data();
+            let pos = [];
+            try { pos = JSON.parse(x.json || "[]"); } catch (e) {}
+            return { fecha: x.fecha || d.id, ccl: x.ccl, spy: x.spy, pos };
+          });
+        } catch (e) { fallo = true; }
+      })());
+      tareas.push(leerSerie("SPY").then(v => { if (v === undefined) fallo = true; else nuevo.spy = v || []; }));
+      tareas.push(leerSerie("_ccl").then(v => { if (v === undefined) fallo = true; else nuevo.ccl = v || []; }));
+    }
+    const pedidos = _evo.pedidos;
+    [...new Set(_pos.map(p => serieDe(p.ticker)))].filter(t => !pedidos.has(t)).forEach(t => {
+      pedidos.add(t);
+      tareas.push(leerSerie(t).then(v => {
+        if (v === undefined) pedidos.delete(t);
+        else if (v) nuevo.series[t] = v;
+      }));
+    });
+    await Promise.all(tareas);
+    // si mientras tanto cambió la sesión, lo leído es de la cuenta anterior: afuera
+    if (!_user || _user.email !== email || _evo.email !== email) return;
+    Object.assign(_evo.series, nuevo.series);
+    if (completa) {
+      if (!fallo) { _evo.fotos = nuevo.fotos || []; _evo.spy = nuevo.spy || []; _evo.ccl = nuevo.ccl || []; }
+      _evo.cargado = !fallo;
+      _evo.error = fallo;
+    }
+  })();
+  _evo.cargando = carga;
+  try { await carga; } finally { if (_evo.cargando === carga) _evo.cargando = null; }
+}
+
+/* colores de ejes del tema activo (oscuro por defecto, claro a elección) */
+function temaEvo() {
+  const cs = getComputedStyle(document.documentElement);
+  return { txt: cs.getPropertyValue("--muted").trim() || "#8B8375", grid: cs.getPropertyValue("--border").trim() || "rgba(128,128,128,.2)" };
+}
+function vigilarTemaEvo() {
+  if (_evoTema || typeof MutationObserver === "undefined") return;
+  _evoTema = new MutationObserver(() => { if (_el && _evoChart) pintarEvolucion(_el); });
+  _evoTema.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+}
+
+const diasHabiles = (a, b) => {
+  let n = 0;
+  for (let d = new Date(a + "T12:00:00Z"); d < new Date(b + "T12:00:00Z"); d = new Date(d.getTime() + 864e5)) {
+    const w = d.getUTCDay();
+    if (w > 0 && w < 6) n++;
+  }
+  return n;
+};
+
+function pintarEvolucion(el) {
+  if (_evoChart) { try { _evoChart.destroy(); } catch (e) {} _evoChart = null; }
+  const box = el && el.querySelector("#mc-evo");
+  if (!box) return;
+  vigilarTemaEvo();
+  const titulo = `<div class="mc-evo-t">Tu cartera contra el S&amp;P 500 · en dólares CCL</div>`;
+  // reintento con freno: como mucho una carga por minuto
+  const reintentar = () => {
+    if (_evo.cargando || Date.now() - _evo.intento < 60000) return;
+    cargarEvolucion().then(() => { if (_el) pintarEvolucion(_el); }).catch(() => {});
+  };
+  if (!_evo.cargado) {
+    box.innerHTML = titulo + `<div class="mc-evo-nota">${_evo.error
+      ? "No pudimos traer la historia de precios; lo volvemos a intentar en unos minutos."
+      : "Cargando la historia de precios…"}</div>`;
+    reintentar();
+    return;
+  }
+  // una posición nueva sin su serie todavía: se pide y se vuelve a pintar
+  if (_pos.some(p => !_evo.pedidos.has(serieDe(p.ticker)))) reintentar();
+
+  const hoy = diaAR(), desde = diaAR(new Date(Date.now() - _evo.rango * 864e5));
+  const sim = simular({ posiciones: _pos, precios: _precios, series: _evo.series, ccl: _evo.ccl, spy: _evo.spy,
+                        desde, hasta: hoy, cclHoy: _fx.ccl });
+  const real = serieReal(_evo.fotos, { cclSerie: _evo.ccl });
+  // con menos del 30% del valor de hoy cubierto (o sin poder saberlo) no se muestra la simulación
+  const simUsable = sim.cobertura != null && sim.cobertura >= 0.3 ? sim.puntos : [];
+  const pts = recortar(combinar(simUsable, real), desde);
+  const res = resumen(pts);
+  const haySim = pts.some(x => x.tipo === "sim"), hayReal = pts.some(x => x.tipo === "real");
+  const iReal = pts.findIndex(x => x.tipo === "real");
+  const ultFoto = _evo.fotos.reduce((m, f) => (f.fecha > m ? f.fecha : m), "");
+  const ultSpy = _evo.spy.length ? String(_evo.spy[_evo.spy.length - 1][0]) : hoy;
+  const fotosViejas = ultFoto && diasHabiles(ultFoto, ultSpy) > 5;
+
+  const iUltReal = pts.map(x => x.tipo).lastIndexOf("real");
+  const simDespues = hayReal && iUltReal < pts.length - 1;
+  // el rótulo dice qué parte es simulación: un % simulado no se pinta de verde
+  const rotulo = !res ? "" : haySim && !hayReal ? "Tu cartera de hoy, simulada"
+    : simDespues ? `Tu cartera (real del ${fechaCorta(pts[iReal].fecha)} al ${fechaCorta(pts[iUltReal].fecha)}, simulada el resto)`
+    : haySim ? `Tu cartera (simulada hasta el ${fechaCorta(pts[Math.max(0, iReal - 1)].fecha)}, real desde ahí)` : "Tu cartera";
+  const colorC = res && !haySim ? (res.cartera >= 0 ? "mc-pos" : "mc-neg") : "";
+  const botones = RANGOS_EVO.map(([d, l]) => `<button data-evo="${d}" class="${_evo.rango === d ? "on" : ""}">${l}</button>`).join("");
+  const cab = `<div class="mc-evo-h"><div>${titulo}
+      ${res ? `<div class="mc-evo-r">${rotulo}: <b class="${colorC}">${pct(res.cartera)}</b> · S&amp;P 500: <b>${pct(res.spy)}</b>
+        <span style="color:var(--muted)">· del ${conAnio(res.desde, res.hasta)[0]} al ${conAnio(res.desde, res.hasta)[1]}</span></div>` : ""}</div>
+    <div class="mc-evo-rg">${botones}</div></div>`;
+
+  const notas = [];
+  if (haySim) notas.push(`La línea punteada es una <b>simulación</b>: cómo le habría ido a tu cartera de hoy con el precio de cada día y el dólar CCL de esa fecha. No es lo que ganaste, porque no sabemos cuándo compraste cada cosa.`);
+  if (hayReal) notas.push(`La línea llena es la <b>variación real</b> de tu cartera, con una foto al cierre de cada rueda: lo que agregás o vendés no cuenta como ganancia ni pérdida, y los cupones y amortizaciones de bonos suman el día que se pagan.`);
+  else if (!_evo.fotos.length) notas.push(`Después del cierre de cada rueda guardamos una foto de tu cartera; con dos fotos vas a ver acá tu variación real.`);
+  if (fotosViejas) notas.push(`La última foto de tu cartera es del ${fechaCorta(ultFoto)}: desde ahí no tenemos datos para seguir la curva real.`);
+  const excl = sim.excluidas.map(e => base(e.ticker));
+  if (haySim && excl.length) notas.push(`La simulación cubre el ${Math.round(sim.cobertura * 100)}% del valor de hoy; quedan afuera ${esc(excl.slice(0, 8).join(", "))}${excl.length > 8 ? " y otras" : ""}, sin historia de precios en el período.`);
+  if (sim.puntos.length && sim.cobertura == null) notas.push(`No mostramos la simulación: sin el dólar CCL o sin precios de hoy no podemos saber qué parte de tu cartera cubre.`);
+  else if (sim.puntos.length && !simUsable.length) notas.push(`No mostramos la simulación: las posiciones con historia de precios son menos del 30% del valor de tu cartera.`);
+  notas.push(`Variación de precio en dólares CCL, base 100 al inicio del período: no incluye dividendos, ni en tu cartera ni en el S&amp;P 500. No es asesoramiento financiero.`);
+
+  const enganchar = () => box.querySelectorAll("[data-evo]").forEach(b => b.onclick = () => {
+    _evo.rango = Number(b.dataset.evo);
+    pintarEvolucion(_el);
+  });
+  if (pts.length < 2) {
+    box.innerHTML = cab + `<div class="mc-evo-nota">${notas.join(" ")}</div>`;
+    enganchar();
+    return;
+  }
+  box.innerHTML = cab + `<div class="mc-evo-box"><canvas></canvas></div>
+    <div class="mc-evo-ley">${haySim ? `<span><i style="border-top-style:dashed;border-color:#B08A3E"></i>Tu cartera (simulación)</span>` : ""}
+      ${hayReal ? `<span><i style="border-color:#B08A3E"></i>Tu cartera (real)</span>` : ""}<span><i style="border-color:#8A9BAD"></i>S&amp;P 500</span></div>
+    <div class="mc-evo-nota">${notas.join(" ")}</div>`;
+  enganchar();
+  if (typeof Chart === "undefined") return;
+  const simData = pts.map(x => (x.tipo === "sim" ? x.cartera : null));
+  const realData = pts.map(x => (x.tipo === "real" ? x.cartera : null));
+  if (iReal > 0) realData[iReal - 1] = pts[iReal - 1].cartera;   // la línea real sale del último punto simulado
+  if (simDespues) simData[iUltReal] = pts[iUltReal].cartera;       // y la simulación sigue desde la última foto
+  const tema = temaEvo();
+  _evoChart = new Chart(box.querySelector("canvas"), {
+    type: "line",
+    data: { labels: pts.map(x => x.fecha), datasets: [
+      { label: "Tu cartera (simulación)", data: simData, borderColor: "#B08A3E", borderDash: [5, 4], borderWidth: 2, pointRadius: 0, tension: 0.2 },
+      { label: "Tu cartera (real)", data: realData, borderColor: "#B08A3E", borderWidth: 2.5,
+        pointRadius: realData.filter(v => v != null).length < 25 ? 2 : 0, tension: 0.2 },
+      { label: "S&P 500", data: pts.map(x => x.spy), borderColor: "#8A9BAD", borderWidth: 1.8, pointRadius: 0, tension: 0.2 },
+    ] },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: { legend: { display: false }, tooltip: {
+        // el punto de empalme es simulado aunque la línea real salga de ahí
+        filter: it => it.raw != null && !(it.datasetIndex === 1 && pts[it.dataIndex].tipo !== "real")
+          && !(it.datasetIndex === 0 && pts[it.dataIndex].tipo !== "sim"),
+        callbacks: {
+          title: it => (it[0] ? String(it[0].label).split("-").reverse().join("/") : ""),
+          label: c => `${c.dataset.label}: ${pct(c.raw - 100)}` } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: tema.txt, maxTicksLimit: 6, maxRotation: 0,
+             callback: function (v) { return fechaCorta(this.getLabelForValue(v)); } } },
+        y: { grid: { color: tema.grid }, ticks: { color: tema.txt, maxTicksLimit: 5 } },
+      },
+    },
   });
 }
 
@@ -1333,6 +1545,12 @@ async function quitar(id) {
 export async function initMiCartera(user, el) {
   if (!user || !el) return;
   _user = user; _el = el;
+  // otra sesión en la misma página (logout y login sin recargar): las fotos
+  // son privadas y no pueden quedar en memoria para la cuenta siguiente
+  if (_evo.email !== user.email) {
+    if (_evoChart) { try { _evoChart.destroy(); } catch (e) {} _evoChart = null; }
+    Object.assign(_evo, { email: user.email, cargado: false, cargando: null, error: false, intento: 0, fotos: [] });
+  }
   asegurarEstilo();
   if (!user.emailVerified) {
     // sin verificar, las reglas de Firestore bloquean la cartera del usuario
@@ -1354,6 +1572,8 @@ export async function initMiCartera(user, el) {
     await Promise.all([cargarRentaFija(), cargarDesglose()]);
     pintar();
     prellenarDesdeUrl();
+    // la historia de precios y las fotos se cargan aparte: no demoran la tabla
+    cargarEvolucion().then(() => pintarEvolucion(_el)).catch(() => {});
     // el sync intradía reescribe los precios cada ~15 min: se releen solos
     // (sin pisar lo que el usuario esté escribiendo ni si la pestaña no se ve)
     if (!window.__mcTimer) {
