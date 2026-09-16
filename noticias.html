@@ -184,7 +184,12 @@ let currentCat = 'todos';
 let gridCount = 6;
 
 const esc = s => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-const bg = (a,i) => a.imagen ? `background-image:url('${esc(a.imagen)}')` : `background:${GRADS[i % GRADS.length]}`;
+// portada de Valtia de respaldo, por categoría, detrás de la foto del medio
+const PORTADA_CAT = { local: "local", wall: "wall", cripto: "cripto", bonos: "bonos" };
+const portadaDe = cat => `img/noticias/${PORTADA_CAT[cat] || "local"}-1.svg`;
+const bg = (a,i) => a.imagen
+  ? `background-image:url('${esc(a.imagen)}'),url('${portadaDe((a.cat || [])[0])}')`
+  : `background:${GRADS[i % GRADS.length]}`;
 const MESES = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
 function fShort(s){ const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(s||"")); return m?`${m[3]} ${MESES[+m[2]-1]} ${m[1]}`:""; }
 

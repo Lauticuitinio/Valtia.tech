@@ -883,7 +883,7 @@ try {
     .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 5) : [];
   lista.innerHTML = notas.length ? notas.map(nn => `
     <a href="nota.html?n=${encodeURIComponent(nn.id)}">
-      <div class="im" style="${nn.imagen ? `background-image:url('${esc(nn.imagen)}')` : ""}"></div>
+      <div class="im" style="${nn.imagen ? `background-image:url('${esc(nn.imagen)}'),url('img/noticias/${(nn.categorias || [])[0] === "wall" || (nn.categorias || [])[0] === "cripto" || (nn.categorias || [])[0] === "bonos" ? nn.categorias[0] : "local"}-1.svg')` : ""}"></div>
       <div><div class="tt">${esc(nn.titulo)}</div>
       <div class="f">${venc(String(nn.fecha))}</div></div>
     </a>`).join("")
