@@ -134,6 +134,41 @@ service cloud.firestore {
         allow read: if esDuenio();
         allow write: if false;
       }
+
+      // ── ALERTAS POR MAIL (alertas_cartera.py) ──
+      // "config" la escribe el dueño desde el panel (apagada por defecto);
+      // "estado" (qué ya se avisó) lo escribe solo el pipeline. Los envíos
+      // quedan fechados en alertasEnvios, que tampoco se escribe desde la web.
+      match /alertas/{docId} {
+        allow read: if esDuenio();
+        allow delete: if esDuenio() && docId == 'config';
+        allow create, update: if esDuenio() && docId == 'config'
+          && request.resource.data.keys().hasOnly(['activo', 'frecuencia', 'tipos', 'umbralVar', 'actualizado'])
+          && request.resource.data.activo is bool
+          && request.resource.data.frecuencia in ['diaria', 'semanal']
+          && request.resource.data.tipos is map
+          && request.resource.data.tipos.keys().hasOnly(['zona', 'estirada', 'resultados', 'vencimientos', 'variacion'])
+          && request.resource.data.tipos.values().hasOnly([true, false])
+          && request.resource.data.umbralVar in [3, 5, 8]
+          && request.resource.data.actualizado == request.time;
+      }
+      match /alertasEnvios/{fecha} {
+        allow read: if esDuenio();
+        allow write: if false;
+      }
+    }
+
+    // ── BAJA DE LAS ALERTAS EN UN CLIC ──
+    // Un doc por usuario con id aleatorio que solo viaja en su mail:
+    // baja-alertas.html (sin login) le pone la hora de la baja, y la próxima
+    // corrida apaga sus alertas salvo que las haya reactivado después desde el
+    // panel. Solo existe si lo creó el pipeline; sin lectura no se pueden
+    // enumerar, y el doc no tiene el email.
+    match /alertasBaja/{token} {
+      allow update: if resource != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['baja'])
+        && request.resource.data.baja == request.time;
+      allow read, create, delete: if isAdmin();
     }
 
     // ── PRECIOS Y FUNDAMENTALS DE LOS TICKERS DE CLIENTES ──

@@ -829,7 +829,7 @@ loadRadar();
     c(venc(b.vence)), c(b.dias != null ? b.dias : "—"), c(num(b.p)), c(pct(b.v)),
     c(b.tem != null ? `<span class="bp-tir">${b.tem.toFixed(2).replace(".", ",")}%</span>` : "—"),
     c(b.tna != null ? n1.format(b.tna) + "%" : "—"),
-    c(b.tirea != null ? `<span class="bp-tir">${n1.format(b.tirea)}%</span>` : "—")])).join("");
+    c(b.tirea != null ? `<span class="bp-tir">${n1.format(b.tirea)}%</span>${b.vpv_estimado ? '<span title="Sobre un pago final estimado: todavía sin dato oficial">*</span>' : ""}` : "—")])).join("");
   simple("#bp-cer", data.cer, false);
   simple("#bp-dl", data.dolar_linked, false);
 

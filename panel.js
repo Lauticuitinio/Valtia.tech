@@ -4,11 +4,11 @@
 // → Mis empresas → Disciplina → Herramientas y datos. Fondo Valtia aparece
 // solo para clientes del fondo y Gestión solo para el admin (fondo-live.js).
 // Mi cartera vive en mi-cartera.js; acá se reutilizan su cálculo y sus tipos.
-import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where }
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { calcular, agruparPorBroker, normalizarTicker, convertir } from './mi-cartera.js?v=25';
-import { resumenVentas, cantidadAjuste } from './ventas.js?v=5';
+import { calcular, agruparPorBroker, normalizarTicker, convertir } from './mi-cartera.js?v=29';
+import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
   from './activos.js?v=6';
@@ -276,7 +276,8 @@ const ajustes = () => cached('aj', async () => {
 async function carteraCalc() {
   const c = (await cartera()) || { pos: [], precios: {} };
   const f = (await fx()) || { ccl: null, mep: null };
-  return { ...c, fx: f, cur: curVista(), r: calcular(c.pos, c.precios, curVista(), f) };
+  // los bonos del panel van explícitos: sin ellos AL30 se leería en dólares
+  return { ...c, fx: f, cur: curVista(), r: calcular(c.pos, c.precios, curVista(), f, (await bonosSet()) || new Set()) };
 }
 const disciplina = () => cached('disc', async () => {
   if (!S.verificado) return { config: null, log: [] };
@@ -629,7 +630,8 @@ async function renderInicio() {
   if (!tiene && (vs || []).length) h += tarjetaRealizado(cc, vs);
   h += `<div class="vp-cols">
       <div><div class="vp-sec">Qu\u00e9 cambi\u00f3${tiene ? ' en tu cartera' : ''}<small id="vp-nov"></small></div>
-        <div id="vp-cambios"><p class="vp-cargando">Buscando novedades\u2026</p></div></div>
+        <div id="vp-cambios"><p class="vp-cargando">Buscando novedades\u2026</p></div>
+        <div id="vp-alertas"></div></div>
       <div><div class="vp-sec">Qu\u00e9 comprar hoy<small><a href="#panel/comprar" data-go="comprar" style="color:var(--gold)">lista completa \u2192</a></small></div>
         <div id="vp-top3"><p class="vp-cargando">Cargando el radar\u2026</p></div>
         <div class="vp-sec">Carteras Valtia<small><a href="#panel/carteras" data-go="carteras" style="color:var(--gold)">ver todas \u2192</a></small></div>
@@ -637,6 +639,77 @@ async function renderInicio() {
     </div>`;
   el.innerHTML = h;
   cambios(cc, disc); top3(cc); carterasMini(cc); contadores(cc, disc, bset);
+  if (tiene) alertasMail();
+}
+
+/* ── alertas por mail: la config la guarda el usuario; los mails los manda
+   alertas_cartera.py (máximo uno por día, apagadas por defecto). Los campos
+   tienen que ser EXACTAMENTE los que aceptan las reglas (alertas/config). ── */
+const TIPOS_ALERTA = [['zona', 'Entrada en zona de valor del radar'], ['estirada', 'Pasa a «Estirada»'],
+  ['resultados', 'Resultados en los próximos días'], ['vencimientos', 'Vencimientos de bonos y letras'],
+  ['variacion', 'Movimientos fuertes de precio']];
+async function alertasMail() {
+  const box = $('vp-alertas');
+  if (!box) return;
+  if (!S.verificado) {
+    box.innerHTML = `<p class="vp-nota">Para recibir estas novedades por mail, primero verificá tu email.</p>`;
+    return;
+  }
+  let cfg = null, ultimo = '';
+  try {
+    const sn = await getDoc(doc(db(), 'inversores', S.email, 'alertas', 'config'));
+    if (sn.exists()) cfg = sn.data();
+  } catch (e) {
+    // sin leer la config no se ofrece guardar: se pisaría con valores por defecto
+    box.innerHTML = `<p class="vp-nota">No pudimos leer tu configuración de alertas por mail. Recargá la página para verla o cambiarla.</p>`;
+    return;
+  }
+  try {
+    const env = await getDocs(collection(db(), 'inversores', S.email, 'alertasEnvios'));
+    const ok = env.docs.filter(d => d.data().estado === 'enviado').map(d => d.id).sort();
+    if (ok.length) ultimo = ok[ok.length - 1];
+  } catch (e) {}
+  const on = !!(cfg && cfg.activo);
+  const tipos = (cfg && cfg.tipos) || {};
+  const umbral = [3, 5, 8].includes(Number(cfg && cfg.umbralVar)) ? Number(cfg.umbralVar) : 5;
+  const frec = cfg && cfg.frecuencia === 'semanal' ? 'semanal' : 'diaria';
+  box.innerHTML = `<div class="vp-card" style="margin-top:12px">
+      <label style="display:flex;gap:10px;align-items:center;cursor:pointer;font-size:13.5px;color:var(--text)">
+        <input type="checkbox" id="al-on"${on ? ' checked' : ''}> <b>Recibir estas novedades por mail</b> <span class="vp-mut" style="font-size:12px">(máximo uno por día)</span></label>
+      <div id="al-opc" style="display:${on ? 'block' : 'none'};margin-top:12px;font-size:12.5px;color:var(--text)">
+        <div style="display:flex;flex-wrap:wrap;gap:8px 18px">${TIPOS_ALERTA.map(([k, t]) =>
+          `<label style="cursor:pointer"><input type="checkbox" data-al-tipo="${k}"${tipos[k] === false ? '' : ' checked'}> ${t}</label>`).join('')}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;align-items:center">
+          <label>Frecuencia <select id="al-frec"><option value="diaria"${frec === 'diaria' ? ' selected' : ''}>diaria</option><option value="semanal"${frec === 'semanal' ? ' selected' : ''}>semanal (lunes)</option></select></label>
+          <label>Movimiento desde <select id="al-umbral">${[3, 5, 8].map(u => `<option value="${u}"${u === umbral ? ' selected' : ''}>${u}%</option>`).join('')}</select></label>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;margin-top:12px;flex-wrap:wrap">
+        <button class="vp-btn" id="al-ok">Guardar</button>
+        <span class="vp-nota" id="al-msg" style="margin:0">${on ? `Llegan a ${esc(S.email)}${ultimo ? ' · último envío ' + esc(fmtF(ultimo)) : ''}.` : 'Apagadas.'}
+          Son lecturas automáticas, no recomendaciones. Sin montos ni cantidades de tu cartera.</span>
+      </div></div>`;
+  $('al-on').addEventListener('change', e => { $('al-opc').style.display = e.target.checked ? 'block' : 'none'; });
+  $('al-ok').addEventListener('click', async () => {
+    const btn = $('al-ok'), msg = $('al-msg');
+    btn.disabled = true;
+    const nuevo = {
+      activo: $('al-on').checked,
+      frecuencia: $('al-frec').value === 'semanal' ? 'semanal' : 'diaria',
+      tipos: Object.fromEntries(TIPOS_ALERTA.map(([k]) => [k, !!box.querySelector(`[data-al-tipo="${k}"]`).checked])),
+      umbralVar: [3, 5, 8].includes(Number($('al-umbral').value)) ? Number($('al-umbral').value) : 5,
+      actualizado: serverTimestamp(),
+    };
+    try {
+      await setDoc(doc(db(), 'inversores', S.email, 'alertas', 'config'), nuevo);
+      msg.textContent = nuevo.activo
+        ? `Listo: llegan a ${S.email}, ${nuevo.frecuencia === 'semanal' ? 'los lunes' : 'cuando haya novedades'} (máximo uno por día).`
+        : 'Listo: alertas apagadas.';
+    } catch (e) {
+      msg.textContent = 'No se pudo guardar. Probá de nuevo en un rato.';
+    }
+    btn.disabled = false;
+  });
 }
 
 function tarjetaFondo() {
@@ -658,12 +731,18 @@ function barraComp(tit, items) {
 
 function tarjetaRealizado(cc, vs) {
   const m = curMoneda(cc.cur), anio = hoyAR().slice(0, 4);
-  const rz = resumenVentas(vs, (v, mon) => convertir(v, mon, cc.cur, cc.fx), anio);
+  const rz = resumenVentas(vs, (v, mon) => mon === curMoneda(cc.cur) ? v : convertir(v, mon, cc.cur, cc.fx), anio);
   const o = rz.delAnio.n || rz.delAnio.sinCosto ? rz.delAnio : rz;
-  const tit = o === rz.delAnio ? `Resultado realizado en ${anio}` : 'Resultado realizado';
+  // sin dólar para convertir, el total no se afirma: se muestra por moneda (y el rótulo lo dice)
+  const porMon = Object.entries(o.porMoneda).map(([mm, v]) => moneyS(v, mm)).join(' · ');
+  const tit = (o === rz.delAnio ? `Resultado realizado en ${anio}` : 'Resultado realizado')
+    + (o.n && o.totalCompleto ? ` · ${curEtq(cc.cur)}` : o.n && porMon ? ' · por moneda (sin cotización del dólar)' : '');
   return `<div class="vp-card" style="max-width:520px;margin-bottom:18px"><div class="l">${tit}</div>
-    <h4 class="${o.n && o.totalCompleto ? cls(o.total) : 'vp-mut'}">${o.n && o.totalCompleto ? moneyS(o.total, m) : '—'}</h4>
-    <p>${[o.n ? `${o.n} ${o.n === 1 ? 'venta' : 'ventas'}` : '', o.sinCosto ? `${o.sinCosto} sin precio de compra` : ''].filter(Boolean).join(' · ')}. No te quedan posiciones abiertas.</p>
+    <h4 class="${o.n && o.totalCompleto ? cls(o.total) : 'vp-mut'}">${o.n && o.totalCompleto ? moneyS(o.total, m) : o.n && porMon ? porMon : '—'}</h4>
+    <p>${[o.n ? `${o.n} ${o.n === 1 ? 'venta' : 'ventas'}` : '',
+          // convertido: el importe original también (como en Mi cartera)
+          o.n && o.totalCompleto && (Object.keys(o.porMoneda).length > 1 || Object.keys(o.porMoneda)[0] !== m) ? porMon : '',
+          o.sinCosto ? `${o.sinCosto} sin precio de compra` : ''].filter(Boolean).join(' · ')}. No te quedan posiciones abiertas.</p>
     <a class="vp-ir" href="#panel/micartera" data-go="micartera">Ver tus ventas →</a></div>`;
 }
 
@@ -671,7 +750,7 @@ function bloqueEstado(cc, vs = []) {
   const r = cc.r, m = curMoneda(cc.cur), n = r.filas.length;
   // lo realizado del año, al lado de lo no realizado (se convierte igual que el resto)
   const anio = hoyAR().slice(0, 4);
-  const rz = resumenVentas(vs, (v, mon) => convertir(v, mon, cc.cur, cc.fx), anio).delAnio;
+  const rz = resumenVentas(vs, (v, mon) => mon === curMoneda(cc.cur) ? v : convertir(v, mon, cc.cur, cc.fx), anio).delAnio;
   // dos causas distintas de "no suma al total": sin precio del sync, o sin
   // cotizacion del dolar para convertir. Van abajo, separadas de la composicion.
   const conPx = r.filas.filter(f => f.dValor != null).length;
@@ -695,7 +774,7 @@ function bloqueEstado(cc, vs = []) {
         <div class="vp-linea"><b class="${cls(r.plTot)}">${moneyS(r.plTot, m)}</b>
           ${r.plTotPct != null ? `<span class="vp-pill ${r.plTotPct >= 0 ? 'pos' : 'neg'}">${pct(r.plTotPct)}</span>` : ''}
           <span>no realizado sobre ${money(r.costoTot, m)} invertidos</span>
-          ${rz.n || rz.sinCosto ? `<a href="#panel/micartera" data-go="micartera" style="text-decoration:none;color:inherit">· <b class="${rz.n && rz.totalCompleto ? cls(rz.total) : 'vp-mut'}" style="font-size:13px">${rz.n && rz.totalCompleto ? moneyS(rz.total, m) : '—'}</b> realizado en ${anio}${rz.sinCosto ? ` (sin contar ${rz.sinCosto} sin precio de compra)` : ''}</a>` : ''}</div></div>
+          ${rz.n || rz.sinCosto ? `<a href="#panel/micartera" data-go="micartera" style="text-decoration:none;color:inherit">· <b class="${rz.n && rz.totalCompleto ? cls(rz.total) : 'vp-mut'}" style="font-size:13px">${rz.n && rz.totalCompleto ? moneyS(rz.total, m) : rz.n ? Object.entries(rz.porMoneda).map(([mm, x]) => moneyS(x, mm)).join(' · ') || '—' : '—'}</b> realizado en ${anio}${rz.n && !rz.totalCompleto ? ' (por moneda, sin cotización del dólar)' : ''}${rz.sinCosto ? ` (sin contar ${rz.sinCosto} sin precio de compra)` : ''}</a>` : ''}</div></div>
       <div class="vp-cob"><div class="l">Cobertura</div>
         <div class="n">${conPx} <small>de</small> ${n}</div>
         <p>posici${n === 1 ? '\u00f3n' : 'ones'} con precio, en ${brokers.length} broker${brokers.length === 1 ? '' : 's'}</p>
@@ -793,7 +872,7 @@ async function cambios(cc, disc) {
       });
       const tf = ((await panelBonos()).tasa_fija || []);
       tf.filter(l => ten.especies.has(l.s) && l.vence >= hoy && enDias(l.vence) <= 30)
-        .forEach(l => ev(2, l.vence, `<b>${esc(l.s)}</b> vence el ${fmtF(l.vence)}${l.vpv ? ` y paga ${l.vpv} por cada 100 VN` : ''}.`, 'Bono', null, 'bono.html?e=' + encodeURIComponent(l.s)));
+        .forEach(l => ev(2, l.vence, `<b>${esc(l.s)}</b> vence el ${fmtF(l.vence)}${l.vpv ? ` y paga $ ${num(l.vpv, 2)} por cada 100 VN${l.vpv_estimado ? ' (estimado)' : ''}` : ''}.`, 'Bono', null, 'bono.html?e=' + encodeURIComponent(l.s)));
     } catch (e) {}
   }
   try {
@@ -1085,7 +1164,7 @@ async function renderEmpresas() {
       nombre = letra ? 'Letra a tasa fija' : bop ? 'Bopreal (BCRA)' : sob ? `Soberano ley ${sob.ley || 'AR'}` : 'Renta fija';
       if (sob) extra = `<p>TIR <b>${num(sob.tir, 1)}%</b> · paridad ${num(sob.paridad, 1)} · MD ${num(sob.md, 1)} · vence ${fmtF(sob.vence)}</p>`;
       if (bop) extra = `<p>TIR <b>${num(bop.tir, 1)}%</b>${bop.md != null ? ` · MD ${num(bop.md, 1)}` : ''} · vence ${fmtF(bop.vence)}</p>`;
-      if (letra) extra = `<p>${letra.tem != null ? `TEM <b>${num(letra.tem, 2)}%</b> · TIREA ${num(letra.tirea, 1)}% · ` : ''}vence ${fmtF(letra.vence)}${letra.vpv ? ` · paga ${letra.vpv} por 100 VN` : ''}</p>`;
+      if (letra) extra = `<p>${letra.tem != null ? `TEM <b>${num(letra.tem, 2)}%</b> · TIREA ${num(letra.tirea, 1)}% · ` : ''}vence ${fmtF(letra.vence)}${letra.vpv ? ` · paga $ ${num(letra.vpv, 2)} por 100 VN${letra.vpv_estimado ? ' (estimado)' : ''}` : ''}</p>`;
       const d = fl[esp] || fl[par];
       if (d && d.flujos) {
         const prox = d.flujos.find(([f]) => f >= hoy);

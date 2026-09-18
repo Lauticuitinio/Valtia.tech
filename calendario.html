@@ -180,7 +180,7 @@ async function cargar() {
       if (!l.vence) return;
       ev.push({
         tipo: "let", fecha: String(l.vence).slice(0, 10), href: "bono.html?e=" + l.s,
-        titulo: `Vence ${l.s}${l.vpv ? ` · paga $ ${n2.format(l.vpv)} por cada 100 VN` : ""}`,
+        titulo: `Vence ${l.s}${l.vpv ? ` · paga $ ${n2.format(l.vpv)} por cada 100 VN${l.vpv_estimado ? " (estimado)" : ""}` : ""}`,
         sub: l.tirea != null ? `letra a tasa fija · TIREA de mercado ${String(l.tirea).replace(".", ",")}%` : "letra a tasa fija",
       });
     });

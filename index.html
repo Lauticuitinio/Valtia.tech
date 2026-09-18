@@ -978,7 +978,7 @@ function updateChartTheme(){
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   import { getDatabase, ref, push, onValue, serverTimestamp as dbTimestamp }
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-  import { iniciarPanel } from './panel.js?v=20';
+  import { iniciarPanel } from './panel.js?v=24';
 
   
   // ── FIREBASE CONFIG ──
@@ -1045,9 +1045,6 @@ function updateChartTheme(){
     }
   }
 
-  // si el login con Google fue por redirect (popup bloqueado en móvil), resolverlo
-  getRedirectResult(auth).catch(() => {});
-
   const AUTH_MSGS = {
     'auth/user-not-found': 'No existe una cuenta con ese email.',
     'auth/wrong-password': 'Contraseña incorrecta.',
@@ -1059,6 +1056,41 @@ function updateChartTheme(){
     'auth/email-already-in-use': 'Ya existe una cuenta con ese email — pasá a la pestaña "Ingresar".',
     'auth/weak-password': 'La contraseña necesita al menos 6 caracteres.',
   };
+  // textos SOLO del ingreso con Google: los formularios de email siguen leyendo AUTH_MSGS
+  const GOOGLE_MSGS = {
+    'auth/unauthorized-domain': 'El ingreso con Google no está habilitado todavía en este dominio. Mientras tanto, entrá con email y contraseña.',
+    'auth/operation-not-allowed': 'Este método de ingreso no está habilitado. Entrá con email y contraseña.',
+    'auth/popup-blocked': 'Tu navegador bloqueó la ventana de Google: permití las ventanas emergentes para valtia.tech y probá de nuevo.',
+    'auth/internal-error': 'El navegador cortó el ingreso con Google. Si usás Brave, bajá los Shields para valtia.tech y probá de nuevo, o entrá con email y contraseña.',
+    'auth/web-storage-unsupported': 'Tu navegador bloquea lo que necesita el ingreso con Google (cookies o almacenamiento). Si usás Brave, bajá los Shields para valtia.tech, o entrá con email y contraseña.',
+    'auth/account-exists-with-different-credential': 'Ya tenés una cuenta con ese email: entrá con email y contraseña.',
+  };
+  // el código entre paréntesis permite diagnosticar sin abrir la consola
+  const SOLO_EMAIL = ['auth/invalid-credential', 'auth/wrong-password', 'auth/user-not-found',
+                      'auth/invalid-email', 'auth/email-already-in-use', 'auth/weak-password'];
+  const msgGoogle = e => (e && (GOOGLE_MSGS[e.code] || (!SOLO_EMAIL.includes(e.code) && AUTH_MSGS[e.code])))
+    || `No se pudo iniciar sesión con Google${e && e.code ? ` (${String(e.code).replace('auth/', '')})` : ''}. Probá de nuevo o entrá con email y contraseña.`;
+
+  // si el login con Google fue por redirect (popup bloqueado en móvil), resolverlo.
+  // Si falla a la vuelta se dice por qué, pero solo si ESTA pestaña lo intentó:
+  // con un dominio mal configurado el SDK puede rechazar en cada carga
+  const intentoRedirect = () => {
+    let intento = false;
+    try { intento = sessionStorage.getItem('valtia-google-redirect') === '1'; sessionStorage.removeItem('valtia-google-redirect'); } catch (e2) {}
+    return intento;
+  };
+  getRedirectResult(auth).then(res => {
+    // volvió de Google sin sesión: el navegador bloqueó el paso intermedio (Brave,
+    // Safari, el navegador de Instagram) o la persona volvió atrás
+    if (intentoRedirect() && !res) {
+      openLogin(null);
+      showLoginMsg('No se completó el ingreso con Google. Si ya elegiste tu cuenta, tu navegador bloqueó el paso final: probá desde Chrome o Safari (en Brave, bajá los Shields para valtia.tech), o entrá con email y contraseña.', 'error');
+    }
+  }, e => {
+    const intento = intentoRedirect();
+    console.error('Login con Google (redirect):', e);
+    if (intento) { openLogin(null); showLoginMsg(msgGoogle(e), 'error'); }
+  });
 
   // ── LOGIN WITH GOOGLE ──
   window.loginWithGoogle = async function() {
@@ -1073,9 +1105,19 @@ function updateChartTheme(){
       if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') return;
       // popup bloqueado (móvil / bloqueador): seguir por redirect en la misma pestaña
       if (e.code === 'auth/popup-blocked') {
-        try { await signInWithRedirect(auth, googleProvider); return; } catch(e2) {}
+        try {
+          try { sessionStorage.setItem('valtia-google-redirect', '1'); } catch (e3) {}
+          await signInWithRedirect(auth, googleProvider); return;
+        } catch(e2) {
+          try { sessionStorage.removeItem('valtia-google-redirect'); } catch (e3) {}
+          // el motivo del redirect es más preciso, si es de Firebase; un
+          // SecurityError/QuotaExceededError es el almacenamiento bloqueado
+          if (e2 && typeof e2.code === 'string' && e2.code.startsWith('auth/')) e = e2;
+          else if (e2 && (e2.name === 'SecurityError' || e2.name === 'QuotaExceededError')) e = { code: 'auth/web-storage-unsupported' };
+        }
       }
-      showLoginMsg(AUTH_MSGS[e.code] || 'No se pudo iniciar sesión con Google. Probá de nuevo.', 'error');
+      console.error('Login con Google:', e);
+      showLoginMsg(msgGoogle(e), 'error');
     }
   };
 
@@ -1312,7 +1354,7 @@ function updateChartTheme(){
 
     // "Mi cartera": seguimiento de las posiciones propias (todo usuario con
     // sesión, admin incluido). Se carga aparte para no demorar el portal.
-    import('./mi-cartera.js?v=25')
+    import('./mi-cartera.js?v=29')
       .then(m => m.initMiCartera(user, document.getElementById('tab-micartera')))
       .catch(() => {});
   }

@@ -53,6 +53,12 @@ check("sin CCL histórico no inventa puntos con pesos", simular({ ...base, ccl: 
 check("rango sin datos: vacío sin romper", simular({ ...base, desde: "2027-01-01", hasta: "2027-02-01" }).puntos.length === 0);
 const serieCruda = { ...series, AAPL: [["2026-01-02", 49, 0, 0, 0, 0, 50], ["2026-01-05", 54, 0, 0, 0, 0, 55], ["2026-01-06", 59, 0, 0, 0, 0, 60]] };
 check("la simulación usa el cierre sin dividendos", cerca(simular({ ...base, series: serieCruda, cclHoy: 1100 }).puntos[2].cartera, sim.puntos[2].cartera));
+// la moneda la decide quien llama (mi-cartera le pasa la misma regla que la tabla)
+const sinMon = { ...base, posiciones: posiciones.map(p => p.id === "x" ? { id: "x", ticker: "AL30", cantidad: 1000, factor: 0.01 } : p),
+                 precios: { ...precios, AL30: { precio: 88000, factor: 0.01 } }, cclHoy: 1100 };
+check("regla de respaldo: AL30 sin moneda se lee en dólares", simular(sinMon).cobertura < 0.01, simular(sinMon).cobertura);
+check("con la regla de la tabla (AL30 en pesos) la cobertura es la misma que con moneda",
+      cerca(simular({ ...sinMon, monedaDe: (p, px) => (px && px.moneda) || p.moneda || (p.ticker === "AL30" ? "ARS" : "USD") }).cobertura, sim.cobertura, 1e-9));
 
 // ── serieReal ──
 const P = (id, q, p, mon = "USD", fac = 1, pag) => ({ id, tk: id, q, p, mon, fac, ...(pag ? { pag } : {}) });

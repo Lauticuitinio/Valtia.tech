@@ -40,7 +40,8 @@ export function valorAl(serie, fecha, crudo = false) {
   return isFinite(v) && v > 0 ? v : null;
 }
 
-/* misma regla que calcular() de mi-cartera.js */
+/* regla de respaldo; mi-cartera.js le pasa a simular() su monedaPosicion,
+   la MISMA que usa calcular() (con los bonos del panel) */
 const monedaDe = (p, px) => (px && px.moneda) || p.moneda || (String(p.ticker || "").toUpperCase().endsWith(".BA") ? "ARS" : "USD");
 const factorDe = (p, px) => Number(p.factor) > 0 ? Number(p.factor) : (px && Number(px.factor) > 0 ? Number(px.factor) : 1);
 
@@ -51,7 +52,8 @@ const factorDe = (p, px) => Number(p.factor) > 0 ? Number(p.factor) : (px && Num
    [{ticker, motivo}], cobertura: parte del valor de HOY que entra (0 a 1), o
    null si no se puede saber (sin precios de hoy, o posiciones en pesos sin
    ningún dólar CCL para valuarlas) }. */
-export function simular({ posiciones = [], precios = {}, series = {}, ccl = [], spy = [], desde, hasta, cclHoy = null }) {
+export function simular({ posiciones = [], precios = {}, series = {}, ccl = [], spy = [], desde, hasta, cclHoy = null,
+                          monedaDe: monedaFn = monedaDe }) {
   const fechas = (spy || []).map(r => String(r[0])).filter(f => f >= desde && f <= hasta);
   const cambioHoy = Number(cclHoy) > 0 ? Number(cclHoy) : valorAl(ccl, hasta);
   const incluidas = [], excluidas = [];
@@ -60,7 +62,7 @@ export function simular({ posiciones = [], precios = {}, series = {}, ccl = [], 
     const tk = String(p.ticker || "").toUpperCase();
     const q = Number(p.cantidad) || 0;
     if (!tk || q <= 0) continue;
-    const px = precios[tk] || null, mon = monedaDe(p, px), fac = factorDe(p, px);
+    const px = precios[tk] || null, mon = monedaFn(p, px), fac = factorDe(p, px);
     const pHoy = px && Number(px.precio) > 0 ? Number(px.precio) : null;
     const vHoy = pHoy == null ? null : mon === "ARS" ? (cambioHoy > 0 ? q * pHoy * fac / cambioHoy : null) : q * pHoy * fac;
     if (pHoy != null && vHoy == null) sinCambio = true;

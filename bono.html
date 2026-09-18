@@ -195,10 +195,10 @@ async function render() {
   let tiles = "";
   if (tipo === "tasa_fija") {
     tiles = [
-      b.tirea != null ? tile("TIREA", n1.format(b.tirea) + "%", "efectiva anual, de mercado") : "",
+      b.tirea != null ? tile("TIREA", n1.format(b.tirea) + "%", b.vpv_estimado ? "efectiva anual · sobre pago estimado" : "efectiva anual, de mercado") : "",
       b.tem != null ? tile("TEM", n2.format(b.tem) + "%", "efectiva mensual") : "",
       b.tna != null ? tile("TNA", n1.format(b.tna) + "%", "simple, 365 días") : "",
-      b.vpv != null ? tile("Paga al vencimiento", "$" + n2.format(b.vpv), "por cada 100 VN") : "",
+      b.vpv != null ? tile("Paga al vencimiento", "$" + n2.format(b.vpv), b.vpv_estimado ? "por cada 100 VN · estimado, sin dato oficial" : "por cada 100 VN") : "",
       b.dias != null ? tile("Días", b.dias, b.vence ? "al " + fverde(b.vence) : "") : (b.vence ? tile("Vence", fverde(b.vence), "") : ""),
       b.tem_lic ? tile("TEM de licitación", n2.format(b.tem_lic) + "%", "tasa de emisión") : "",
     ].join("");
@@ -231,7 +231,7 @@ async function render() {
       <label>TIR a mi precio — ¿y si pago otra cosa?</label>
       <input type="number" step="any" min="0" id="mi-precio" value="${b.p}">
       <div class="out" id="mi-out"></div>
-      <div class="nota">Misma matemática del panel: ${tipo === "tasa_fija" ? "tasas sobre el pago final oficial de la letra" : "TIR efectiva anual (act/365) por bisección sobre los flujos oficiales"}, valuada a hoy.</div>
+      <div class="nota">Misma matemática del panel: ${tipo === "tasa_fija" ? (b.vpv_estimado ? "tasas sobre un pago final ESTIMADO (sin dato oficial todavía)" : "tasas sobre el pago final oficial de la letra") : "TIR efectiva anual (act/365) por bisección sobre los flujos oficiales"}, valuada a hoy.</div>
     </div>` : "";
 
   $("#main").innerHTML = `

@@ -21,13 +21,29 @@ const EPS = 1e-9;
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 const dia = s => String(s || '').slice(0, 10);
 
+/* la moneda que el ticker dice sin lugar a dudas: BYMA (.BA) en pesos, cripto
+   (-USD) en dólares y la renta fija local según su especie (AL30 y las letras
+   en pesos; AL30D y GD30C en dólares). Un ticker sin sufijo (AAPL, o uno mal
+   escrito) no alcanza: null. esRF: el ticker es un bono o una letra. */
+export function monedaDeTicker(tk, esRF = false) {
+  const t = String(tk || '').trim().toUpperCase();
+  if (!t) return null;
+  if (t.endsWith('-USD')) return 'USD';
+  if (esRF) return /[CD]$/.test(t.replace(/\.BA$/, '')) ? 'USD' : 'ARS';
+  if (t.endsWith('.BA')) return 'ARS';
+  return null;
+}
+
 /* moneda y factor de lámina con el mismo criterio que calcular() de
-   mi-cartera: manda el doc de precios; si no, lo que diga la posición. A
-   diferencia de calcular(), acá NO se asume USD: la venta congela la moneda
-   para siempre, así que si no se sabe devuelve moneda null y la venta no se
-   registra. esRF: renta fija sin factor en ningún lado → cotiza cada 100 VN. */
-export function monedaFactor(pos, px, esRF = false) {
-  const m = (px && px.moneda) || (pos && pos.moneda) || null;
+   mi-cartera: manda el doc de precios; si no, lo que diga la posición; si
+   tampoco, la que el ticker indica sin dudas (monedaDeTicker). A diferencia de
+   calcular(), acá NO se asume USD: la venta congela la moneda para siempre,
+   así que si no se sabe devuelve moneda null y la venta no se registra.
+   esRF: renta fija sin factor en ningún lado → cotiza cada 100 VN.
+   tk: el ticker, si la posición no lo trae (la foto de un aviso). */
+export function monedaFactor(pos, px, esRF = false, tk = null) {
+  const m = (px && px.moneda) || (pos && pos.moneda)
+          || monedaDeTicker(tk || (pos && pos.ticker), esRF) || null;
   const factor = Number(pos && pos.factor) > 0 ? Number(pos.factor)
                : (px && Number(px.factor) > 0 ? Number(px.factor) : (esRF ? 0.01 : 1));
   return { moneda: m === 'ARS' ? 'ARS' : m ? 'USD' : null, factor };
@@ -147,7 +163,7 @@ export function validarAjuste(aj, cant, precio, fecha, hoy, moneda) {
 
 export function ventaDesdeAjuste(aj, cant, px, precio, fecha, ahoraISO, esRF = false) {
   const pos = { ...(aj.pos || {}) };
-  const { moneda, factor } = monedaFactor(pos, px, esRF);
+  const { moneda, factor } = monedaFactor(pos, px, esRF, aj.ticker || pos.ticker);
   const foto = {};
   CAMPOS_POS.forEach(k => { if (pos[k] !== undefined && pos[k] !== null) foto[k] = pos[k]; });
   return {

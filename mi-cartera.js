@@ -8,11 +8,11 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, runTransaction, query, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { base, linkDe, esRentaFija, parBono, sectorDe, mercadoDe, desglose } from './activos.js?v=6';
-import { simular, serieReal, combinar, recortar, resumen, serieDe } from './evolucion.js?v=1';
+import { base, linkDe, esRentaFija, parBono, sectorDe, mercadoDe, desglose, monedaProbable } from './activos.js?v=6';
+import { simular, serieReal, combinar, recortar, resumen, serieDe } from './evolucion.js?v=2';
 import { validarVenta, armarVenta, planDeshacer, resultadoVenta, resumenVentas, tenencia, monedaFactor,
          cantidadAjuste, validarAjuste, ventaDesdeAjuste, ajusteDesdeVenta, restoDeAjuste }
-  from './ventas.js?v=5';
+  from './ventas.js?v=6';
 
 const STYLE = `
 .mc-wrap{width:100%}
@@ -36,6 +36,7 @@ const STYLE = `
 .mc-tbl tr:hover td{background:rgba(184,151,90,.05)}
 .mc-tk{font-weight:700;color:var(--gold)}
 .mc-nm{display:block;font-size:11px;color:var(--muted);font-weight:400}
+.mc-orig{display:block;font-size:10.5px;color:var(--muted);font-weight:400}.mc-orig.il{display:inline;font-size:inherit}
 .mc-ver{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:4px;white-space:nowrap}
 .mc-ver.infra{color:#4caf50;background:rgba(76,175,80,.12)}
 .mc-ver.precio{color:var(--gold);background:rgba(184,151,90,.14)}
@@ -235,6 +236,29 @@ export function convertir(valor, monedaOrigen, display, fx) {
 }
 
 const curLabel = () => (_cur === "ARS" ? "ARS" : "USD");
+
+/* ventas y avisos: lo que se CARGA va en la moneda en que cotiza el activo
+   (la que muestra el broker) y lo que se MUESTRA va en la moneda elegida
+   arriba, con el importe original abajo. Sin dólar para convertir, queda en su
+   moneda. enLinea: el original entre paréntesis, para textos corridos. */
+const monNombre = m => m === "ARS" ? "en pesos ($)" : m === "USD" ? "en dólares (US$)" : "moneda sin confirmar";
+function enVista(valor, moneda, signo = false, enLinea = false) {
+  const f = signo ? moneyS : money;
+  if (valor == null || !moneda) return "—";
+  const cur = curLabel();
+  const c = moneda === cur ? null : convertir(valor, moneda, _cur, _fx);
+  if (c == null || !isFinite(c)) return f(valor, moneda);
+  const orig = f(valor, moneda);
+  return f(c, cur) + (enLinea ? ` <span class="mc-orig il">(${orig})</span>` : `<span class="mc-orig">${orig}</span>`);
+}
+/* "(≈ US$4,13 al CCL de hoy)": el formulario se llena en la moneda del activo */
+function aprox(valor, moneda, signo = false) {
+  const cur = curLabel();
+  if (valor == null || !moneda || moneda === cur) return "";
+  const c = convertir(valor, moneda, _cur, _fx);
+  if (c == null || !isFinite(c)) return "";
+  return ` <span class="mc-mut" style="font-weight:400">(≈ ${(signo ? moneyS : money)(c, cur)} al ${_cur === "MEP" ? "MEP" : "CCL"} de hoy)</span>`;
+}
 const pct = n => (n >= 0 ? "+" : "") + Number(n).toFixed(2).replace(".", ",") + "%";
 const num = (n, d = 1) => n == null ? "—" : Number(n).toFixed(d).replace(".", ",");
 const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
@@ -306,10 +330,15 @@ export function monedaMercado(mercado, tk, bonos = new Set()) {
 }
 
 /* ── cálculo: posiciones + precios → filas con resultado ── */
-export function calcular(posiciones, precios, cur = _cur, fx = _fx) {
+/* moneda de una posición: la del precio, la guardada o, si no hay ninguna, la
+   que indica el ticker (GGAL.BA en pesos, AL30D en dólares), no USD a ciegas.
+   La usan la tabla y la simulación de la evolución: tienen que coincidir. */
+export const monedaPosicion = (p, px, bonos = _bonos) => (px && px.moneda) || p.moneda || monedaProbable(p.ticker, bonos);
+
+export function calcular(posiciones, precios, cur = _cur, fx = _fx, bonos = _bonos) {
   const filas = posiciones.map(p => {
     const px = precios[String(p.ticker).toUpperCase()] || null;
-    const moneda = (px && px.moneda) || p.moneda || "USD";
+    const moneda = monedaPosicion(p, px, bonos);
     const actual = px && px.precio != null ? px.precio : null;
     // factor de lámina: los bonos cotizan cada 100 nominales (factor 0,01),
     // las acciones y CEDEARs 1 a 1. Los precios se muestran como cotizan;
@@ -490,7 +519,8 @@ const cantTxt = n => num(n, 4).replace(/,0+$/, "");
 function seccionVentas(ventas, cur) {
   if (!ventas.length) return "";
   const anio = hoyAR().slice(0, 4);
-  const s = resumenVentas(ventas, (v, m) => convertir(v, m, _cur, _fx), anio);
+  // lo que ya está en la moneda de la vista se suma tal cual (US$ en la vista CCL no necesita dólar)
+  const s = resumenVentas(ventas, (v, m) => m === cur ? v : convertir(v, m, _cur, _fx), anio);
   const porMon = o => Object.entries(o.porMoneda)
     .map(([m, v]) => `<span class="${v >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(v, m)}</span>`).join(" · ");
   // el total convertido solo se afirma si se pudieron convertir todas; las
@@ -498,7 +528,8 @@ function seccionVentas(ventas, cur) {
   const kpi = (tit, o) => {
     const partes = [];
     if (o.n) partes.push(`${o.n} ${o.n === 1 ? "venta" : "ventas"}`);
-    if (o.n && (Object.keys(o.porMoneda).length > 1 || !o.totalCompleto)) partes.push(porMon(o));
+    if (o.n && (Object.keys(o.porMoneda).length > 1 || !o.totalCompleto
+                || Object.keys(o.porMoneda)[0] !== cur)) partes.push(porMon(o));
     if (o.sinCosto) partes.push(`${o.sinCosto} sin precio de compra`);
     return `<div class="mc-k"><div class="l">${tit}</div>
       <div class="v ${!o.n || !o.totalCompleto ? "" : o.total >= 0 ? "mc-pos" : "mc-neg"}">${!o.n || !o.totalCompleto ? "—" : moneyS(o.total, cur)}</div>
@@ -515,23 +546,35 @@ function seccionVentas(ventas, cur) {
       <td class="l">${fmtFecha(v.fecha)}</td>
       <td class="l"><span class="mc-tk">${esc(base(v.ticker))}</span><span class="mc-nm">${esc(v.broker || "sin broker")}</span></td>
       <td>${cantTxt(v.cantidad)}</td>
-      <td>${Number(v.costoUnitario) > 0 ? money(v.costoUnitario, m) : "—"}</td>
-      <td>${money(v.precioVenta, m)}</td>
-      <td class="${c(resultado)}"${resultado == null ? ' title="Sin precio de compra cargado: no se puede calcular"' : ""}>${resultado == null ? "—" : moneyS(resultado, m)}</td>
+      <td>${Number(v.costoUnitario) > 0 ? enVista(v.costoUnitario, m) : "—"}</td>
+      <td>${enVista(v.precioVenta, m)}</td>
+      <td class="${c(resultado)}"${resultado == null ? ' title="Sin precio de compra cargado: no se puede calcular"' : ""}>${resultado == null ? "—" : enVista(resultado, m, true)}</td>
       <td class="${c(q)}">${q == null ? "—" : pct(q)}</td>
       <td${t && t.aprox ? ' title="Desde que el sync vio la posición: la compra puede ser anterior"' : ""}>${t == null ? "—" : (t.aprox ? "≥ " : "") + t.dias + " d"}</td>
       <td><button class="mc-undo" data-deshacer="${esc(v.id)}" title="Borra la venta y devuelve la posición a tu cartera">Deshacer</button></td>
     </tr>`;
   }).join("");
-  const mezcla = Object.keys(s.porMoneda).length > 1 || cur !== (Object.keys(s.porMoneda)[0] || cur);
+  // ¿hay ventas en la otra moneda? ¿se pudieron convertir? (sin dólar, cada
+  // venta queda en su moneda y no se dice lo contrario)
+  // sinFx: faltó el dólar para sumar algún total (sale de los totales mismos, así
+  // el texto nunca contradice al número); mezcla: se convirtió algo con el de hoy
+  const sinFx = (s.n > 0 && !s.totalCompleto) || (s.delAnio.n > 0 && !s.delAnio.totalCompleto);
+  const otra = ventas.find(v => (v.moneda === "ARS" ? "ARS" : "USD") !== cur);
+  const mezcla = !!otra && !sinFx && convertir(1, otra.moneda === "ARS" ? "ARS" : "USD", _cur, _fx) != null;
+  // el rótulo de moneda va en cada KPI que sí se pudo sumar
+  const etqBase = ` · ${_cur === "ARS" ? "en pesos" : "US$ " + _cur}`;
+  const etqDe = o => (o.n > 0 && !o.totalCompleto) ? "" : etqBase;
+  const faltaAnio = s.delAnio.n > 0 && !s.delAnio.totalCompleto;
   return `<div class="mc-ventas">
     <h4>Ventas y resultado realizado</h4>
     <div class="sub">Lo que ya vendiste. La ganancia o pérdida quedó fija al vender, contra el precio de compra de esa
-      posición. Cada operación se muestra en su moneda${mezcla ? `; los totales se pasan a ${cur === "ARS" ? "pesos" : "dólares"}
-      con la cotización de hoy, así que no son tu resultado medido en esa moneda` : ""}.${s.sinCosto
+      posición, en la moneda en que operaste${mezcla ? `. Acá se muestra en ${_cur === "ARS" ? "pesos" : "dólares " + _cur}
+      con la cotización de hoy, igual que el resto de tu cartera (abajo de cada importe, el original), así que no es
+      tu resultado medido en esa moneda` : sinFx ? `. <b>No pudimos traer la cotización del dólar</b>: cada
+      venta queda en su moneda y ${faltaAnio ? "los totales no se pueden sumar" : "el realizado total no se puede sumar"}; recargá la página en unos minutos` : ""}.${s.sinCosto
       ? ` ${s.sinCosto} ${s.sinCosto === 1 ? "venta sin precio de compra no entra" : "ventas sin precio de compra no entran"} en los totales.` : ""}</div>
     <div class="mc-msg" id="mc-ventas-msg"></div>
-    <div class="mc-kpis">${kpi(`Realizado en ${anio}`, s.delAnio)}${kpi("Realizado total", s)}</div>
+    <div class="mc-kpis">${kpi(`Realizado en ${anio}${etqDe(s.delAnio)}`, s.delAnio)}${kpi(`Realizado total${etqDe(s)}`, s)}</div>
     <div class="mc-tblwrap"><table class="mc-tbl"><thead><tr>
       <th class="l">Fecha</th><th class="l">Activo</th><th>Cant.</th><th>Compra</th><th>Venta</th>
       <th>Resultado</th><th>%</th><th title="Días entre la compra y la venta">Tenencia</th><th></th>
@@ -570,7 +613,7 @@ function bloqueAjustes(ajustes, precios, bonos) {
   return ajustes.map(a => {
     const pos = a.pos || {}, px = precios[String(a.ticker || "").toUpperCase()] || null;
     const esRF = esRentaFija(a.ticker, bonos);
-    const { moneda, factor } = monedaFactor(pos, px, esRF);
+    const { moneda, factor } = monedaFactor(pos, px, esRF, a.ticker);
     const unidad = factor !== 1 ? "cada 100 VN" : "por unidad";
     const n = cantidadAjuste(a), costo = Number(pos.precioCompra) > 0 ? Number(pos.precioCompra) : 0;
     const que = a.tipo === "desaparecio"
@@ -581,16 +624,16 @@ function bloqueAjustes(ajustes, precios, bonos) {
       <p><b>${esc(base(a.ticker))}</b> ${que}. ¿Vendiste <b>${cantTxt(n)}</b>?</p>
       <div class="mc-vform">
         <div><label>Cantidad vendida · de ${cantTxt(n)}</label><input data-aj-cant type="number" step="any" min="0" max="${n}" value="${n}"${moneda ? "" : " disabled"}></div>
-        <div><label>Precio de venta · ${moneda === "ARS" ? "en pesos" : moneda === "USD" ? "en dólares" : "moneda sin confirmar"}, ${unidad}</label>
+        <div><label>Precio de venta · ${monNombre(moneda)}, ${unidad}</label>
           <input data-aj-px type="number" step="any" min="0" placeholder="el que te pagaron"${moneda ? "" : " disabled"}></div>
         <div><label>Fecha de la venta</label><input data-aj-fecha type="date" max="${hoy}"${moneda ? "" : " disabled"}></div>
         <div class="prev" data-aj-prev></div>
         <div><button class="mc-btn" data-aj-ok${moneda ? "" : " disabled"}>Sí, registrar la venta</button>
           ${a.tipo === "desaparecio" ? `<button class="mc-btn sec mc-btn-mini" data-aj-tengo>La sigo teniendo</button>` : ""}
           <button class="mc-undo" data-aj-no>No fue una venta</button></div>
-        <div class="nota">Tu costo en esa posición: <b>${costo ? (moneda ? money(costo, moneda) : num(costo, 2)) + " " + unidad : "sin precio de compra, así que el resultado no se va a poder calcular"}</b>.
+        <div class="nota">Tu costo en esa posición: <b>${costo ? (moneda ? money(costo, moneda) : num(costo, 2)) + " " + unidad + aprox(costo, moneda) : "sin precio de compra, así que el resultado no se va a poder calcular"}</b>.
           Lo vimos el ${fmtFecha(a.fecha)}, pero la venta pudo ser antes: <b>poné el día y el precio reales</b>.
-          ${px && px.precio != null && moneda ? `Cotización de hoy, como referencia: ${money(px.precio, moneda)}.` : ""}
+          ${px && px.precio != null && moneda ? `Cotización de hoy, como referencia: ${money(px.precio, moneda)}${aprox(px.precio, moneda)}.` : ""}
           ${a.tipo === "desaparecio" ? `Si la pasaste a otro broker o ${esc(a.broker)} no la mostró ese día, "La sigo teniendo" la devuelve a tu cartera con su costo (si la transferiste, después cambiale el broker en la fila). Si vendiste solo una parte, poné esa cantidad: el resto queda preguntando.` : `La cantidad del panel ya sigue a ${esc(a.broker)}: acá solo se registra el resultado.`}
           ${!moneda ? "<b>Todavía no tenemos la cotización de este activo</b>: esperá a que aparezca su precio para registrar la venta." : ""}</div>
         <div class="mc-msg" data-aj-msg style="flex-basis:100%;margin:0"></div>
@@ -881,7 +924,7 @@ function pintarEvolucion(el) {
 
   const hoy = diaAR(), desde = diaAR(new Date(Date.now() - _evo.rango * 864e5));
   const sim = simular({ posiciones: _pos, precios: _precios, series: _evo.series, ccl: _evo.ccl, spy: _evo.spy,
-                        desde, hasta: hoy, cclHoy: _fx.ccl });
+                        desde, hasta: hoy, cclHoy: _fx.ccl, monedaDe: (p, px) => monedaPosicion(p, px, _bonos) });
   const real = serieReal(_evo.fotos, { cclSerie: _evo.ccl });
   // con menos del 30% del valor de hoy cubierto (o sin poder saberlo) no se muestra la simulación
   const simUsable = sim.cobertura != null && sim.cobertura >= 0.3 ? sim.puntos : [];
@@ -982,7 +1025,9 @@ async function leerTodo() {
     _ajustes = sa.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (e) { _ajustes = []; }
   _precios = {};
-  const tks = [...new Set(_pos.map(p => String(p.ticker).toUpperCase()))];
+  // también los tickers de los avisos: una posición que "desapareció" ya no
+  // está en la cartera, pero su aviso muestra la cotización de referencia
+  const tks = [...new Set([..._pos, ..._ajustes].map(p => String(p.ticker || "").toUpperCase()).filter(Boolean))];
   if (tks.length) {
     const px = await getDocs(collection(db, "precios"));
     px.docs.forEach(d => { if (tks.includes(d.id)) _precios[d.id] = d.data(); });
@@ -1212,11 +1257,11 @@ function abrirVenta(id) {
   fila.dataset.vid = base(p.ticker) + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
   fila.innerHTML = `<td colspan="14"><div class="mc-vform">
       <div><label>Cantidad vendida</label><input id="mc-v-cant" type="number" step="any" min="0" value="${Number(p.cantidad) || ""}"></div>
-      <div><label>Precio de venta · ${moneda === "ARS" ? "en pesos" : moneda === "USD" ? "en dólares" : "moneda sin confirmar"}, ${unidad}</label><input id="mc-v-px" type="number" step="any" min="0" value="${px && px.precio != null ? px.precio : ""}"></div>
+      <div><label>Precio de venta · ${monNombre(moneda)}, ${unidad}</label><input id="mc-v-px" type="number" step="any" min="0" value="${px && px.precio != null ? px.precio : ""}"></div>
       <div><label>Fecha de la venta</label><input id="mc-v-fecha" type="date" max="${hoy}" value="${hoy}"></div>
       <div class="prev" id="mc-v-prev"></div>
       <div><button class="mc-btn" id="mc-v-ok">Registrar venta</button> <button class="mc-undo" id="mc-v-no">Cancelar</button></div>
-      <div class="nota">Tu costo en esta posición: <b>${costo ? (moneda ? money(costo, moneda) : num(costo, 2)) + " " + unidad
+      <div class="nota">Tu costo en esta posición: <b>${costo ? (moneda ? money(costo, moneda) : num(costo, 2)) + " " + unidad + aprox(costo, moneda)
         : "sin precio de compra cargado, así que el resultado no se va a poder calcular"}</b>.
         ${px && px.precio != null ? "El precio viene con la última cotización: poné el que te pagaron." : ""}
         ${sync ? "Esta posición la trae el sync de tu broker: en la próxima corrida la cantidad se ajusta a lo que diga el broker." : ""}
@@ -1240,7 +1285,7 @@ function abrirVenta(id) {
     if (!v.ok) { out.innerHTML = `<span class="mc-mut">${esc(v.error)}</span>`; return; }
     const { resultado, pct: q } = resultadoVenta(armarVenta(p, px, cant, precio, fecha, "", esRF));
     out.innerHTML = resultado == null ? `<span class="mc-mut">Resultado: sin precio de compra</span>`
-      : `Resultado: <b class="${resultado >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(resultado, moneda)}</b> (${pct(q)})`
+      : `Resultado: <b class="${resultado >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(resultado, moneda)}</b>${aprox(resultado, moneda, true)} · ${pct(q)}`
         + (v.resto === 0 ? " · vendés toda la posición" : "");
   };
   fila.querySelectorAll("input").forEach(i => i.addEventListener("input", vista));
@@ -1299,7 +1344,7 @@ async function registrarVenta(p, px, esRF, { cant, precio, fecha }, fila) {
   // la venta ya quedó guardada: si falla el refresco, NO se invita a reintentar
   const { resultado } = resultadoVenta(venta);
   const texto = `Venta registrada: ${cantTxt(venta.cantidad)} ${esc(base(venta.ticker))}`
-    + (resultado != null ? ` con un resultado de ${moneyS(resultado, venta.moneda)}` : "")
+    + (resultado != null ? ` con un resultado de ${enVista(resultado, venta.moneda === "ARS" ? "ARS" : "USD", true, true)}` : "")
     + ". La ves más abajo, en Ventas y resultado realizado.";
   try {
     await leerTodo();
@@ -1380,7 +1425,7 @@ function datosAjuste(card) {
   if (!a) return null;
   const px = _precios[String(a.ticker || "").toUpperCase()] || null;
   const esRF = esRentaFija(a.ticker, _bonos);
-  return { a, px, esRF, moneda: monedaFactor(a.pos || {}, px, esRF).moneda,
+  return { a, px, esRF, moneda: monedaFactor(a.pos || {}, px, esRF, a.ticker).moneda,
            cant: parseFloat(card.querySelector("[data-aj-cant]").value),
            precio: parseFloat(card.querySelector("[data-aj-px]").value),
            fecha: card.querySelector("[data-aj-fecha]").value };
@@ -1393,7 +1438,7 @@ function vistaAjuste(card) {
   if (!v.ok) { out.innerHTML = `<span class="mc-mut">${esc(v.error)}</span>`; return; }
   const { resultado, pct: q } = resultadoVenta(ventaDesdeAjuste(d.a, d.cant, d.px, d.precio, d.fecha, "", d.esRF));
   out.innerHTML = resultado == null ? `<span class="mc-mut">Resultado: sin precio de compra</span>`
-    : `Resultado: <b class="${resultado >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(resultado, d.moneda)}</b> (${pct(q)})`;
+    : `Resultado: <b class="${resultado >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(resultado, d.moneda)}</b>${aprox(resultado, d.moneda, true)} · ${pct(q)}`;
 }
 
 async function confirmarAjuste(card) {
@@ -1440,7 +1485,7 @@ async function confirmarAjuste(card) {
   }
   const { resultado } = resultadoVenta(venta);
   const texto = `Venta registrada: ${cantTxt(venta.cantidad)} ${esc(base(venta.ticker))}`
-    + (resultado != null ? ` con un resultado de ${moneyS(resultado, venta.moneda)}` : "")
+    + (resultado != null ? ` con un resultado de ${enVista(resultado, venta.moneda === "ARS" ? "ARS" : "USD", true, true)}` : "")
     + ". La ves más abajo, en Ventas y resultado realizado."
     + (resto > 0 ? ` Quedan ${cantTxt(resto)} por responder en el aviso.` : "");
   // lo escrito en ESTA tarjeta ya se usó: si queda un resto, la tarjeta nueva

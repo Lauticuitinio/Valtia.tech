@@ -60,6 +60,21 @@ ok('sin moneda en ningun lado: null (NO se asume USD)', JSON.stringify(V.monedaF
 ok('moneda rara se normaliza a USD', V.monedaFactor({ moneda: 'EUR' }, null).moneda === 'USD');
 ok('renta fija sin factor: 0,01', V.monedaFactor({ moneda: 'ARS' }, null, true).factor === 0.01);
 ok('renta fija: el factor del precio le gana', V.monedaFactor({ moneda: 'ARS' }, { factor: 1 }, true).factor === 1);
+// sin precio ni moneda guardada: solo lo que el ticker dice sin dudas
+ok('ticker .BA: pesos', V.monedaDeTicker('TXAR.BA') === 'ARS');
+ok('YPFD.BA termina en D pero es accion: pesos', V.monedaDeTicker('YPFD.BA') === 'ARS');
+ok('cripto: dolares', V.monedaDeTicker('BTC-USD') === 'USD');
+ok('bono en pesos', V.monedaDeTicker('AL30', true) === 'ARS');
+ok('bono D y C: dolares', V.monedaDeTicker('AL30D', true) === 'USD' && V.monedaDeTicker('GD30C', true) === 'USD');
+ok('letra: pesos', V.monedaDeTicker('S30N6', true) === 'ARS');
+ok('sin sufijo y no es bono: no se sabe', V.monedaDeTicker('AAPL') === null && V.monedaDeTicker('') === null);
+ok('la posicion sin moneda usa su ticker', V.monedaFactor({ ticker: 'TXAR.BA' }, null).moneda === 'ARS');
+ok('el ticker aparte (foto de un aviso sin ticker)', V.monedaFactor({}, null, false, 'BTC-USD').moneda === 'USD');
+ok('el precio le gana al ticker', V.monedaFactor({ ticker: 'X.BA' }, { moneda: 'USD' }).moneda === 'USD');
+ok('la moneda guardada le gana al ticker', V.monedaFactor({ ticker: 'X.BA', moneda: 'USD' }, null).moneda === 'USD');
+ok('sin sufijo y sin datos sigue bloqueando', V.monedaFactor({ ticker: 'AAPL' }, null).moneda === null);
+ok('venta desde un aviso sin moneda: la del ticker del aviso',
+   V.ventaDesdeAjuste({ ticker: 'GGAL.BA', pos: { precioCompra: 5000 }, cantidadAntes: 10, cantidadBroker: 0 }, 10, null, 6000, '2026-09-01', 'x').moneda === 'ARS');
 
 // ── documento de la venta ──
 const px = { moneda: 'ARS', precio: 6100 };
