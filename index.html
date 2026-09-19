@@ -978,7 +978,7 @@ function updateChartTheme(){
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   import { getDatabase, ref, push, onValue, serverTimestamp as dbTimestamp }
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-  import { iniciarPanel } from './panel.js?v=27';
+  import { iniciarPanel } from './panel.js?v=28';
 
   
   // ── FIREBASE CONFIG ──
@@ -1264,6 +1264,12 @@ function updateChartTheme(){
   // ── LOGOUT ──
   window.logout = async function() {
     await signOut(auth);
+    // Recargar es la única garantía dura de que no queda NADA de la sesión
+    // anterior: los módulos ES viven mientras viva la página, y sin esto la
+    // cuenta siguiente podía encontrarse con la cartera del usuario de antes.
+    // El panel además se limpia solo al detectar el cambio de mail, pero acá
+    // no dependemos de que alguien se acuerde de hacerlo.
+    try { location.replace(location.pathname); } catch (e) { location.reload(); }
   };
 
   // ── AVISO DE EMAIL SIN VERIFICAR (cuentas nuevas por email) ──
@@ -1354,7 +1360,7 @@ function updateChartTheme(){
 
     // "Mi cartera": seguimiento de las posiciones propias (todo usuario con
     // sesión, admin incluido). Se carga aparte para no demorar el portal.
-    import('./mi-cartera.js?v=30')
+    import('./mi-cartera.js?v=31')
       .then(m => m.initMiCartera(user, document.getElementById('tab-micartera')))
       .catch(() => {});
   }

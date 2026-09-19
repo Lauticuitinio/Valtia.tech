@@ -7,7 +7,7 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { calcular, agruparPorBroker, normalizarTicker, convertir } from './mi-cartera.js?v=30';
+import { calcular, agruparPorBroker, normalizarTicker, convertir, reiniciarMiCartera } from './mi-cartera.js?v=31';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
@@ -224,8 +224,19 @@ function toast(msg) {
 }
 
 /* ───────────────────────── datos (con caché) ───────────────────────── */
-const _c = {};
-const cached = (k, f) => _c[k] || (_c[k] = f().catch(() => null));
+/* La caché es POR CUENTA. El logout NO recarga la página (index.html solo hace
+   signOut), así que este módulo sobrevive al cambio de usuario: una entrada
+   vieja servida a la cuenta siguiente le mostraría la cartera de otro. Cada
+   entrada se guarda con el mail de su dueño y NUNCA se sirve a otro mail, aunque
+   alguien se olvide de vaciarla. */
+let _c = {};
+const cached = (k, f) => {
+  const e = _c[k];
+  if (e && e.u === S.email) return e.p;
+  const p = f().catch(() => null);
+  _c[k] = { u: S.email, p };
+  return p;
+};
 const invalidar = (...ks) => ks.forEach(k => { delete _c[k]; });
 async function docJson(col) {
   try { const s = await getDoc(doc(db(), col, 'latest')); return s.exists() ? { ...JSON.parse(s.data().json || '{}'), _ts: s.data().actualizado_utc || null } : null; }
@@ -469,8 +480,22 @@ async function detectarPlan() {
   S.pro = pro; S.plan = S.cliente ? 'cliente' : pro ? 'pro' : 'gratis';
 }
 
+/* Cambio de cuenta en la misma página. Como el logout no recarga, sin esto
+   quedaban vivos: la caché de datos, el registro de qué pestaña ya se dibujó
+   (_hecho, que evita volver a dibujarla) y el HTML ya renderizado adentro de
+   cada div tab-*. O sea que la cuenta siguiente podía ver, literalmente en
+   pantalla, la cartera del usuario anterior. */
+function reiniciarEstado() {
+  _c = {};
+  Object.keys(_hecho).forEach(k => { delete _hecho[k]; });
+  _tab = 'inicio';
+  try { document.querySelectorAll('.portal-content div[id^="tab-"]').forEach(d => { d.innerHTML = ''; }); } catch (e) {}
+  try { reiniciarMiCartera(); } catch (e) {}
+}
+
 /* punto de entrada: lo llama enterPortal (index.html) para todo usuario */
 export async function iniciarPanel({ user, isAdmin, data }) {
+  if (S.email && S.email !== user.email) reiniciarEstado();
   // pestaña recordada de OTRO usuario (o de una sesión cerrada): se descarta
   try {
     if (sessionStorage.getItem('valtia-panel-user') !== user.email) {

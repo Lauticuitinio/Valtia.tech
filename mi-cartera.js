@@ -1587,6 +1587,18 @@ async function quitar(id) {
   } catch (e) {}
 }
 
+/* Cambio de cuenta sin recargar la página: el módulo sobrevive y estas
+   variables todavía tienen las posiciones, las ventas y los avisos del usuario
+   anterior. Las llama el panel apenas detecta que cambió el mail. */
+export function reiniciarMiCartera() {
+  _el = null; _user = null; _pos = []; _precios = {}; _ventas = []; _ajustes = [];
+  _porImportar = null;
+  if (_evoChart) { try { _evoChart.destroy(); } catch (e) {} _evoChart = null; }
+  Object.assign(_evo, { email: null, cargado: false, cargando: null, error: false,
+                        intento: 0, fotos: [], series: {}, spy: [], ccl: [] });
+  try { _evo.pedidos.clear(); _deshaciendo.clear(); } catch (e) {}
+}
+
 export async function initMiCartera(user, el) {
   if (!user || !el) return;
   _user = user; _el = el;
