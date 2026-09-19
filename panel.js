@@ -1353,7 +1353,7 @@ async function renderEmpresas() {
       const pxUsd = f && pi[f] && pi[f].p != null ? pi[f].p : null;
       if (docs.length) extra = `<p>📄 <a href="activo.html?t=${f}#informe" style="color:var(--gold)">${esc(docs[0].titulo)}</a> · ${fmtF(docs[0].fecha)}${docs[0].precio_pub && pxUsd ? ` · ${pct((pxUsd / docs[0].precio_pub - 1) * 100, 1)} desde su publicación` : ''}</p>`;
       else if (emp && emp.slug) extra = `<p>📄 Informe Valtia disponible con PRO · <a href="activo.html?t=${f}#informe" style="color:var(--gold)">ver la ficha</a></p>`;
-      else if (f) extra = `<p class="vp-mut">Sin informe Valtia todavía · <a href="mailto:valtyaanalytics@gmail.com?subject=Análisis de ${f}" style="color:var(--gold)">pedir este análisis</a></p>`;
+      else if (f) extra = `<p class="vp-mut">Sin informe Valtia todavía · <a href="mailto:soporte@valtia.tech?subject=Análisis de ${f}" style="color:var(--gold)">pedir este análisis</a></p>`;
       else extra = `<p class="vp-mut">Sin ficha en Valtia para este ticker.</p>`;
     }
     return `<div class="vp-card" data-emp="${esc(g.k)}"><div class="l">${esc(g.k)}${ver ? ` · <span class="vp-tag ${verCls(ver)}" style="padding:1px 6px">${esc(ver)}</span>` : ''}</div>
