@@ -120,6 +120,19 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 .vp-paso b{display:block;font-size:14px;color:var(--text);margin:8px 0 4px}
 .vp-paso p{font-size:12.5px;color:var(--sub);line-height:1.6;margin:0}
 .vp-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#14213D;color:#E8CE96;border:1px solid #B08A3E;border-radius:8px;padding:11px 18px;font-size:13px;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.vp-bv{position:fixed;inset:0;z-index:1000;background:rgba(6,12,22,.72);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.vp-bv-caja{background:var(--card);border:1px solid var(--border);border-radius:14px;max-width:560px;width:100%;padding:26px 28px 22px;box-shadow:0 20px 60px rgba(0,0,0,.45);margin:auto}
+.vp-bv-caja .k{font:600 9.5px 'Jost',sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.vp-bv-caja h3{font-family:'Cormorant Garamond',serif;font-size:29px;font-weight:400;color:var(--text);margin:8px 0 10px;line-height:1.15}
+.vp-bv-caja p{font-size:13.5px;color:var(--sub);line-height:1.7;margin:0 0 14px}
+.vp-bv-caja ul{list-style:none;padding:0;margin:0 0 16px}
+.vp-bv-caja li{font-size:13px;color:var(--sub);line-height:1.6;padding:9px 0;border-top:1px solid var(--border);display:flex;gap:11px;align-items:flex-start}
+.vp-bv-caja li b{color:var(--text);font-weight:600}
+.vp-bv-caja li i{flex-shrink:0;font-style:normal;color:var(--gold);font-weight:700;font-size:11px;letter-spacing:.06em;min-width:18px}
+.vp-bv-legal{font-size:11.5px;color:var(--muted);line-height:1.65;border-top:1px solid var(--border);padding-top:12px;margin-bottom:16px}
+.vp-bv-legal a{color:var(--gold);text-decoration:none}
+.vp-bv-pie{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+@media(max-width:560px){.vp-bv-caja{padding:22px 20px 18px}.vp-bv-caja h3{font-size:25px}}
 .vp-spark{width:100%;height:36px;display:block;margin:8px 0 4px}
 .vp-pos{color:#4caf50}.vp-neg{color:#ef5350}.vp-mut{color:var(--muted)}
 .vp-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px}
@@ -480,6 +493,60 @@ async function detectarPlan() {
   S.pro = pro; S.plan = S.cliente ? 'cliente' : pro ? 'pro' : 'gratis';
 }
 
+/* Bienvenida: se muestra UNA vez por cuenta, la primera vez que entra al
+   panel. Dice lo que hay que decir antes de que toque nada —qué es esto, qué
+   NO es, que sus datos son suyos— y deja a mano a quién escribirle.
+   La marca de "ya la vio" va por cuenta: en una máquina compartida, el que
+   entra después tiene derecho a verla igual. */
+const BIENVENIDA_V = 1;   // subir esto la vuelve a mostrar a todos
+const claveBienvenida = () => `valtia-bienvenida-v${BIENVENIDA_V}-${S.email || ''}`;
+
+function bienvenida() {
+  if (!S.email) return;
+  try { if (localStorage.getItem(claveBienvenida())) return; } catch (e) { return; }
+  if (document.getElementById('vp-bv')) return;
+  const nombre = (S.user && S.user.displayName ? S.user.displayName : S.email.split('@')[0]).split(' ')[0];
+  const f = document.createElement('div');
+  f.className = 'vp-bv'; f.id = 'vp-bv';
+  f.setAttribute('role', 'dialog'); f.setAttribute('aria-modal', 'true'); f.setAttribute('aria-labelledby', 'vp-bv-t');
+  f.innerHTML = `<div class="vp-bv-caja">
+    <div class="k">Bienvenido a Valtia</div>
+    <h3 id="vp-bv-t">Hola, ${esc(nombre)}</h3>
+    <p>Valtia es una herramienta para mirar tus inversiones con criterio propio: qué tenés,
+    cuánto vale hoy y qué dice la lectura automática sobre cada activo. Tres cosas antes de arrancar.</p>
+    <ul>
+      <li><i>01</i><div><b>Tus datos son tuyos.</b> Tu cartera y tu plan los ve tu cuenta y nadie más:
+        las reglas del servidor lo impiden. No los vendemos ni los compartimos.</div></li>
+      <li><i>02</i><div><b>Acá no se opera.</b> Valtia no ejecuta órdenes ni custodia fondos. Comprás y
+        vendés en tu broker; acá lo registrás y lo seguís.</div></li>
+      <li><i>03</i><div><b>Son lecturas, no consejos.</b> Todo lo que publicamos es análisis automático de
+        precios y múltiplos, de carácter general y educativo. No es asesoramiento financiero ni una
+        recomendación para tu caso.</div></li>
+    </ul>
+    ${!S.verificado ? `<p style="color:var(--gold)"><b>Te falta verificar tu mail.</b> Hasta que lo hagas,
+      Mi cartera y la inversión mensual quedan bloqueadas. Te mandamos el enlace cuando creaste la cuenta.</p>` : ''}
+    <div class="vp-bv-legal">Las alertas por mail vienen apagadas: las prendés vos desde el panel, y como
+      máximo sale una por día. ¿Dudas o algo que no funciona? Escribinos a
+      <a href="mailto:soporte@valtia.tech">soporte@valtia.tech</a>.</div>
+    <div class="vp-bv-pie">
+      <button class="vp-btn" id="vp-bv-ok">Empezar</button>
+      <a class="vp-ir" href="privacidad.html" style="margin:0">Privacidad</a>
+      <a class="vp-ir" href="terminos.html" style="margin:0">Términos</a>
+    </div>
+  </div>`;
+  const cerrar = () => {
+    try { localStorage.setItem(claveBienvenida(), new Date().toISOString()); } catch (e) {}
+    document.removeEventListener('keydown', porTecla);
+    f.remove();
+  };
+  const porTecla = ev => { if (ev.key === 'Escape') cerrar(); };
+  f.addEventListener('click', ev => { if (ev.target === f) cerrar(); });
+  document.addEventListener('keydown', porTecla);
+  document.body.appendChild(f);
+  const b = document.getElementById('vp-bv-ok');
+  if (b) { b.onclick = cerrar; try { b.focus(); } catch (e) {} }
+}
+
 /* Cambio de cuenta en la misma página. Como el logout no recarga, sin esto
    quedaban vivos: la caché de datos, el registro de qué pestaña ya se dibujó
    (_hecho, que evita volver a dibujarla) y el HTML ya renderizado adentro de
@@ -509,6 +576,7 @@ export async function iniciarPanel({ user, isAdmin, data }) {
   S.pro = S.isAdmin || S.cliente;
   instalarShell();
   abrirDesdeHash();
+  bienvenida();
   const antesPro = S.pro;
   await detectarPlan();
   const chip = $('vp-plan');
