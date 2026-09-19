@@ -247,6 +247,33 @@ const panelBonos = () => cached('bp', async () => (await docJson('bonosPanel')) 
 const preciosInf = () => cached('pi', async () => (await docJson('preciosInformes')) || {});
 const desglosePer = () => cached('dg', async () => (await docJson('desglosePeriodos')) || {});
 const bonosSet = () => cached('bset', async () => new Set(Object.keys((await panelBonos()).todos || {})));
+/* ── vencimientos de renta fija ─────────────────────────────────────────────
+   La fuente es bonosPanel.vencimientos ({especie: 'AAAA-MM-DD'}), que cubre TODA
+   la renta fija: soberanos, Bopreal, letras, CER y dólar linked. Si el pipeline
+   todavía no lo publicó, el mapa se arma con el campo vence de cada grupo y el
+   comportamiento es el de antes. Una especie AUSENTE del mapa no se avisa:
+   ausente significa "no sé cuándo vence", nunca "no vence". */
+const GRUPOS_RF = ['soberanos', 'bopreal', 'tasa_fija', 'cer', 'dolar_linked'];
+const vencMapa = () => cached('venc', async () => {
+  const bp = (await panelBonos()) || {}, m = {};
+  // se indexa por la especie tal cual Y por su par (AL30D y AL30): la posición
+  // del usuario puede estar cargada de cualquiera de las dos formas
+  const poner = (e, v) => {
+    const k = String(e || '').trim().toUpperCase(), f = String(v || '').slice(0, 10);
+    if (!k || !/^\d{4}-\d{2}-\d{2}$/.test(f)) return;
+    if (!m[k]) m[k] = f;
+    const p = parBono(k); if (!m[p]) m[p] = f;
+  };
+  // el mapa del pipeline manda: se carga primero y poner() no pisa lo ya puesto
+  Object.entries(bp.vencimientos || {}).forEach(([e, v]) => poner(e, v));
+  GRUPOS_RF.forEach(g => (bp[g] || []).forEach(x => x && poner(x.s, x.vence)));
+  return m;
+});
+const vencimientoDe = (tk, vm) => {
+  if (!vm) return '';
+  const e = base(tk);
+  return vm[e] || vm[parBono(e)] || vm[especieBono(e)] || '';
+};
 const fx = () => cached('fx', async () => {
   const r = await fetch('https://dolarapi.com/v1/dolares'); const d = await r.json();
   const v = casa => { const x = d.find(y => y.casa === casa); return x ? x.venta : null; };
@@ -830,7 +857,9 @@ async function cambios(cc, disc) {
   const box = $('vp-cambios'); if (!box) return;
   const items = [];
   const ev = (g, iso, txt, accion, go, href) => items.push({ g, iso: iso || '', txt, accion, go, href });
-  const tiene = cc.pos.length > 0, ten = tenencias(cc), hoy = hoyAR();
+  // con bonosSet la detección de renta fija sale del panel (245 especies); sin
+  // él caía en el regex de activos.js, que no matchea CER ni dólar linked
+  const tiene = cc.pos.length > 0, ten = tenencias(cc, await bonosSet()), hoy = hoyAR();
   // avisos del sync: una baja en el broker que todavía no se respondió
   try {
     const c4 = n => num(n, 4).replace(/,0+$/, '');
@@ -855,24 +884,72 @@ async function cambios(cc, disc) {
     cal.filter(c => c.fecha >= hoy && enDias(c.fecha) <= (tiene ? 7 : 3) && (!tiene || ten.fichas.has(c.ficha)))
       .forEach(c => ev(2, c.fecha, `<b>${esc(c.nombre)}</b> presenta resultados el ${fmtF(c.fecha)}${enDias(c.fecha) === 0 ? ' (hoy)' : ''}.`, 'Calendario', null, 'calendario.html'));
   } catch (e) {}
-  if (tiene && ten.pares.size) {
+  // la guarda es especies, no pares: `pares` es el índice para cruzar contra
+  // bonosFlujos, y lo que el bloque recorre es `especies`
+  if (tiene && ten.especies.size) {
     try {
-      const fl = await flujos();
+      const fl = await flujos(), bp = (await panelBonos()) || {}, vm = (await vencMapa()) || {};
       cc.pos.forEach(p => {
         if (!ten.especies.has(base(p.ticker))) return;
         // los soberanos se indexan por el par (AL30) y los Bopreal por su
         // simbolo completo (BPA7D): se prueban las dos formas
         const esp = base(p.ticker), par = fl[esp] ? esp : parBono(esp), d = fl[par];
         if (!d || !d.flujos) return;
-        d.flujos.filter(([f]) => f >= hoy && enDias(f) <= 30).slice(0, 1).forEach(([f, monto]) => {
+        // el pago final no se anuncia dos veces: si el flujo cae el día del
+        // vencimiento, el aviso que vale es el del vencimiento
+        d.flujos.filter(([f]) => f >= hoy && enDias(f) <= 30 && f !== vencimientoDe(esp, vm)).slice(0, 1).forEach(([f, monto]) => {
           const est = (Number(p.cantidad) || 0) * Number(monto) / 100;
           ev(2, f, `<b>${esc(base(p.ticker))}</b> paga el ${fmtF(f)}: ~US$${est.toLocaleString('es-AR', { maximumFractionDigits: 0 })} por tus ${Number(p.cantidad).toLocaleString('es-AR')} VN (estimado).`,
             'Bono', null, 'bono.html?e=' + encodeURIComponent(especieBono(par)));
         });
       });
-      const tf = ((await panelBonos()).tasa_fija || []);
-      tf.filter(l => ten.especies.has(l.s) && l.vence >= hoy && enDias(l.vence) <= 30)
-        .forEach(l => ev(2, l.vence, `<b>${esc(l.s)}</b> vence el ${fmtF(l.vence)}${l.vpv ? ` y paga $ ${num(l.vpv, 2)} por cada 100 VN${l.vpv_estimado ? ' (estimado)' : ''}` : ''}.`, 'Bono', null, 'bono.html?e=' + encodeURIComponent(l.s)));
+      // vencimientos: toda la renta fija, no solo las letras. De 0 a 7 días es
+      // plata que cae en la cuenta y hay que decidir qué hacer con ella, así que
+      // va a "Para actuar hoy"; de 8 a 30 alcanza con tenerlo agendado.
+      const tf = bp.tasa_fija || [];
+      // la especie tal como la nombra el panel, para que el link no invente
+      // tickers: especieBono() le pega una D a todo lo que no sea letra y
+      // convertiría TX26 en TX26D, que no existe
+      const espSet = new Set(GRUPOS_RF.flatMap(g => (bp[g] || []).map(x => x && x.s).filter(Boolean)));
+      // se agrupa por par: AL30, AL30D y AL30C son el mismo bono y el mismo
+      // vencimiento. Un aviso por bono, no uno por lote ni uno por moneda.
+      const porBono = new Map();
+      cc.pos.forEach(p => {
+        const e = base(p.ticker);
+        if (!ten.especies.has(e)) return;
+        const k = parBono(e), a = porBono.get(k) || { vn: 0, tk: e };
+        a.vn += Number(p.cantidad) || 0;
+        porBono.set(k, a);
+      });
+      porBono.forEach(({ vn, tk }, esp) => {
+        const venc = vencimientoDe(esp, vm);
+        if (!venc || venc < hoy) return;
+        const d = enDias(venc); if (d > 30) return;
+        const canon = [tk, esp, especieBono(esp)].find(x => espSet.has(x)) || esp;
+        // el importe solo se muestra si sale de un dato publicado: el vpv de la
+        // letra (pesos por 100 VN) o el último flujo del bono (dólares). Si no
+        // hay ninguno de los dos, se avisa el vencimiento sin número.
+        const letra = tf.find(l => l.s === canon);
+        const fd = fl[tk] || fl[esp] || fl[especieBono(esp)] || {};
+        const fin = ((fd.flujos || []).find(([f]) => f === venc) || [])[1];
+        const est = letra && letra.vpv != null ? { m: vn * Number(letra.vpv) / 100, s: '$ ' }
+          : fin != null ? { m: vn * Number(fin) / 100, s: 'US$' } : null;
+        const vnT = vn.toLocaleString('es-AR');
+        // "es el último pago" y no "te devuelven todo": en las amortizantes
+        // (TX26, TX28, DICP, PARP, CUAP) la fecha es la última cuota, no un pago
+        // único, y ya vinieron cuotas antes.
+        const plata = est ? `te acreditan ~${est.s}${num(est.m, 0)} por tus ${vnT} VN (estimado)`
+          : `es el último pago de tus ${vnT} VN`;
+        const href = 'bono.html?e=' + encodeURIComponent(canon);
+        if (d <= 7) {
+          // la columna de fecha del grupo 1 dice "hoy" para todo: la fecha real
+          // del vencimiento tiene que ir adentro del texto
+          const cuando = d === 0 ? 'hoy' : d === 1 ? 'mañana' : `en ${d} días`;
+          ev(1, venc, `<b>${esc(tk)}</b> vence ${cuando} (${fmtF(venc)}): ${plata} y esa plata te queda disponible para reinvertir.`, 'Bono', null, href);
+        } else {
+          ev(2, venc, `<b>${esc(tk)}</b> vence el ${fmtF(venc)}, en ${d} días: ${plata}.`, 'Bono', null, href);
+        }
+      });
     } catch (e) {}
   }
   try {
