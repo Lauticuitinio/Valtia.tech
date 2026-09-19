@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inversión mensual — Valtia Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0E1830;--navy2:#0B1327;--gold:#B08A3E;--gold2:#E8CE96;--gold3:#8A6A2F;--ink:#0E1830;--text:#4A453B;--muted:#6B6459;--line:#E5E7EB;--line2:#EEF0F3;--bg:#fff;--bg2:#F8F9FB;--green:#1F7A4D;--amber:#B7791F;--red:#B23A3A;--grey:#8A9BAD}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+a{color:var(--gold3);text-decoration:none}a:hover{color:var(--gold)}
+/* nav (igual que el resto del sitio) */
+nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:center;justify-content:space-between;gap:28px;padding:0 52px;background:rgba(14,24,48,.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(232,206,150,.14)}
+.brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.brand-name{font:700 20px 'Playfair Display',serif;letter-spacing:.06em;color:#fff}.brand-name em{color:var(--gold2)}
+.brand-sub{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4)}
+.nav-links{display:flex;align-items:center;gap:22px;min-width:0;overflow:hidden}
+.nav-links a{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6);white-space:nowrap}
+.nav-links a:hover,.nav-links a.on{color:var(--gold2)}
+.nav-cta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--navy);background:var(--gold2);padding:9px 22px;border-radius:8px;white-space:nowrap;flex-shrink:0}.nav-cta:hover{background:#fff;color:var(--navy)}
+/* mismo corte que nav-menu.js (1100): abajo de eso manda la hamburguesa */
+@media(max-width:1100px){.nav-links{display:none}}@media(max-width:880px){nav{padding:0 20px}}
+/* masthead */
+.mast{background:var(--navy);padding:30px 52px 26px;text-align:center}
+.mast h1{font:700 clamp(32px,4vw,44px) 'Playfair Display',serif;color:#fff;letter-spacing:.01em;line-height:1.05}.mast h1 em{color:var(--gold2)}
+.mast .k{font:600 10.5px 'IBM Plex Sans';letter-spacing:.24em;color:rgba(232,206,150,.8);text-transform:uppercase;margin-top:12px}
+.steps{background:var(--navy2);padding:11px 52px;border-top:1px solid rgba(255,255,255,.06);position:sticky;top:64px;z-index:150;overflow-x:auto}
+.steps div{display:flex;align-items:center;justify-content:center;gap:10px;min-width:max-content}
+.steps a{font:500 12px 'IBM Plex Sans';padding:8px 18px;border-radius:6px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);white-space:nowrap;display:flex;align-items:center;gap:8px}
+.steps a span{font:600 10px 'IBM Plex Mono',monospace;opacity:.7}.steps a.on{background:var(--gold2);color:var(--navy);font-weight:600}
+main{padding:36px 52px 70px;max-width:1160px;margin:0 auto;width:100%}
+@media(max-width:880px){main,.mast,.steps{padding-left:20px;padding-right:20px}}
+.intro{max-width:72ch;margin-bottom:40px}.intro .lead{font:400 17px 'IBM Plex Sans';line-height:1.75;color:var(--ink);margin-bottom:10px}.intro p{font-size:14.5px;line-height:1.75;color:var(--text)}
+.eye{font:600 10px 'IBM Plex Sans';letter-spacing:.22em;text-transform:uppercase;color:var(--gold3);display:flex;align-items:center;gap:12px}.eye::before{content:'';width:32px;height:1px;background:var(--gold)}
+h2{font:700 clamp(26px,3vw,34px) 'Playfair Display',serif;color:var(--ink);line-height:1.15;margin:12px 0 10px}
+.sub{font-size:15px;line-height:1.75;color:var(--text);margin-bottom:22px;max-width:75ch}.sub b{color:var(--ink)}
+.src{border-bottom:1px dotted var(--gold)}
+.hr{height:1px;background:var(--line);margin:48px 0}
+section{scroll-margin-top:130px}
+.two{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:36px;align-items:start}
+@media(max-width:820px){.two{grid-template-columns:1fr}}
+.tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.tabs button{font:600 11px 'IBM Plex Sans';letter-spacing:.08em;text-transform:uppercase;padding:9px 16px;border-radius:6px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--text);white-space:nowrap}.tabs button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.card-h{padding:14px 20px;border-bottom:1px solid var(--line2);display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.card-h b{font:600 16px 'Playfair Display',serif;color:var(--ink)}.card-h span{font-size:12px;color:var(--muted)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line2)}.row>span,.row>label{font-size:14px;color:var(--text)}
+.money{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:7px;padding:0 10px;background:#FAFAFA}.money:focus-within{border-color:var(--gold)}
+.money i{font:500 12px 'IBM Plex Mono',monospace;color:var(--muted);font-style:normal}
+.money input{width:96px;padding:9px 0;border:0;background:transparent;font:600 15px 'IBM Plex Mono',monospace;color:var(--ink);text-align:right;outline:none}
+/* el outline propio se saca, pero el foco de teclado tiene que verse igual */
+.money input:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:3px}
+.total{display:flex;justify-content:space-between;align-items:center;padding:13px 20px;background:var(--bg2);font-size:14px;color:var(--text)}.total b{font:600 16px 'IBM Plex Mono',monospace;color:var(--ink)}
+.side{display:flex;flex-direction:column;gap:14px;position:sticky;top:130px}
+.navycard{background:var(--navy);border-radius:12px;padding:22px 24px;color:#fff}
+.navycard .k{font:600 9.5px 'IBM Plex Sans';letter-spacing:.16em;text-transform:uppercase;color:rgba(232,206,150,.8)}
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}.trio>div{min-width:0}
+.trio b{display:block;font:600 clamp(15px,1.6vw,22px) 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}.trio small{font-size:11px;color:rgba(255,255,255,.55);display:block;margin-top:3px}
+.bar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:rgba(255,255,255,.1);margin-top:18px}
+.leg{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:rgba(255,255,255,.7)}.leg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
+.rule{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.rule .k{font:600 9.5px 'IBM Plex Sans';letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}.rule p{font-size:12.5px;color:var(--text);line-height:1.6;margin:8px 0 12px}
+.rule .r{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line2);font-size:13px}.rule .r small{color:var(--muted);font-size:11px}
+.rule .r b{font:600 13px 'IBM Plex Mono',monospace;color:var(--ink)}
+.tag{font:600 9.5px 'IBM Plex Sans';letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:4px;white-space:nowrap}
+.tag.ok{color:var(--green);background:rgba(31,122,77,.12)}.tag.casi{color:var(--amber);background:rgba(183,121,31,.12)}.tag.mal{color:var(--red);background:rgba(178,58,58,.12)}
+.trio-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:26px}
+.tc{border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:10px;padding:16px 18px}.tc .n{font:400 24px 'Playfair Display',serif;color:var(--gold);line-height:1}.tc b{display:block;font-size:14px;margin:8px 0 5px;color:var(--ink)}.tc p{font-size:12.5px;color:var(--text);line-height:1.6}
+.pct{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:22px 26px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center}
+@media(max-width:700px){.pct{grid-template-columns:1fr}.pct .big{border-left:0;border-top:1px solid var(--line);padding-top:16px}}
+.pct .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px}.pct .top span{font:600 13px 'IBM Plex Sans';color:var(--ink)}.pct .top b{font:600 20px 'IBM Plex Mono',monospace;color:var(--gold)}
+.pct input{width:100%;accent-color:var(--gold)}.pct .lab{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px}
+.pct .big{text-align:center;padding:0 12px;border-left:1px solid var(--line);min-width:180px}.pct .big .k{font:600 9.5px 'IBM Plex Sans';letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.pct .big b{display:block;font:700 40px 'Playfair Display',serif;color:var(--ink);line-height:1;margin-top:6px;font-variant-numeric:tabular-nums}.pct .big small{font-size:11.5px;color:var(--muted);display:block;margin-top:6px}
+.infl{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:18px}.infl p{font-size:13px;color:var(--text);line-height:1.55;max-width:60ch}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:#fff;flex-shrink:0}.seg button{font:600 11px 'IBM Plex Sans';letter-spacing:.06em;padding:8px 14px;cursor:pointer;background:transparent;color:var(--muted);border:0;white-space:nowrap}.seg button+button{border-left:1px solid var(--line)}.seg button.on{background:var(--ink);color:#fff}
+.chart{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px 24px 14px}
+.chart .legend{display:flex;flex-direction:column;gap:6px;margin-bottom:22px}.chart .legend div{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--text)}.chart .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}.chart .legend b{color:var(--ink)}.chart .legend small{font-size:11px;color:var(--muted)}
+.plot{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px}.yt{display:flex;flex-direction:column;justify-content:space-between;font:500 10.5px 'IBM Plex Mono',monospace;color:var(--muted);text-align:right;min-width:56px}
+.plot svg{width:100%;height:clamp(240px,34vw,360px);display:block;overflow:visible}
+.xt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;margin-top:8px}.xt>span{min-width:56px}.xt div{display:flex;justify-content:space-between;font:500 10.5px 'IBM Plex Mono',monospace;color:var(--muted)}
+.hitos{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin-top:14px}
+.hito{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:#fff}.hito .k{font:600 9.5px 'IBM Plex Sans';letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.hito .r{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:12px;color:var(--text)}.hito .r:first-of-type{margin-top:8px}.hito .r span{white-space:nowrap}.hito .r b{font:600 12.5px 'IBM Plex Mono',monospace;color:var(--ink)}.hito .r b.g{color:var(--gold3)}
+.note{font-size:12.5px;color:var(--text);line-height:1.7;margin-top:16px;max-width:80ch}.note b{color:var(--ink)}
+.resp{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.rc{border:1px solid var(--line);border-top:3px solid var(--grey);border-radius:10px;padding:16px 18px;background:#fff}.rc.gold{border-top-color:var(--gold)}.rc.navy{border-top-color:var(--ink)}
+.rc .k{font:600 9.5px 'IBM Plex Sans';letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}.rc .v{display:flex;align-items:baseline;gap:6px;margin-top:8px}.rc .v b{font:700 32px 'Playfair Display',serif;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--grey)}.rc.gold .v b{color:var(--gold)}.rc.navy .v b{color:var(--ink)}.rc .v span{font-size:12px;color:var(--text)}.rc small{display:block;font-size:12px;color:var(--muted);margin-top:6px}
+.cta{margin-top:48px;background:var(--navy);border-radius:14px;padding:30px 34px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.cta .k{font:600 9.5px 'IBM Plex Sans';letter-spacing:.16em;text-transform:uppercase;color:rgba(232,206,150,.8)}.cta h3{font:700 26px 'Playfair Display',serif;color:#fff;margin:8px 0 6px;line-height:1.2}.cta p{font-size:13.5px;color:rgba(255,255,255,.7);line-height:1.65;max-width:60ch}
+.btn{background:var(--gold2);color:var(--navy);font:600 11px 'IBM Plex Sans';letter-spacing:.12em;text-transform:uppercase;padding:14px 26px;border-radius:8px;white-space:nowrap;border:0;cursor:pointer}.btn:hover{background:#fff;color:var(--navy)}.btn:disabled{background:rgba(232,206,150,.35);color:rgba(14,24,48,.55);cursor:not-allowed}.btn:disabled:hover{background:rgba(232,206,150,.35)}
+.msg{font-size:12.5px;margin-top:10px;min-height:16px;color:rgba(255,255,255,.75)}.msg.ok{color:#9be0b6}.msg.err{color:#f0a0a0}
+footer.legal{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;font-size:12px;color:var(--text);line-height:1.9;max-width:900px}
+.oculto{display:none!important}
+.site-foot{background:var(--navy2);padding:26px 52px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;font:400 11px 'IBM Plex Sans';color:rgba(255,255,255,.35)}.site-foot a{font-weight:500;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase;white-space:nowrap}
+</style>
+</head>
+<body>
+<nav>
+  <a class="brand" href="index.html">
+    <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <div><div class="brand-name">VAL<em>T</em>IA</div><div class="brand-sub">Analytics</div></div>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Inicio</a><a href="cartera.html">Carteras</a><a href="inversion-mensual.html" class="on">Inversión mensual</a><a href="noticias.html">Noticias</a><a href="informes.html">Informes</a><a href="herramientas.html">Herramientas</a><a href="planes.html">Planes</a>
+  </div>
+  <a class="nav-cta" href="index.html?login=crear" id="nav-cta">Ingresar / Crear cuenta</a>
+</nav>
+<div id="valtia-cot"></div>
+
+<div class="mast"><h1>Inversión <em>mensual</em></h1><div class="k">Cuánto te sobra · Cuánto invertir · Qué cambia con el tiempo</div></div>
+<div class="steps"><div>
+  <a href="#paso-1" class="on"><span>01</span>Presupuesto</a><a href="#paso-2"><span>02</span>Cuánto invertir</a><a href="#paso-3"><span>03</span>Qué hace el tiempo</a><a href="#paso-4"><span>04</span>En perspectiva</a>
+</div></div>
+
+<main>
+  <div class="intro">
+    <p class="lead">Esta página te ayuda a decidir una sola cosa: <b>cuánta plata podés poner en inversiones cada mes sin que te falte para vivir.</b></p>
+    <p>Son tres pasos. Primero anotás lo que entra y lo que sale. Después elegís qué parte de lo que sobra va al mercado. Al final ves qué hace el tiempo con ese aporte, comparando tres caminos. Lleva cinco minutos y todos los números se pueden cambiar.</p>
+  </div>
+
+  <section id="paso-1" class="two">
+    <div>
+      <div class="eye">Paso 1 · Tu presupuesto</div>
+      <h2>Primero, cuánto te sobra</h2>
+      <p class="sub">Anotá lo que entra y lo que sale en un mes normal. No hace falta que sea exacto: con un número aproximado alcanza para saber cuánto podés invertir sin apretarte.</p>
+      <div class="tabs" id="tabs" role="tablist" aria-label="Tipo de movimiento"></div>
+      <div class="card"><div class="card-h"><b id="tab-t"></b><span id="tab-h"></span></div><div id="campos" role="tabpanel" tabindex="0"></div><div class="total"><span>Total</span><b id="tab-total"></b></div></div>
+    </div>
+    <div class="side">
+      <div class="navycard">
+        <div class="k">Tu mes, en resumen</div>
+        <div class="trio"><div><b id="r-ing"></b><small>entra</small></div><div><b id="r-gas"></b><small>sale</small></div><div><b id="r-aho"></b><small>te sobra</small></div></div>
+        <div class="bar"><div id="w-nec" style="background:#8A9BAD"></div><div id="w-des" style="background:#B08A3E"></div><div id="w-aho" style="background:#E8CE96"></div></div>
+        <div class="leg"><span><i style="background:#8A9BAD"></i>Necesario <b id="p-nec"></b></span><span><i style="background:#B08A3E"></i>Deseado <b id="p-des"></b></span><span><i style="background:#E8CE96"></i>Ahorro <b id="p-aho"></b></span></div>
+      </div>
+      <div class="rule">
+        <div class="k">La regla 50 / 30 / 20</div>
+        <p>Una referencia, no una ley: hasta el 50% en lo necesario, hasta el 30% en gustos, y al menos el 20% para ahorrar. La propusieron Elizabeth Warren y Amelia Warren Tyagi en <i>All Your Worth</i> (2005).</p>
+        <div id="salud"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="hr"></div>
+
+  <section id="paso-2">
+    <div class="eye">Paso 2 · Cuánto invertir</div>
+    <h2>De lo que te sobra, ¿qué parte invertís?</h2>
+    <p class="sub">No todo lo que ahorrás debería ir al mercado. Una parte conviene tenerla a mano. Antes de elegir el porcentaje, fijate si ya cubriste estas tres cosas:</p>
+    <div class="trio-cards">
+      <div class="tc"><div class="n">1</div><b>Un colchón para imprevistos</b><p>Entre tres y seis meses de gastos, en algo que puedas sacar mañana sin perder.</p></div>
+      <div class="tc"><div class="n">2</div><b>Las vacaciones de este año</b><p>Si ya sabés que vas a gastar, no lo pongas en acciones. Entre 5% y 10% del ingreso anual es razonable.</p></div>
+      <div class="tc"><div class="n">3</div><b>Cualquier gasto grande a menos de un año</b><p>Un auto, una mudanza, un curso. Lo que necesitás pronto no puede depender del mercado.</p></div>
+    </div>
+    <div class="pct">
+      <div><div class="top"><span>Porcentaje del ahorro que va a inversión</span><b id="pct-v">50%</b></div><input type="range" id="pct" min="0" max="100" step="5" value="50"><div class="lab"><span>0% · todo a mano</span><span>50% · referencia</span><span>100% · todo al mercado</span></div></div>
+      <div class="big" aria-live="polite"><div class="k">Invertís por mes</div><b id="aporte"></b><small>y quedan <span id="colchon"></span> a mano</small><small id="regla-big" style="color:var(--gold3)"></small></div>
+    </div>
+  </section>
+
+  <div class="hr"></div>
+
+  <section id="paso-3">
+    <div class="eye">Paso 3 · Qué hace el tiempo</div>
+    <h2 id="h-paso3">Qué pasa con tu aporte al mes durante veinte años</h2>
+    <p class="sub" style="margin-bottom:14px">Tres caminos con la misma plata. Debajo del colchón no rinde nada. Para renta fija tomamos <b>5% al año</b>: es lo que rindieron los bonos del Tesoro de EE.UU. a diez años en promedio desde 1928 (<a class="src" href="https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html" target="_blank" rel="noopener">Damodaran, NYU Stern</a>). Para acciones, <b>10% al año</b>: el promedio del S&amp;P 500 con dividendos desde 1957 (<a class="src" href="https://www.officialdata.org/us/stocks/s-p-500/1957" target="_blank" rel="noopener">Official Data</a>, <a class="src" href="https://www.fidelity.com/learning-center/trading-investing/sp-500-average-return" target="_blank" rel="noopener">Fidelity</a>). No usamos lo que rindió Valtia: veinte años no se prometen. Y ojo con leer el promedio como si fuera el resultado: ventanas reales de veinte años rindieron entre 6% y 13% anual. El mismo aporte entre 1999 y 2019 habría terminado bastante por debajo de lo que muestra el gráfico.</p>
+    <div class="infl" id="infl"><p id="infl-t"></p><div class="seg"><button id="b-nom" class="on">Sin descontar inflación</button><button id="b-real">En plata de hoy</button></div></div>
+    <div class="chart" id="chart">
+      <div class="legend"><div><span><i style="background:#8A9BAD"></i>Debajo del colchón <b id="f-cash"></b></span><span><i style="background:#B08A3E"></i>Renta fija <b id="f-rf"></b></span><span><i style="background:#0E1830"></i>Acciones <b id="f-acc"></b></span></div><small>valor de la inversión, en dólares</small></div>
+      <div class="plot"><div class="yt" id="yt"></div>
+        <svg viewBox="0 0 1000 340" preserveAspectRatio="none" role="img" aria-label="Evolución del aporte mensual a veinte años en tres caminos: debajo del colchón, renta fija y acciones. Los montos exactos están en la leyenda y en las tarjetas de abajo.">
+          <line x1="0" y1="0" x2="1000" y2="0" stroke="#EEF0F3"/><line x1="0" y1="85" x2="1000" y2="85" stroke="#EEF0F3"/><line x1="0" y1="170" x2="1000" y2="170" stroke="#EEF0F3"/><line x1="0" y1="255" x2="1000" y2="255" stroke="#EEF0F3"/><line x1="0" y1="340" x2="1000" y2="340" stroke="#D9DCE1"/>
+          <path id="a-acc" fill="rgba(14,24,48,0.06)"/><path id="l-cash" fill="none" stroke="#8A9BAD" stroke-width="2.5" vector-effect="non-scaling-stroke"/><path id="l-rf" fill="none" stroke="#B08A3E" stroke-width="2.5" vector-effect="non-scaling-stroke"/><path id="l-acc" fill="none" stroke="#0E1830" stroke-width="3" vector-effect="non-scaling-stroke"/>
+        </svg></div>
+      <div class="xt"><span></span><div><span>hoy</span><span>5 años</span><span>10 años</span><span>15 años</span><span>20 años</span></div></div>
+    </div>
+    <div class="hitos" id="hitos"></div>
+    <p class="note"><b>¿Y los bonos argentinos?</b> Suelen pagar bastante más que ese 5%, pero el país entró en default nueve veces desde su independencia: las primeras siete están contadas en Reinhart y Rogoff, <i>This Time Is Different</i> (2009), y después vinieron 2014 y 2020. A propósito no los usamos como supuesto a veinte años: una tasa alta con riesgo de no cobrar no es lo mismo que una tasa baja segura. Si querés ver cómo rinden hoy, están en <a class="src" href="herramientas.html">Herramientas</a> con el dato del día.</p>
+  </section>
+
+  <div class="hr"></div>
+
+  <section id="paso-4">
+    <div class="eye">Para tener en perspectiva</div>
+    <h2>Cuántos meses de gastos tendrías cubiertos</h2>
+    <p class="sub">Una forma concreta de leer los números de arriba: si mañana se cortara el ingreso, ¿cuántos meses podrías vivir de lo invertido? Hoy gastás <b id="gastos-mes"></b> por mes. <b>Esta sección siempre va en plata de hoy</b>, sin importar cómo tengas el interruptor de arriba: comparar dólares de dentro de veinte años contra tus gastos de este mes no diría nada. Las proyecciones incluyen lo que ya tenés invertido, creciendo a la misma tasa. No es una meta ni una promesa; es una medida de respaldo.</p>
+    <div class="row" style="border:1px solid var(--line);border-radius:10px;margin-bottom:16px;max-width:480px"><label for="stock">¿Cuánto tenés invertido hoy?</label><div class="money"><i>US$</i><input type="text" id="stock" inputmode="decimal" autocomplete="off" value="0" style="width:110px"></div></div>
+    <div class="resp" id="resp" aria-live="polite"></div>
+  </section>
+
+  <div class="cta">
+    <div><div class="k">Y ahora, todos los meses</div><h3 id="cta-h">Guardá tu regla mensual</h3><p>Cada mes te mostramos los activos que el radar ve baratos y que todavía no tenés en tu cartera. Marcás los que compraste y quedan anotados en Mi cartera.</p><div class="msg" id="regla-actual" style="opacity:.85"></div><div class="msg" id="msg" aria-live="polite"></div></div>
+    <button class="btn" id="guardar" disabled>Guardar y ver las candidatas →</button>
+  </div>
+
+  <footer class="legal">Invertir implica riesgo de pérdida del capital y los rendimientos pasados no garantizan resultados futuros. Valtia no ejecuta operaciones ni custodia fondos. Los cálculos no descuentan impuestos y usan rendimientos promedio del pasado: sirven para entender el efecto del tiempo, no para predecir. Fuentes consultadas el 18 de septiembre de 2026. Es análisis general, no una recomendación para tu caso. · <a href="terminos.html" style="color:inherit;text-decoration:underline">Términos</a> · <a href="privacidad.html" style="color:inherit;text-decoration:underline">Privacidad</a></footer>
+</main>
+<div class="site-foot"><span>© 2026 Valtia Analytics</span><a href="index.html">Inicio</a></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const app = initializeApp({ apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw', authDomain: 'valtia-analytics.firebaseapp.com', projectId: 'valtia-analytics' });
+const db = getFirestore(app);
+let user = null, authResuelto = false, huboSesion = false, cfgPrev = null;
+
+const $ = s => document.querySelector(s);
+const usd = n => 'US$' + Math.round(n).toLocaleString('es-AR');
+const usdK = n => n >= 1e6 ? 'US$' + (n / 1e6).toFixed(1).replace('.', ',') + ' M' : n >= 1000 ? 'US$' + Math.round(n / 1000) + ' k' : 'US$' + Math.round(n);
+const sum = o => Object.values(o).reduce((a, b) => a + (+b || 0), 0);
+const pct1 = x => x.toFixed(1).replace('.', ',');
+// 10% anual es 10% anual: con r/12 la capitalización mensual lo convertía en 10,47%
+const fv = (pm, r, y) => { const m = Math.pow(1 + r, 1 / 12) - 1, n = y * 12; return m === 0 ? pm * n : pm * ((Math.pow(1 + m, n) - 1) / m); };
+const INFL = 3, RF = 5, ACC = 10, Y = 20, TOPE = 1e8;
+// inflación acumulada hasta el año y: se le aplica a TODA la serie, también a lo
+// que pusiste. Restarle 3 puntos a la tasa solo descuenta el rendimiento y deja
+// los aportes intactos, que es lo que inflaba el resultado hasta un 81%
+const defl = y => Math.pow(1 + INFL / 100, y);
+const real = r => ((1 + r / 100) / (1 + INFL / 100) - 1) * 100;
+
+const TABS = {
+  ing: ['Ingresos', 'Lo que entra', 'neto, después de impuestos', { sueldo: 'Sueldo neto mensual', otros: 'Otros ingresos' }],
+  nec: ['Gastos necesarios', 'Lo que no podés dejar de pagar', 'alquiler, comida, transporte, servicios', { vivienda: 'Vivienda', comida: 'Comida', transporte: 'Transporte', servicios: 'Servicios y salud' }],
+  des: ['Gastos deseados', 'Lo que elegís gastar', 'salidas, ropa, suscripciones, viajes', { salidas: 'Salidas', ropa: 'Ropa', suscripciones: 'Suscripciones', viajes: 'Viajes y escapadas' }],
+};
+const LS = 'valtia-presupuesto';
+// marca de sesión: si el usuario cierra sesión en otra página, al volver acá
+// sigue estando y el presupuesto se limpia igual (lo promete privacidad.html)
+const LS_SES = 'valtia-sesion-abierta';
+const DEF = { tab: 'ing', pct: 50, stock: 0, real: false, ing: { sueldo: 1500, otros: 0 }, nec: { vivienda: 450, comida: 250, transporte: 80, servicios: 120 }, des: { salidas: 120, ropa: 60, suscripciones: 30, viajes: 90 } };
+const clonDef = () => JSON.parse(JSON.stringify(DEF));
+let S = clonDef();
+
+// Un argentino escribe 1.500,50. Un input type=number lo lee como 1,5 (o lo
+// descarta) y devuelve un resultado creíble y equivocado sin avisar. Acá se lee
+// el texto crudo y se normaliza; si no se entiende, se marca y no se asume cero.
+function numeroCrudo(txt) {
+  const s = String(txt == null ? '' : txt).trim().replace(/\s| |US\$|\$/g, '');
+  if (!s) return 0;
+  let t = s;
+  if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.');
+  else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
+  const n = Number(t);
+  return isFinite(n) ? n : null;
+}
+function parseMonto(txt) {
+  const n = numeroCrudo(txt);
+  return n === null ? null : Math.min(TOPE, Math.max(0, n));
+}
+// un negativo o un monto por encima del tope se recortan para la cuenta; si el
+// campo siguiera mostrando lo tipeado, la pantalla diría una cosa y el cálculo
+// otra. Se lee, se recorta y se reescribe el campo con el valor que se usa.
+function leerCampo(el, aplicar) {
+  const crudo = numeroCrudo(el.value), v = parseMonto(el.value), malo = v === null;
+  el.style.color = malo ? 'var(--red)' : '';
+  el.setAttribute('aria-invalid', malo ? 'true' : 'false');
+  if (malo) return;
+  if (crudo !== v) el.value = String(v);
+  aplicar(v); calc();
+}
+
+// lo guardado puede venir de una versión anterior, a medias o manipulado: se
+// valida campo por campo. Un null acá dejaba la página en blanco sin mensaje.
+function limpiarGuardado(g) {
+  const num = (v, max, def) => { const n = Number(v); return isFinite(n) ? Math.min(max, Math.max(0, n)) : def; };
+  const out = {};
+  if (!g || typeof g !== 'object') return out;
+  if (g.pct !== undefined) out.pct = Math.round(num(g.pct, 100, 50) / 5) * 5;
+  if (g.stock !== undefined) out.stock = num(g.stock, TOPE, 0);
+  for (const k of ['ing', 'nec', 'des']) {
+    if (g[k] && typeof g[k] === 'object') {
+      out[k] = {};
+      for (const c of Object.keys(TABS[k][3])) out[k][c] = num(g[k][c], TOPE, S[k][c]);
+    }
+  }
+  return out;
+}
+try { S = { ...S, ...limpiarGuardado(JSON.parse(localStorage.getItem(LS) || 'null')), tab: 'ing' }; } catch (e) {}
+// noPersistir corta la escritura durante el render que sigue al cierre de
+// sesión: si no, el propio calc() volvía a guardar el presupuesto recién borrado
+let noPersistir = false;
+const persist = () => { if (noPersistir) return; try { localStorage.setItem(LS, JSON.stringify({ pct: S.pct, stock: S.stock, ing: S.ing, nec: S.nec, des: S.des })); } catch (e) {} };
+
+function pintarTabs() {
+  $('#tabs').querySelectorAll('button').forEach(b => {
+    const on = b.dataset.k === S.tab;
+    b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false');
+    b.tabIndex = on ? 0 : -1;
+    if (on) $('#campos').setAttribute('aria-labelledby', b.id);
+  });
+}
+
+function renderCampos() {
+  const t = TABS[S.tab]; $('#tab-t').textContent = t[1]; $('#tab-h').textContent = t[2];
+  $('#campos').innerHTML = Object.entries(t[3]).map(([k, l]) =>
+    `<div class="row"><label for="c-${k}">${l}</label><div class="money"><i>US$</i>` +
+    `<input type="text" inputmode="decimal" autocomplete="off" id="c-${k}" data-f="${k}" value="${S[S.tab][k]}"></div></div>`).join('');
+  $('#campos').querySelectorAll('input').forEach(i => i.oninput = () => {
+    leerCampo(i, v => { S[S.tab][i.dataset.f] = v; });
+  });
+  $('#tab-total').textContent = usd(sum(S[S.tab]));
+}
+
+function renderTabs() {
+  // se dibuja UNA vez: reescribir #tabs adentro del propio onclick mandaba el
+  // foco del teclado a body en cada cambio de solapa
+  $('#tabs').innerHTML = Object.keys(TABS).map(k =>
+    `<button type="button" role="tab" id="tab-b-${k}" aria-controls="campos" data-k="${k}">${TABS[k][0]}</button>`).join('');
+  const btns = [...$('#tabs').querySelectorAll('button')];
+  const ir = b => { S.tab = b.dataset.k; pintarTabs(); renderCampos(); b.focus(); };
+  btns.forEach((b, i) => {
+    b.onclick = () => ir(b);
+    // un tablist se recorre con las flechas: el Tab sale de la barra de solapas
+    b.onkeydown = e => {
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : e.key === 'Home' ? -i : e.key === 'End' ? btns.length - 1 - i : 0;
+      if (!d) return;
+      e.preventDefault(); ir(btns[(i + d + btns.length) % btns.length]);
+    };
+  });
+  pintarTabs(); renderCampos();
+}
+
+function calc() {
+  persist();
+  const ing = sum(S.ing), nec = sum(S.nec), des = sum(S.des), gas = nec + des, aho = ing - gas;
+  const p = n => ing > 0 ? Math.max(0, Math.round(n / ing * 100)) : 0;
+  const pN = p(nec), pD = p(des), pA = ing > 0 ? Math.max(0, 100 - pN - pD) : 0;
+  $('#tab-total').textContent = usd(sum(S[S.tab]));
+  $('#r-ing').textContent = usd(ing); $('#r-gas').textContent = usd(gas); $('#r-aho').textContent = usd(aho); $('#r-aho').style.color = aho >= 0 ? '#E8CE96' : '#F0A0A0';
+  $('#w-nec').style.width = pN + '%'; $('#w-des').style.width = pD + '%'; $('#w-aho').style.width = pA + '%';
+  $('#p-nec').textContent = pN + '%'; $('#p-des').textContent = pD + '%'; $('#p-aho').textContent = pA + '%';
+  const ev = (v, ok, casi, t) => { const c = ok ? 'ok' : casi ? 'casi' : 'mal'; return `<span class="tag ${c}">${ok ? t[0] : casi ? t[1] : t[2]}</span>`; };
+  $('#salud').innerHTML =
+    `<div class="r"><span>Necesario <small>hasta 50%</small></span><span style="display:flex;gap:8px;align-items:center"><b>${pN}%</b>${ev(pN, pN <= 50, pN <= 60, ['Bien', 'Un poco alto', 'Alto'])}</span></div>` +
+    `<div class="r"><span>Deseado <small>hasta 30%</small></span><span style="display:flex;gap:8px;align-items:center"><b>${pD}%</b>${ev(pD, pD <= 30, pD <= 40, ['Bien', 'Un poco alto', 'Alto'])}</span></div>` +
+    `<div class="r"><span>Ahorro <small>desde 20%</small></span><span style="display:flex;gap:8px;align-items:center"><b>${pA}%</b>${ev(pA, pA >= 20, pA >= 10, ['Sano', 'Justo', 'Bajo'])}</span></div>`;
+
+  const aporte = Math.max(0, aho) * S.pct / 100, colchon = Math.max(0, aho) - aporte;
+  $('#pct-v').textContent = S.pct + '%'; $('#aporte').textContent = usd(aporte); $('#colchon').textContent = usd(colchon);
+  $('#pct').setAttribute('aria-valuetext', `${S.pct}% del ahorro · ${usd(aporte)} por mes`);
+  const hayAporte = aporte > 0;
+  $('#h-paso3').textContent = hayAporte ? `Qué pasa con ${usd(aporte)} al mes durante veinte años` : 'Qué hace el tiempo con un aporte mensual';
+  $('#cta-h').textContent = hayAporte ? `Guardá tu regla: ${usd(aporte)} por mes` : 'Guardá tu regla mensual';
+  // con aporte 0 el gráfico dibujaba tres líneas pegadas al piso y un eje de
+  // US$1: son montos inventados. Se esconde y queda el mensaje de los hitos
+  $('#chart').classList.toggle('oculto', !hayAporte);
+  $('#infl').classList.toggle('oculto', !hayAporte);
+
+  $('#infl-t').textContent = S.real
+    ? `Viendo los montos en plata de hoy: descontamos la inflación acumulada (${INFL}% al año, el promedio histórico de EE.UU.) a toda la serie, también a lo que fuiste poniendo. En términos reales equivale a ${pct1(real(ACC))}% anual en acciones y ${pct1(real(RF))}% en renta fija. Es lo que realmente podrías comprar.`
+    : `Viendo los montos sin descontar inflación. Se ven más grandes de lo que van a valer: un ${ACC}% nominal equivale a ${pct1(real(ACC))}% real con ${INFL}% de inflación al año.`;
+  $('#b-nom').classList.toggle('on', !S.real); $('#b-real').classList.toggle('on', S.real);
+  // las tasas quedan siempre nominales; lo que cambia es si la serie se deflacta
+  const pts = r => Array.from({ length: Y + 1 }, (_, y) => { const v = fv(aporte, r / 100, y); return S.real ? v / defl(y) : v; });
+  const cash = pts(0), sRF = pts(RF), sAcc = pts(ACC), max = Math.max(sAcc[Y], 1), W = 1000, H = 340;
+  const path = a => 'M' + a.map((v, i) => (i / Y * W).toFixed(1) + ',' + (H - v / max * H).toFixed(1)).join('L');
+  $('#l-cash').setAttribute('d', path(cash)); $('#l-rf').setAttribute('d', path(sRF)); $('#l-acc').setAttribute('d', path(sAcc)); $('#a-acc').setAttribute('d', path(sAcc) + `L${W},${H}L0,${H}Z`);
+  $('#yt').innerHTML = [1, .75, .5, .25, 0].map(f => `<span>${usdK(max * f)}</span>`).join('');
+  $('#f-cash').textContent = usd(cash[Y]); $('#f-rf').textContent = usd(sRF[Y]); $('#f-acc').textContent = usd(sAcc[Y]);
+  $('#hitos').innerHTML = hayAporte
+    ? [5, 10, 15, 20].map(y => `<div class="hito"><div class="k">Año ${y}</div><div class="r"><span>Pusiste</span><b>${usd(cash[y])}</b></div><div class="r"><span>Renta fija</span><b class="g">${usd(sRF[y])}</b></div><div class="r"><span>Acciones</span><b>${usd(sAcc[y])}</b></div></div>`).join('')
+    : '<div class="hito" style="grid-column:1/-1"><div class="k">Todavía no hay aporte</div>' +
+      '<p style="font-size:12.5px;color:var(--text);line-height:1.6;margin-top:8px">Con lo que anotaste no te sobra nada para invertir. ' +
+      'Revisá los números del paso 1 o bajá el porcentaje del paso 2: el gráfico se dibuja solo cuando hay un aporte mayor que cero.</p></div>';
+
+  $('#gastos-mes').textContent = usd(gas);
+  // esta sección va SIEMPRE en plata de hoy: dividir dólares de dentro de veinte
+  // años por los gastos de este mes no mide nada. No depende del interruptor
+  // incluye lo que YA tenés invertido, creciendo a la misma tasa: si no, la
+  // tarjeta de "hoy" podía dar más años que la de diez años y la escalera se
+  // daba vuelta apenas cargabas un monto
+  const hoyMismo = (r, y) => (fv(aporte, r / 100, y) + S.stock * Math.pow(1 + r / 100, y)) / defl(y);
+  const meses = v => gas > 0 ? v / gas : 0, fm = v => { const m = meses(v); return m >= 24 ? (m / 12).toFixed(m >= 120 ? 0 : 1).replace('.', ',') : Math.round(m) + ''; }, um = v => meses(v) >= 24 ? 'años' : 'meses';
+  if (gas <= 0) {
+    $('#resp').innerHTML = '<div class="rc" style="grid-column:1/-1"><div class="k">Sin gastos cargados</div>' +
+      '<small>Anotá arriba lo que gastás en un mes normal y acá te decimos cuántos meses podrías cubrir con lo invertido.</small></div>';
+  } else {
+    const sumaStock = S.stock > 0 ? ', con lo que ya tenés adentro' : '';
+    $('#resp').innerHTML = [
+      ['', 'Hoy, si ya tenés algo invertido', S.stock, S.stock > 0 ? 'con ' + usd(S.stock) : 'todavía nada — es normal al empezar'],
+      ['gold', 'En 10 años · acciones', hoyMismo(ACC, 10), usd(hoyMismo(ACC, 10)) + ' en plata de hoy' + sumaStock],
+      ['gold', 'En 20 años · renta fija', hoyMismo(RF, Y), usd(hoyMismo(RF, Y)) + ' en plata de hoy' + sumaStock],
+      ['navy', 'En 20 años · acciones', hoyMismo(ACC, Y), usd(hoyMismo(ACC, Y)) + ' en plata de hoy' + sumaStock],
+    ].map(([c, k, v, s]) => `<div class="rc ${c}"><div class="k">${k}</div><div class="v"><b>${fm(v)}</b><span>${um(v)}</span></div><small>${s}</small></div>`).join('');
+  }
+  actualizarBoton(aporte);
+  return { aporte, ing, gas, aho };
+}
+
+$('#pct').oninput = e => { S.pct = +e.target.value; calc(); };
+$('#pct').setAttribute('aria-label', 'Porcentaje del ahorro que va a inversión');
+$('#stock').value = S.stock;
+$('#stock').oninput = e => {
+  const v = parseMonto(e.target.value);
+  const malo = v === null;
+  e.target.style.color = malo ? 'var(--red)' : '';
+  e.target.setAttribute('aria-invalid', malo ? 'true' : 'false');
+  if (!malo) { S.stock = v; calc(); }
+};
+$('#b-nom').onclick = () => { S.real = false; calc(); }; $('#b-real').onclick = () => { S.real = true; calc(); };
+document.querySelectorAll('.steps a').forEach(a => a.onclick = e => { e.preventDefault(); const el = $(a.getAttribute('href')); document.querySelectorAll('.steps a').forEach(x => x.classList.remove('on')); a.classList.add('on'); window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 130, behavior: 'smooth' }); });
+
+// El botón arranca apagado: con la sesión sin resolver, un usuario logueado que
+// apretaba rápido caía por la rama "no hay sesión" y lo mandaban al login
+function actualizarBoton(aporte) {
+  const b = $('#guardar');
+  if (aporte === undefined) return;
+  b.disabled = !authResuelto || aporte <= 0;
+  b.title = !authResuelto ? 'Un segundo, estamos viendo si tenés sesión abierta'
+    : aporte <= 0 ? 'Todavía no te sobra nada para invertir' : '';
+}
+
+function avisoReglaActual() {
+  const nota = $('#regla-actual');
+  if (!nota) return;
+  nota.textContent = (cfgPrev && cfgPrev.aporte > 0)
+    ? `Hoy tu regla es de ${usd(cfgPrev.aporte)} por mes. Si guardás, la reemplazamos.` : '';
+}
+
+$('#guardar').onclick = async () => {
+  const { aporte } = calc(), msg = $('#msg');
+  if (!authResuelto) return;
+  if (!user) { location.href = 'index.html?login=crear'; return; }
+  if (!user.emailVerified) {
+    msg.className = 'msg err';
+    msg.textContent = 'Verificá tu mail antes de guardar la regla. Te mandamos un correo cuando creaste la cuenta; si no lo ves, mirá en correo no deseado.';
+    return;
+  }
+  if (aporte <= 0) {
+    msg.className = 'msg err';
+    msg.textContent = 'Todavía no te sobra nada para invertir. Ajustá los números de arriba y volvé.';
+    return;
+  }
+  // no se pisa en silencio una regla que el usuario ya armó en Disciplina
+  if (cfgPrev && cfgPrev.aporte > 0 && Math.round(cfgPrev.aporte) !== Math.round(aporte)
+      && !confirm(`Ya tenés una regla de ${usd(cfgPrev.aporte)} por mes.\n\n¿La reemplazamos por ${usd(aporte)}?`)) {
+    msg.className = 'msg'; msg.textContent = 'Dejamos tu regla como estaba.';
+    return;
+  }
+  try {
+    const ref = doc(db, 'inversores', user.email, 'disciplina', 'config');
+    const prev = (await getDoc(ref)).data() || {};
+    await setDoc(ref, { ...prev, aporte: Math.round(aporte), compras: prev.compras || 1, creado: prev.creado || new Date().toISOString(), actualizado: new Date().toISOString() });
+    cfgPrev = { ...prev, aporte: Math.round(aporte) };
+    msg.className = 'msg ok'; msg.textContent = 'Regla guardada. Te llevamos a las candidatas del mes…';
+    setTimeout(() => location.href = 'disciplina.html', 900);
+  } catch (e) { msg.className = 'msg err'; msg.textContent = 'No se pudo guardar: ' + String(e).slice(0, 90); }
+};
+
+// El nav lo maneja nav-auth.js, como en el resto del sitio; acá solo se necesita
+// saber si hay sesión y cuál es la regla vigente
+onAuthStateChanged(getAuth(app), async u => {
+  user = u; authResuelto = true;
+  if (u) {
+    huboSesion = true;
+    try {
+      const snap = await getDoc(doc(db, 'inversores', u.email, 'disciplina', 'config'));
+      cfgPrev = snap.exists() ? snap.data() : null;
+    } catch (e) { cfgPrev = null; }
+  } else {
+    cfgPrev = null;
+    // el presupuesto es dato sensible: al cerrar sesión no queda en el navegador
+    if (huboSesion) { try { localStorage.removeItem(LS); } catch (e) {} }
+  }
+  avisoReglaActual();
+  calc();
+});
+renderTabs(); calc();
+</script>
+<script type="module" src="nav-auth.js?v=6"></script>
+<script type="module" src="cotizaciones.js?v=3"></script>
+<script src="nav-menu.js?v=5"></script>
+</body>
+</html>

@@ -653,7 +653,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     <div class="mc-head"><div>
       <div class="portal-title" style="margin-bottom:0">Mi cartera</div>
       <div style="font-size:12px;color:var(--muted);margin-top:6px">Seguimiento de tus posiciones con la valuación de Valtia
-        · <a href="disciplina.html" style="color:var(--gold);text-decoration:none">Tu plan de disciplina mensual →</a></div>
+        · <a href="disciplina.html" style="color:var(--gold);text-decoration:none">Las candidatas del mes →</a></div>
     </div>
     <div class="mc-curwrap">
       <div class="mc-cur">
@@ -1602,7 +1602,7 @@ export async function initMiCartera(user, el) {
     el.innerHTML = `<div class="portal-title">Mi cartera</div>
       <div class="mc-empty"><h4>Verificá tu email para activar Mi Cartera</h4>
       <p>Te mandamos un mail de verificación a <b>${esc(user.email)}</b>. Abrilo, tocá el link
-      y recargá la página — tus posiciones y el plan de Disciplina se activan al instante.</p></div>`;
+      y recargá la página — tus posiciones y el plan de inversión mensual se activan al instante.</p></div>`;
     return;
   }
   el.innerHTML = `<div class="portal-title">Mi cartera</div><p style="color:var(--sub);font-size:14px">Cargando tus posiciones…</p>`;

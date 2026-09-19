@@ -53,7 +53,7 @@ footer{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;font-
   <div class="nav-links">
     <a href="index.html">Inicio</a>
     <a href="cartera.html">Carteras</a>
-    <a href="disciplina.html">Disciplina</a>
+    <a href="inversion-mensual.html">Inversión mensual</a>
     <a href="noticias.html">Noticias</a>
     <a href="informes.html">Informes</a>
     <a href="herramientas.html">Herramientas</a>
@@ -77,11 +77,15 @@ footer{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;font-
   <ul>
     <li><b>Cuenta:</b> tu email (y nombre, si ingresás con Google), para autenticarte.</li>
     <li><b>Newsletter y lista de espera PRO:</b> el email que dejás voluntariamente.</li>
-    <li><b>Mi Cartera y Disciplina:</b> las posiciones y el plan que cargás vos. Son privados: las reglas de acceso
+    <li><b>Mi Cartera e Inversión mensual:</b> las posiciones y el plan que cargás vos. Son privados: las reglas de acceso
     hacen que solo tu cuenta (y la administración del sitio) puedan leerlos.</li>
     <li><b>Alertas por mail:</b> si las activás en tu panel, guardamos qué avisos querés recibir y de qué ya te
     avisamos, para no repetirlos. Los mails no incluyen cantidades ni montos de tu cartera.</li>
-    <li><b>Preferencias locales:</b> el tema claro/oscuro se guarda en tu propio navegador (localStorage), no en nuestros servidores.</li>
+    <li><b>Preferencias locales:</b> algunas cosas se guardan en tu propio navegador (localStorage) y no llegan a nuestros
+    servidores: el tema claro/oscuro, la moneda en la que mirás Mi Cartera y los números que cargás en
+    <a href="inversion-mensual.html">Inversión mensual</a> (ingresos y gastos). Ese último dato lo borramos de tu
+    navegador cuando cerrás sesión, y no lo subimos: de esa página solo se guarda en tu cuenta el aporte mensual que
+    elegís, porque es el que necesita el plan de compras.</li>
   </ul>
   <p>No pedimos ni almacenamos datos financieros sensibles como tarjetas, claves de tu broker o cuentas bancarias.</p>
 
@@ -131,6 +135,6 @@ function volver() {
 }
 </script>
 <script type="module" src="nav-auth.js?v=6"></script>
-<script src="nav-menu.js?v=4"></script>
+<script src="nav-menu.js?v=5"></script>
 </body>
 </html>

@@ -7,7 +7,7 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { calcular, agruparPorBroker, normalizarTicker, convertir } from './mi-cartera.js?v=29';
+import { calcular, agruparPorBroker, normalizarTicker, convertir } from './mi-cartera.js?v=30';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
@@ -330,7 +330,7 @@ const TABS = [
   { g: 'Tus inversiones', id: 'empresas', t: 'Mis empresas' },
   { g: 'Para decidir', id: 'comprar', t: 'Qué comprar' },
   { g: 'Para decidir', id: 'carteras', t: 'Carteras Valtia' },
-  { g: 'Para decidir', id: 'disciplina', t: 'Disciplina' },
+  { g: 'Para decidir', id: 'disciplina', t: 'Inversión mensual' },
   { g: 'Herramientas', id: 'herramientas', t: 'Herramientas y datos' },
   { g: 'Fondo Valtia', id: 'fondocli', t: 'Tu posición', cliente: true },
   { g: 'Gestión', id: 'dashboard', t: 'Fondo · Dashboard', admin: true },
@@ -791,11 +791,11 @@ function bloqueCamino(cc, disc) {
   const pasos = [
     { ok: compras > 0, go: 'comprar', t: 'Mir\u00e1 qu\u00e9 comprar hoy', p: 'La lectura Valtia de 34 activos, con los que est\u00e1n en zona de compra primero.' },
     { ok: cc.pos.length > 0, go: 'micartera', t: 'Carg\u00e1 tu cartera', p: 'Lo que ya ten\u00e9s en IOL, PPI, Balanz o Binance. Se importa pegando desde Excel.' },
-    { ok: !!(disc && disc.config), go: 'disciplina', t: 'Defin\u00ed tu regla de Disciplina', p: 'Cu\u00e1nto aport\u00e1s por mes y en cu\u00e1ntas compras. Te marcamos el ritmo.' },
+    { ok: !!(disc && disc.config), go: 'disciplina', t: 'Defin\u00ed tu inversi\u00f3n mensual', p: 'Cu\u00e1nto aport\u00e1s por mes y en cu\u00e1ntas compras. Te marcamos el ritmo.' },
   ];
   return `<p class="vp-sub">Tu panel arma un panorama completo de tus inversiones, est\u00e9n en el broker que est\u00e9n. Tres pasos para empezar:</p>
     <div class="vp-pasos">${pasos.map((s, i) => `<div class="vp-paso${s.ok ? ' ok' : ''}" data-go="${s.go}"><div class="n">${s.ok ? '\u2713' : '0' + (i + 1)}</div><b>${s.t}</b><p>${s.p}</p></div>`).join('')}</div>
-    ${!S.verificado ? `<p class="vp-nota">Verific\u00e1 tu email para activar Mi cartera y Disciplina (te mandamos el link al registrarte).</p>` : ''}`;
+    ${!S.verificado ? `<p class="vp-nota">Verific\u00e1 tu email para activar Mi cartera y tu inversi\u00f3n mensual (te mandamos el link al registrarte).</p>` : ''}`;
 }
 
 /* ── contadores del sidebar: cuanto hay detras de cada seccion ── */
@@ -903,8 +903,8 @@ async function cambios(cc, disc) {
   if (disc && disc.config) {
     const mes = hoy.slice(0, 7), obj = Math.max(1, Number(disc.config.compras) || 1);
     const hechas = (disc.log || []).filter(c => String(c.fecha || '').slice(0, 7) === mes).length;
-    if (hechas < obj) ev(1, hoy, `<b>Disciplina</b>: este mes te falta${obj - hechas > 1 ? 'n' : ''} ${obj - hechas} compra${obj - hechas > 1 ? 's' : ''} de ${obj}.`, 'Plan', 'disciplina');
-    else ev(1, hoy, `<b>Disciplina</b>: plan del mes cumplido (${hechas} de ${obj}).`, 'Plan', 'disciplina');
+    if (hechas < obj) ev(1, hoy, `<b>Inversión mensual</b>: este mes te falta${obj - hechas > 1 ? 'n' : ''} ${obj - hechas} compra${obj - hechas > 1 ? 's' : ''} de ${obj}.`, 'Plan', 'disciplina');
+    else ev(1, hoy, `<b>Inversión mensual</b>: plan del mes cumplido (${hechas} de ${obj}).`, 'Plan', 'disciplina');
   }
   const nov = $('vp-nov');
   if (nov) nov.textContent = items.length ? `${items.length} novedad${items.length > 1 ? 'es' : ''}` : '';
@@ -1000,7 +1000,7 @@ async function renderComprar() {
         <p style="font-size:12.5px;color:var(--sub);margin:4px 0 10px">La lista completa, el veredicto y la zona de compra son gratis. Con PRO ves el PER, EV/EBITDA, FCF yield, ROE y el puntaje de calidad de cada uno.</p>
         <a class="vp-btn" href="planes.html">Ver planes</a></div>` : ''}
     </div>
-    <p class="vp-nota">"La compré" registra la compra en Mi cartera y en tu plan de Disciplina, con el mercado, la cantidad, el precio que pagaste y el broker. Si compraste en BYMA (CEDEAR o acción local), el precio va en pesos.</p>`;
+    <p class="vp-nota">"La compré" registra la compra en Mi cartera y en tu plan de inversión mensual, con el mercado, la cantidad, el precio que pagaste y el broker. Si compraste en BYMA (CEDEAR o acción local), el precio va en pesos.</p>`;
 }
 
 /* en qué carteras Valtia está cada ticker (solo las que el usuario puede leer) */
@@ -1225,9 +1225,9 @@ const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', '
 const mesAnterior = m => { let [a, mm] = m.split('-').map(Number); mm--; if (!mm) { mm = 12; a--; } return a + '-' + String(mm).padStart(2, '0'); };
 async function renderDisciplina() {
   const el = $('tab-disciplina');
-  el.innerHTML = titulo('Disciplina') + '<p class="vp-cargando">Cargando tu plan…</p>';
+  el.innerHTML = titulo('Inversión mensual') + '<p class="vp-cargando">Cargando tu plan…</p>';
   if (!S.verificado) {
-    el.innerHTML = titulo('Disciplina') + `<div class="vp-card" style="max-width:520px"><h4>Verificá tu email para activar tu plan</h4><p>Te mandamos un mail al registrarte. Abrilo, tocá el link y recargá.</p></div>`;
+    el.innerHTML = titulo('Inversión mensual') + `<div class="vp-card" style="max-width:520px"><h4>Verificá tu email para activar tu plan</h4><p>Te mandamos un mail al registrarte. Abrilo, tocá el link y recargá.</p></div>`;
     return;
   }
   const [disc, cc, pi] = await Promise.all([disciplina(), carteraCalc(), preciosInf()]);
@@ -1249,7 +1249,7 @@ async function renderDisciplina() {
       <td>${p && monto ? num(monto / p, 3) : '—'}</td>
       <td data-host><button class="vp-btn mini sec" data-compra="${esc(a.sym)}" data-px="${p != null && f ? p : ''}">La compré</button></td></tr>`;
   };
-  el.innerHTML = titulo('Disciplina') + `
+  el.innerHTML = titulo('Inversión mensual') + `
     <p class="vp-sub">El método del inversor constante: una regla mensual, candidatas del radar que todavía no tenés, y cada compra marcada se suma sola a Mi cartera.</p>
     ${DATALIST}
     ${config ? `<div class="vp-kpis">

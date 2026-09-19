@@ -1,8 +1,10 @@
 // nav-menu.js — navegación lateral compartida por todas las páginas.
 // · Desktop: una franja invisible en el borde izquierdo (con un hilo dorado
 //   como pista) abre el panel al pasar el cursor; se cierra al salir de él.
-// · Mobile (<880px): el nav de escritorio se oculta y el botón ☰ abre el
-//   mismo panel desde la derecha.
+// · Angosto (<1100px): el nav de escritorio se oculta y el botón ☰ abre el
+//   mismo panel desde la derecha. El corte está en 1100 (y no en 880) porque
+//   los siete enlaces de la barra no entran por debajo de eso: antes se
+//   recortaban al medio contra el borde del contenedor.
 // Sin dependencias: se sirve como script clásico en cada página.
 (function () {
   var nav = document.querySelector('nav');
@@ -11,7 +13,8 @@
   var LINKS = [
     ['index.html', 'Inicio'],
     ['cartera.html', 'Carteras'],
-    ['disciplina.html', 'Disciplina'],
+    ['inversion-mensual.html', 'Inversión mensual'],
+    ['disciplina.html', 'Candidatas del mes'],
     ['noticias.html', 'Noticias'],
     ['informes.html', 'Informes'],
     ['herramientas.html', 'Herramientas'],
@@ -26,7 +29,11 @@
     'border:1px solid rgba(184,151,90,.45);border-radius:8px;background:transparent;cursor:pointer;',
     'flex-shrink:0;padding:0;margin-left:10px}',
     '#vnav-burger svg{display:block}',
-    '@media(max-width:880px){#vnav-burger{display:flex}nav .nav-links{display:none!important}nav .nav-cta{display:none!important}}',
+    '@media(max-width:1100px){#vnav-burger{display:flex}nav .nav-links{display:none!important}nav .nav-cta{display:none!important}}',
+    // entre 1101 y 1320 los enlaces entran, pero justos: se achican el gap y la
+    // tipografía en lugar de esconderlos
+    '@media(min-width:1101px) and (max-width:1320px){nav .nav-links{gap:12px!important}',
+    'nav .nav-links a{font-size:10px!important;letter-spacing:.05em!important}}',
     '#vnav-back{position:fixed;inset:0;background:rgba(6,12,22,.55);z-index:998;opacity:0;',
     'pointer-events:none;transition:opacity .2s}',
     '#vnav-menu{position:fixed;top:0;right:0;height:100%;width:min(78vw,300px);z-index:999;',
@@ -43,7 +50,7 @@
     '#vnav-menu a.vn-cta{margin:18px 20px 0;text-align:center;background:#B8975A;color:#0D1B2A;',
     'font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:13px 10px;',
     'border-radius:8px;text-decoration:none}',
-    '@media(max-width:880px){body.vnav-open{overflow:hidden}}',
+    '@media(max-width:1100px){body.vnav-open{overflow:hidden}}',
     'body.vnav-open #vnav-back{opacity:1;pointer-events:auto}',
     'body.vnav-open #vnav-menu{transform:translateX(0);visibility:visible}',
     // desktop: barra lateral oculta que aparece al pasar el cursor por el borde
@@ -53,7 +60,7 @@
     '#vnav-hot::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:72px;',
     'border-radius:0 3px 3px 0;background:#B8975A;opacity:.4;transition:opacity .2s,height .2s}',
     '#vnav-hot:hover::before{opacity:.95;height:110px}',
-    '@media(min-width:881px){#vnav-hot{display:block}#vnav-back{display:none}',
+    '@media(min-width:1101px){#vnav-hot{display:block}#vnav-back{display:none}',
     '#vnav-menu{left:0;right:auto;width:250px;transform:translateX(-105%);box-shadow:12px 0 40px rgba(0,0,0,.35)}',
     'body.vnav-open #vnav-menu{transform:translateX(0)}}',
   ].join('');
@@ -129,7 +136,7 @@
     document.body.classList.add('vnav-open');
   }
   function cerrar() { document.body.classList.remove('vnav-open'); }
-  var esDesktop = function () { return window.matchMedia('(min-width:881px)').matches; };
+  var esDesktop = function () { return window.matchMedia('(min-width:1101px)').matches; };
   btn.addEventListener('click', abrir);
   back.addEventListener('click', cerrar);
   menu.querySelector('.vn-x').addEventListener('click', cerrar);

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Disciplina — Valtia Analytics</title>
+<title>Candidatas del mes — Valtia Analytics</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -32,6 +32,9 @@ nav{display:flex;align-items:center;justify-content:space-between;gap:16px;paddi
 main{max-width:1080px;margin:0 auto;padding:34px clamp(16px,3vw,40px) 70px}
 .eye{font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:12px}
 .eye::before{content:'';display:block;width:32px;height:1px;background:var(--gold);opacity:.6}
+/* volver a la página que define la regla: es un enlace, no un segundo kicker */
+.volver{display:inline-block;font-size:12.5px;letter-spacing:.02em;text-transform:none;color:var(--sub);text-decoration:none;margin-bottom:10px}
+.volver:hover{color:var(--gold)}
 h1{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,4.5vw,46px);font-weight:400;line-height:1.1;margin-bottom:12px}
 h1 em{font-style:italic;color:var(--gold2)}
 .sub{color:var(--sub);font-size:15px;line-height:1.75;max-width:720px;margin-bottom:8px}
@@ -109,7 +112,7 @@ footer{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;font-
   <div class="nav-links">
     <a href="index.html">Inicio</a>
     <a href="cartera.html">Carteras</a>
-    <a href="disciplina.html" style="color:var(--gold)">Disciplina</a>
+    <a href="inversion-mensual.html">Inversión mensual</a>
     <a href="noticias.html">Noticias</a>
     <a href="informes.html">Informes</a>
     <a href="herramientas.html">Herramientas</a>
@@ -252,7 +255,8 @@ async function registrarCompra(tickerFicha, cantidad, precio, broker = "") {
 /* ── vistas ── */
 function intro(publico) {
   return `
-    <div class="eye">Disciplina Valtia · el método del inversor constante</div>
+    <a class="volver" href="inversion-mensual.html">← Inversión mensual</a>
+    <div class="eye">Candidatas del mes · el método del inversor constante</div>
     <h1>Invertí todos los meses.<br>Nosotros te <em>marcamos</em> el ritmo.</h1>
     <p class="sub">El secreto del largo plazo no es acertarle al momento: es aportar siempre y comprar lo que está barato.
     Definís tu regla —cuánto aportás por mes y en cuántas compras—, el radar te propone los activos mejor puntuados
@@ -368,7 +372,7 @@ function vistaPlan() {
       <thead><tr><th>Fecha</th><th>Activo</th><th class="num">Cantidad</th><th class="num">Pagaste</th><th class="num">Hoy</th><th class="num">Retorno</th></tr></thead>
       <tbody>${histRows}</tbody></table></div>` : ""}
     ` : ""}
-    <footer>Disciplina Valtia es una herramienta de organización personal: registra las compras que vos decidís y hacés en tu broker.
+    <footer>Candidatas del mes es una herramienta de organización personal de Valtia: registra las compras que vos decidís y hacés en tu broker.
     Valtia no ejecuta operaciones ni custodia fondos. La lectura del radar es análisis de carácter general y educativo,
     no constituye asesoramiento financiero personalizado. Invertir implica riesgo de pérdida del capital. · <a href="terminos.html" style="color:inherit;text-decoration:underline">Términos</a> · <a href="privacidad.html" style="color:inherit;text-decoration:underline">Privacidad</a></footer>`;
 
@@ -466,6 +470,6 @@ onAuthStateChanged(getAuth(app), u => { _user = u; render(); });
 </script>
 <script type="module" src="nav-auth.js?v=6"></script>
 <script type="module" src="cotizaciones.js?v=3"></script>
-<script src="nav-menu.js?v=4"></script>
+<script src="nav-menu.js?v=5"></script>
 </body>
 </html>
