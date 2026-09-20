@@ -13,6 +13,8 @@ import { simular, serieReal, combinar, recortar, resumen, serieDe } from './evol
 import { validarVenta, armarVenta, planDeshacer, resultadoVenta, resumenVentas, tenencia, monedaFactor,
          cantidadAjuste, validarAjuste, ventaDesdeAjuste, ajusteDesdeVenta, restoDeAjuste }
   from './ventas.js?v=6';
+import { fxMercado, etiquetaFx, convertir } from './fx.js?v=1';
+export { convertir } from './fx.js?v=1';
 
 const STYLE = `
 .mc-wrap{width:100%}
@@ -221,19 +223,11 @@ function avisarPanel() {
    Las posiciones se guardan en la moneda en la que cotizan (los CEDEARs y
    acciones locales en pesos, las de EE.UU. en dólares) y acá se convierten
    a lo que el usuario elija: pesos, dólar CCL o dólar MEP. */
-let _fx = { ccl: null, mep: null };
+let _fx = { ccl: null, mep: null, meta: { ccl: null, mep: null }, ok: false, motivo: null };
 let _cur = (typeof localStorage !== "undefined" && localStorage.getItem("valtia-mc-cur")) || "ARS";
 
-export function convertir(valor, monedaOrigen, display, fx) {
-  if (valor == null) return null;
-  const tasa = display === "CCL" ? fx.ccl : display === "MEP" ? fx.mep : null;
-  if (display === "ARS") {
-    // para pasar dólares a pesos se usa el CCL, que es la referencia de equity
-    return monedaOrigen === "ARS" ? valor : (fx.ccl ? valor * fx.ccl : null);
-  }
-  if (!tasa) return null;
-  return monedaOrigen === "ARS" ? valor / tasa : valor;
-}
+// convertir() vive en fx.js (es tipo de cambio puro) y se re-exporta de acá
+// para que panel.js siga importándola de este módulo sin cambios.
 
 const curLabel = () => (_cur === "ARS" ? "ARS" : "USD");
 
@@ -647,8 +641,10 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   const escrito = escritoEnAvisos(el);
   const r = calcular(posiciones, precios);
   const cur = curLabel();
-  const fxTxt = _cur === "CCL" ? (_fx.ccl ? `CCL $${_fx.ccl.toLocaleString("es-AR")}` : "")
-              : _cur === "MEP" ? (_fx.mep ? `MEP $${_fx.mep.toLocaleString("es-AR")}` : "") : "";
+  // "CCL $1.598 · dolarapi, hace 12 min": con la fuente y la edad, para que
+  // el que ve otro CCL en el panel de bonos sepa que son dos mediciones
+  const fxTxt = _cur === "CCL" ? etiquetaFx(_fx, "ccl")
+              : _cur === "MEP" ? etiquetaFx(_fx, "mep") : "";
   const cabecera = `
     <div class="mc-head"><div>
       <div class="portal-title" style="margin-bottom:0">Mi cartera</div>
@@ -1123,15 +1119,11 @@ function enganchar() {
 }
 
 /* cotizaciones para convertir (misma fuente que la barra del sitio) */
-async function cargarFx() {
-  try {
-    const r = await fetch("https://dolarapi.com/v1/dolares");
-    if (!r.ok) return;
-    const d = await r.json();
-    const v = casa => { const x = d.find(y => y.casa === casa); return x ? x.venta : null; };
-    _fx = { ccl: v("contadoconliqui"), mep: v("bolsa") };
-  } catch (e) {}
-}
+/* el dólar sale de fx.js: misma fuente que la barra, pero con guardas y una
+   sola consulta por carga compartida con el panel. Si no pasa las guardas,
+   _fx.ccl queda en null y el aviso de "sin dólar" se encarga. fxMercado()
+   nunca rechaza. */
+async function cargarFx() { _fx = await fxMercado(); }
 
 /* ── importar: primero muestra qué entendió, después confirma ── */
 let _porImportar = null;

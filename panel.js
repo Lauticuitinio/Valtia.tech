@@ -7,7 +7,8 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { calcular, agruparPorBroker, normalizarTicker, convertir, reiniciarMiCartera } from './mi-cartera.js?v=31';
+import { calcular, agruparPorBroker, normalizarTicker, convertir, reiniciarMiCartera } from './mi-cartera.js?v=32';
+import { fxMercado, registrarImplicito } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
@@ -267,7 +268,13 @@ const radarPro = async () => !!(await radarDoc()).pro;
 const teaser = () => cached('teaser', async () => ((await docJson('carterasTeaser')) || {}).carteras || []);
 const calendario = () => cached('cal', async () => ((await docJson('calendario')) || {}).earnings || []);
 const flujos = () => cached('flujos', async () => (await docJson('bonosFlujos')) || {});
-const panelBonos = () => cached('bp', async () => (await docJson('bonosPanel')) || {});
+const panelBonos = () => cached('bp', async () => {
+  const bp = (await docJson('bonosPanel')) || {};
+  // el CCL/MEP implícitos en bonos se registran en fx.js con su nombre: son
+  // otra medición que la de dolarapi, y así la UI puede decir cuál es cuál
+  registrarImplicito(bp.variables, bp._ts);
+  return bp;
+});
 const preciosInf = () => cached('pi', async () => (await docJson('preciosInformes')) || {});
 const desglosePer = () => cached('dg', async () => (await docJson('desglosePeriodos')) || {});
 const bonosSet = () => cached('bset', async () => new Set(Object.keys((await panelBonos()).todos || {})));
@@ -298,11 +305,11 @@ const vencimientoDe = (tk, vm) => {
   const e = base(tk);
   return vm[e] || vm[parBono(e)] || vm[especieBono(e)] || '';
 };
-const fx = () => cached('fx', async () => {
-  const r = await fetch('https://dolarapi.com/v1/dolares'); const d = await r.json();
-  const v = casa => { const x = d.find(y => y.casa === casa); return x ? x.venta : null; };
-  return { ccl: v('contadoconliqui'), mep: v('bolsa') };
-});
+// el dólar sale de fx.js: una sola consulta compartida con Mi cartera, con las
+// mismas guardas que el pipeline. Sin cached() a propósito: esa caché es por
+// cuenta y nunca expira, y dejaría el dólar congelado toda la sesión; fx.js ya
+// memoiza con un TTL de 5 min, el mismo ritmo de la barra de precios
+const fx = () => fxMercado();
 const cartera = () => cached('cartera', async () => {
   if (!S.verificado) return { pos: [], precios: {} };
   const snap = await getDocs(collection(db(), 'inversores', S.email, 'cartera'));
