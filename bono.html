@@ -158,7 +158,12 @@ function tasasLetra(precio, vpv, dias) {
 const tile = (l, v, s) => `<div class="tile"><div class="l">${l}</div><div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`;
 
 async function render() {
-  const e = (new URLSearchParams(location.search).get("e") || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  // El '.BA' se saca ANTES de limpiar la puntuación: si no, AL30.BA quedaba
+  // como "AL30BA" y la ficha decía que la especie no existe (misma regla que
+  // canon() de activos.js). `e` puede cambiar abajo si el panel la lista por
+  // su versión en dólares.
+  let e = (new URLSearchParams(location.search).get("e") || "").trim().toUpperCase()
+    .replace(/\.BA$/, "").replace(/[^A-Z0-9]/g, "");
   if (!e) { $("#main").innerHTML = `<div class="state">Elegí una especie desde el <a href="herramientas.html" style="color:var(--gold)">panel de bonos →</a></div>`; return; }
   document.title = e + " — Ficha de bono · Valtia Analytics";
 
@@ -181,10 +186,18 @@ async function render() {
     ["dolar_linked", "Dólar linked · $ ajusta por A3500"],
   ];
   let b = null, tipo = null, tipoNombre = "";
-  for (const [k, nom] of TIPOS) {
-    const hit = (panel[k] || []).find(x => x.s === e);
-    if (hit) { b = hit; tipo = k; tipoNombre = nom; break; }
+  // El panel lista soberanos y Bopreal por la especie en dólares (AL30D). Quien
+  // llega con AL30 —o con AL30C, que es el mismo título liquidado por cable—
+  // tiene que caer en esa ficha, no en "no encontramos la especie".
+  const candidatas = [e, e + "D", e.replace(/[CD]$/, "") + "D"].filter((x, i, a) => x && a.indexOf(x) === i);
+  buscar:
+  for (const cand of candidatas) {
+    for (const [k, nom] of TIPOS) {
+      const hit = (panel[k] || []).find(x => x.s === cand);
+      if (hit) { b = hit; tipo = k; tipoNombre = nom; e = cand; break buscar; }
+    }
   }
+  if (b) document.title = e + " — Ficha de bono · Valtia Analytics";
   if (!b) { $("#main").innerHTML = `<div class="state">No encontramos la especie <b>${esc(e)}</b> en el panel.<br><br><a href="herramientas.html" style="color:var(--gold)">Ver el panel completo →</a></div>`; return; }
 
   const enUSD = tipo === "soberanos" || tipo === "bopreal";

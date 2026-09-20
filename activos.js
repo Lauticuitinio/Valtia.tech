@@ -5,6 +5,7 @@
 //   base('GGAL.BA')        -> 'GGAL'      quita sufijos de mercado
 //   radarSym('PAM')        -> 'PAMP'      símbolo como figura en radar/latest
 //   tickerFicha('PAMP.BA') -> 'PAM'       ticker de activo.html (null si no hay ficha)
+//   canon('AL30.BA')       -> 'AL30'      renta fija sin el sufijo de mercado
 //   esRentaFija('AL30D')   -> true        títulos públicos y letras
 //   especieBono('AL30')    -> 'AL30D'     especie que abre bono.html (USD para soberanos)
 //   linkDe('GGAL.BA')      -> 'activo.html?t=GGAL'
@@ -59,26 +60,56 @@ export function nombreDe(tk) {
 const RX_SOBERANO = /^(AL|GD|AE|AN|AO)\d{2}[CD]?$/;
 const RX_BOPREAL = /^BP[A-Z0-9]{2,4}[CD]?$/;
 const RX_LETRA = /^[STX]\d{2}[A-Z]\d[CD]?$/;
+const esEspecieRF = (t, bonosSet) =>
+  !!t && ((bonosSet && bonosSet.size && bonosSet.has(t)) ||
+          RX_SOBERANO.test(t) || RX_BOPREAL.test(t) || RX_LETRA.test(t));
+
+/* Una sola clave para la renta fija: 'AL30.BA' -> 'AL30'. Es la misma regla
+   que canon_bono() del pipeline. Un bono puede quedar guardado con '.BA'
+   porque el usuario lo cargó eligiendo "BYMA" o porque el panel de bonos no
+   había cargado todavía; sin esto se lo trataba como una acción: sin sector,
+   sin link a su ficha, sin cupones ni vencimientos.
+   SOLO se toca cuando lo que queda al sacar el sufijo ES renta fija: GGAL.BA
+   sigue siendo GGAL.BA. */
+export function canon(tk, bonosSet) {
+  const t = String(tk || '').trim().toUpperCase();
+  if (t.endsWith('.BA')) {
+    const s = t.slice(0, -3);
+    if (esEspecieRF(s, bonosSet)) return s;
+  }
+  return t;
+}
+
 export function esRentaFija(tk, bonosSet) {
-  const t = String(tk || '').trim().toUpperCase();
+  const t = canon(tk, bonosSet);
   if (!t || t.endsWith('.BA') || t.endsWith('-USD')) return false;
-  if (bonosSet && bonosSet.size && bonosSet.has(t)) return true;
-  return RX_SOBERANO.test(t) || RX_BOPREAL.test(t) || RX_LETRA.test(t);
+  return esEspecieRF(t, bonosSet);
 }
 
-/* la especie que abre bono.html: los soberanos/Bopreal se muestran en su
-   versión en dólares (AL30 -> AL30D); las letras son una sola especie */
-export function especieBono(tk) {
-  const t = String(tk || '').trim().toUpperCase();
+/* lo que abre bono.html. El panel lista los soberanos y Bopreal por su
+   versión en dólares (AL30 -> AL30D); letras, CER y dólar linked son una sola
+   especie y van tal cual. Con bonosSet se elige lo que el panel REALMENTE
+   tiene: sin él, a un CER como TX26 se le pegaba una D y TX26D no existe. */
+export function especieBono(tk, bonosSet) {
+  const t = canon(tk, bonosSet);
   if (RX_LETRA.test(t)) return t;
-  if (/[CD]$/.test(t)) return t;
-  return t + 'D';
+  if (/[CD]$/.test(t) && (RX_SOBERANO.test(t) || RX_BOPREAL.test(t))) return t;
+  if (RX_SOBERANO.test(t) || RX_BOPREAL.test(t)) return t + 'D';
+  // ni letra ni soberano ni Bopreal (CER, dólar linked): manda el panel
+  if (bonosSet && bonosSet.size) {
+    if (bonosSet.has(t)) return t;
+    if (bonosSet.has(t + 'D')) return t + 'D';
+  }
+  return t;
 }
 
-/* la especie "par" de los flujos (bonosFlujos usa AL30, sin sufijo) */
-export function parBono(tk) {
-  const t = String(tk || '').trim().toUpperCase();
-  return RX_LETRA.test(t) ? t : t.replace(/[CD]$/, '');
+/* la especie "par" de los flujos (bonosFlujos usa AL30, sin sufijo). La C/D
+   final se saca SOLO a soberanos y Bopreal, que son los únicos donde esa letra
+   es la moneda de liquidación; en cualquier otra especie es parte del nombre */
+export function parBono(tk, bonosSet) {
+  const t = canon(tk, bonosSet);
+  if (RX_LETRA.test(t)) return t;
+  return (RX_SOBERANO.test(t) || RX_BOPREAL.test(t)) ? t.replace(/[CD]$/, '') : t;
 }
 
 export function esCripto(tk) {
@@ -88,16 +119,20 @@ export function esCripto(tk) {
 
 /* a dónde lleva el ticker dentro de la web (o null si no hay página) */
 export function linkDe(tk, bonosSet) {
-  if (esRentaFija(tk, bonosSet)) return 'bono.html?e=' + encodeURIComponent(especieBono(tk));
+  if (esRentaFija(tk, bonosSet)) return 'bono.html?e=' + encodeURIComponent(especieBono(tk, bonosSet));
   const f = tickerFicha(tk);
   return f ? 'activo.html?t=' + encodeURIComponent(f) : null;
 }
 
-/* moneda en la que cotiza, cuando precios/{tk} todavía no la trae */
+/* moneda en la que cotiza, cuando precios/{tk} todavía no la trae. En la renta
+   fija la decide la especie y no el '.BA': AL30D.BA cotiza en dólares. La C/D
+   final solo es moneda en soberanos y Bopreal */
 export function monedaProbable(tk, bonosSet) {
-  const t = String(tk || '').trim().toUpperCase();
+  const t = canon(tk, bonosSet);
+  if (esRentaFija(t, bonosSet)) {
+    return /[CD]$/.test(t) && (RX_SOBERANO.test(t) || RX_BOPREAL.test(t)) ? 'USD' : 'ARS';
+  }
   if (t.endsWith('.BA')) return 'ARS';
-  if (esRentaFija(t, bonosSet)) return /[CD]$/.test(t) ? 'USD' : 'ARS';
   return 'USD';
 }
 

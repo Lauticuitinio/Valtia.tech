@@ -7,12 +7,13 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { calcular, agruparPorBroker, normalizarTicker, convertir, reiniciarMiCartera } from './mi-cartera.js?v=32';
+import { calcular, agruparPorBroker, normalizarTicker, convertir, reiniciarMiCartera, completarPreciosDeRentaFija }
+  from './mi-cartera.js?v=33';
 import { fxMercado, registrarImplicito } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
-  from './activos.js?v=6';
+  from './activos.js?v=7';
 
 /* ───────────────────────── estilos ───────────────────────── */
 const CSS = `
@@ -319,6 +320,10 @@ const cartera = () => cached('cartera', async () => {
   await Promise.all(tks.map(async tk => {
     try { const s = await getDoc(doc(db(), 'precios', tk)); if (s.exists()) precios[tk] = s.data(); } catch (e) {}
   }));
+  // la renta fija sin precio del sync se completa desde el panel de bonos, con
+  // la MISMA función que usa Mi cartera: si cada pantalla lo hiciera por su
+  // lado, el Inicio y Mi cartera mostrarían dos totales distintos
+  try { completarPreciosDeRentaFija(pos, precios, await panelBonos(), await bonosSet()); } catch (e) {}
   return { pos, precios };
 });
 const ventas = () => cached('ventas', async () => {

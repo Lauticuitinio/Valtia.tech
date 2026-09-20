@@ -8,7 +8,7 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, runTransaction, query, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { base, linkDe, esRentaFija, parBono, sectorDe, mercadoDe, desglose, monedaProbable } from './activos.js?v=6';
+import { base, canon, linkDe, esRentaFija, parBono, sectorDe, mercadoDe, desglose, monedaProbable } from './activos.js?v=7';
 import { simular, serieReal, combinar, recortar, resumen, serieDe } from './evolucion.js?v=2';
 import { validarVenta, armarVenta, planDeshacer, resultadoVenta, resumenVentas, tenencia, monedaFactor,
          cantidadAjuste, validarAjuste, ventaDesdeAjuste, ajusteDesdeVenta, restoDeAjuste }
@@ -172,11 +172,17 @@ const pref = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) 
 const setPref = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 
 /* Ticker canónico según el mercado. Los bonos y letras (AL30, S30O6, GD30D…)
-   se reconocen contra el panel de bonos y quedan tal cual. */
+   quedan SIN sufijo, que es como los lista el panel de bonos y como los guarda
+   el sync. Antes solo se reconocían si el panel ya había cargado: con el set
+   vacío, AL30 en "BYMA" se guardaba como AL30.BA y después nada lo encontraba
+   (ni precio del panel, ni ficha, ni cupones). Ahora canon() también mira el
+   patrón del ticker, y un AL30.BA tipeado a mano se limpia. */
 export function normalizarTicker(ticker, mercado, bonosSet = new Set()) {
   const t = String(ticker || "").trim().toUpperCase().replace(/[^A-Z0-9.\-]/g, "");
   if (!t) return "";
-  if (mercado === "byma") return (t.endsWith(".BA") || bonosSet.has(t)) ? t : t + ".BA";
+  const c = canon(t, bonosSet);
+  if (esRentaFija(c, bonosSet)) return c;
+  if (mercado === "byma") return t.endsWith(".BA") ? t : t + ".BA";
   if (mercado === "cripto") return t.endsWith("-USD") ? t : t + "-USD";
   return t;
 }
@@ -198,15 +204,30 @@ export function agruparPorBroker(filas, total) {
   }).sort((a, b) => b.valor - a.valor || a.broker.localeCompare(b.broker));
 }
 
-let _bonosSet = null;
+/* El panel de bonos se pide UNA vez y se guarda la PROMESA, no el valor.
+   Antes se asignaba un Set vacío antes del await: el segundo que llamaba
+   mientras la consulta estaba en vuelo se llevaba el set vacío, y con él los
+   CER y dólar linked (TX26, DICP…) dejaban de ser renta fija, porque no tienen
+   un patrón de ticker que los delate: sin link, sin mercado, sin nada.
+   Además el documento se descargaba dos veces (acá para las claves y en
+   cargarRentaFija para el resto): ahora se conserva entero. */
+let _panelProm = null;
+function panelBonosDoc() {
+  if (!_panelProm) {
+    _panelProm = (async () => {
+      try {
+        const snap = await getDoc(doc(getFirestore(getApp()), "bonosPanel", "latest"));
+        return snap.exists() ? JSON.parse(snap.data().json || "{}") : null;
+      } catch (e) { return null; }
+    })();
+    // una falla no queda cacheada para siempre: el próximo intento vuelve a pedir
+    _panelProm.then(v => { if (!v) _panelProm = null; });
+  }
+  return _panelProm;
+}
 async function bonosSet() {
-  if (_bonosSet) return _bonosSet;
-  _bonosSet = new Set();
-  try {
-    const snap = await getDoc(doc(getFirestore(getApp()), "bonosPanel", "latest"));
-    if (snap.exists()) _bonosSet = new Set(Object.keys(JSON.parse(snap.data().json || "{}").todos || {}));
-  } catch (e) {}
-  return _bonosSet;
+  const p = await panelBonosDoc();
+  return new Set(Object.keys((p && p.todos) || {}));
 }
 
 const money = (n, cur) => (Number(n) < 0 ? "−" : "") + (cur === "ARS" ? "$" : "US$") +
@@ -451,13 +472,17 @@ function analisisRentaFija(r, bonos, panel, flujos, hoy) {
   const rf = r.filas.filter(f => esRentaFija(f.ticker, bonos));
   if (!rf.length) return "";
   const sob = [...(panel.soberanos || []), ...(panel.bopreal || [])];
+  // CER y dólar linked no están en soberanos ni en tasa_fija: su vencimiento
+  // sale del mapa que publica el pipeline. Antes la fila salía con tres guiones
+  // aunque la fecha existía.
+  const venc = panel.vencimientos || {};
   const filas = rf.map(f => {
-    const esp = base(f.ticker), par = parBono(esp);
+    const esp = base(f.ticker), par = parBono(esp, bonos);
     const b = sob.find(x => x.s === esp) || sob.find(x => parBono(x.s) === par && /D$/.test(x.s));
     const l = (panel.tasa_fija || []).find(x => x.s === esp);
     const tasa = b && b.tir != null ? `TIR ${b.tir.toFixed(1).replace(".", ",")}%`
                : l && l.tem != null ? `TEM ${l.tem.toFixed(2).replace(".", ",")}%` : "—";
-    const vence = (b && b.vence) || (l && l.vence) || "";
+    const vence = (b && b.vence) || (l && l.vence) || venc[esp] || venc[par] || "";
     return `<tr><td><b>${esc(esp)}</b></td><td>${Number(f.cantidad).toLocaleString("es-AR")}</td>
       <td>${tasa}</td><td>${b && b.paridad != null ? b.paridad.toFixed(1).replace(".", ",") : "—"}</td>
       <td>${vence ? vence.split("-").reverse().join("/") : "—"}</td></tr>`;
@@ -475,6 +500,11 @@ function analisisRentaFija(r, bonos, panel, flujos, hoy) {
     const l = (panel.tasa_fija || []).find(x => x.s === esp);
     if (l && l.vence >= hoy && l.vence <= corte && l.vpv)
       cobros.push({ f: l.vence, tk: esp, ars: (Number(f.cantidad) || 0) * Number(l.vpv) / 100 });
+    // CER y dólar linked: se sabe CUÁNDO vencen pero no cuánto pagan (el
+    // capital ajusta por CER o por el A3500), así que va la fecha sin importe.
+    // Solo si no entró ya por flujos o como letra, para no listarlo dos veces.
+    const vf = venc[esp] || venc[par];
+    if (vf && vf >= hoy && vf <= corte && !l && !(d && d.flujos)) cobros.push({ f: vf, tk: esp });
   });
   cobros.sort((a, b) => a.f.localeCompare(b.f));
   const totalUsd = cobros.reduce((s, c) => s + (c.usd || 0), 0);
@@ -729,9 +759,12 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     // variación del precio por período (no es "lo que ganaste": eso es la
     // columna Resultado, que sale del precio de compra)
     const dg = desglose(f.ticker, opts.desg || {}, px, f);
+    // la etiqueta sale del MERCADO y no de si el texto termina en ".BA": un bono
+    // bien guardado (TX26, AL30) también cotiza en BYMA
+    const esByma = ["byma", "rf"].includes(mercadoDe(f.ticker, opts.bonos));
     return `<tr data-fila="${esc(f.id)}">
-      <td class="l">${(h => h ? `<a class="mc-tk" href="${h}" style="text-decoration:none">${esc(base(f.ticker))}</a>` : `<span class="mc-tk">${esc(base(f.ticker))}</span>`)(linkDe(f.ticker))}${
-        String(f.ticker).endsWith(".BA") ? '<span class="mc-nm" style="display:inline;color:var(--gold);opacity:.7"> BYMA</span>' : ""}
+      <td class="l">${(h => h ? `<a class="mc-tk" href="${h}" style="text-decoration:none">${esc(base(f.ticker))}</a>` : `<span class="mc-tk">${esc(base(f.ticker))}</span>`)(linkDe(f.ticker, opts.bonos))}${
+        esByma ? '<span class="mc-nm" style="display:inline;color:var(--gold);opacity:.7"> BYMA</span>' : ""}
         <span class="mc-nm">${esc(px.nombre && px.nombre !== f.ticker ? px.nombre : "")}</span>
         <span class="mc-brk" data-brk="${esc(f.id)}" title="Cambiar broker">${esc(f.broker || "sin broker")}</span></td>
       <td>${num(f.cantidad, 4).replace(/,0+$/, "")}</td>
@@ -1028,6 +1061,10 @@ async function leerTodo() {
     const px = await getDocs(collection(db, "precios"));
     px.docs.forEach(d => { if (tks.includes(d.id)) _precios[d.id] = d.data(); });
   }
+  // leerTodo arranca _precios de cero: en cada refresco hay que volver a
+  // completar la renta fija desde el panel, o los bonos pierden el precio a los
+  // dos minutos (en la primera carga el panel todavía no está y no hace nada)
+  completarPreciosRF();
 }
 
 /* "actualizado hace X": el sync intradía escribe cada ~15 min mientras el
@@ -1066,16 +1103,49 @@ async function cargarDesglose() {
   } catch (e) {}
 }
 
-/* panel de bonos y flujos: solo se piden si la cartera tiene renta fija */
+/* panel de bonos y flujos: solo hacen falta si la cartera tiene renta fija. El
+   panel es el MISMO documento que ya bajó bonosSet(): no se vuelve a pedir */
 async function cargarRentaFija() {
   if (!_pos.some(p => esRentaFija(p.ticker, _bonos))) return;
-  const db = getFirestore(getApp());
-  for (const [col, set] of [["bonosPanel", v => { _panel = v; }], ["bonosFlujos", v => { _flujos = v; }]]) {
-    try {
-      const s2 = await getDoc(doc(db, col, "latest"));
-      if (s2.exists()) set(JSON.parse(s2.data().json || "{}"));
-    } catch (e) {}
-  }
+  _panel = (await panelBonosDoc()) || _panel;
+  try {
+    const s2 = await getDoc(doc(getFirestore(getApp()), "bonosFlujos", "latest"));
+    if (s2.exists()) _flujos = JSON.parse(s2.data().json || "{}");
+  } catch (e) {}
+  completarPreciosRF();
+}
+
+/* El precio de un bono está en el panel de bonos, que la página ya tiene.
+   El sync también lo escribe en precios/{ticker}, pero recién en su próxima
+   corrida: mientras tanto una letra recién cargada decía "Buscando precio…"
+   por horas, sin valor, y como el análisis pide al menos dos posiciones
+   valuadas, arrastraba con ella la caja de renta fija y el desglose por sector.
+   Acá se completa lo que FALTA: el doc del sync, si existe y trae precio, manda.
+   Misma forma que escribe escribir_precio_bono() en el pipeline.
+
+   Es UNA función, pura y exportada, porque la usan dos pantallas: Mi cartera y
+   el Inicio del panel. Si cada una completara los precios por su lado, el mismo
+   usuario vería dos totales distintos con una solapa de diferencia. Completa
+   `precios` en el lugar y lo devuelve. */
+export function completarPreciosDeRentaFija(posiciones, precios, panel, bonos) {
+  const todos = panel && panel.todos;
+  if (!todos || !precios) return precios;
+  (posiciones || []).forEach(p => {
+    const tk = String((p && p.ticker) || "").toUpperCase();
+    if (!tk || !esRentaFija(tk, bonos)) return;
+    const px = precios[tk];
+    if (px && px.precio != null) return;
+    const esp = canon(tk, bonos), d = todos[esp];
+    if (!d || !(Number(d.p) > 0)) return;
+    precios[tk] = { ticker: tk, precio: Number(d.p), d: d.v != null ? Number(d.v) : null,
+                    moneda: monedaProbable(esp, bonos), factor: 0.01,
+                    nombre: "Renta fija BYMA · cotiza por 100 VN", veredicto: "Sin cobertura",
+                    delPanel: true };
+  });
+  return precios;
+}
+function completarPreciosRF() {
+  completarPreciosDeRentaFija([..._pos, ..._ajustes], _precios, _panel, _bonos);
 }
 
 function enganchar() {
@@ -1616,8 +1686,11 @@ export async function initMiCartera(user, el) {
     try { await Promise.all([leerTodo(), cargarFx()]); pintar(); } catch (e) {}
   };
   try {
-    await Promise.all([leerTodo(), cargarFx()]);
-    _bonos = await bonosSet();
+    // el panel de bonos se pide junto con todo lo demás (antes iba después, en
+    // serie) y tiene que estar ANTES de decidir qué es renta fija: un CER solo
+    // se reconoce por figurar ahí
+    const [, , bset] = await Promise.all([leerTodo(), cargarFx(), bonosSet()]);
+    _bonos = bset;
     await Promise.all([cargarRentaFija(), cargarDesglose()]);
     pintar();
     prellenarDesdeUrl();

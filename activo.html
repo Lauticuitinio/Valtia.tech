@@ -322,7 +322,7 @@ import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebase
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, where, getCountFromServer, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { EMPRESAS, SECTORES } from './empresas.js?v=3';
-import { radarSym, tickerFicha, mergeRadar } from './activos.js?v=6';
+import { radarSym, tickerFicha, mergeRadar, canon, esRentaFija, especieBono } from './activos.js?v=7';
 
 const app = getApps().length ? getApp() : initializeApp({
   apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
@@ -335,7 +335,24 @@ const db = getFirestore(app);
 const t = (new URLSearchParams(location.search).get("t") || "NVDA").toUpperCase();
 const emp = EMPRESAS.find(e => e.ticker === t);
 const ficha = document.getElementById("ficha");
-if (!emp) location.replace("informes.html");
+if (!emp) {
+  // Sin ficha de empresa. Antes todo caía en informes.html, también un bono:
+  // activo.html?t=AL30 era un callejón sin salida aunque AL30 tiene su propia
+  // ficha. Soberanos, Bopreal y letras se reconocen por el ticker; los CER y
+  // dólar linked (TX26, DICP…) no tienen patrón, así que ahí se consulta el
+  // panel. Es el camino raro: no demora la carga de ninguna ficha normal.
+  let destino = "informes.html";
+  try {
+    let bonos = null;
+    if (!esRentaFija(t)) {
+      const s = await getDoc(doc(db, "bonosPanel", "latest"));
+      if (s.exists()) bonos = new Set(Object.keys(JSON.parse(s.data().json || "{}").todos || {}));
+    }
+    if (esRentaFija(t, bonos)) destino = "bono.html?e=" + encodeURIComponent(especieBono(canon(t, bonos), bonos));
+  } catch (e) {}
+  location.replace(destino);
+  await new Promise(() => {});   // nada de lo que sigue aplica: la página se va
+}
 
 const nf = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const n1 = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
