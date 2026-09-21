@@ -1,81 +1,123 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ficha de bono — Valtia Analytics</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+/* ── Ficha de bono — mismo lenguaje editorial que Noticias / Ficha de activo:
+     página blanca, Playfair + Plex Sans + Plex Mono, nav navy, hairlines. ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --navy:#0D1B2A;--gold:#B8975A;--gold2:#D4AF6E;
-  --text-d:#F0EDE8;--sub-d:rgba(240,237,232,.55);--muted-d:rgba(240,237,232,.35);
-  --text-l:#1A2B3C;--sub-l:#4A5A6C;--muted-l:#8A9BAD;
-  --bg-d:#0D1B2A;--bg3-d:#152336;--bg-l:#F5F2EC;--bg3-l:#EDE9E0;
-  --border-d:rgba(184,151,90,.14);--border-l:rgba(26,58,92,.12);
-  --card-d:#101F31;--card-l:#FFFFFF;
+  --navy:#0E1830;--navy2:#0B1327;--navy3:#14213D;
+  --gold:#B08A3E;--gold2:#8A6A2F;--gold-claro:#E8CE96;
+  --bg:#fff;--bg2:#F6F3EC;--bg3:#F6F3EC;
+  --text:#101010;--sub:#57534A;--muted:#8B8375;
+  --border:#E7E3DA;--card:#fff;
+  --ink:#101010;--mut:#8B8375;--line:#E7E3DA;--marfil:#F6F3EC;
+  --up:#1F7A4D;--dn:#B23A3A;--greenTx:#1F7A4D;--redTx:#B23A3A;
 }
-[data-theme="dark"]{--bg:var(--bg-d);--bg3:var(--bg3-d);--text:var(--text-d);--sub:var(--sub-d);--muted:var(--muted-d);--border:var(--border-d);--card:var(--card-d);--greenTx:#4caf50;--redTx:#ef5350}
-[data-theme="light"]{--bg:var(--bg-l);--bg3:var(--bg3-l);--text:var(--text-l);--sub:var(--sub-l);--muted:var(--muted-l);--border:var(--border-l);--card:var(--card-l);--greenTx:#2E7D32;--redTx:#C62828}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;min-height:100vh}
-a{color:inherit}
-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px clamp(16px,4vw,52px);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:50}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.brand-name{font-family:'Cormorant Garamond',serif;font-size:19px;letter-spacing:.14em;text-transform:uppercase}
-.brand-name em{color:var(--gold);font-style:normal}
-.nav-links{display:flex;gap:20px;align-items:center;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
-.nav-links a{text-decoration:none;color:var(--sub)}
-.nav-links a:hover{color:var(--gold)}
-.theme-btn{width:36px;height:20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;position:relative;flex-shrink:0}
-.theme-btn::after{content:'';position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--gold);transition:transform .2s}
-[data-theme="light"] .theme-btn::after{transform:translateX(16px)}
-.top-volver{max-width:980px;margin:0 auto;padding:20px clamp(16px,3vw,40px) 0;display:flex;gap:10px;align-items:center}
-.volver{font-family:'Jost',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);background:none;border:1px solid var(--border);border-radius:7px;padding:8px 14px;cursor:pointer}
-.volver:hover{color:var(--gold);border-color:var(--gold)}
-main{max-width:980px;margin:0 auto;padding:26px clamp(16px,3vw,40px) 70px}
-.eye{font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;display:flex;align-items:center;gap:12px}
-.eye::before{content:'';display:block;width:32px;height:1px;background:var(--gold);opacity:.6}
-.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,4.5vw,46px);font-weight:500;line-height:1.05}
-.ley{font-size:9.5px;font-weight:700;letter-spacing:.08em;border:1px solid var(--border);border-radius:4px;padding:3px 8px;color:var(--sub);vertical-align:middle;margin-left:10px}
-.ley.ny{color:var(--gold);border-color:rgba(184,151,90,.5)}
+html{scroll-behavior:smooth}
+body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);min-height:100vh;display:flex;flex-direction:column}
+a{color:var(--gold);text-decoration:none}
+a:hover{color:var(--gold2)}
+
+/* nav global (navy, igual a Noticias) */
+nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;background:rgba(14,24,48,.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(232,206,150,.14)}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;letter-spacing:.06em;color:#fff}
+.nav-name em{color:#E8CE96;font-style:italic}
+.nav-sub{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4)}
+.nav-links{display:flex;align-items:center;gap:26px}
+.nav-links a{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+.nav-links a:hover,.nav-links a.active{color:#E8CE96}
+.nav-cta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0E1830;background:#E8CE96;padding:9px 22px;border-radius:8px;text-decoration:none}
+.nav-cta:hover{background:#fff;color:#0E1830}
+@media(max-width:1100px){.nav-links{display:none}}
+
+
+/* barra superior: volver + acceso al panel (misma columna de 980px que el contenido) */
+.top-volver{width:100%;max-width:1084px;margin:0 auto;padding:22px 52px 16px;display:flex;gap:16px;align-items:center;position:relative}
+.top-volver::after{content:'';position:absolute;left:52px;right:52px;bottom:0;height:1px;background:var(--line)}
+.top-volver a{font-weight:600;margin-left:auto;text-align:right}
+.top-volver a:hover{color:var(--gold)!important}
+.volver{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);background:none;border:none;border-radius:0;padding:0;white-space:nowrap;cursor:pointer}
+.volver:hover{color:var(--gold)}
+
+/* columna de contenido de 980px; el footer (que pinta el JS dentro de <main>) va a sangre */
+main{flex:1 0 auto;display:grid;grid-template-columns:minmax(52px,1fr) minmax(0,980px) minmax(52px,1fr);grid-template-rows:repeat(12,auto) 1fr;padding-top:24px}
+main>*{grid-column:2;min-width:0}
+
+/* cabecera del bono (como .head de la ficha de activo) */
+.eye{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:8px}
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:24px}
+h1{font:700 clamp(28px,3.4vw,40px) 'Playfair Display',serif;font-variant-numeric:lining-nums;line-height:1.05;letter-spacing:.01em;color:var(--ink)}
+.ley{font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line);border-radius:0;padding:4px 8px;color:var(--sub);vertical-align:middle;margin-left:12px;white-space:nowrap}
+.ley.ny{color:var(--gold2);border-color:var(--gold)}
 .px{text-align:right}
-.px .v{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,3.6vw,40px);font-weight:600;font-variant-numeric:tabular-nums;line-height:1}
-.px .s{font-size:12px;color:var(--sub);margin-top:5px}
-.pos{color:var(--greenTx)!important}.neg{color:var(--redTx)!important}.mut{color:var(--muted)!important}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:26px}
-.tile{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px 16px;position:relative}
-.tile::before{content:'';position:absolute;top:0;left:16px;width:22px;height:2px;background:var(--gold)}
-.tile .l{font-size:9px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase;font-weight:600;margin-bottom:7px}
-.tile .v{font-family:'Cormorant Garamond',serif;font-size:clamp(20px,2vw,26px);font-weight:500;font-variant-numeric:tabular-nums;line-height:1}
-.tile .s{font-size:10.5px;color:var(--sub);margin-top:5px}
-.sec{display:flex;align-items:center;gap:12px;margin:30px 0 14px;font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
-.sec::before{content:'';display:block;width:32px;height:1px;background:var(--gold);opacity:.6}
-.sec::after{content:'';flex:1;height:1px;background:var(--border)}
-.dos{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;align-items:start}
+.px .v{font:600 clamp(22px,2.6vw,30px) 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;line-height:1;color:var(--ink)}
+.px .s{font:400 11.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--sub);margin-top:7px;line-height:1.5}
+.px .s span{font-weight:600}
+.pos{color:var(--up)!important}.neg{color:var(--dn)!important}.mut{color:var(--mut)!important}
+
+/* tiles de métricas: tarjeta recta con hairline y acento dorado arriba */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:0;padding:15px 16px 14px;position:relative;min-width:0}
+.tile::before{content:'';position:absolute;top:-1px;left:16px;width:22px;height:2px;background:var(--gold)}
+.tile .l{font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:8px}
+.tile .v{font:600 clamp(15px,1.5vw,18px) 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;line-height:1.1;color:var(--ink)}
+.tile .s{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--sub);margin-top:6px;line-height:1.45}
+
+/* título de sección: patrón .sec-h de Informes (Playfair + hairline que se estira) */
+.sec{display:flex;align-items:center;gap:14px;margin:34px 0 18px;font:700 17px 'Playfair Display',serif;line-height:1.25;color:var(--ink)}
+.sec::after{content:'';flex:1;height:1px;background:var(--line)}
+.dos{display:grid;grid-template-columns:1.4fr 1fr;gap:22px;align-items:start}
+.dos>*{min-width:0}
 @media(max-width:760px){.dos{grid-template-columns:1fr}}
-.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow-x:auto}
+
+/* tabla de flujos */
+.panel{background:#fff;border:1px solid var(--line);border-radius:0;overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;font-size:9.5px;letter-spacing:.15em;color:var(--muted);padding:11px 16px;border-bottom:1px solid var(--border);text-transform:uppercase;font-weight:600}
-td{padding:9px 16px;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums}
+th{text-align:left;font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:12px 16px;border-bottom:1px solid var(--ink);white-space:nowrap}
+td{padding:10px 16px;border-bottom:1px solid var(--line);font:500 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
 tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--marfil)}
 .num{text-align:right}
-.calc{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--gold);border-radius:0 12px 12px 0;padding:18px 20px}
-.calc label{display:block;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-.calc input{width:100%;max-width:180px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'Jost',sans-serif;font-size:15px;outline:none}
+
+/* calculadora: bloque destacado marfil con filete dorado */
+.calc{background:var(--marfil);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:0;padding:18px 20px}
+.calc label{display:block;font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:9px;line-height:1.5}
+.calc input{width:100%;max-width:180px;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:0;color:var(--ink);font:500 14px 'IBM Plex Mono',monospace;outline:none}
 .calc input:focus{border-color:var(--gold)}
 .calc .out{margin-top:14px;font-size:13.5px;color:var(--sub);line-height:1.8}
-.calc .out b{color:var(--text);font-size:15px}
-.state{border:1px dashed var(--border);border-radius:14px;text-align:center;padding:60px 20px;color:var(--sub);margin-top:30px}
-.nota{font-size:12px;color:var(--muted);line-height:1.7;margin-top:10px;max-width:70ch}
-footer{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;font-size:11px;color:var(--muted);line-height:1.9;max-width:900px}
+.calc .out b{color:var(--ink);font:600 14px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+
+.state{border:1px dashed var(--line);border-radius:0;text-align:center;padding:60px 20px;color:var(--sub);font-size:14px;line-height:1.9;margin:30px 0 70px}
+.state b{color:var(--ink);font:600 13.5px 'IBM Plex Mono',monospace}
+.nota{font-size:12px;color:var(--sub);line-height:1.7;margin-top:12px;max-width:70ch}
+
+/* footer de Noticias (navy2) — a sangre, con el texto alineado a la columna de contenido */
+footer{margin-top:48px;background:#0B1327;padding:28px max(52px,calc(50% - 490px));font:400 11px 'IBM Plex Sans',sans-serif;line-height:1.9;color:rgba(255,255,255,.55)}
+main>footer{grid-column:1/-1;grid-row:13;align-self:end}
+footer a{color:inherit}
+footer a:hover{color:#E8CE96}
+
+@media(max-width:880px){
+  .top-volver{padding-left:20px;padding-right:20px}
+  .top-volver::after{left:20px;right:20px}
+  main{grid-template-columns:minmax(20px,1fr) minmax(0,980px) minmax(20px,1fr)}
+  footer{padding-left:20px;padding-right:20px}
+}
+@media(max-width:600px){.px{text-align:left}}
 </style>
 </head>
 <body>
 <nav>
-  <a class="brand" href="index.html">
-    <svg width="30" height="30" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
-    <span class="brand-name">VAL<em>T</em>IA</span>
+  <a href="index.html" class="nav-brand">
+    <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
     <a href="index.html">Inicio</a>
@@ -85,9 +127,13 @@ footer{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;font-
     <a href="informes.html">Informes</a>
     <a href="herramientas.html">Herramientas</a>
     <a href="planes.html">Planes</a>
-    <button class="theme-btn" onclick="tg()" title="Cambiar tema"></button>
+  </div>
+  <div class="nav-right">
+    <a href="index.html?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
   </div>
 </nav>
+<!-- cotizaciones en vivo (módulo único del sitio: cotizaciones.js) -->
+<div id="valtia-cot"></div>
 <div class="top-volver">
   <button class="volver" onclick="volver()">← Volver</button>
   <a href="herramientas.html" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);text-decoration:none">Panel de bonos completo →</a>
@@ -107,13 +153,6 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-const saved = localStorage.getItem('valtia-theme');
-if (saved) document.documentElement.dataset.theme = saved;
-window.tg = () => {
-  const h = document.documentElement;
-  h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
-  localStorage.setItem('valtia-theme', h.dataset.theme);
-};
 window.volver = () => {
   try {
     if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
@@ -293,7 +332,8 @@ async function render() {
 }
 render();
 </script>
-<script type="module" src="nav-auth.js?v=6"></script>
-<script src="nav-menu.js?v=5"></script>
+<script type="module" src="nav-auth.js?v=7"></script>
+<script type="module" src="cotizaciones.js?v=3"></script>
+<script src="nav-menu.js?v=6"></script>
 </body>
 </html>

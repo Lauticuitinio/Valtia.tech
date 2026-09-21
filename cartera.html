@@ -1,118 +1,185 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Carteras — Valtia Analytics</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="chart.umd.min.js?v=1"></script>
 <style>
+/* ── Carteras — mismo lenguaje editorial que Noticias (navy + dorado):
+     página blanca, Playfair + IBM Plex, hairlines, esquinas rectas. Solo claro. ── */
 :root{
-  --navy:#0D1B2A;--navy2:#152336;--gold:#B8975A;--gold2:#D4AF6E;
-  --text-d:#F0EDE8;--sub-d:rgba(240,237,232,.55);--muted-d:rgba(240,237,232,.35);
-  --text-l:#1A2B3C;--sub-l:#4A5A6C;--muted-l:#8A9BAD;
-  --bg-d:#0D1B2A;--bg3-d:#152336;--bg-l:#F5F2EC;--bg3-l:#EDE9E0;
-  --border-d:rgba(184,151,90,.14);--border-l:rgba(26,58,92,.12);
-  --card-d:#101F31;--card-l:#FFFFFF;--green:#2E7D32;--red:#C62828;
+  --navy:#0E1830;--navy2:#0B1327;
+  --gold:#B08A3E;--gold2:#8A6A2F;--gold-claro:#E8CE96;
+  --bg:#fff;--bg3:#F6F3EC;
+  --text:#101010;--sub:#57534A;--muted:#8B8375;
+  --border:#E7E3DA;--card:#fff;
+  --ink:#101010;--mut:#8B8375;--line:#E7E3DA;--marfil:#F6F3EC;
+  --up:#1F7A4D;--dn:#B23A3A;--greenTx:#1F7A4D;--redTx:#B23A3A;
 }
-[data-theme="dark"]{--bg:var(--bg-d);--bg3:var(--bg3-d);--text:var(--text-d);--sub:var(--sub-d);--muted:var(--muted-d);--border:var(--border-d);--card:var(--card-d);--greenTx:#4caf50;--redTx:#ef5350}
-[data-theme="light"]{--bg:var(--bg-l);--bg3:var(--bg3-l);--text:var(--text-l);--sub:var(--sub-l);--muted:var(--muted-l);--border:var(--border-l);--card:var(--card-l);--greenTx:#2E7D32;--redTx:#C62828}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s;min-height:100vh}
-a{color:inherit}
-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px clamp(16px,4vw,52px);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:50}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.brand-name{font-family:'Cormorant Garamond',serif;font-size:19px;letter-spacing:.14em;text-transform:uppercase}
-.brand-name em{color:var(--gold);font-style:normal}
-.nav-links{display:flex;gap:20px;align-items:center;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
-.nav-links a{text-decoration:none;color:var(--sub)}
-.nav-links a:hover{color:var(--gold)}
-.theme-btn{width:36px;height:20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;position:relative;flex-shrink:0}
-.theme-btn::after{content:'';position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--gold);transition:transform .2s}
-[data-theme="light"] .theme-btn::after{transform:translateX(16px)}
-main{max-width:1240px;margin:0 auto;padding:34px clamp(16px,3vw,40px) 70px}
-.eye{font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:12px}
-.eye::before{content:'';display:block;width:32px;height:1px;background:var(--gold);opacity:.6}
-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,4.5vw,46px);font-weight:400;line-height:1.1;margin-bottom:12px}
-h1 em{font-style:italic;color:var(--gold2)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+a{color:var(--gold);text-decoration:none}
+a:hover{color:var(--gold2)}
+
+/* nav global (navy, igual a Noticias) */
+nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;background:rgba(14,24,48,.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(232,206,150,.14)}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;letter-spacing:.06em;color:#fff}
+.nav-name em{color:#E8CE96;font-style:italic}
+.nav-sub{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4)}
+.nav-links{display:flex;align-items:center;gap:26px}
+.nav-links a{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+.nav-links a:hover,.nav-links a.active{color:#E8CE96}
+.nav-cta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0E1830;background:#E8CE96;padding:9px 22px;border-radius:8px;text-decoration:none}
+.nav-cta:hover{background:#fff;color:#0E1830}
+@media(max-width:1100px){.nav-links{display:none}}
+
+/* masthead centrado sobre la franja navy, con el título de la página */
+.masthead{background:#0E1830;padding:26px 52px 20px;text-align:center}
+.masthead .t{font:700 clamp(28px,3.4vw,40px) 'Playfair Display',serif;color:#fff;letter-spacing:.01em;line-height:1.12;text-wrap:balance}
+.masthead .t em{color:#E8CE96;font-style:italic}
+.masthead .d{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(232,206,150,.75);margin-top:12px}
+
+/* columna de contenido de 1136px. El <footer> lo pinta el JS DENTRO de <main>: la grilla
+   de tres pistas lo deja ir a sangre. Ojo: entre ítems de grilla los márgenes verticales
+   no colapsan (se suman), por eso los ajustes con "+" más abajo. */
+main{display:grid;grid-template-columns:minmax(52px,1fr) minmax(0,1136px) minmax(52px,1fr);padding-top:30px}
+main>*{grid-column:2;min-width:0}
+
+/* rótulo (eyebrow) */
+.eye{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;font:700 10.5px/1.5 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:12px}
+/* nombre de la cartera en el detalle (como .head h1 de la ficha de activo) */
+main h1,main .dnom{font:700 clamp(26px,3.4vw,38px) 'Playfair Display',serif;font-variant-numeric:lining-nums;line-height:1.1;letter-spacing:.01em;color:var(--ink);text-wrap:balance}
 .sub{color:var(--sub);font-size:15px;line-height:1.75;max-width:720px;margin-bottom:8px}
-.honest{display:inline-flex;align-items:center;gap:8px;margin:14px 0 0;border:1px solid var(--border);border-left:3px solid var(--gold);background:var(--card);border-radius:8px;padding:9px 14px;font-size:12.5px;color:var(--sub);line-height:1.5}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:18px;margin-top:32px}
-.ccard{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:12px;transition:transform .15s,border-color .2s;position:relative}
-.ccard:hover{transform:translateY(-3px);border-color:var(--gold)}
-.ccard .top{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-.badge{font-size:9.5px;font-weight:600;letter-spacing:.12em;background:var(--gold);color:#0D1B2A;border-radius:4px;padding:3px 9px;text-transform:uppercase}
-.tagx{font-size:9px;letter-spacing:.12em;border:1px solid var(--border);border-radius:4px;padding:2.5px 8px;color:var(--sub);text-transform:uppercase;font-weight:600}
-.ccard h3{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500}
+.honest{display:inline-flex;justify-self:start;align-items:center;gap:8px;margin:14px 0 0;border:1px solid var(--line);border-left:3px solid var(--gold);background:var(--marfil);padding:10px 14px;font-size:12.5px;color:var(--sub);line-height:1.5}
+.honest b{color:var(--ink);font-weight:600}
+
+/* catálogo: tarjetas rectas con hairline y filete dorado arriba (como .fsr-card de Informes) */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));gap:18px;margin-top:32px}
+.ccard{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--gold);padding:22px;display:flex;flex-direction:column;gap:12px;transition:border-color .2s;position:relative;min-width:0}
+.ccard:hover{border-color:var(--gold)}
+.ccard .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font:700 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;background:var(--gold);color:#0E1830;padding:4px 9px}
+.tagx{font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line);padding:3px 8px;color:var(--sub)}
+.ccard h3{font:700 20px 'Playfair Display',serif;font-variant-numeric:lining-nums;line-height:1.2;color:var(--ink);text-wrap:pretty}
 .ccard p{font-size:13px;color:var(--sub);line-height:1.65;flex:1}
 .mini{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.mini .mi{border:1px solid var(--border);border-radius:9px;padding:9px 12px}
-.mini .l{font-size:8.5px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase;font-weight:600;margin-bottom:4px}
-.mini .v{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
+.mini .mi{border:1px solid var(--line);padding:10px 12px;min-width:0}
+.mini .l{font:600 9px/1.45 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
+.mini .v{font:600 15px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;line-height:1.1;color:var(--ink)}
 .spark{height:56px;position:relative}
-.cta{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
-.cta .go{color:var(--gold);font-weight:600;text-decoration:none}
-.cta .meta{color:var(--muted);font-size:10px}
-.pos{color:var(--greenTx)!important}.neg{color:var(--redTx)!important}.mut{color:var(--muted)!important}
+.cta{display:flex;align-items:center;justify-content:space-between;gap:10px;font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase}
+.cta .go{color:var(--gold2);white-space:nowrap}
+.cta .go:hover{color:var(--ink)}
+.cta .meta{color:var(--sub);font-weight:500;font-size:10px;letter-spacing:.08em;line-height:1.5}
+.pos{color:var(--up)!important}.neg{color:var(--dn)!important}.mut{color:var(--mut)!important}
+
 /* detalle */
-.crumb{font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:22px}
+.crumb{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin-bottom:22px}
 .crumb a{color:var(--sub);text-decoration:none}
 .crumb a:hover{color:var(--gold)}
-.dhead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px}
-.dmeta{font-size:11px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin:10px 0 26px;line-height:2}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:13px;margin:0 0 24px}
-.kpi{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:16px 18px;position:relative}
-.kpi::before{content:'';position:absolute;top:0;left:18px;width:24px;height:2px;background:var(--gold)}
-.kpi .l{font-size:9px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;font-weight:600;margin-bottom:8px}
-.kpi .v{font-family:'Cormorant Garamond',serif;font-size:clamp(22px,2vw,29px);font-weight:500;font-variant-numeric:tabular-nums;line-height:1}
-.kpi .s{font-size:11px;color:var(--sub);margin-top:7px}
-.sec{display:flex;align-items:center;gap:12px;margin:32px 0 14px;font-size:10px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
-.sec::before{content:'';display:block;width:32px;height:1px;background:var(--gold);opacity:.6}
-.sec::after{content:'';flex:1;height:1px;background:var(--border)}
-.chart-box{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:18px 20px;height:340px;position:relative}
-.chart-box .inner{position:absolute;inset:52px 18px 16px}
-.chart-box .leg{display:flex;gap:18px;font-size:11.5px;color:var(--sub)}
-.leg b{font-variant-numeric:tabular-nums}
+.dhead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.dmeta{font:500 10.5px/2 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);margin:10px 0 0;max-width:900px}
+.dmeta+.kpis{margin-top:26px}
+
+/* tiles de métricas: tarjeta recta con hairline y acento dorado arriba */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:12px;margin:0 0 24px}
+.kpi{background:#fff;border:1px solid var(--line);padding:15px 16px 14px;position:relative;min-width:0}
+.kpi::before{content:'';position:absolute;top:-1px;left:16px;width:22px;height:2px;background:var(--gold)}
+.kpi .l{font:600 9px/1.45 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:8px}
+.kpi .v{font:600 clamp(16px,1.5vw,20px) 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;line-height:1.1;color:var(--ink)}
+.kpi .s{font-size:10.5px;color:var(--sub);margin-top:7px;line-height:1.45}
+
+/* título de sección: patrón .sec-h de Informes (Playfair + hairline que se estira) */
+.sec{display:flex;align-items:center;gap:14px;margin:34px 0 16px;font:700 17px 'Playfair Display',serif;font-variant-numeric:lining-nums;line-height:1.25;color:var(--ink)}
+.sec::after{content:'';flex:1;min-width:24px;height:1px;background:var(--line)}
+.kpis+.sec{margin-top:10px}
+.sub+.sec{margin-top:26px}
+
+/* gráfico de evolución */
+.chart-box{background:#fff;border:1px solid var(--line);padding:18px 20px;height:340px;position:relative}
+.chart-box .inner{position:absolute;inset:56px 18px 16px}
+.chart-box .leg{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:11.5px;line-height:1.5;color:var(--sub)}
+.leg b{font:600 11.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
 .dotl{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:baseline}
-.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow-x:auto}
+
+/* tablas: encabezado con filete de tinta, filas con hairline, números en Plex Mono */
+.panel{background:#fff;border:1px solid var(--line);overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}
-th{text-align:left;font-size:9.5px;letter-spacing:.15em;color:var(--muted);padding:12px 16px;border-bottom:1px solid var(--border);text-transform:uppercase;font-weight:600}
-td{padding:11px 16px;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums;vertical-align:top}
+th{text-align:left;font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:12px 16px;border-bottom:1px solid var(--ink);white-space:nowrap}
+td{padding:11px 16px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;vertical-align:top;color:var(--ink)}
 tr:last-child td{border-bottom:none}
-tbody tr:hover td{background:var(--bg3)}
+tbody tr:hover td{background:var(--marfil)}
 .num{text-align:right}
-.pill{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:600;border-radius:999px;padding:1px 8px;white-space:nowrap}
-.pill.p{color:var(--greenTx);background:rgba(46,125,50,.12)}
-.pill.n{color:var(--redTx);background:rgba(198,40,40,.12)}
-.pill.m{color:var(--sub);background:var(--bg3)}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
-.chip{border:1px solid var(--border);background:var(--card);border-radius:8px;padding:6px 12px;font-size:12px;display:inline-flex;gap:8px;align-items:center}
-.chip b{letter-spacing:.03em}
-.razon{color:var(--sub);font-size:12px;line-height:1.6;max-width:520px}
-.razon b{color:var(--text);display:block;font-size:12.5px;margin-bottom:2px}
-.tesis-row{color:var(--sub);font-size:12px;line-height:1.55;max-width:340px}
-footer{margin-top:44px;border-top:1px solid var(--border);padding-top:18px;font-size:11px;color:var(--muted);line-height:1.9;max-width:900px}
-.state{border:1px dashed var(--border);border-radius:14px;text-align:center;padding:60px 20px;color:var(--sub);margin-top:30px}
-@media(max-width:760px){.chart-box{height:280px}}
+td.num{font:500 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+td.num div{font-family:'IBM Plex Sans',sans-serif;font-weight:400}
+td:not(.razon):not(.tesis-row)>b{font:600 12.5px 'IBM Plex Mono',monospace;letter-spacing:.02em}
+.pill{display:inline-flex;align-items:center;gap:4px;font:700 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;white-space:nowrap}
+td.num .pill{font:600 11.5px 'IBM Plex Mono',monospace;letter-spacing:0;text-transform:none;padding:2px 7px}
+.pill.p{color:var(--up);background:rgba(31,122,77,.1)}
+.pill.n{color:var(--dn);background:rgba(178,58,58,.1)}
+.pill.m{color:var(--sub);background:var(--marfil)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:#fff;padding:6px 12px;font:500 12px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;display:inline-flex;gap:8px;align-items:center}
+.chip b{font-weight:600;letter-spacing:.02em;color:var(--ink)}
+/* las columnas de texto no se aplastan cuando la tabla scrollea de costado en el celular */
+.razon{color:var(--sub);font-size:12px;line-height:1.6;max-width:520px;min-width:280px}
+.razon b{color:var(--ink);display:block;font-size:12.5px;margin-bottom:2px}
+.tesis-row{color:var(--sub);font-size:12px;line-height:1.55;max-width:340px;min-width:260px}
+td:not(.num)>b+div{min-width:120px}
+
+/* footer de Noticias (navy2). Lo pinta el JS dentro de <main>: va a sangre, con el texto
+   alineado a la columna de contenido y un ancho de lectura de ~900px */
+footer{margin-top:48px;background:#0B1327;padding:28px max(52px,calc(50% - 332px)) 28px max(52px,calc(50% - 568px));font:400 11px/1.9 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.55)}
+main>footer{grid-column:1/-1}
+footer b{color:rgba(255,255,255,.85);font-weight:600}
+footer a{color:inherit;text-decoration:underline}
+footer a:hover{color:#E8CE96}
+
+.state{border:1px dashed var(--line);text-align:center;padding:60px 20px;color:var(--sub);font-size:14px;line-height:1.9;margin-top:30px}
+main>.state{margin:10px 0 70px}
+.grid>.state{grid-column:1/-1;margin-top:0}
+.state a{text-decoration:underline;text-underline-offset:3px}
+
+@media(max-width:880px){
+  .masthead{padding-left:20px;padding-right:20px}
+  .masthead .t br{display:none}
+  main{grid-template-columns:minmax(20px,1fr) minmax(0,1136px) minmax(20px,1fr)}
+  footer{padding-left:20px;padding-right:20px}
+}
+@media(max-width:760px){.chart-box{height:300px}.chart-box .inner{top:74px}}
 </style>
 </head>
 <body>
 <nav>
-  <a class="brand" href="index.html">
-    <svg width="30" height="30" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
-    <span class="brand-name">VAL<em>T</em>IA</span>
+  <a href="index.html" class="nav-brand">
+    <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
     <a href="index.html">Inicio</a>
-    <a href="cartera.html">Carteras</a>
+    <a href="cartera.html" class="active">Carteras</a>
     <a href="inversion-mensual.html">Inversión mensual</a>
     <a href="noticias.html">Noticias</a>
     <a href="informes.html">Informes</a>
     <a href="herramientas.html">Herramientas</a>
     <a href="planes.html">Planes</a>
-    <button class="theme-btn" onclick="tg()" title="Cambiar tema"></button>
+  </div>
+  <div class="nav-right">
+    <a href="index.html?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
   </div>
 </nav>
+
+<!-- masthead: el título de la página sobre la franja navy (antes lo pintaba el JS en el catálogo) -->
+<div class="masthead">
+  <h1 class="t">Carteras que se <em>gestionan</em>, <br>no listas que se olvidan</h1>
+  <div class="d">Carteras vivas · seguimiento verificable</div>
+</div>
+
+<!-- cotizaciones en vivo (módulo único del sitio: cotizaciones.js) -->
 <div id="valtia-cot"></div>
 <main id="main">
   <div class="state">Cargando carteras…</div>
@@ -133,16 +200,6 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 
-/* tema persistente compartido con el sitio */
-const saved = localStorage.getItem('valtia-theme');
-if (saved) document.documentElement.dataset.theme = saved;
-window.tg = () => {
-  const h = document.documentElement;
-  h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
-  localStorage.setItem('valtia-theme', h.dataset.theme);
-  render();
-};
-
 const $ = s => document.querySelector(s);
 // las lecaps valuadas en dolares son centavos por 100 VN: mas decimales
 const fmtUSD = n => n == null || !isFinite(Number(n)) ? "—" : "US$" + Number(n).toLocaleString("es-AR",
@@ -157,6 +214,8 @@ const PERFIL = { "renta-fija": "Renta fija", "renta-mixta": "Renta mixta", "rent
 const fdate = v => !v ? "—" : (v.toDate ? v.toDate().toISOString().slice(0,10) : String(v).slice(0,10));
 
 let charts = [];
+// tipografía de los gráficos (ejes y tooltip): la del sitio
+if (window.Chart) Chart.defaults.font.family = "'IBM Plex Sans',system-ui,sans-serif";
 let cache = null, cacheAuth = null;
 
 // acceso PRO: admin, alta manual (usuariosPro) o cliente del fondo (inversores)
@@ -288,7 +347,7 @@ function lockedCard(t) {
     <div class="ccard">
       <div class="top"><span class="badge">${t.codigo || t.id}</span>
         <span class="tagx">${RIESGO[t.nivelRiesgo] || t.nivelRiesgo || ""}</span>
-        <span class="tagx" style="color:var(--gold);border-color:rgba(184,151,90,.4)">🔒 PRO</span></div>
+        <span class="tagx" style="color:var(--gold2);border-color:var(--gold)">🔒 PRO</span></div>
       <h3>${t.nombre}</h3>
       <p>El retorno real, a la vista. La composición, la tesis por posición y cada rotación con su razonamiento se destapan con Valtia PRO.</p>
       <div class="mini">
@@ -313,8 +372,8 @@ function renderCatalogo(carteras, user, teaser) {
         <span class="tagx">${RIESGO[c.nivelRiesgo] || c.nivelRiesgo || ""}</span>
         ${PERFIL[c.perfil] ? `<span class="tagx">${PERFIL[c.perfil]}</span>` : ""}
         ${c.rebalanceo ? `<span class="tagx">Rebalanceo ${c.rebalanceo}</span>` : ""}
-        ${c.visibilidad === "borrador" ? '<span class="tagx" style="color:#E0A93E;border-color:rgba(224,169,62,.5)">Borrador · sin publicar</span>'
-          : priv ? '<span class="tagx" style="color:var(--gold);border-color:rgba(184,151,90,.4)">Suscriptores</span>' : ''}</div>
+        ${c.visibilidad === "borrador" ? '<span class="tagx" style="color:#B45309;border-color:rgba(180,83,9,.45)">Borrador · sin publicar</span>'
+          : priv ? '<span class="tagx" style="color:var(--gold2);border-color:var(--gold)">Suscriptores</span>' : ''}</div>
       <h3>${c.nombre}</h3>
       <p>${c.descripcionCorta || ((c.tesis || "").slice(0, 150) + ((c.tesis||"").length > 150 ? "…" : ""))}</p>
       <div class="mini">
@@ -328,17 +387,16 @@ function renderCatalogo(carteras, user, teaser) {
         <a class="go" href="cartera.html?c=${c.id}">Ver cartera →</a></div>
     </div>`;
   }).join("");
+  // el rótulo y el <h1> del catálogo viven ahora en el .masthead estático de la página
   $("#main").innerHTML = `
-    <div class="eye">Carteras vivas · seguimiento verificable</div>
-    <h1>Carteras que se <em>gestionan</em>,<br>no listas que se olvidan</h1>
     <p class="sub">Cada cartera es una página viva: posiciones con tesis, precio de entrada registrado el día que entra, y cada rotación fechada con su razonamiento. El rendimiento se mide desde el lanzamiento — nunca con backtests.</p>
     <div class="honest">🔎 <span><b>Transparencia primero:</b> el historial se construye día a día con precios reales. Lo que ves es lo que fue.</span></div>
     <div class="grid">${cards || '<div class="state">Sin carteras activas todavía.</div>'}${bloqueadas.map(lockedCard).join("")}</div>
     <footer>Valtia Analytics no brinda asesoramiento financiero personalizado a través de estas carteras. La información es de carácter general y educativo; los rendimientos pasados no garantizan resultados futuros. Invertir en renta variable implica riesgo de pérdida del capital.</footer>`;
   charts.forEach(ch => ch.destroy()); charts = [];
   const spark = (el, labels, data) => charts.push(new Chart(el, { type: "line",
-    data: { labels, datasets: [{ data, borderColor: "#B8975A",
-      backgroundColor: "rgba(184,151,90,.12)", fill: true, borderWidth: 2, pointRadius: 0, tension: .3 }] },
+    data: { labels, datasets: [{ data, borderColor: "#B08A3E",
+      backgroundColor: "rgba(176,138,62,.12)", fill: true, borderWidth: 2, pointRadius: 0, tension: .3 }] },
     options: { responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: { enabled: false } },
       scales: { x: { display: false }, y: { display: false } } } }));
@@ -387,8 +445,8 @@ async function renderDetalle(c) {
   $("#main").innerHTML = `
     <div class="crumb"><a href="cartera.html">← Todas las carteras</a></div>
     <div class="dhead">
-      <div><div class="eye" style="margin-bottom:10px"><span class="badge">${c.codigo || c.slug}</span> ${RIESGO[c.nivelRiesgo] || ""}${PERFIL[c.perfil] ? " · " + PERFIL[c.perfil] : ""}${c.visibilidad === "borrador" ? ' · <span style="color:#E0A93E">Borrador · sin publicar</span>' : ""}</div>
-        <h1 style="margin-bottom:6px">${c.nombre}</h1></div>
+      <div><div class="eye" style="margin-bottom:10px"><span class="badge">${c.codigo || c.slug}</span> ${RIESGO[c.nivelRiesgo] || ""}${PERFIL[c.perfil] ? " · " + PERFIL[c.perfil] : ""}${c.visibilidad === "borrador" ? ' · <span style="color:#B45309">Borrador · sin publicar</span>' : ""}</div>
+        <h2 class="dnom" style="margin-bottom:6px">${c.nombre}</h2></div>
     </div>
     <div class="dmeta">Lanzada ${inicio} · Rebalanceo ${c.rebalanceo || "mensual"} · ${c.modo === "automatico" ? "Reglas automáticas" : "Curada por el equipo"} · Benchmark ${c.benchmark || "—"}<br>${c.criterio || ""}</div>
     ${(() => {
@@ -407,7 +465,7 @@ async function renderDetalle(c) {
           ${it("ROA", k.roa, k.roaCobertura, "%")}
           ${it("Beta vs S&P", k.beta, k.betaCobertura, "")}
         </div>
-        <p style="font-size:12px;color:var(--muted);line-height:1.7;margin:-14px 0 22px">Promedio ponderado por peso objetivo de los activos que la cartera tiene hoy (el P/E es media armónica). No depende del historial: es la foto de la composición actual.</p>`;
+        <p style="font-size:12px;color:var(--sub);line-height:1.7;margin:-14px 0 22px">Promedio ponderado por peso objetivo de los activos que la cartera tiene hoy (el P/E es media armónica). No depende del historial: es la foto de la composición actual.</p>`;
     })()}
     <div class="kpis">
       <div class="kpi"><div class="l">Retorno desde inicio</div><div class="v ${r!=null?cls(r):"mut"}">${r!=null?fmtPct(r):"—"}</div><div class="s">desde ${inicio}</div></div>
@@ -420,8 +478,8 @@ async function renderDetalle(c) {
     </div>
     <div class="sec">Evolución · base 100 al lanzamiento</div>
     <div class="chart-box">
-      <div class="leg"><span><span class="dotl" style="background:#B8975A"></span>${c.nombre} <b class="${cls(r)}">${fmtPct(r)}</b></span>
-      ${rb != null ? `<span><span class="dotl" style="background:#8A9BAD"></span>${c.benchmark} <b class="${cls(rb)}">${fmtPct(rb)}</b></span>` : ""}</div>
+      <div class="leg"><span><span class="dotl" style="background:#B08A3E"></span>${c.nombre} <b class="${cls(r)}">${fmtPct(r)}</b></span>
+      ${rb != null ? `<span><span class="dotl" style="background:#0E1830"></span>${c.benchmark} <b class="${cls(rb)}">${fmtPct(rb)}</b></span>` : ""}</div>
       <div class="inner"><canvas id="chEvo"></canvas></div>
     </div>
     <div class="sec">Tesis</div>
@@ -440,11 +498,11 @@ async function renderDetalle(c) {
 
   charts.forEach(ch => ch.destroy()); charts = [];
   const subC = tok("--sub"), borderC = tok("--border");
-  const dsets = [{ label: c.nombre, data: c.valores.map(v => v.indice), borderColor: "#B8975A",
-    backgroundColor: "rgba(184,151,90,.10)", fill: true, borderWidth: 2.2, pointRadius: c.valores.length < 25 ? 3.5 : 0,
-    pointBackgroundColor: "#B8975A", tension: .3 }];
+  const dsets = [{ label: c.nombre, data: c.valores.map(v => v.indice), borderColor: "#B08A3E",
+    backgroundColor: "rgba(176,138,62,.10)", fill: true, borderWidth: 2.2, pointRadius: c.valores.length < 25 ? 3.5 : 0,
+    pointBackgroundColor: "#B08A3E", tension: .3 }];
   if (c.valores.some(v => v.benchmark != null)) {
-    dsets.push({ label: c.benchmark, data: c.valores.map(v => v.benchmark ?? null), borderColor: "#8A9BAD",
+    dsets.push({ label: c.benchmark, data: c.valores.map(v => v.benchmark ?? null), borderColor: "#0E1830",
       borderWidth: 1.8, pointRadius: 0, tension: .3, fill: false });
   }
   charts.push(new Chart(document.getElementById("chEvo"), { type: "line",
@@ -468,8 +526,8 @@ async function render() {
       const t = teaser.find(x => x.id === slug);
       if (t) {
         $("#main").innerHTML = `<div class="state">
-          <div style="font-family:'Cormorant Garamond',serif;font-size:26px;margin-bottom:8px">${t.nombre}</div>
-          ${t.retorno != null ? `<div style="margin-bottom:14px">Retorno real desde ${t.fechaInicio}: <b class="${cls(t.retorno)}" style="font-size:18px">${fmtPct(t.retorno)}</b>${t.retornoBench != null ? ` · ${t.benchmark || "SPY"} ${fmtPct(t.retornoBench)}` : ""}</div>` : ""}
+          <div style="font-family:'Playfair Display',serif;font-weight:700;font-variant-numeric:lining-nums;font-size:22px;line-height:1.2;color:var(--ink);margin-bottom:8px">${t.nombre}</div>
+          ${t.retorno != null ? `<div style="margin-bottom:14px">Retorno real desde ${t.fechaInicio}: <b class="${cls(t.retorno)}" style="font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px">${fmtPct(t.retorno)}</b>${t.retornoBench != null ? ` · ${t.benchmark || "SPY"} <span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-variant-numeric:tabular-nums">${fmtPct(t.retornoBench)}</span>` : ""}</div>` : ""}
           La composición, la tesis y cada rotación con su razonamiento son de Valtia PRO.<br><br>
           <a class="go" href="planes.html" style="color:var(--gold);font-weight:600">Conocé Valtia PRO · USD 19/mes →</a>
           &nbsp;·&nbsp; <a href="cartera.html" style="color:var(--sub)">mirá las abiertas</a></div>`;
@@ -486,8 +544,8 @@ async function render() {
 // el catálogo cambia según haya sesión: se re-renderiza al resolver el auth
 onAuthStateChanged(getAuth(app), u => { _user = u; render(); });
 </script>
-<script type="module" src="nav-auth.js?v=6"></script>
+<script type="module" src="nav-auth.js?v=7"></script>
 <script type="module" src="cotizaciones.js?v=3"></script>
-<script src="nav-menu.js?v=5"></script>
+<script src="nav-menu.js?v=6"></script>
 </body>
 </html>

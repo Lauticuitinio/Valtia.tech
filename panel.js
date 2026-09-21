@@ -8,7 +8,7 @@ import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, quer
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { calcular, agruparPorBroker, normalizarTicker, convertir, reiniciarMiCartera, completarPreciosDeRentaFija }
-  from './mi-cartera.js?v=33';
+  from './mi-cartera.js?v=34';
 import { fxMercado, registrarImplicito } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
@@ -41,7 +41,8 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
   letter-spacing:.12em!important;background:none;border:none;cursor:pointer;text-transform:uppercase}
 .fl-main{flex:1;min-width:0;display:flex;flex-direction:column}
 .fl-topbar{display:flex;align-items:center;gap:4px;padding:9px 14px 9px 0;margin-left:22px;border-bottom:1px solid rgba(0,0,0,.08);
-  background:#FBF9F3;position:sticky;top:0;z-index:60;overflow-x:auto}
+  background:#FBF9F3;position:sticky;top:0;z-index:60;overflow-x:auto;scrollbar-width:none}
+.fl-topbar::-webkit-scrollbar{display:none}
 [data-theme="dark"] .fl-topbar{background:#0F1B30;border-bottom-color:rgba(255,255,255,.08)}
 .fl-topbar a{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#6B6456;
   padding:7px 13px;border-radius:8px;text-decoration:none;white-space:nowrap;cursor:pointer}
@@ -49,7 +50,7 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 .fl-topbar a:hover{background:rgba(176,138,62,.1);color:#8A6A2F}
 [data-theme="dark"] .fl-topbar a:hover{background:rgba(232,206,150,.1);color:#E8CE96}
 .fl-topbar .sep{flex:1}
-.fl-topbar .dom{font:600 9.5px 'IBM Plex Mono',monospace;letter-spacing:.12em;color:#B08A3E;white-space:nowrap}
+.fl-topbar .dom{font:600 9.5px 'IBM Plex Mono',monospace;letter-spacing:.12em;color:var(--link);white-space:nowrap}
 .fl-sbbrand{display:flex;align-items:center;gap:10px;padding:2px 10px 12px}
 .fl-sbbrand .lg{width:30px;height:30px;border:1.5px solid #B08A3E;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none}
 .fl-sbbrand .nm{font:500 15px 'Playfair Display',serif;letter-spacing:.18em;color:#fff}
@@ -67,77 +68,82 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 }
 /* secciones del panel */
 .vp-sub{color:var(--sub);font-size:14px;line-height:1.7;max-width:720px;margin:-14px 0 22px}
-.vp-sec{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:400;color:var(--text);margin:30px 0 12px}
-.vp-sec small{font-family:'Jost',sans-serif;font-size:12px;color:var(--muted);margin-left:10px}
+.vp-sec{display:flex;align-items:baseline;gap:12px;font:700 19px 'Playfair Display',serif;color:var(--text);margin:32px 0 14px;line-height:1.2}
+.vp-sec::after{content:'';flex:1;height:1px;background:var(--border);align-self:center;min-width:20px}
+.vp-sec small{font:400 12px 'IBM Plex Sans',system-ui,sans-serif;color:var(--muted)}
 .vp-cargando{color:var(--muted);font-size:13px}
 .vp-nota{font-size:12px;color:var(--muted);line-height:1.7;margin-top:10px;max-width:760px}
 .vp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
-.vp-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;position:relative}
-.vp-card h4{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:400;color:var(--text);margin:0 0 6px}
+.vp-card{background:var(--card);border:1px solid var(--border);padding:16px 18px;position:relative}
+.vp-card h4{font:600 17.5px 'Playfair Display',serif;color:var(--text);margin:0 0 7px;line-height:1.25}
 .vp-card p{font-size:13px;color:var(--sub);line-height:1.65;margin:0}
-.vp-card .l{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.vp-card a.vp-ir{display:inline-block;margin-top:10px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);text-decoration:none}
-.vp-fila{display:flex;gap:10px;align-items:baseline;text-decoration:none;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:11px 14px;margin-bottom:8px;color:var(--text);font-size:13px;line-height:1.5}
+.vp-card .l{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.vp-card a.vp-ir{display:inline-block;margin-top:10px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--link);text-decoration:none}
+.vp-fila{display:flex;gap:10px;align-items:baseline;text-decoration:none;background:var(--bg3);border:1px solid var(--border);padding:11px 14px;margin-bottom:8px;color:var(--text);font-size:13px;line-height:1.5}
 .vp-fila b{color:var(--text)}
 .vp-chips{display:flex;gap:8px;flex-wrap:wrap;margin:-8px 0 20px}
-.vp-chip{font-size:11px;padding:5px 10px;border-radius:14px;border:1px solid var(--border);background:var(--bg3);color:var(--sub)}
+.vp-chip{font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--sub)}
 .vp-chip b{color:var(--text)}
-.vp-tag{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:4px;white-space:nowrap;display:inline-block}
-.vp-tag.infra{color:#4caf50;background:rgba(76,175,80,.12)}.vp-tag.precio{color:var(--gold);background:rgba(184,151,90,.14)}
-.vp-tag.cara{color:#ef5350;background:rgba(239,83,80,.12)}.vp-tag.sin{color:var(--muted);background:rgba(120,130,140,.12)}
+.vp-tag{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:2px;white-space:nowrap;display:inline-block}
+.vp-tag.infra{color:var(--green);background:rgba(31,122,77,.12)}.vp-tag.precio{color:var(--link);background:rgba(176,138,62,.14)}
+.vp-tag.cara{color:var(--red);background:rgba(178,58,58,.1)}.vp-tag.sin{color:var(--muted);background:rgba(120,130,140,.12)}
 .vp-tag.zona{color:#14213D;background:#E8CE96}.vp-tag.tengo{color:var(--sub);background:transparent;border:1px solid var(--border)}
-.vp-tag.pro{color:#B08A3E;border:1px solid #B08A3E}.vp-tag.gratis{color:#4caf50;border:1px solid rgba(76,175,80,.5)}
-.vp-tblwrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow-x:auto;position:relative}
+.vp-tag.pro{color:var(--link);border:1px solid var(--gold)}.vp-tag.gratis{color:var(--green);border:1px solid rgba(31,122,77,.5)}
+.vp-tblwrap{background:var(--card);border:1px solid var(--border);overflow-x:auto;position:relative}
 .vp-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
-.vp-tbl th{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:11px 12px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+.vp-tbl th{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:11px 12px;border-bottom:1px solid var(--text);text-align:right;white-space:nowrap}
 .vp-tbl th.l,.vp-tbl td.l{text-align:left}
-.vp-tbl td{padding:10px 12px;border-bottom:.5px solid var(--border);color:var(--text);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.vp-tbl td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);text-align:right;font:500 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+.vp-tbl td.l{font:400 13px 'IBM Plex Sans',system-ui,sans-serif}
+.vp-tbl tbody tr:hover td{background:var(--bg3)}
 .vp-tbl tr:last-child td{border-bottom:none}
-.vp-tbl .tk{font-weight:700;color:var(--gold);text-decoration:none}
-.vp-tbl .nm{display:block;font-size:11px;color:var(--muted);font-weight:400;white-space:normal}
+.vp-tbl .tk{font:600 12.5px 'IBM Plex Mono',monospace;color:var(--link);text-decoration:none}
+.vp-tbl .nm{display:block;font:400 11px 'IBM Plex Sans',system-ui,sans-serif;color:var(--muted);white-space:normal}
 .vp-tbl tr.vp-blur td{filter:blur(4px);pointer-events:none;user-select:none}
 .vp-lock{position:absolute;left:0;right:0;bottom:0;padding:22px;text-align:center;background:linear-gradient(to bottom,transparent,var(--card) 40%)}
-.vp-lock b{display:block;font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--text)}
+.vp-lock b{display:block;font:700 18px 'Playfair Display',serif;color:var(--text)}
 .vp-lock p{font-size:12.5px;color:var(--sub);margin:4px 0 10px}
-.vp-btn{font-family:'Jost',sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);
-  background:var(--gold);border:none;padding:10px 20px;border-radius:5px;cursor:pointer;text-decoration:none;display:inline-block}
-.vp-btn:hover{background:var(--gold2)}
-.vp-btn.sec{background:transparent;color:var(--gold);border:1px solid var(--gold)}
+.vp-btn{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--btn-tx);
+  background:var(--btn-bg);border:1px solid var(--btn-bg);padding:10px 20px;cursor:pointer;text-decoration:none;display:inline-block;transition:background .15s,color .15s,border-color .15s}
+.vp-btn:hover{background:var(--btn-hover);border-color:var(--btn-hover)}
+.vp-btn.sec{background:transparent;color:var(--text);border:1px solid var(--text)}
+.vp-btn.sec:hover{background:var(--text);color:var(--bg);border-color:var(--text)}
 .vp-btn.mini{padding:6px 12px;font-size:10px}
 .vp-btn[disabled]{opacity:.45;cursor:default}
-.vp-form{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-top:8px;padding:10px;border:1px dashed var(--border);border-radius:8px;text-align:left}
+.vp-form{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-top:8px;padding:10px;border:1px dashed var(--border);text-align:left}
 .vp-form label{display:block;font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
-.vp-form input,.vp-form select{padding:7px 9px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Jost',sans-serif;font-size:13px;outline:none;min-width:90px}
-[data-theme="light"] .vp-form input,[data-theme="light"] .vp-form select{background:var(--bg3)}
+.vp-form input,.vp-form select{padding:8px 10px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:13px;outline:none;min-width:90px}
 .vp-form input:focus,.vp-form select:focus{border-color:var(--gold)}
 .vp-msg{font-size:12.5px;margin-top:8px}
-.vp-cur{display:inline-flex;border:1px solid var(--border);border-radius:7px;overflow:hidden;vertical-align:middle}
-.vp-cur button{font-family:'Jost',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.06em;padding:6px 12px;border:none;background:transparent;color:var(--muted);cursor:pointer}
+.vp-cur{display:inline-flex;border:1px solid var(--border);overflow:hidden;vertical-align:middle}
+.vp-cur button{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.06em;padding:6px 12px;border:none;background:transparent;color:var(--muted);cursor:pointer}
 .vp-cur button+button{border-left:1px solid var(--border)}
-.vp-cur button.on{background:var(--gold);color:var(--navy)}
+.vp-cur button.on{background:var(--btn-bg);color:var(--btn-tx)}
 .vp-pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:8px}
-.vp-paso{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;cursor:pointer}
-.vp-paso .n{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--gold);line-height:1}
-.vp-paso.ok .n{color:#4caf50}
+.vp-paso{background:var(--card);border:1px solid var(--border);padding:16px 18px;cursor:pointer}
+.vp-paso .n{font:700 22px 'Playfair Display',serif;color:var(--gold);line-height:1}
+.vp-paso.ok .n{color:var(--green)}
 .vp-paso b{display:block;font-size:14px;color:var(--text);margin:8px 0 4px}
 .vp-paso p{font-size:12.5px;color:var(--sub);line-height:1.6;margin:0}
-.vp-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#14213D;color:#E8CE96;border:1px solid #B08A3E;border-radius:8px;padding:11px 18px;font-size:13px;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.vp-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#14213D;color:#E8CE96;border:1px solid #B08A3E;padding:11px 18px;font-size:13px;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,.35)}
 .vp-bv{position:fixed;inset:0;z-index:1000;background:rgba(6,12,22,.72);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
-.vp-bv-caja{background:var(--card);border:1px solid var(--border);border-radius:14px;max-width:560px;width:100%;padding:26px 28px 22px;box-shadow:0 20px 60px rgba(0,0,0,.45);margin:auto}
-.vp-bv-caja .k{font:600 9.5px 'Jost',sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
-.vp-bv-caja h3{font-family:'Cormorant Garamond',serif;font-size:29px;font-weight:400;color:var(--text);margin:8px 0 10px;line-height:1.15}
+.vp-bv-caja{background:var(--card);border:1px solid var(--border);max-width:560px;width:100%;padding:26px 28px 22px;box-shadow:0 20px 60px rgba(0,0,0,.45);margin:auto}
+.vp-bv-caja .k{font:700 10px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--link)}
+.vp-bv-caja h3{font:700 25px 'Playfair Display',serif;color:var(--text);margin:8px 0 10px;line-height:1.15}
 .vp-bv-caja p{font-size:13.5px;color:var(--sub);line-height:1.7;margin:0 0 14px}
 .vp-bv-caja ul{list-style:none;padding:0;margin:0 0 16px}
 .vp-bv-caja li{font-size:13px;color:var(--sub);line-height:1.6;padding:9px 0;border-top:1px solid var(--border);display:flex;gap:11px;align-items:flex-start}
 .vp-bv-caja li b{color:var(--text);font-weight:600}
-.vp-bv-caja li i{flex-shrink:0;font-style:normal;color:var(--gold);font-weight:700;font-size:11px;letter-spacing:.06em;min-width:18px}
+.vp-bv-caja li i{flex-shrink:0;font-style:normal;color:var(--link);font-weight:700;font-size:11px;letter-spacing:.06em;min-width:18px}
 .vp-bv-legal{font-size:11.5px;color:var(--muted);line-height:1.65;border-top:1px solid var(--border);padding-top:12px;margin-bottom:16px}
-.vp-bv-legal a{color:var(--gold);text-decoration:none}
+.vp-bv-legal a{color:var(--link);text-decoration:none}
 .vp-bv-pie{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-@media(max-width:560px){.vp-bv-caja{padding:22px 20px 18px}.vp-bv-caja h3{font-size:25px}}
+@media(max-width:560px){.vp-bv-caja{padding:22px 20px 18px}.vp-bv-caja h3{font-size:22px}}
 .vp-spark{width:100%;height:36px;display:block;margin:8px 0 4px}
-.vp-pos{color:#4caf50}.vp-neg{color:#ef5350}.vp-mut{color:var(--muted)}
+.vp-pos{color:var(--green)}.vp-neg{color:var(--red)}.vp-mut{color:var(--muted)}
 .vp-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px}
+/* acá los .pkpi van sueltos (no dentro del marco de .portal-kpis): cada uno es su propia tarjeta */
+.vp-kpis .pkpi{background:var(--card);border:1px solid var(--border)}
 /* Resumen: cabecera, bloque de estado, composicion y avisos */
 .vp-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
 .vp-head .portal-title{margin-bottom:2px}
@@ -147,21 +153,19 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 .vp-hero:not(.dos) .vp-fondo{max-width:420px}
 .vp-estado{display:flex;flex-direction:column;gap:15px}
 .vp-est-top{display:flex;justify-content:space-between;gap:22px;flex-wrap:wrap}
-.vp-big{font-family:'Cormorant Garamond',serif;font-size:44px;line-height:1.05;font-weight:400;color:var(--text);
-  font-variant-numeric:tabular-nums;letter-spacing:-.01em;margin:3px 0 7px}
+.vp-big{font:600 32px 'IBM Plex Mono',monospace;line-height:1.1;color:var(--text);
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin:5px 0 8px}
 .vp-linea{font-size:13px;color:var(--sub);display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;line-height:1.5}
-.vp-linea b{font-size:18px;font-weight:600}
-.vp-pill{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:5px;white-space:nowrap}
-.vp-pill.pos{color:#2E7D32;background:rgba(76,175,80,.14)}
-.vp-pill.neg{color:#C62828;background:rgba(239,83,80,.14)}
-[data-theme="dark"] .vp-pill.pos{color:#7DD487}
-[data-theme="dark"] .vp-pill.neg{color:#FF8A86}
+.vp-linea b{font:600 18px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.vp-pill{font:600 11.5px 'IBM Plex Mono',monospace;padding:2px 8px;border-radius:2px;white-space:nowrap}
+.vp-pill.pos{color:var(--green);background:rgba(31,122,77,.12)}
+.vp-pill.neg{color:var(--red);background:rgba(178,58,58,.1)}
 .vp-cob{text-align:right;flex:none;max-width:210px}
-.vp-cob .n{font-family:'Cormorant Garamond',serif;font-size:27px;line-height:1.15;color:var(--text)}
-.vp-cob .n small{font-size:14px;color:var(--muted)}
+.vp-cob .n{font:600 20px 'IBM Plex Mono',monospace;line-height:1.2;color:var(--text);font-variant-numeric:tabular-nums}
+.vp-cob .n small{font-size:12px;font-weight:500;color:var(--muted)}
 .vp-cob p{font-size:11.5px;color:var(--muted);margin:0;line-height:1.5}
 .vp-cob .vp-ir{margin-top:8px}
-@media(max-width:640px){.vp-cob{text-align:left;max-width:none}.vp-big{font-size:38px}}
+@media(max-width:640px){.vp-cob{text-align:left;max-width:none}.vp-big{font-size:27px}}
 .vp-comp{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:20px;border-top:1px solid var(--border);padding-top:14px}
 .vp-bar{display:flex;height:7px;border-radius:4px;overflow:hidden;background:var(--bg3);margin:8px 0}
 .vp-bar i{display:block;height:100%}
@@ -172,32 +176,33 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 .vp-avisos{border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:8px}
 .vp-aviso{font-size:12.5px;color:var(--sub);display:flex;gap:10px;align-items:baseline;line-height:1.55}
 .vp-aviso .vp-tag{flex:none}
-.vp-tag.warn{color:#8A6A2F;background:rgba(224,169,62,.18)}
+.vp-tag.warn{color:#7A5C26;background:rgba(224,169,62,.18)}
 [data-theme="dark"] .vp-tag.warn{color:#E0A93E}
-.vp-fondo{background:#14213D;border:1px solid #B08A3E;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;justify-content:center}
-.vp-fondo .l{font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#B08A3E}
-.vp-fondo .v{font-family:'Cormorant Garamond',serif;font-size:36px;line-height:1.1;color:#fff;font-variant-numeric:tabular-nums;margin:6px 0 4px}
+.vp-fondo{background:#14213D;border:1px solid #B08A3E;padding:18px 20px;display:flex;flex-direction:column;justify-content:center}
+.vp-fondo .l{font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#E8CE96}
+.vp-fondo .v{font:600 26px 'IBM Plex Mono',monospace;line-height:1.15;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin:7px 0 5px}
 .vp-fondo p{font-size:12px;color:rgba(255,255,255,.6);margin:0 0 16px;line-height:1.5}
-.vp-fondo .vp-btn{align-self:flex-start}
+.vp-fondo .vp-btn{align-self:flex-start;background:#E8CE96;border-color:#E8CE96;color:#0E1830}
+.vp-fondo .vp-btn:hover{background:#fff;border-color:#fff}
 /* dos columnas: lo que cambio a la izquierda, lo que hay para decidir a la derecha */
 .vp-cols{display:grid;gap:8px 30px;align-items:start}
 @media(min-width:980px){.vp-cols{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}}
 .vp-evg{font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
 .vp-evg:first-child{margin-top:0}
 .vp-ev{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:12px;align-items:baseline;text-decoration:none;
-  background:var(--card);border:1px solid var(--border);border-radius:9px;padding:11px 14px;margin-bottom:7px;
+  background:var(--card);border:1px solid var(--border);padding:11px 14px;margin-bottom:7px;
   color:var(--text);font-size:13px;line-height:1.5}
 .vp-ev:hover{border-color:var(--gold)}
 .vp-ev .d{font:600 10.5px 'IBM Plex Mono',monospace;color:var(--muted);white-space:nowrap}
-.vp-ev .a{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);white-space:nowrap}
+.vp-ev .a{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--link);white-space:nowrap}
 /* tarjetas compactas de la columna derecha */
-.vp-buy{display:block;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 15px;margin-bottom:9px;text-decoration:none;color:var(--text)}
+.vp-buy{display:block;background:var(--card);border:1px solid var(--border);padding:13px 15px;margin-bottom:9px;text-decoration:none;color:var(--text)}
 a.vp-buy:hover{border-color:var(--gold)}
 .vp-buy .h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.vp-buy .tk{font-weight:700;color:var(--gold);font-size:14px}
+.vp-buy .tk{font:600 13px 'IBM Plex Mono',monospace;color:var(--link)}
 .vp-buy .nb{font-weight:600;color:var(--text);font-size:14px}
 .vp-buy .nm{font-size:12px;color:var(--muted)}
-.vp-buy .px{font-size:14px;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
+.vp-buy .px{font:500 13px 'IBM Plex Mono',monospace;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
 .vp-buy .tg{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0 9px}
 .vp-buy .sc{font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .vp-rsi{display:flex;align-items:center;gap:9px}
@@ -535,7 +540,7 @@ function bienvenida() {
         precios y múltiplos, de carácter general y educativo. No es asesoramiento financiero ni una
         recomendación para tu caso.</div></li>
     </ul>
-    ${!S.verificado ? `<p style="color:var(--gold)"><b>Te falta verificar tu mail.</b> Hasta que lo hagas,
+    ${!S.verificado ? `<p style="color:var(--link)"><b>Te falta verificar tu mail.</b> Hasta que lo hagas,
       Mi cartera y la inversión mensual quedan bloqueadas. Te mandamos el enlace cuando creaste la cuenta.</p>` : ''}
     <div class="vp-bv-legal">Las alertas por mail vienen apagadas: las prendés vos desde el panel, y como
       máximo sale una por día. ¿Dudas o algo que no funciona? Escribinos a
@@ -764,9 +769,9 @@ async function renderInicio() {
       <div><div class="vp-sec">Qu\u00e9 cambi\u00f3${tiene ? ' en tu cartera' : ''}<small id="vp-nov"></small></div>
         <div id="vp-cambios"><p class="vp-cargando">Buscando novedades\u2026</p></div>
         <div id="vp-alertas"></div></div>
-      <div><div class="vp-sec">Qu\u00e9 comprar hoy<small><a href="#panel/comprar" data-go="comprar" style="color:var(--gold)">lista completa \u2192</a></small></div>
+      <div><div class="vp-sec">Qu\u00e9 comprar hoy<small><a href="#panel/comprar" data-go="comprar" style="color:var(--link)">lista completa \u2192</a></small></div>
         <div id="vp-top3"><p class="vp-cargando">Cargando el radar\u2026</p></div>
-        <div class="vp-sec">Carteras Valtia<small><a href="#panel/carteras" data-go="carteras" style="color:var(--gold)">ver todas \u2192</a></small></div>
+        <div class="vp-sec">Carteras Valtia<small><a href="#panel/carteras" data-go="carteras" style="color:var(--link)">ver todas \u2192</a></small></div>
         <div id="vp-cart3"></div></div>
     </div>`;
   el.innerHTML = h;
@@ -1112,7 +1117,7 @@ async function top3(cc) {
   const lista = ordenComprar(await radar()).filter(a => !ten.radar.has(a.sym)).slice(0, 3);
   box.innerHTML = lista.map(a => {
     const f = tickerFicha(a.sym), p = f && pi[f] && pi[f].p != null ? pi[f].p : a.precio, r = a.rsi;
-    const col = r == null ? 'var(--muted)' : r < 30 ? '#4caf50' : r > 70 ? '#ef5350' : '#B08A3E';
+    const col = r == null ? 'var(--muted)' : r < 30 ? 'var(--green)' : r > 70 ? 'var(--red)' : 'var(--gold)';
     const cuerpo = `<div class="h"><span><span class="tk">${esc(a.sym)}</span> <span class="nm">${esc(a.nombre)}</span></span>
         <span class="px">${p != null ? 'US$' + num(p, 2) : '\u2014'}</span></div>
       <div class="tg"><span class="vp-tag ${verCls(a.veredicto)}">${esc(a.veredicto)}</span>
@@ -1163,7 +1168,7 @@ async function renderComprar() {
     const blur = !S.pro && i >= LIBRES;
     return `<tr class="${blur ? 'vp-blur' : ''}">
       <td class="l">${f ? `<a class="tk" href="activo.html?t=${f}">${esc(a.sym)}</a>` : `<span class="tk">${esc(a.sym)}</span>`}<span class="nm">${esc(a.nombre)} · ${esc(a.sector || '')}</span></td>
-      <td class="l"><span class="vp-tag ${verCls(a.veredicto)}">${esc(a.veredicto)}</span> ${a.entrada ? '<span class="vp-tag zona">◎ zona de compra</span>' : ''} ${a.pierdePlata ? '<span class="vp-tag" style="color:#E0A93E;border:1px solid rgba(224,169,62,.5)" title="El puntaje mide qué tan barata cotiza; esta empresa hoy no gana dinero">no gana plata</span>' : ''} ${tengo ? '<span class="vp-tag tengo">lo tenés</span>' : ''} ${enC}</td>
+      <td class="l"><span class="vp-tag ${verCls(a.veredicto)}">${esc(a.veredicto)}</span> ${a.entrada ? '<span class="vp-tag zona">◎ zona de compra</span>' : ''} ${a.pierdePlata ? '<span class="vp-tag warn" title="El puntaje mide qué tan barata cotiza; esta empresa hoy no gana dinero">no gana plata</span>' : ''} ${tengo ? '<span class="vp-tag tengo">lo tenés</span>' : ''} ${enC}</td>
       <td>${a.score ?? '—'}</td>
       <td>${p != null ? 'US$' + num(p, 2) : '—'}</td>
       <td>${a.rsi != null ? a.rsi.toFixed(0) : '—'}<span class="nm">${esc(a.rsiZona || '')}</span></td>
@@ -1178,7 +1183,7 @@ async function renderComprar() {
       <th class="l">Activo</th><th class="l">Lectura Valtia</th><th>Valor</th><th>Precio</th><th>RSI</th>${conRatios ? '<th>PER</th><th>EV/EBITDA</th><th>FCF yield</th><th>ROE</th><th>Calidad</th>' : ''}<th></th></tr></thead>
       <tbody>${lista.map(fila).join('')}</tbody></table>
       ${!conRatios ? `<div style="border-top:1px solid var(--border);padding:16px 18px;text-align:center">
-        <b style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--text);display:block">Los números detrás de la lectura son PRO</b>
+        <b style="font:700 18px 'Playfair Display',serif;color:var(--text);display:block">Los números detrás de la lectura son PRO</b>
         <p style="font-size:12.5px;color:var(--sub);margin:4px 0 10px">La lista completa, el veredicto y la zona de compra son gratis. Con PRO ves el PER, EV/EBITDA, FCF yield, ROE y el puntaje de calidad de cada uno.</p>
         <a class="vp-btn" href="planes.html">Ver planes</a></div>` : ''}
     </div>
@@ -1363,9 +1368,9 @@ async function renderEmpresas() {
       // el precio de publicación está en dólares (el ADR): comparar contra el
       // precio en dólares de hoy, NUNCA contra el de una posición en pesos
       const pxUsd = f && pi[f] && pi[f].p != null ? pi[f].p : null;
-      if (docs.length) extra = `<p>📄 <a href="activo.html?t=${f}#informe" style="color:var(--gold)">${esc(docs[0].titulo)}</a> · ${fmtF(docs[0].fecha)}${docs[0].precio_pub && pxUsd ? ` · ${pct((pxUsd / docs[0].precio_pub - 1) * 100, 1)} desde su publicación` : ''}</p>`;
-      else if (emp && emp.slug) extra = `<p>📄 Informe Valtia disponible con PRO · <a href="activo.html?t=${f}#informe" style="color:var(--gold)">ver la ficha</a></p>`;
-      else if (f) extra = `<p class="vp-mut">Sin informe Valtia todavía · <a href="mailto:soporte@valtia.tech?subject=Análisis de ${f}" style="color:var(--gold)">pedir este análisis</a></p>`;
+      if (docs.length) extra = `<p>📄 <a href="activo.html?t=${f}#informe" style="color:var(--link)">${esc(docs[0].titulo)}</a> · ${fmtF(docs[0].fecha)}${docs[0].precio_pub && pxUsd ? ` · ${pct((pxUsd / docs[0].precio_pub - 1) * 100, 1)} desde su publicación` : ''}</p>`;
+      else if (emp && emp.slug) extra = `<p>📄 Informe Valtia disponible con PRO · <a href="activo.html?t=${f}#informe" style="color:var(--link)">ver la ficha</a></p>`;
+      else if (f) extra = `<p class="vp-mut">Sin informe Valtia todavía · <a href="mailto:soporte@valtia.tech?subject=Análisis de ${f}" style="color:var(--link)">pedir este análisis</a></p>`;
       else extra = `<p class="vp-mut">Sin ficha en Valtia para este ticker.</p>`;
     }
     return `<div class="vp-card" data-emp="${esc(g.k)}"><div class="l">${esc(g.k)}${ver ? ` · <span class="vp-tag ${verCls(ver)}" style="padding:1px 6px">${esc(ver)}</span>` : ''}</div>
@@ -1435,10 +1440,10 @@ async function renderDisciplina() {
     <p class="vp-sub">El método del inversor constante: una regla mensual, candidatas del radar que todavía no tenés, y cada compra marcada se suma sola a Mi cartera.</p>
     ${DATALIST}
     ${config ? `<div class="vp-kpis">
-        <div class="pkpi"><div class="pkpi-label">Tu regla</div><div class="pkpi-value" style="font-size:26px">US$${Number(config.aporte || 0).toLocaleString('es-AR')}</div><div class="pkpi-sub">por mes en ${obj} compra${obj > 1 ? 's' : ''} (US$${Math.round(monto).toLocaleString('es-AR')} c/u)</div></div>
+        <div class="pkpi"><div class="pkpi-label">Tu regla</div><div class="pkpi-value">US$${Number(config.aporte || 0).toLocaleString('es-AR')}</div><div class="pkpi-sub">por mes en ${obj} compra${obj > 1 ? 's' : ''} (US$${Math.round(monto).toLocaleString('es-AR')} c/u)</div></div>
         <div class="pkpi"><div class="pkpi-label">${MESES[Number(mes.slice(5)) - 1]}</div><div class="pkpi-value ${faltan ? '' : 'pos'}">${hechas} / ${obj}</div><div class="pkpi-sub">${faltan ? `te falta${faltan > 1 ? 'n' : ''} ${faltan}` : 'plan cumplido ✓'}</div></div>
         <div class="pkpi"><div class="pkpi-label">Racha</div><div class="pkpi-value">${racha ? '🔥 ' + racha : '—'}</div><div class="pkpi-sub">${racha ? `mes${racha > 1 ? 'es' : ''} seguido${racha > 1 ? 's' : ''} cumpliendo` : 'arrancá este mes'}</div></div>
-        <div class="pkpi"><div class="pkpi-label">Compras registradas</div><div class="pkpi-value">${log.length}</div><div class="pkpi-sub"><a href="disciplina.html" style="color:var(--gold)">historial y regla →</a></div></div>
+        <div class="pkpi"><div class="pkpi-label">Compras registradas</div><div class="pkpi-value">${log.length}</div><div class="pkpi-sub"><a href="disciplina.html" style="color:var(--link)">historial y regla →</a></div></div>
       </div>`
     : `<div class="vp-card" style="max-width:640px;margin-bottom:22px"><h4>Definí tu regla</h4><p>Cuánto aportás por mes en dólares y en cuántas compras lo repartís. Es tu contrato con vos mismo.</p>
         <div class="vp-form" style="border:none;padding:10px 0 0">
@@ -1508,7 +1513,7 @@ async function renderHerramientas() {
     datos = `<div class="vp-sec">Datos de tus activos<small>lo que el sync sabe de cada uno${S.pro ? '' : ' · ratios completos con PRO'}</small></div>
       <div class="vp-tblwrap"><table class="vp-tbl"><thead><tr><th class="l">Activo</th><th>Precio</th><th class="l">Lectura</th>${rd.pro ? '<th>PER / TIR</th><th>P/Libro / MD</th><th>ROE / paridad</th><th>Deuda/EBITDA</th><th>Beta</th><th>Valor</th>' : '<th>RSI</th>'}</tr></thead>
       <tbody>${filas.map(fila).join('') || '<tr><td colspan="9" class="l vp-mut">Tus posiciones todavía no tienen datos del sync (9:00).</td></tr>'}</tbody></table></div>
-      ${!rd.pro ? `<p class="vp-nota">Con PRO ves PER, P/Libro, ROE, deuda sobre EBITDA y beta de tus acciones, y TIR, duration y paridad de tus bonos. <a href="planes.html" style="color:var(--gold)">Ver planes →</a></p>` : `<p class="vp-nota">Múltiplos de yfinance al último cierre; para renta fija, la matemática propia del panel de bonos (cada 15 min en rueda).</p>`}`;
+      ${!rd.pro ? `<p class="vp-nota">Con PRO ves PER, P/Libro, ROE, deuda sobre EBITDA y beta de tus acciones, y TIR, duration y paridad de tus bonos. <a href="planes.html" style="color:var(--link)">Ver planes →</a></p>` : `<p class="vp-nota">Múltiplos de yfinance al último cierre; para renta fija, la matemática propia del panel de bonos (cada 15 min en rueda).</p>`}`;
   }
   el.innerHTML = titulo('Herramientas y datos') + `<div class="vp-grid">${cards}</div>${datos}`;
 }

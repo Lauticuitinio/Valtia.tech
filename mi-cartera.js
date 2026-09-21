@@ -18,144 +18,149 @@ export { convertir } from './fx.js?v=1';
 
 const STYLE = `
 .mc-wrap{width:100%}
+/* botones y campos heredan la tipografía de la página (si no, el navegador les pone Arial) */
+.mc-wrap button,.mc-wrap input,.mc-wrap select,.mc-wrap textarea{font-family:inherit}
 .mc-head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:18px}
 .mc-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px}
-.mc-k{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
-.mc-k .l{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-.mc-k .v{font-family:'Cormorant Garamond',serif;font-size:30px;line-height:1;color:var(--text)}
+.mc-k{background:var(--card);border:1px solid var(--border);padding:16px 18px}
+.mc-k .l{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+.mc-k .v{font:600 22px 'IBM Plex Mono',monospace;line-height:1.1;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .mc-k .s{font-size:11px;color:var(--muted);margin-top:5px}
-.mc-pos{color:#4caf50}.mc-neg{color:#ef5350}.mc-mut{color:var(--muted)}
-.mc-tblwrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+.mc-pos{color:var(--green)}.mc-neg{color:var(--red)}.mc-mut{color:var(--muted)}
+.mc-tblwrap{background:var(--card);border:1px solid var(--border);overflow-x:auto}
 .mc-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:820px}
-.mc-tbl th{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
-  padding:11px 12px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;cursor:pointer;user-select:none}
+.mc-tbl th{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  padding:11px 12px;border-bottom:1px solid var(--text);text-align:right;white-space:nowrap;cursor:pointer;user-select:none}
 .mc-tbl th:first-child,.mc-tbl th.l{text-align:left}
 .mc-tbl th:hover{color:var(--text)}
-.mc-tbl td{padding:11px 12px;border-bottom:.5px solid var(--border);color:var(--text);text-align:right;
-  font-variant-numeric:tabular-nums;white-space:nowrap}
-.mc-tbl td.l{text-align:left}
+.mc-tbl td{padding:11px 12px;border-bottom:1px solid var(--border);color:var(--text);text-align:right;
+  font:500 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mc-tbl td.l{text-align:left;font:400 13px 'IBM Plex Sans',system-ui,sans-serif}
 .mc-tbl tr:last-child td{border-bottom:none}
-.mc-tbl tr:hover td{background:rgba(184,151,90,.05)}
-.mc-tk{font-weight:700;color:var(--gold)}
-.mc-nm{display:block;font-size:11px;color:var(--muted);font-weight:400}
+.mc-tbl tr:hover td{background:var(--bg3)}
+.mc-tk{font:600 13px 'IBM Plex Mono',monospace;color:var(--link)}
+.mc-nm{display:block;font:400 11px 'IBM Plex Sans',system-ui,sans-serif;color:var(--muted)}
 .mc-orig{display:block;font-size:10.5px;color:var(--muted);font-weight:400}.mc-orig.il{display:inline;font-size:inherit}
-.mc-ver{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:4px;white-space:nowrap}
-.mc-ver.infra{color:#4caf50;background:rgba(76,175,80,.12)}
-.mc-ver.precio{color:var(--gold);background:rgba(184,151,90,.14)}
-.mc-ver.cara{color:#ef5350;background:rgba(239,83,80,.12)}
+.mc-ver{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:2px;white-space:nowrap}
+.mc-ver.infra{color:var(--green);background:rgba(31,122,77,.12)}
+.mc-ver.precio{color:var(--link);background:rgba(176,138,62,.14)}
+.mc-ver.cara{color:var(--red);background:rgba(178,58,58,.1)}
 .mc-ver.sin{color:var(--muted);background:rgba(120,130,140,.12)}
 .mc-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:2px 6px}
 .mc-vend{background:none;border:1px solid var(--border);color:var(--sub);cursor:pointer;font-size:10px;font-weight:600;
-  letter-spacing:.06em;text-transform:uppercase;border-radius:5px;padding:3px 8px;margin-right:4px}
-.mc-vend:hover{border-color:var(--gold);color:var(--gold)}
-.mc-vrow td{background:rgba(184,151,90,.06)!important;text-align:left!important;white-space:normal!important}
+  letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;margin-right:4px}
+.mc-vend:hover{border-color:var(--gold);color:var(--link)}
+.mc-vrow td{background:var(--bg3)!important;font-family:'IBM Plex Sans',system-ui,sans-serif!important;text-align:left!important;white-space:normal!important}
 .mc-vform{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;padding:4px 0}
 .mc-vform label{display:block;font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
-.mc-vform input{padding:7px 9px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;width:140px}
+.mc-vform input{padding:7px 9px;background:var(--bg);border:1px solid var(--border);color:var(--text);font:500 13px 'IBM Plex Mono',monospace;width:140px}
 .mc-vform .prev{font-size:12.5px;color:var(--sub);align-self:center;min-width:200px}
 .mc-vform .nota{flex-basis:100%;font-size:11.5px;color:var(--muted);line-height:1.5}
 .mc-ventas{margin-top:26px}
-.mc-ventas h4{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--text);margin:0 0 4px}
+.mc-ventas h4{font:700 19px 'Playfair Display',serif;color:var(--text);margin:0 0 6px;line-height:1.2}
 .mc-ventas .sub{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;max-width:780px}
 .mc-ventas .mc-tbl{min-width:720px}
 .mc-ventas .mc-tbl th{cursor:default}
 .mc-undo{background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;text-decoration:underline;padding:0}
-.mc-undo:hover{color:var(--gold)}
-.mc-aj{background:rgba(224,169,62,.08);border:1px solid rgba(224,169,62,.45);border-left:3px solid #E0A93E;border-radius:8px;padding:12px 16px;margin-bottom:14px}
+.mc-undo:hover{color:var(--link)}
+.mc-aj{background:rgba(224,169,62,.08);border:1px solid rgba(224,169,62,.45);border-left:3px solid #E0A93E;padding:12px 16px;margin-bottom:14px}
 .mc-aj .t{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .mc-aj p{margin:4px 0 8px;font-size:13.5px;color:var(--text);line-height:1.5}
-.mc-btn.sec{background:transparent;color:var(--gold);border:1px solid var(--gold)}
+.mc-btn.sec{background:transparent;color:var(--text);border:1px solid var(--text)}
+.mc-btn.sec:hover{background:var(--text);color:var(--bg);border-color:var(--text)}
 .mc-btn-mini{padding:7px 12px;font-size:10.5px}
-.mc-del:hover{color:#ef5350}
-.mc-form{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:20px}
+.mc-del:hover{color:var(--red)}
+.mc-form{background:var(--card);border:1px solid var(--border);padding:18px 20px;margin-bottom:20px}
 .mc-form .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;align-items:end}
 .mc-form label{display:block;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
-.mc-form input{width:100%;padding:10px 12px;background:rgba(255,255,255,.05);border:1px solid var(--border);
-  border-radius:6px;color:var(--text);font-family:'Jost',sans-serif;font-size:14px;outline:none}
-[data-theme="light"] .mc-form input{background:var(--bg3)}
+.mc-form input{width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);
+  color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;outline:none}
 .mc-form input:focus{border-color:var(--gold)}
-.mc-btn{font-family:'Jost',sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--navy);background:var(--gold);border:none;padding:11px 22px;border-radius:5px;cursor:pointer}
-.mc-btn:hover{background:var(--gold2)}
+.mc-btn{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--btn-tx);background:var(--btn-bg);border:1px solid var(--btn-bg);padding:11px 22px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.mc-btn:hover{background:var(--btn-hover);border-color:var(--btn-hover)}
 .mc-msg{font-size:12px;margin-top:10px}
-.mc-empty{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:34px 28px;text-align:center}
-.mc-empty h4{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--text);margin-bottom:8px}
+.mc-empty{background:var(--card);border:1px solid var(--border);padding:34px 28px;text-align:center}
+.mc-empty h4{font:700 20px 'Playfair Display',serif;color:var(--text);margin-bottom:8px;line-height:1.2}
 .mc-empty p{font-size:13px;color:var(--sub);line-height:1.7;max-width:520px;margin:0 auto}
 .mc-foot{font-size:11px;color:var(--muted);line-height:1.7;margin-top:14px}
 .mc-an{margin-top:26px}
-.mc-an h4{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:400;color:var(--text);margin:0 0 4px}
+.mc-an h4{font:700 19px 'Playfair Display',serif;color:var(--text);margin:0 0 6px;line-height:1.2}
 .mc-an .sub{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:16px}
 .mc-angrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
-.mc-anbox{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
+.mc-anbox{background:var(--card);border:1px solid var(--border);padding:16px 18px;min-width:0;overflow-x:auto}
 .mc-anbox .t{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
 .mc-bar{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12.5px}
 .mc-bar .n{flex:none;width:104px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mc-bar .t2{flex:1;height:7px;border-radius:4px;background:rgba(120,130,140,.16);overflow:hidden}
-.mc-bar .t2 i{display:block;height:100%;background:var(--gold);border-radius:4px}
-.mc-bar .p{flex:none;width:46px;text-align:right;color:var(--sub);font-variant-numeric:tabular-nums}
+.mc-bar .t2{flex:1;height:6px;background:var(--bg3);border:1px solid var(--border);overflow:hidden}
+.mc-bar .t2 i{display:block;height:100%;background:var(--gold)}
+.mc-bar .p{flex:none;width:46px;text-align:right;color:var(--sub);font:500 11.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
 .mc-anbox .nota{font-size:11.5px;color:var(--muted);line-height:1.6;margin-top:10px}
 .mc-alerta{background:rgba(224,169,62,.08);border:1px solid rgba(224,169,62,.4);border-left:3px solid #E0A93E;
-  border-radius:0 8px 8px 0;padding:11px 14px;font-size:12.5px;color:var(--sub);line-height:1.6;margin-top:12px}
+  padding:11px 14px;font-size:12.5px;color:var(--sub);line-height:1.6;margin-top:12px}
 .mc-rf{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
 .mc-rf th{font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);padding:7px 8px;
   border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
 .mc-rf th:first-child,.mc-rf td:first-child{text-align:left}
-.mc-rf td{padding:7px 8px;border-bottom:.5px solid var(--border);color:var(--text);text-align:right;
-  font-variant-numeric:tabular-nums;white-space:nowrap}
+.mc-rf td{padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text);text-align:right;
+  font:500 12px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mc-rf td:first-child{font:600 12px 'IBM Plex Mono',monospace}
 .mc-rf tr:last-child td{border-bottom:none}
 .mc-lect{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--gold);
-  border-radius:0 10px 10px 0;padding:14px 18px;margin-top:18px;font-size:13px;color:var(--sub);line-height:1.7}
+  padding:14px 18px;margin-top:18px;font-size:13px;color:var(--sub);line-height:1.7}
 .mc-lect b{color:var(--text)}
 .mc-tabs{display:flex;gap:8px;margin-bottom:14px}
-.mc-tab{font-family:'Jost',sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
-  padding:8px 16px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer}
-.mc-tab.on{background:var(--gold);border-color:var(--gold);color:var(--navy)}
-.mc-imp textarea{width:100%;min-height:120px;padding:12px;background:rgba(255,255,255,.05);border:1px solid var(--border);
-  border-radius:6px;color:var(--text);font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12.5px;outline:none;resize:vertical}
-[data-theme="light"] .mc-imp textarea{background:var(--bg3)}
+.mc-tab{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  padding:8px 16px;border:1px solid var(--border);background:transparent;color:var(--sub);cursor:pointer}
+.mc-tab:hover{border-color:var(--gold);color:var(--text)}
+.mc-tab.on{background:var(--btn-bg);border-color:var(--btn-bg);color:var(--btn-tx)}
+.mc-imp textarea{width:100%;min-height:120px;padding:12px;background:var(--bg);border:1px solid var(--border);
+  color:var(--text);font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12.5px;outline:none;resize:vertical}
 .mc-imp textarea:focus{border-color:var(--gold)}
 .mc-hint{font-size:11.5px;color:var(--muted);line-height:1.7;margin:8px 0 12px}
-.mc-prev{margin-top:12px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.mc-prev{margin-top:12px;border:1px solid var(--border);overflow:hidden}
 .mc-prev table{width:100%;border-collapse:collapse;font-size:12.5px}
 .mc-prev th{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:8px 10px;
   border-bottom:1px solid var(--border);text-align:left}
 .mc-prev td{padding:8px 10px;border-bottom:.5px solid var(--border);color:var(--text)}
 .mc-prev tr:last-child td{border-bottom:none}
-.mc-bad{color:#ef5350}
+.mc-bad{color:var(--red)}
 .mc-live{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
-.mc-dot{width:6px;height:6px;border-radius:50%;background:#4caf50;display:inline-block}
-.mc-cur{display:flex;gap:0;border:1px solid var(--border);border-radius:7px;overflow:hidden}
-.mc-cur button{font-family:'Jost',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.06em;
+.mc-dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block}
+.mc-cur{display:flex;gap:0;border:1px solid var(--border);overflow:hidden}
+.mc-cur button{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.06em;
   padding:7px 13px;border:none;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
 .mc-cur button+button{border-left:1px solid var(--border)}
-.mc-cur button.on{background:var(--gold);color:var(--navy)}
+.mc-cur button.on{background:var(--btn-bg);color:var(--btn-tx)}
 .mc-curwrap{display:flex;flex-direction:column;align-items:flex-end;gap:7px}
-.mc-form select{width:100%;padding:10px 12px;background:rgba(255,255,255,.05);border:1px solid var(--border);
-  border-radius:6px;color:var(--text);font-family:'Jost',sans-serif;font-size:13.5px;outline:none}
-[data-theme="light"] .mc-form select{background:var(--bg3)}
+.mc-form select{width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);
+  color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:13.5px;outline:none}
 .mc-form select:focus{border-color:var(--gold)}
-.mc-grp td{background:rgba(184,151,90,.07);font-size:12px;color:var(--text);padding:9px 12px;text-align:left;
+.mc-grp td{background:var(--bg3);font:400 12px 'IBM Plex Sans',system-ui,sans-serif;color:var(--text);padding:9px 12px;text-align:left;
   border-top:1px solid var(--border);white-space:normal}
-.mc-grp td b{color:var(--gold);letter-spacing:.06em;text-transform:uppercase;font-size:11px}
-.mc-grp td span{color:var(--muted);margin-left:8px}
+.mc-grp td b{color:var(--link);letter-spacing:.12em;text-transform:uppercase;font-size:10.5px;font-weight:700}
+.mc-grp td span{color:var(--muted);margin-left:8px;font-family:'IBM Plex Mono',monospace;font-size:11.5px}
+/* el resultado del grupo va en su color: la regla de arriba le ganaba a .mc-pos/.mc-neg y lo dejaba gris */
+.mc-grp td span span{margin-left:0}.mc-grp td span .mc-pos{color:var(--green)}.mc-grp td span .mc-neg{color:var(--red)}
 .mc-brk{display:inline-block;font-size:9.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
-  color:var(--muted);border:1px solid var(--border);border-radius:4px;padding:1px 6px;margin-top:4px;cursor:pointer}
-.mc-brk:hover{color:var(--gold);border-color:var(--gold)}
-.mc-brk-in{font:400 12px 'Jost',sans-serif;padding:3px 6px;background:var(--bg3);border:1px solid var(--gold);
-  border-radius:4px;color:var(--text);width:120px;outline:none}
+  color:var(--muted);border:1px solid var(--border);padding:1px 6px;margin-top:4px;cursor:pointer}
+.mc-brk:hover{color:var(--link);border-color:var(--gold)}
+.mc-brk-in{font:400 12px 'IBM Plex Sans',system-ui,sans-serif;padding:3px 6px;background:var(--bg);border:1px solid var(--gold);
+  color:var(--text);width:120px;outline:none}
 .mc-brks{display:flex;gap:8px;flex-wrap:wrap;margin:-8px 0 18px}
-.mc-evo{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin:0 0 22px}
+.mc-evo{background:var(--card);border:1px solid var(--border);padding:16px 18px;margin:0 0 22px}
 .mc-evo-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px}
 .mc-evo-t{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .mc-evo-r{font-size:13.5px;margin-top:6px;line-height:1.55}
+.mc-evo-r b{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
 .mc-evo-rg{display:flex;gap:4px}
-.mc-evo-rg button{font-size:11px;font-weight:600;padding:4px 10px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:6px;cursor:pointer}
-.mc-evo-rg button.on{background:var(--gold);border-color:var(--gold);color:#0E1830}
+.mc-evo-rg button{font-size:11px;font-weight:600;padding:4px 10px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer}
+.mc-evo-rg button.on{background:var(--btn-bg);border-color:var(--btn-bg);color:var(--btn-tx)}
 .mc-evo-box{position:relative;height:240px}
 .mc-evo-ley{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:8px}
 .mc-evo-ley i{display:inline-block;width:18px;height:0;border-top:2px solid;vertical-align:middle;margin-right:5px}
 .mc-evo-nota{font-size:11.5px;color:var(--muted);line-height:1.6;margin-top:8px}
-.mc-brks .b{font-size:12px;color:var(--sub);border:1px solid var(--border);border-radius:999px;padding:4px 11px}
+.mc-brks .b{font:500 11.5px 'IBM Plex Mono',monospace;color:var(--sub);border:1px solid var(--border);border-radius:6px;padding:4px 11px}
 .mc-brks .b b{color:var(--text)}
 `;
 
@@ -679,7 +684,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     <div class="mc-head"><div>
       <div class="portal-title" style="margin-bottom:0">Mi cartera</div>
       <div style="font-size:12px;color:var(--muted);margin-top:6px">Seguimiento de tus posiciones con la valuación de Valtia
-        · <a href="disciplina.html" style="color:var(--gold);text-decoration:none">Las candidatas del mes →</a></div>
+        · <a href="disciplina.html" style="color:var(--link);text-decoration:none">Las candidatas del mes →</a></div>
     </div>
     <div class="mc-curwrap">
       <div class="mc-cur">
@@ -727,7 +732,10 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   const fxFalta = posiciones.length && (
     (_cur === "ARS" && !_fx.ccl && r.filas.some(f => f.moneda !== "ARS")) ||
     (_cur === "CCL" && !_fx.ccl) || (_cur === "MEP" && !_fx.mep));
-  const avisoFx = fxFalta ? `<div style="background:rgba(224,169,62,.12);border:1px solid rgba(224,169,62,.45);border-left:3px solid #E0A93E;border-radius:8px;padding:10px 14px;font-size:12.5px;line-height:1.6;margin-bottom:16px;color:var(--text)">⚠ No pudimos traer la cotización del dólar: los totales de abajo <b>excluyen tus posiciones en USD</b>. Recargá la página en unos minutos.</div>` : "";
+  // vista en dólares sin dólar: no hay NADA convertible. Un "US$0" de titular se lee como
+  // "no tenés nada"; va un guion y el aviso dice qué pasa y qué hacer.
+  const sinDolar = !!posiciones.length && ((_cur === "CCL" && !_fx.ccl) || (_cur === "MEP" && !_fx.mep));
+  const avisoFx = fxFalta ? `<div style="background:rgba(224,169,62,.12);border:1px solid rgba(224,169,62,.45);border-left:3px solid #E0A93E;padding:10px 14px;font-size:12.5px;line-height:1.6;margin-bottom:16px;color:var(--text)">⚠ No pudimos traer la cotización del dólar: ${sinDolar ? "por ahora <b>no podemos mostrar tu cartera en dólares</b>. Pasá a Pesos o recargá la página en unos minutos." : "los totales de abajo <b>excluyen tus posiciones en USD</b>. Recargá la página en unos minutos."}</div>` : "";
 
   if (!posiciones.length) {
     el.innerHTML = `<div class="mc-wrap">${cabecera}${bloqueAjustes(opts.ajustes || [], precios, opts.bonos || new Set())}${form}
@@ -764,7 +772,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     const esByma = ["byma", "rf"].includes(mercadoDe(f.ticker, opts.bonos));
     return `<tr data-fila="${esc(f.id)}">
       <td class="l">${(h => h ? `<a class="mc-tk" href="${h}" style="text-decoration:none">${esc(base(f.ticker))}</a>` : `<span class="mc-tk">${esc(base(f.ticker))}</span>`)(linkDe(f.ticker, opts.bonos))}${
-        esByma ? '<span class="mc-nm" style="display:inline;color:var(--gold);opacity:.7"> BYMA</span>' : ""}
+        esByma ? '<span class="mc-nm" style="display:inline;color:var(--link)"> BYMA</span>' : ""}
         <span class="mc-nm">${esc(px.nombre && px.nombre !== f.ticker ? px.nombre : "")}</span>
         <span class="mc-brk" data-brk="${esc(f.id)}" title="Cambiar broker">${esc(f.broker || "sin broker")}</span></td>
       <td>${num(f.cantidad, 4).replace(/,0+$/, "")}</td>
@@ -802,10 +810,10 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   el.innerHTML = `<div class="mc-wrap">
     ${cabecera}${avisoFx}${bloqueAjustes(opts.ajustes || [], precios, opts.bonos || new Set())}
     <div class="mc-kpis">
-      <div class="mc-k"><div class="l">Valor actual</div><div class="v">${money(r.total, cur)}</div><div class="s">${r.filas.length} ${r.filas.length === 1 ? "posición" : "posiciones"}</div></div>
-      <div class="mc-k"><div class="l">Invertido</div><div class="v">${money(r.costoTot, cur)}</div><div class="s">a precio de compra</div></div>
-      <div class="mc-k"><div class="l">Resultado</div><div class="v ${r.plTot >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(r.plTot, cur)}</div><div class="s">ganancia / pérdida no realizada</div></div>
-      <div class="mc-k"><div class="l">Rendimiento</div><div class="v ${(r.plTotPct || 0) >= 0 ? "mc-pos" : "mc-neg"}">${r.plTotPct == null ? "—" : pct(r.plTotPct)}</div><div class="s">sobre lo invertido</div></div>
+      <div class="mc-k"><div class="l">Valor actual</div><div class="v">${sinDolar ? "—" : money(r.total, cur)}</div><div class="s">${r.filas.length} ${r.filas.length === 1 ? "posición" : "posiciones"}</div></div>
+      <div class="mc-k"><div class="l">Invertido</div><div class="v">${sinDolar ? "—" : money(r.costoTot, cur)}</div><div class="s">a precio de compra</div></div>
+      <div class="mc-k"><div class="l">Resultado</div><div class="v ${sinDolar ? "" : r.plTot >= 0 ? "mc-pos" : "mc-neg"}">${sinDolar ? "—" : moneyS(r.plTot, cur)}</div><div class="s">ganancia / pérdida no realizada</div></div>
+      <div class="mc-k"><div class="l">Rendimiento</div><div class="v ${sinDolar || r.plTotPct == null ? "" : r.plTotPct >= 0 ? "mc-pos" : "mc-neg"}">${sinDolar || r.plTotPct == null ? "—" : pct(r.plTotPct)}</div><div class="s">sobre lo invertido</div></div>
     </div>
     <div class="mc-evo" id="mc-evo"></div>
     ${reparto}
@@ -1252,8 +1260,8 @@ async function confirmarImport() {
   await leerTodo();
   pintar();
   const msg2 = _el.querySelector("#mc-msg");
-  if (msg2) msg2.innerHTML = `<span style="color:#4caf50">${ok} ${ok === 1 ? "posición importada" : "posiciones importadas"}.</span>` +
-    (fallo ? ` <span style="color:#ef5350">${fallo} fallaron.</span>` : "") +
+  if (msg2) msg2.innerHTML = `<span style="color:var(--green)">${ok} ${ok === 1 ? "posición importada" : "posiciones importadas"}.</span>` +
+    (fallo ? ` <span style="color:var(--red)">${fallo} fallaron.</span>` : "") +
     ` <span style="color:var(--muted)">Los precios aparecen en la próxima actualización (cada 15 min en rueda).</span>`;
 }
 
@@ -1266,7 +1274,7 @@ async function agregar() {
   const pc = parseFloat(_el.querySelector("#mc-precio").value);
   const fecha = _el.querySelector("#mc-fecha").value || "";
   if (!crudo || !(cant > 0)) {
-    msg.innerHTML = `<span style="color:#ef5350">Completá al menos el ticker y la cantidad.</span>`;
+    msg.innerHTML = `<span style="color:var(--red)">Completá al menos el ticker y la cantidad.</span>`;
     return;
   }
   try {
@@ -1289,10 +1297,10 @@ async function agregar() {
     pintar();
     // el repintado recrea el formulario: el mensaje se escribe recién ahora
     const msg2 = _el.querySelector("#mc-msg");
-    if (msg2) msg2.innerHTML = `<span style="color:#4caf50">${esc(tk)} agregado (${donde}${broker ? ", " + esc(broker) : ""}). El precio aparece en la próxima actualización — cada 15 min en rueda.</span>`;
+    if (msg2) msg2.innerHTML = `<span style="color:var(--green)">${esc(tk)} agregado (${donde}${broker ? ", " + esc(broker) : ""}). El precio aparece en la próxima actualización — cada 15 min en rueda.</span>`;
     avisarPanel();
   } catch (e) {
-    msg.innerHTML = `<span style="color:#ef5350">No se pudo guardar: ${esc(String(e).slice(0, 90))}</span>`;
+    msg.innerHTML = `<span style="color:var(--red)">No se pudo guardar: ${esc(String(e).slice(0, 90))}</span>`;
   }
 }
 
@@ -1362,7 +1370,7 @@ function abrirVenta(id) {
 async function registrarVenta(p, px, esRF, { cant, precio, fecha }, fila) {
   const msg = fila.querySelector("#mc-v-msg"), btn = fila.querySelector("#mc-v-ok");
   const pre = validarVenta(p, cant, precio, fecha, hoyAR(), monedaFactor(p, px, esRF).moneda);
-  if (!pre.ok) { msg.innerHTML = `<span style="color:#ef5350">${esc(pre.error)}</span>`; return; }
+  if (!pre.ok) { msg.innerHTML = `<span style="color:var(--red)">${esc(pre.error)}</span>`; return; }
   btn.disabled = true;
   const db = getFirestore(getApp());
   const refPos = doc(db, "inversores", _user.email, "cartera", p.id);
@@ -1398,7 +1406,7 @@ async function registrarVenta(p, px, esRF, { cant, precio, fecha }, fila) {
       const tr = [..._el.querySelectorAll("tr[data-fila]")].find(x => x.dataset.fila === p.id);
       if (tr && p2) tr.children[1].textContent = cantTxt(p2.cantidad);
       btn.disabled = false;
-      msg.innerHTML = `<span style="color:#ef5350">${esc(String((e && e.message) || e).slice(0, 180))}</span>`;
+      msg.innerHTML = `<span style="color:var(--red)">${esc(String((e && e.message) || e).slice(0, 180))}</span>`;
       return;
     }
     venta = _ventas.find(x => x.id === fila.dataset.vid);
@@ -1413,11 +1421,11 @@ async function registrarVenta(p, px, esRF, { cant, precio, fecha }, fila) {
     pintar();
     avisarPanel();
   } catch (e) {
-    msg.innerHTML = `<span style="color:#4caf50">${texto}</span> <span class="mc-mut">No pude actualizar la tabla: recargá la página.</span>`;
+    msg.innerHTML = `<span style="color:var(--green)">${texto}</span> <span class="mc-mut">No pude actualizar la tabla: recargá la página.</span>`;
     return;
   }
   const m2 = _el.querySelector("#mc-msg");
-  if (m2) m2.innerHTML = `<span style="color:#4caf50">${texto}</span>`;
+  if (m2) m2.innerHTML = `<span style="color:var(--green)">${texto}</span>`;
 }
 
 const _deshaciendo = new Set();
@@ -1475,7 +1483,7 @@ async function deshacerVenta(vid, btn) {
   const aviso = _el.querySelector("#mc-ventas-msg") || _el.querySelector("#mc-msg");
   if (error) {
     if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = "Deshacer"; }
-    if (aviso) aviso.innerHTML = `<span style="color:#ef5350">No se pudo deshacer: ${esc(error)}</span>`;
+    if (aviso) aviso.innerHTML = `<span style="color:var(--red)">No se pudo deshacer: ${esc(error)}</span>`;
   } else if (!refrescada && aviso) {
     aviso.innerHTML = `<span class="mc-mut">Se deshizo la venta, pero no pude actualizar la tabla: recargá la página.</span>`;
   }
@@ -1507,7 +1515,7 @@ async function confirmarAjuste(card) {
   const d = datosAjuste(card); if (!d) return;
   const msg = card.querySelector("[data-aj-msg]"), btn = card.querySelector("[data-aj-ok]");
   const v = validarAjuste(d.a, d.cant, d.precio, d.fecha, hoyAR(), d.moneda);
-  if (!v.ok) { msg.innerHTML = `<span style="color:#ef5350">${esc(v.error)}</span>`; return; }
+  if (!v.ok) { msg.innerHTML = `<span style="color:var(--red)">${esc(v.error)}</span>`; return; }
   btn.disabled = true;
   const db = getFirestore(getApp());
   const refAj = doc(db, "inversores", _user.email, "ajustes", d.a.id);
@@ -1540,7 +1548,7 @@ async function confirmarAjuste(card) {
     try { await leerTodo(); entro = _ventas.some(x => x.id === vid); } catch (e2) {}
     if (!entro) {
       btn.disabled = false;
-      msg.innerHTML = `<span style="color:#ef5350">${esc(String((e && e.message) || e).slice(0, 180))}</span>`;
+      msg.innerHTML = `<span style="color:var(--red)">${esc(String((e && e.message) || e).slice(0, 180))}</span>`;
       return;
     }
     venta = _ventas.find(x => x.id === vid);
@@ -1554,11 +1562,11 @@ async function confirmarAjuste(card) {
   // arranca con el resto como cantidad, no con lo que se acaba de registrar
   card.querySelectorAll("input").forEach(i => { i.value = i.defaultValue; });
   try { await leerTodo(); pintar(); avisarPanel(); } catch (e) {
-    msg.innerHTML = `<span style="color:#4caf50">${texto}</span> <span class="mc-mut">No pude actualizar la tabla: recargá la página.</span>`;
+    msg.innerHTML = `<span style="color:var(--green)">${texto}</span> <span class="mc-mut">No pude actualizar la tabla: recargá la página.</span>`;
     return;
   }
   const m2 = _el.querySelector("#mc-msg");
-  if (m2) m2.innerHTML = `<span style="color:#4caf50">${texto}</span>`;
+  if (m2) m2.innerHTML = `<span style="color:var(--green)">${texto}</span>`;
 }
 
 async function descartarAjuste(card) {
@@ -1572,7 +1580,7 @@ async function descartarAjuste(card) {
     await leerTodo(); pintar(); avisarPanel();
   } catch (e) {
     const msg = card.querySelector("[data-aj-msg]");
-    if (msg && msg.isConnected) msg.innerHTML = `<span style="color:#ef5350">No se pudo descartar: ${esc(String((e && e.message) || e).slice(0, 120))}</span>`;
+    if (msg && msg.isConnected) msg.innerHTML = `<span style="color:var(--red)">No se pudo descartar: ${esc(String((e && e.message) || e).slice(0, 120))}</span>`;
   }
 }
 
@@ -1603,11 +1611,11 @@ async function recuperarAjuste(card, btn) {
     });
     await leerTodo(); pintar(); avisarPanel();
     const m2 = _el.querySelector("#mc-msg");
-    if (m2) m2.innerHTML = `<span style="color:#4caf50">${esc(base(a.ticker))} volvió a tu cartera con su costo. Si la transferiste a otro broker, cambiale el broker en la fila; si sigue en ${esc(a.broker)}, el sync la vuelve a comparar mañana.</span>`;
+    if (m2) m2.innerHTML = `<span style="color:var(--green)">${esc(base(a.ticker))} volvió a tu cartera con su costo. Si la transferiste a otro broker, cambiale el broker en la fila; si sigue en ${esc(a.broker)}, el sync la vuelve a comparar mañana.</span>`;
   } catch (e) {
     btn.disabled = false;
     const msg = card.querySelector("[data-aj-msg]");
-    if (msg && msg.isConnected) msg.innerHTML = `<span style="color:#ef5350">No se pudo recuperar: ${esc(String((e && e.message) || e).slice(0, 120))}</span>`;
+    if (msg && msg.isConnected) msg.innerHTML = `<span style="color:var(--red)">No se pudo recuperar: ${esc(String((e && e.message) || e).slice(0, 120))}</span>`;
   }
 }
 

@@ -26,7 +26,7 @@
   var st = document.createElement('style');
   st.textContent = [
     '#vnav-burger{display:none;align-items:center;justify-content:center;width:38px;height:34px;',
-    'border:1px solid rgba(184,151,90,.45);border-radius:8px;background:transparent;cursor:pointer;',
+    'border:1px solid rgba(232,206,150,.45);border-radius:8px;background:transparent;cursor:pointer;',
     'flex-shrink:0;padding:0;margin-left:10px}',
     '#vnav-burger svg{display:block}',
     '@media(max-width:1100px){#vnav-burger{display:flex}nav .nav-links{display:none!important}nav .nav-cta{display:none!important}}',
@@ -37,17 +37,17 @@
     '#vnav-back{position:fixed;inset:0;background:rgba(6,12,22,.55);z-index:998;opacity:0;',
     'pointer-events:none;transition:opacity .2s}',
     '#vnav-menu{position:fixed;top:0;right:0;height:100%;width:min(78vw,300px);z-index:999;',
-    'background:#0D1B2A;color:#F0EDE8;box-shadow:-12px 0 40px rgba(0,0,0,.35);',
+    'background:#0E1830;color:#fff;box-shadow:-12px 0 40px rgba(0,0,0,.35);',
     'transform:translateX(105%);visibility:hidden;transition:transform .22s ease,visibility .22s;display:flex;flex-direction:column;',
-    "padding:18px 0 24px;font-family:'Jost','IBM Plex Sans',sans-serif}",
+    "padding:18px 0 24px;font-family:'IBM Plex Sans',system-ui,sans-serif}",
     '#vnav-menu .vn-top{display:flex;align-items:center;justify-content:space-between;padding:0 20px 14px;',
-    'border-bottom:1px solid rgba(184,151,90,.18)}',
-    '#vnav-menu .vn-brand{font-size:12px;letter-spacing:.22em;color:#D4AF6E;text-transform:uppercase;font-weight:600}',
-    '#vnav-menu .vn-x{background:none;border:none;color:rgba(240,237,232,.7);font-size:20px;cursor:pointer;padding:4px 8px}',
-    '#vnav-menu a.vn-link{display:block;padding:14px 22px;color:rgba(240,237,232,.85);text-decoration:none;',
-    'font-size:14px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid rgba(184,151,90,.08)}',
-    '#vnav-menu a.vn-link.on{color:#D4AF6E;font-weight:600}',
-    '#vnav-menu a.vn-cta{margin:18px 20px 0;text-align:center;background:#B8975A;color:#0D1B2A;',
+    'border-bottom:1px solid rgba(232,206,150,.18)}',
+    "#vnav-menu .vn-brand{font:700 17px 'Playfair Display',serif;letter-spacing:.06em;color:#fff}",
+    '#vnav-menu .vn-x{background:none;border:none;color:rgba(255,255,255,.7);font-size:20px;cursor:pointer;padding:4px 8px}',
+    '#vnav-menu a.vn-link{display:block;padding:14px 22px;color:rgba(255,255,255,.72);text-decoration:none;',
+    'font-size:12.5px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06)}',
+    '#vnav-menu a.vn-link:hover{color:#fff}#vnav-menu a.vn-link.on{color:#E8CE96;font-weight:600}',
+    '#vnav-menu a.vn-cta{margin:18px 20px 0;text-align:center;background:#E8CE96;color:#0E1830;',
     'font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:13px 10px;',
     'border-radius:8px;text-decoration:none}',
     '@media(max-width:1100px){body.vnav-open{overflow:hidden}}',
@@ -58,7 +58,7 @@
     'border:none;background:transparent;padding:0;margin:0;outline:none}',
     '#vnav-hot:focus-visible::before{opacity:1;height:110px}',
     '#vnav-hot::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:72px;',
-    'border-radius:0 3px 3px 0;background:#B8975A;opacity:.4;transition:opacity .2s,height .2s}',
+    'border-radius:0 3px 3px 0;background:#B08A3E;opacity:.4;transition:opacity .2s,height .2s}',
     '#vnav-hot:hover::before{opacity:.95;height:110px}',
     '@media(min-width:1101px){#vnav-hot{display:block}#vnav-back{display:none}',
     '#vnav-menu{left:0;right:auto;width:250px;transform:translateX(-105%);box-shadow:12px 0 40px rgba(0,0,0,.35)}',
@@ -70,7 +70,7 @@
   btn.id = 'vnav-burger';
   btn.setAttribute('aria-label', 'Abrir menú');
   btn.innerHTML = '<svg width="18" height="14" viewBox="0 0 18 14" fill="none">' +
-    '<path d="M1 1h16M1 7h16M1 13h16" stroke="#B8975A" stroke-width="1.8" stroke-linecap="round"/></svg>';
+    '<path d="M1 1h16M1 7h16M1 13h16" stroke="#E8CE96" stroke-width="1.8" stroke-linecap="round"/></svg>';
   nav.appendChild(btn);
 
   var hot = document.createElement('button');
@@ -85,7 +85,7 @@
   var menu = document.createElement('div');
   menu.id = 'vnav-menu';
   menu.innerHTML =
-    '<div class="vn-top"><span class="vn-brand">Valtia</span>' +
+    '<div class="vn-top"><span class="vn-brand">VAL<em style="color:#E8CE96">T</em>IA</span>' +
     '<button class="vn-x" aria-label="Cerrar menú">✕</button></div>' +
     LINKS.map(function (l) {
       var on = aca === l[0] || (aca === '' && l[0] === 'index.html');
@@ -93,7 +93,7 @@
     }).join('') +
     '<a class="vn-link" id="vnav-tema" href="#" style="display:none">◐ &nbsp;Cambiar tema</a>' +
     '<a class="vn-cta" id="vnav-cta" href="index.html?login=1">Ingresar / Crear cuenta</a>' +
-    '<div style="margin-top:auto;padding:18px 22px 0;font-size:10.5px;color:rgba(240,237,232,.4)">' +
+    '<div style="margin-top:auto;padding:18px 22px 0;font-size:10.5px;color:rgba(255,255,255,.45)">' +
     '<a href="terminos.html" style="color:inherit">Términos</a> · <a href="privacidad.html" style="color:inherit">Privacidad</a></div>';
   document.body.appendChild(back);
   document.body.appendChild(menu);

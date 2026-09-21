@@ -33,8 +33,11 @@ function pintarCandados(abiertos) {
   document.querySelectorAll('.pro-overlay').forEach(o => { o.style.display = abiertos ? 'none' : ''; });
   document.querySelectorAll('.preview-blur').forEach(b => {
     b.style.filter = abiertos ? 'none' : '';
-    if (abiertos) b.style.pointerEvents = '';
-    b.style.userSelect = '';
+    // la clase .preview-blur trae pointer-events:none y user-select:none: vaciar el
+    // inline no alcanza, hay que pisarlos. Si no, el cliente PRO ve el contenido nítido
+    // pero no puede hacer click en los links de los bonos ni ver los tooltips.
+    b.style.pointerEvents = abiertos ? 'auto' : '';
+    b.style.userSelect = abiertos ? 'auto' : '';
   });
   document.querySelectorAll('.badge-p').forEach(b => { b.textContent = abiertos ? 'PRO ✓' : 'PRO'; });
 }
