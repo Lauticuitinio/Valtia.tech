@@ -39,12 +39,6 @@ const CSS = `
 .rs-pl .v{font:600 18px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
 .rs-pl .s{font-size:12px;color:var(--v3-mut)}
 .rs-pl .s .rs-num{color:var(--v3-sub)}
-/* el día: abajo del resultado total y más chico que él (38 · 18 · 15) */
-.rs-dia{display:flex;align-items:baseline;gap:6px 10px;margin-top:11px;flex-wrap:wrap}
-.rs-dia .k{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut)}
-.rs-dia .v{font:600 15px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
-.rs-dia .s{font-size:12px;color:var(--v3-mut);line-height:1.5}
-.rs-dia .rs-pill{font-size:11.5px;padding:2px 7px}
 .rs-pill{font:600 12.5px 'IBM Plex Mono',monospace;padding:3px 8px;border-radius:5px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .rs-pill.up{color:var(--v3-up);background:var(--v3-upBg)}
 .rs-pill.dn{color:var(--v3-dn);background:var(--v3-dnBg)}
@@ -256,17 +250,12 @@ export async function renderResumen(el, ctx) {
     }
     const tiene = (cc.pos || []).length > 0;
     const nRadar = tiene ? 0 : ((await seguro(ctx.radar, [])) || []).length;
-    // lo que se movió la cartera hoy: la cuenta vive en panel.js (ctx.variacionDia)
-    // para que Mi cartera y el Resumen muestren la misma cifra. Si el panel es
-    // viejo y todavía no la trae, la tarjeta sale sin la línea del día.
-    const dia = tiene && typeof ctx.variacionDia === 'function'
-      ? await seguro(() => ctx.variacionDia(cc), null) : null;
     if (!vivo()) return;
     const hoy = ctx.hoyAR();
     // una sola lectura de la agenda para las tarjetas de hoy y para la columna
     const evP = eventos(ctx, { desde: hoy, hasta: sumarDias(hoy, 30) }).catch(() => []);
     el.innerHTML = `<div class="rs">
-      ${tiene ? tarjetaPrincipal(cc, bset, vs, ctx, dia) : tarjetaVacia(cc, disc, vs, ctx, nRadar)}
+      ${tiene ? tarjetaPrincipal(cc, bset, vs, ctx) : tarjetaVacia(cc, disc, vs, ctx, nRadar)}
       <div class="rs-hoy" data-rs="hoy">${ESQ_HOY}</div>
       <div class="rs-cols">
         <section class="rs-min0"><div class="rs-col-h"><h3>${tiene ? 'Lo que viene en tus activos' : 'Lo que viene en el mercado'}</h3>
@@ -347,29 +336,7 @@ function lineaRealizado(cc, vs, ctx, sinPos) {
   return `<div><a class="rs-rz" href="#panel/micartera" data-go="micartera">Resultado realizado${o === rz.delAnio ? ' en ' + anio : ''}: ${cifra}${extra ? ' · ' + extra : ''}${sinPos ? '. No te quedan posiciones abiertas' : ''} →</a></div>`;
 }
 
-/* la línea del día: cuánto se movió la cartera HOY, en plata y en porcentaje.
-   La cuenta es la de ctx.variacionDia() (panel.js), la misma que usa Mi cartera:
-   la variación del día de cada posición (precios/{TICKER}.d en acciones, CEDEARs
-   y cripto; el campo v del panel de bonos en renta fija), el cierre anterior que
-   sale de ahí, y la diferencia convertida a la moneda del encabezado.
-   Lo que no trae variación NO se cuenta como cero: queda afuera y se aclara. */
-function lineaDia(dia, m, ctx) {
-  if (!dia || !dia.total) return '';
-  if (!dia.con) {
-    return `<div class="rs-dia"><span class="k">Hoy</span><span class="v rs-mu">—</span>
-      <span class="s">${dia.total === 1 ? 'Tu posición todavía no trae' : 'Ninguna de tus posiciones trae'} la variación del día.</span></div>`;
-  }
-  const tks = dia.sinTickers || [];
-  const lista = tks.slice(0, 3).map(t => ctx.esc(t)).join(', ') + (tks.length > 3 ? ' y otras' : '');
-  const nota = dia.sin && lista ? `no incluye ${lista}, sin variación del día`
-    : dia.sin ? `${dia.sin} ${dia.sin === 1 ? 'posición queda afuera' : 'posiciones quedan afuera'}, sin variación del día` : '';
-  return `<div class="rs-dia"><span class="k">Hoy</span>
-    <span class="v ${upCls(dia.monto)}">${ctx.moneyS(dia.monto, m)}</span>
-    ${dia.pct != null && isFinite(dia.pct) ? `<span class="rs-pill ${dia.pct >= 0 ? 'up' : 'dn'}">${pctS(dia.pct)}</span>` : ''}
-    ${nota ? `<span class="s">${nota}</span>` : ''}</div>`;
-}
-
-function tarjetaPrincipal(cc, bset, vs, ctx, dia) {
+function tarjetaPrincipal(cc, bset, vs, ctx) {
   const esc = ctx.esc, r = cc.r, m = ctx.curMoneda(cc.cur);
   const filas = r.filas || [], n = filas.length;
   const conValor = filas.filter(f => f.dValor != null && isFinite(f.dValor));
@@ -431,7 +398,6 @@ function tarjetaPrincipal(cc, bset, vs, ctx, dia) {
     <div class="rs-top">
       <div class="rs-min0"><div class="rs-k">Valor de tu cartera</div>
         ${valor}
-        ${tot > 0 ? lineaDia(dia, m, ctx) : ''}
         ${lineaRealizado(cc, vs, ctx, false)}
         <div class="rs-info"><span><b>${n}</b> ${n === 1 ? 'posición' : 'posiciones'}</span>${nb ? `<span><b>${nb}</b> ${nb === 1 ? 'broker' : 'brokers'}</span>` : ''}<span><b>${conPx}<span class="de"> de </span>${n}</b> con precio</span></div>
       </div>

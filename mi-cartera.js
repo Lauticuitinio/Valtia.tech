@@ -41,17 +41,8 @@ const STYLE = `
 .mc3-tot b{font:600 15px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-ink);letter-spacing:-.01em}
 .mc3-tot b.mc-pos{color:var(--v3-up)}.mc3-tot b.mc-neg{color:var(--v3-dn)}
 .mc3-tot b.k{font-size:13px}
-/* la aclaración de los totales (qué quedó afuera de la suma del día) */
-.mc3-tot em{font-style:normal;font-size:11.5px;color:var(--v3-mut);margin-left:6px}
 .mc3-pp{font:600 11px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-style:normal;padding:2px 7px;border-radius:4px;margin-left:6px;white-space:nowrap}
 .mc3-pp.up{color:var(--v3-up);background:var(--v3-upBg)}.mc3-pp.dn{color:var(--v3-dn);background:var(--v3-dnBg)}
-.mc3-ctrl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-/* "Ocultar $": tapa los importes para mostrarle la pantalla a alguien */
-.mc3-ojo{font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-mut);
-  background:none;border:1px solid var(--v3-line);padding:6px 11px;border-radius:5px;cursor:pointer;white-space:nowrap;
-  transition:color .15s,border-color .15s,background .15s}
-.mc3-ojo:hover{color:var(--v3-ink);border-color:var(--v3-gold)}
-.mc3-ojo[aria-pressed="true"]{color:var(--v3-gold2);border-color:var(--v3-gold);background:var(--v3-goldBg)}
 .mc3-seg{display:inline-flex;gap:2px;align-items:center}
 .mc3-seg button{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;padding:7px 10px;cursor:pointer;color:var(--v3-mut);
   background:none;border:none;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s}
@@ -88,8 +79,8 @@ const STYLE = `
 
 /* ── la tabla (grilla del prototipo) ── */
 .mc3-tbl{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;overflow-x:auto}
-.mc3-in{min-width:1012px}
-.mc3-hd,.mc3-row{display:grid;grid-template-columns:minmax(200px,1.5fr) 90px 110px 120px 120px 120px 130px 32px;gap:12px}
+.mc3-in{min-width:880px}
+.mc3-hd,.mc3-row{display:grid;grid-template-columns:minmax(200px,1.5fr) 90px 110px 120px 120px 130px 32px;gap:12px}
 .mc3-hd{padding:10px 18px;border-bottom:1px solid var(--v3-line);font:700 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;
   text-transform:uppercase;color:var(--v3-mut)}
 .mc3-hd .r{text-align:right}
@@ -116,10 +107,6 @@ const STYLE = `
 .mc3-n.f{font-weight:600}
 .mc3-n.mc-pos{color:var(--v3-up)}.mc3-n.mc-neg{color:var(--v3-dn)}.mc3-n.mc-mut{color:var(--v3-mut)}
 .mc3-n small{display:block;font:500 10.5px 'IBM Plex Mono',monospace;margin-top:2px}
-/* el precio promedio de compra, debajo de la cantidad */
-.mc3-n small.pm{color:var(--v3-mut);font-weight:400}
-/* el rótulo "Hoy" de esa celda: solo se ve cuando la fila pasa a tres líneas */
-.mc3-hoyk{display:none;font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);margin-right:6px}
 .mc3-meta{display:none;font:500 11.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-mut);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mc3-rot{text-align:center;color:var(--v3-mut);font-size:12px;display:inline-block;transition:transform .15s}
@@ -298,25 +285,19 @@ const STYLE = `
    920 y ~1180 px la grilla de 880 px tampoco entra. Sin container queries
    (navegadores viejos) queda el scroll dentro de la caja, como el prototipo. */
 .mc3-tbl{container-type:inline-size;container-name:mc3t}
-@container mc3t (max-width:1011px){
+@container mc3t (max-width:879px){
   .mc3-in{min-width:0}
   /* el encabezado no desaparece: queda como una línea de "ordenar por" (en el
      celular también se ordena, como antes) */
   .mc3-hd{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;padding:10px 14px}
   .mc3-hd::before{content:"Ordenar:";font-weight:600;color:var(--v3-mut)}
   .mc3-hd>span:last-child{display:none}
-  /* "Hoy" no entra en la línea de Valor y Resultado sin apretar los números:
-     va abajo, en su propio renglón y con el rótulo adelante */
-  .mc3-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 14px;
-    grid-template-areas:"act act rot" "meta meta rot" "val pl rot" "hoy hoy rot";
+  .mc3-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 14px;grid-template-areas:"act act rot" "meta meta rot" "val pl rot";
     gap:6px 12px;padding:12px 14px}
   .mc3-row>.c-act{grid-area:act}
   .mc3-row>.c-meta{display:block;grid-area:meta}
   .mc3-row>.c-val{grid-area:val;text-align:left}
   .mc3-row>.c-pl{grid-area:pl}
-  .mc3-row>.c-hoy{grid-area:hoy;text-align:left;font-size:12px}
-  .mc3-row>.c-hoy .mc3-hoyk{display:inline}
-  .mc3-row>.c-hoy small{display:inline;margin:0 0 0 6px}
   .mc3-row>.c-rot{grid-area:rot;align-self:center}
   .mc3-row>.c-brk,.mc3-row>.c-cnt,.mc3-row>.c-px{display:none}
   .mc3-grp{padding:9px 14px}
@@ -355,13 +336,6 @@ export function normalizarTicker(ticker, mercado, bonosSet = new Set()) {
   return t;
 }
 
-/* el subtotal del día de un grupo: suma solo las filas que traen la variación
-   (las otras muestran un guion y no entran, igual que en el total de arriba) */
-const hoyDe = fs => {
-  const con = fs.filter(f => f.dHoy != null);
-  return { hoy: con.length ? con.reduce((a, f) => a + f.dHoy, 0) : null, hoyN: con.length };
-};
-
 /* Subtotales por broker sobre las filas ya calculadas. */
 export function agruparPorBroker(filas, total) {
   const m = new Map();
@@ -375,7 +349,7 @@ export function agruparPorBroker(filas, total) {
     const costo = fs.reduce((a, f) => a + (f.dValor != null ? (f.dCosto ?? 0) : 0), 0);
     return { broker, filas: fs, valor, costo, pl: valor - costo,
              plPct: costo > 0 ? (valor - costo) / costo * 100 : null,
-             peso: total > 0 ? valor / total * 100 : null, ...hoyDe(fs) };
+             peso: total > 0 ? valor / total * 100 : null };
   }).sort((a, b) => b.valor - a.valor || a.broker.localeCompare(b.broker));
 }
 
@@ -405,22 +379,10 @@ async function bonosSet() {
   return new Set(Object.keys((p && p.todos) || {}));
 }
 
-/* ── "Ocultar $" ──
-   El botón de arriba tapa los importes en plata y deja los porcentajes y las
-   cantidades, que es lo que sirve para mostrarle la pantalla a alguien. Se tapa
-   acá, en las dos funciones por las que pasa TODA la plata de la pantalla (la
-   tabla, los totales, los gráficos, el desplegable, las ventas y los avisos del
-   sync): así no queda ningún importe suelto afuera y no hay que acordarse de
-   taparlo en cada lugar nuevo. Es solo visual: los datos no cambian. */
-const OCULTO = "•••••";
-let _ocultar = pref("valtia-mc-ocultar", "") === "1";
-
-const money = (n, cur) => _ocultar ? OCULTO : (Number(n) < 0 ? "−" : "") + (cur === "ARS" ? "$" : "US$") +
+const money = (n, cur) => (Number(n) < 0 ? "−" : "") + (cur === "ARS" ? "$" : "US$") +
   Math.abs(Number(n) || 0).toLocaleString("es-AR", { maximumFractionDigits: Math.abs(n) < 1000 ? 2 : 0 });
 // con signo explícito (para resultados): +US$930 / −US$160
-const moneyS = (n, cur) => _ocultar ? OCULTO : (Number(n) >= 0 ? "+" : "") + money(n, cur);
-// los pocos importes que se arman a mano en dólares (cupones y vencimientos)
-const usdRedondo = n => _ocultar ? OCULTO : "US$" + Math.round(Number(n) || 0).toLocaleString("es-AR");
+const moneyS = (n, cur) => (Number(n) >= 0 ? "+" : "") + money(n, cur);
 
 /* el panel (panel.js) cachea la cartera: cuando cambia acá, se le avisa */
 function avisarPanel() {
@@ -541,26 +503,7 @@ export function monedaMercado(mercado, tk, bonos = new Set()) {
    La usan la tabla y la simulación de la evolución: tienen que coincidir. */
 export const monedaPosicion = (p, px, bonos = _bonos) => (px && px.moneda) || p.moneda || monedaProbable(p.ticker, bonos);
 
-/* ── la variación del día, en por ciento ──
-   Las acciones, los CEDEARs y la cripto la traen en su propio documento de
-   precios (campo d, el que ya usa desglose() para la fila "Hoy"). La renta fija
-   NO: el sync no se la escribe, así que sale del panel de bonos (campo v), que
-   es de donde salen también sus precios. Si no está en ninguno de los dos,
-   devuelve null y la fila muestra un guion: un cero se leería como "no se
-   movió", que es otra cosa. */
-function variacionDia(ticker, px, bonos = _bonos, panel = _panel) {
-  const d = px && px.d != null ? Number(px.d) : null;
-  if (d != null && isFinite(d)) return d;
-  const todos = panel && panel.todos;
-  const tk = String(ticker || "").toUpperCase();
-  if (!todos || !tk || !esRentaFija(tk, bonos)) return null;
-  // la misma clave que usa completarPreciosDeRentaFija para buscar su precio
-  const b = todos[canon(tk, bonos)];
-  const v = b && b.v != null ? Number(b.v) : null;
-  return v != null && isFinite(v) ? v : null;
-}
-
-export function calcular(posiciones, precios, cur = _cur, fx = _fx, bonos = _bonos, panel = _panel) {
+export function calcular(posiciones, precios, cur = _cur, fx = _fx, bonos = _bonos) {
   const filas = posiciones.map(p => {
     const px = precios[String(p.ticker).toUpperCase()] || null;
     const moneda = monedaPosicion(p, px, bonos);
@@ -576,35 +519,17 @@ export function calcular(posiciones, precios, cur = _cur, fx = _fx, bonos = _bon
     const c = v => convertir(v, moneda, cur, fx);   // a la moneda elegida
     const dCosto = c(costo), dValor = c(valor);
     const dPl = (dValor != null && dCosto != null) ? dValor - dCosto : null;
-    // lo que se movió HOY esta posición: el cierre de ayer sale de la variación
-    // del día (previo = precio / (1 + d/100)) y la diferencia se multiplica por
-    // lo que tenés. Una variación de −100% dejaría el cierre de ayer en cero:
-    // ahí no hay cuenta posible y queda en null.
-    const hoyPct = variacionDia(p.ticker, px, bonos, panel);
-    const previo = (hoyPct != null && 1 + hoyPct / 100 > 0 && actual != null) ? actual / (1 + hoyPct / 100) : null;
-    const hoy = previo != null ? (Number(p.cantidad) || 0) * (actual - previo) * fac : null;
-    const dHoy = dValor != null ? c(hoy) : null;
     return { ...p, px, moneda, actual, costo, valor,
              dCompra: c(Number(p.precioCompra) || 0), dActual: c(actual),
-             dCosto, dValor, dPl, hoyPct: dHoy != null ? hoyPct : null, hoy, dHoy,
+             dCosto, dValor, dPl,
              plPct: (valor != null && costo > 0) ? (valor - costo) / costo * 100 : null };
   });
   const total = filas.reduce((s, f) => s + (f.dValor ?? 0), 0);
   const costoTot = filas.reduce((s, f) => s + (f.dValor != null ? (f.dCosto ?? 0) : 0), 0);
   const plTot = total - costoTot;
-  // el total del día suma SOLO las filas que traen la variación; las otras se
-  // cuentan aparte para poder decir cuántas quedaron afuera. El % es sobre el
-  // cierre de ayer de esas mismas filas (dValor − dHoy), no sobre el total.
-  const conHoy = filas.filter(f => f.dHoy != null);
-  const hoyTot = conHoy.reduce((s, f) => s + f.dHoy, 0);
-  const hoyBase = conHoy.reduce((s, f) => s + (f.dValor - f.dHoy), 0);
   filas.forEach(f => { f.peso = total > 0 && f.dValor != null ? f.dValor / total * 100 : null; });
   return { filas, total, costoTot, plTot,
-           plTotPct: costoTot > 0 ? plTot / costoTot * 100 : null,
-           hoyTot: conHoy.length ? hoyTot : null,
-           hoyTotPct: hoyBase > 0 ? hoyTot / hoyBase * 100 : null,
-           hoyN: conHoy.length,
-           hoySin: filas.filter(f => f.dValor != null && f.dHoy == null).length };
+           plTotPct: costoTot > 0 ? plTot / costoTot * 100 : null };
 }
 
 /* ── lectura Valtia: qué le dice la valuación sobre SU cartera ── */
@@ -737,8 +662,8 @@ function analisisRentaFija(r, bonos, panel, flujos, hoy) {
     <table class="mc-rf"><thead><tr><th>Especie</th><th>Nominales</th><th>Tasa</th><th>Paridad</th><th>Vence</th></tr></thead>
       <tbody>${filas}</tbody></table>
     ${cobros.length ? `<div class="nota"><b>Próximos 90 días:</b> ${cobros.slice(0, 4).map(c =>
-        `${esc(c.tk)} el ${c.f.slice(8, 10)}/${c.f.slice(5, 7)}${c.usd ? ` (~${usdRedondo(c.usd)})` : ""}`).join(" · ")}${cobros.length > 4 ? ` y ${cobros.length - 4} más` : ""}.
-      ${totalUsd > 0 ? `Total estimado a cobrar: <b>${usdRedondo(totalUsd)}</b>.` : ""}
+        `${esc(c.tk)} el ${c.f.slice(8, 10)}/${c.f.slice(5, 7)}${c.usd ? ` (~US$${Math.round(c.usd).toLocaleString("es-AR")})` : ""}`).join(" · ")}${cobros.length > 4 ? ` y ${cobros.length - 4} más` : ""}.
+      ${totalUsd > 0 ? `Total estimado a cobrar: <b>US$${Math.round(totalUsd).toLocaleString("es-AR")}</b>.` : ""}
       Son estimaciones sobre los nominales que tenés cargados.</div>`
       : `<div class="nota">Sin pagos previstos en los próximos 90 días.</div>`}
   </div>`;
@@ -913,7 +838,7 @@ function agruparPorTipo(filas, total, bonos) {
     const costo = fs.reduce((a, f) => a + (f.dValor != null ? (f.dCosto ?? 0) : 0), 0);
     return { nombre, filas: fs, valor, costo, pl: valor - costo,
              plPct: costo > 0 ? (valor - costo) / costo * 100 : null,
-             peso: total > 0 ? valor / total * 100 : null, ...hoyDe(fs) };
+             peso: total > 0 ? valor / total * 100 : null };
   }).sort((a, b) => b.valor - a.valor || TIPOS_ORDEN.indexOf(a.nombre) - TIPOS_ORDEN.indexOf(b.nombre));
 }
 
@@ -1059,7 +984,7 @@ function metricas_(f, opts, cur) {
     const dfl = fl[esp] || fl[parBono(esp)];
     const hoy = hoyAR();
     const prox = dfl && Array.isArray(dfl.flujos) ? dfl.flujos.find(([fe]) => fe >= hoy) : null;
-    if (prox) out.push(["Próximo pago", diaMes(prox[0]), `≈ ${usdRedondo((Number(f.cantidad) || 0) * Number(prox[1]) / 100)} (estimado)`]);
+    if (prox) out.push(["Próximo pago", diaMes(prox[0]), `≈ US$${Math.round((Number(f.cantidad) || 0) * Number(prox[1]) / 100).toLocaleString("es-AR")} (estimado)`]);
   }
   return out;
 }
@@ -1306,17 +1231,6 @@ function instalarDelegado(el) {
       _ajAbierto = p.hidden ? null : det.dataset.det;
       return;
     }
-    const oc = t.closest("[data-ocultar]");
-    if (oc) {
-      ev.preventDefault();
-      _ocultar = !_ocultar;
-      setPref("valtia-mc-ocultar", _ocultar ? "1" : "0");
-      repintar();
-      // el repintado rehace el botón: el foco vuelve al nuevo, para el teclado
-      const n = el.querySelector("[data-ocultar]");
-      if (n) try { n.focus(); } catch (e) {}
-      return;
-    }
     const g = t.closest("[data-agrupar]");
     if (g) { ev.preventDefault(); setPref("valtia-mc-agrupar", g.dataset.agrupar); repintar(); return; }
     const s = t.closest(".mc3-hd [data-col]");
@@ -1344,9 +1258,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   asegurarEstilo();
   instalarDelegado(el);
   const escrito = escritoEnAvisos(el);
-  // el panel de bonos va explícito (los defaults siguen siendo los de siempre):
-  // de ahí sale la variación del día de la renta fija, que no viene en precios
-  const r = calcular(posiciones, precios, _cur, _fx, _bonos, opts.panel || _panel);
+  const r = calcular(posiciones, precios);
   const cur = curLabel();
   const bonos = opts.bonos || new Set();
   // lo último que se dibujó: lo usan el desplegable, el orden y el agrupado sin
@@ -1401,17 +1313,8 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   const sinDolar = !!posiciones.length && ((_cur === "CCL" && !_fx.ccl) || (_cur === "MEP" && !_fx.mep));
   const avisoFx = fxFalta ? `<div class="mc3-aviso">⚠ No pudimos traer la cotización del dólar: ${sinDolar ? "por ahora <b>no podemos mostrar tu cartera en dólares</b>. Pasá a Pesos o recargá la página en unos minutos." : "los totales de abajo <b>excluyen tus posiciones en USD</b>. Recargá la página en unos minutos."}</div>` : "";
 
-  // "Ocultar $": el estado vive en localStorage, así que sobrevive al refresco
-  // de dos minutos y a cambiar de pestaña
-  const ojo = `<button type="button" class="mc3-ojo" data-ocultar aria-pressed="${_ocultar}"
-      title="${_ocultar ? "Volver a mostrar los importes" : "Tapa los importes para poder mostrarle la pantalla a alguien; los porcentajes y las cantidades quedan"}"
-    >${_ocultar ? "Mostrar $" : "Ocultar $"}</button>`;
-
   if (!posiciones.length) {
-    // sin posiciones no hay tabla, pero las ventas de abajo sí tienen importes:
-    // si el botón no estuviera, no habría cómo destaparlos desde esta pantalla
     el.innerHTML = `<div class="mc-wrap">${cabecera}${bloqueAjustes(opts.ajustes || [], precios, opts.bonos || new Set())}${form}
-      ${(opts.ventas || []).length ? `<div class="mc3-top"><span></span><div class="mc3-ctrl">${ojo}</div></div>` : ""}
       ${(opts.ventas || []).length ? `<div class="mc-empty"><h4>No te quedan posiciones abiertas</h4>
         <p>Tus ventas y su resultado están más abajo. Si compraste algo nuevo, cargalo con el formulario.</p></div>` : `<div class="mc-empty">
         <h4>Todavía no cargaste posiciones</h4>
@@ -1433,9 +1336,8 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
 
   // encabezado de la grilla: las columnas que se pueden ordenar llevan data-col
   const flecha = c => _orden.col === c ? (_orden.desc ? " ↓" : " ↑") : "";
-  const ordPor = l => l === "%" ? "resultado en %" : l === "Hoy" ? "lo que se movió hoy" : l.toLowerCase();
-  const hc = (c, l, cl = "") => `<span class="${[cl, _orden.col === c ? "on" : ""].filter(Boolean).join(" ")}" data-col="${c}" role="button" tabindex="0" title="Ordenar por ${ordPor(l)}">${l}${flecha(c)}</span>`;
-  const encabezado = `<div class="mc3-hd">${hc("ticker", "Activo")}${hc("broker", "Broker")}${hc("cantidad", "Cantidad", "r")}${hc("dActual", "Precio hoy", "r")}${hc("dValor", "Valor", "r")}${hc("dHoy", "Hoy", "r")}<span class="r">${hc("dPl", "Resultado")} · ${hc("plPct", "%")}</span><span></span></div>`;
+  const hc = (c, l, cl = "") => `<span class="${[cl, _orden.col === c ? "on" : ""].filter(Boolean).join(" ")}" data-col="${c}" role="button" tabindex="0" title="Ordenar por ${l === "%" ? "resultado en %" : l.toLowerCase()}">${l}${flecha(c)}</span>`;
+  const encabezado = `<div class="mc3-hd">${hc("ticker", "Activo")}${hc("broker", "Broker")}${hc("cantidad", "Cantidad", "r")}${hc("dActual", "Precio hoy", "r")}${hc("dValor", "Valor", "r")}<span class="r">${hc("dPl", "Resultado")} · ${hc("plPct", "%")}</span><span></span></div>`;
 
   const filaHTML = f => {
     const px = f.px || {};
@@ -1461,30 +1363,16 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     const cant = cantFmt(f.cantidad) + (rf ? " VN" : "");
     const pxHoy = f.dActual != null ? money(f.dActual, cur) : "—";
     const brk = String(f.broker || "").trim() || "sin broker";
-    // el precio promedio de compra, debajo de la cantidad: es el mismo que ya
-    // calcula calcular() (dCompra, convertido a la moneda de arriba) y el que
-    // muestra el desplegable, así que los dos dicen siempre lo mismo
-    const fac = Number(f.factor) > 0 ? Number(f.factor) : (Number(px.factor) > 0 ? Number(px.factor) : 1);
-    const prom = Number(f.precioCompra) > 0
-      ? (f.dCompra != null ? money(f.dCompra, cur) : money(Number(f.precioCompra), f.moneda)) : "";
-    const promTit = prom ? `Precio promedio de compra: ${money(Number(f.precioCompra), f.moneda)}${fac !== 1 ? " cada 100 VN" : ""}` : "";
-    // lo que se movió esta posición hoy. Sin variación del día va un guion: no
-    // se inventa un cero (se leería como "no se movió")
-    const hoyCls = f.dHoy == null ? "mc-mut" : f.dHoy >= 0 ? "mc-pos" : "mc-neg";
-    const hoyTit = f.dHoy == null ? "Todavía no tenemos la variación del día de este activo: esta fila no entra en el total de arriba"
-                                  : "Lo que se movió esta posición hoy, contra el cierre de ayer";
     return `<div class="mc3-pos" data-pos="${esc(f.id)}">
       <div class="mc3-row${on ? " on" : ""}" data-fila="${esc(f.id)}" role="button" tabindex="0" aria-expanded="${on}">
         <div class="c-act"><div class="mc3-tk"><b>${esc(tk)}</b>${mk === "byma" || mk === "rf" ? '<span class="mc3-mk">BYMA</span>' : ""}${nombre ? `<span class="mc3-nm">${esc(nombre)}</span>` : ""}</div>
           ${pills.length ? `<div class="mc3-pills">${pills.map(([c, t, tt]) => `<span class="mc3-pill ${c}"${tt ? ` title="${esc(tt)}"` : ""}>${esc(t)}</span>`).join("")}</div>` : ""}</div>
         <span class="c-brk mc3-brk">${esc(brk)}</span>
-        <span class="c-cnt mc3-n"><span data-cantde="${esc(f.id)}">${cant}</span>${prom ? `<small class="pm" title="${esc(promTit)}">${prom}</small>` : ""}</span>
+        <span class="c-cnt mc3-n" data-cantde="${esc(f.id)}">${cant}</span>
         <span class="c-px mc3-n">${pxHoy}</span>
         <span class="c-val mc3-n f">${f.dValor != null ? money(f.dValor, cur) : "—"}</span>
-        <span class="c-hoy mc3-n f ${hoyCls}" title="${esc(hoyTit)}"><em class="mc3-hoyk">Hoy</em>${f.dHoy == null ? "—"
-          : moneyS(f.dHoy, cur) + (f.hoyPct != null ? `<small>${pct1(f.hoyPct)}</small>` : "")}</span>
         <span class="c-pl mc3-n f ${f.dPl == null ? "mc-mut" : f.dPl >= 0 ? "mc-pos" : "mc-neg"}">${f.dPl == null ? "—" : moneyS(f.dPl, cur)}${f.plPct != null ? `<small>${pct1(f.plPct)}</small>` : ""}</span>
-        <span class="c-meta mc3-meta">${esc(brk)} · ${cant}${prom ? " · " + prom : ""} · ${pxHoy}</span>
+        <span class="c-meta mc3-meta">${esc(brk)} · ${cant} · ${pxHoy}</span>
         <span class="c-rot mc3-rot" aria-hidden="true">▾</span>
       </div>${on ? detalleHTML(f, opts, cur) : ""}</div>`;
   };
@@ -1494,32 +1382,19 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   const agr = agruparPref();
   const grupos = agr === "broker" ? agruparPorBroker(filas, r.total).map(g => ({ ...g, nombre: g.broker }))
     : agr === "tipo" ? agruparPorTipo(filas, r.total, bonos) : null;
-  // el renglón del grupo: cuánto suma, qué parte del total es, cuánto se movió
-  // hoy y cuánto va ganando. El peso va pegado al monto, que es la pregunta que
-  // se hace al agrupar ("¿cuánto tengo en IOL y qué parte de todo es?")
-  const grpHTML = g => `<div class="mc3-grp"><b>${esc(g.nombre)}</b><span>${g.filas.length} ${g.filas.length === 1 ? "posición" : "posiciones"}${sinDolar ? "" : ` · ${money(g.valor, cur)}${g.peso != null ? ` · <em title="Lo que pesa este grupo en el total de tu cartera">${num(g.peso)}% de tu cartera</em>` : ""}${g.hoy != null ? ` · hoy <em class="${g.hoy >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(g.hoy, cur)}</em>` : ""}${g.plPct != null ? ` · <em class="${g.pl >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(g.pl, cur)} (${pct1(g.plPct)})</em>` : ""}`}</span></div>`;
+  const grpHTML = g => `<div class="mc3-grp"><b>${esc(g.nombre)}</b><span>${g.filas.length} ${g.filas.length === 1 ? "posición" : "posiciones"}${sinDolar ? "" : ` · ${money(g.valor, cur)}${g.plPct != null ? ` · <em class="${g.pl >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(g.pl, cur)} (${pct1(g.plPct)})</em>` : ""}${g.peso != null ? ` · ${num(g.peso)}% de tu cartera` : ""}`}</span></div>`;
   const filasHTML = grupos ? grupos.map(g => grpHTML(g) + g.filas.map(filaHTML).join("")).join("") : filas.map(filaHTML).join("");
 
   const conPrecio = r.filas.filter(f => f.actual != null).length;
-  // el total del día: suma solo las filas que traen la variación, y si alguna
-  // quedó afuera se dice al lado del número (y no en un título que nadie abre)
-  const hoyOk = !sinDolar && r.hoyTot != null;
-  const hoyFuera = !sinDolar && r.hoySin > 0
-    ? `<em>· ${r.hoySin === 1 ? "1 posición sin variación del día" : `${r.hoySin} posiciones sin variación del día`}</em>` : "";
   const arriba = `<div class="mc3-top">
       <div class="mc3-tot">
         <span><b>${sinDolar ? "—" : money(r.total, cur)}</b> valor</span>
-        <span title="Lo que se movió tu cartera hoy, contra el cierre de ayer"><b class="${hoyOk ? (r.hoyTot >= 0 ? "mc-pos" : "mc-neg") : ""}">${hoyOk ? moneyS(r.hoyTot, cur) : "—"}</b>${hoyOk && r.hoyTotPct != null
-          ? `<i class="mc3-pp ${r.hoyTotPct >= 0 ? "up" : "dn"}">${pct1(r.hoyTotPct)}</i>` : ""} hoy${hoyFuera}</span>
         <span><b class="${sinDolar ? "" : r.plTot >= 0 ? "mc-pos" : "mc-neg"}">${sinDolar ? "—" : moneyS(r.plTot, cur)}</b>${!sinDolar && r.plTotPct != null
           ? `<i class="mc3-pp ${r.plTotPct >= 0 ? "up" : "dn"}" title="sobre ${esc(money(r.costoTot, cur))} invertidos">${pct1(r.plTotPct)}</i>` : ""} resultado</span>
         <span><b class="k">${conPrecio} de ${r.filas.length}</b> con precio</span>
       </div>
-      <div class="mc3-ctrl">
-        ${ojo}
-        <div class="mc3-seg" role="group" aria-label="Agrupar la tabla">${AGRUPAR.map(([k, l]) =>
-          `<button type="button" data-agrupar="${k}" class="${agr === k ? "on" : ""}" aria-pressed="${agr === k}">${l}</button>`).join("")}</div>
-      </div>
+      <div class="mc3-seg" role="group" aria-label="Agrupar la tabla">${AGRUPAR.map(([k, l]) =>
+        `<button type="button" data-agrupar="${k}" class="${agr === k ? "on" : ""}" aria-pressed="${agr === k}">${l}</button>`).join("")}</div>
     </div>`;
 
   el.innerHTML = `<div class="mc-wrap">
@@ -1529,9 +1404,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     ${sinDolar ? "" : graficos(r, cur)}
     <div class="mc3-tbl"><div class="mc3-in">${encabezado}${filasHTML}</div></div>
     <p class="mc3-pie">Tocá una fila para ver la lectura de Valtia, las noticias y el próximo evento de ese activo. Los precios se
-      sincronizan en rueda; el costo y el valor se convierten con la cotización de hoy.
-      «Hoy» es lo que se movió esa posición en la rueda, contra el cierre de ayer; si todavía no tenemos su variación del día
-      va un guion y esa fila no entra en el total de arriba. Debajo de la cantidad va tu precio promedio de compra.</p>
+      sincronizan en rueda; el costo y el valor se convierten con la cotización de hoy.</p>
     <div class="mc-subnav">Todos tus activos juntos: <a href="#panel/empresas" data-go="empresas">informes, noticias y agenda →</a>
       <span>·</span> <a href="#panel/herramientas" data-go="herramientas">ratios y datos →</a></div>
     ${lectura(r)}
@@ -2425,7 +2298,6 @@ export async function initMiCartera(user, el) {
   window.__mcAbrirFila = abrirFila;
   window.__mcRecargar = async () => {
     _cur = pref("valtia-mc-cur", "ARS");
-    _ocultar = pref("valtia-mc-ocultar", "") === "1";
     try { await Promise.all([releer(), cargarFx()]); pintar(); } catch (e) {}
   };
   try {

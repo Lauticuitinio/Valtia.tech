@@ -12,13 +12,13 @@ import { calcular, agruparPorBroker, normalizarTicker, convertir, reiniciarMiCar
 import { fxMercado, registrarImplicito, etiquetaFx } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
-import { renderResumen } from './panel-resumen.js?v=2';
+import { renderResumen } from './panel-resumen.js?v=1';
 import { renderComprar as renderComprarV3 } from './panel-comprar.js?v=1';
 import { renderCarteras as renderCarterasV3 } from './panel-carteras.js?v=1';
 import { renderMensual } from './panel-mensual.js?v=1';
 import { renderAgenda } from './panel-agenda.js?v=1';
 import { eventos } from './panel-eventos.js?v=1';
-import { base, canon, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
+import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
   from './activos.js?v=7';
 
 /* ───────────────────────── estilos ───────────────────────── */
@@ -92,15 +92,7 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 .vp-enc{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:22px 30px 16px;
   border-bottom:1px solid var(--border);background:var(--panel-bg);position:sticky;top:0;z-index:60}
 .vp-enc h1{font:700 30px 'Playfair Display',serif;color:var(--text);line-height:1.1;margin:0;letter-spacing:.01em}
-.vp-enc .sub{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:6px;
-  display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap}
-/* cartelito de mercado abierto/cerrado: el verde y el gris son los del panel v3 */
-.vp-mkt{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;
-  text-transform:uppercase;padding:3px 8px;border-radius:5px;line-height:1.5}
-.vp-mkt i{width:6px;height:6px;border-radius:50%;background:currentColor;display:block;flex:none}
-.vp-mkt em{font-style:normal;opacity:.85}
-.vp-mkt.on{color:var(--v3-up,#1F7A4D);background:var(--v3-upBg,rgba(31,122,77,.12))}
-.vp-mkt.off{color:var(--v3-mut,#8B8375);background:var(--v3-neutro,rgba(139,131,117,.12))}
+.vp-enc .sub{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:6px}
 .vp-enc .der{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .vp-enc-volver{display:inline-block;font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--link);text-decoration:none;margin-bottom:6px}
 .vp-enc-volver:hover{color:var(--text)}
@@ -273,10 +265,7 @@ a.vp-buy:hover{border-color:var(--gold)}
 `;
 
 /* ───────────────────────── estado y utilidades ───────────────────────── */
-// frescura: el texto del encabezado; preciosMs: el sello del precio más viejo,
-// que es de donde sale el cartel de mercado abierto/cerrado
-const S = { user: null, isAdmin: false, data: {}, email: '', verificado: false, cliente: false, pro: false, plan: 'gratis',
-  frescura: '', preciosMs: null };
+const S = { user: null, isAdmin: false, data: {}, email: '', verificado: false, cliente: false, pro: false, plan: 'gratis' };
 const db = () => getFirestore(getApp());
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -409,77 +398,6 @@ async function carteraCalc() {
   const f = (await fx()) || { ccl: null, mep: null };
   // los bonos del panel van explícitos: sin ellos AL30 se leería en dólares
   return { ...c, fallo: !leida, fx: f, cur: curVista(), r: calcular(c.pos, c.precios, curVista(), f, (await bonosSet()) || new Set()) };
-}
-
-/* ── lo que se movió tu cartera HOY ───────────────────────────────────────────
-   UNA sola cuenta para todo el panel. Está acá, en el ctx, y no adentro de una
-   pestaña, porque la usan dos pantallas (el Resumen y Mi cartera): si cada una
-   la hiciera por su lado, el mismo usuario vería dos cifras distintas.
-
-   De dónde sale la variación de cada posición (en por ciento, del día):
-     · acciones, CEDEARs y cripto → precios/{TICKER}.d, lo que deja el sync;
-     · renta fija → el campo v del panel de bonos (bonosPanel/latest), porque
-       precios/{especie} NO trae la variación de los bonos. Cuando el precio ya
-       salió del panel, completarPreciosDeRentaFija() (mi-cartera.js) lo copió
-       en .d y con eso alcanza.
-   Con la variación se saca el cierre anterior — previo = precio / (1 + d/100) —
-   y lo que se movió la posición es cantidad × factor × (precio − previo),
-   convertido a la moneda que el usuario esté mirando. El factor de lámina se
-   resuelve con la MISMA regla que calcular() (la posición manda, después el doc
-   de precios, y si no hay, 1).
-
-   Lo que no trae variación queda AFUERA y se informa: nunca se asume que una
-   posición no se movió. El porcentaje es sobre el valor de ayer de las
-   posiciones que sí entraron, no sobre el total de la cartera.
-
-   Devuelve (todo en la moneda de cc.cur, monto y pct en null si no hay nada):
-     { monto, pct, valor, previo, con, sin, total, sinTickers, porId }
-   porId indexa por id de posición ({ ticker, d, monto, previo }), así una tabla
-   puede mostrar el "Hoy" de cada fila sin repetir la cuenta. */
-function varDia(f, bp, bset) {
-  const px = f.px || {};
-  const propia = Number(px.d);
-  if (px.d != null && isFinite(propia)) return propia;
-  const tk = String(f.ticker || '').toUpperCase();
-  if (!esRentaFija(tk, bset)) return null;
-  // misma clave que usa completarPreciosDeRentaFija() para el precio: si el
-  // precio salió de todos[esp], la variación tiene que salir de ahí también
-  const esp = canon(tk, bset);
-  const t = (bp.todos || {})[esp];
-  if (t && t.v != null && isFinite(Number(t.v))) return Number(t.v);
-  const enGrupo = GRUPOS_RF.map(g => (bp[g] || []).find(x => x && String(x.s || '').toUpperCase() === esp)).find(Boolean);
-  if (enGrupo && enGrupo.v != null && isFinite(Number(enGrupo.v))) return Number(enGrupo.v);
-  return null;
-}
-async function variacionDia(cc) {
-  const filas = (cc && cc.r && cc.r.filas) || [];
-  const vacio = { monto: null, pct: null, valor: null, previo: null, con: 0, sin: filas.length, total: filas.length, sinTickers: [], porId: {} };
-  if (!filas.length) return { ...vacio, sin: 0 };
-  const cur = (cc && cc.cur) || curVista(), fxs = (cc && cc.fx) || null;
-  const bset = (await bonosSet()) || new Set(), bp = (await panelBonos()) || {};
-  let monto = 0, valor = 0, previo = 0, con = 0;
-  const sinTickers = [], porId = {};
-  filas.forEach(f => {
-    const px = f.px || {}, precio = f.actual, d = varDia(f, bp, bset);
-    const cant = Number(f.cantidad) || 0;
-    const fac = Number(f.factor) > 0 ? Number(f.factor) : (Number(px.factor) > 0 ? Number(px.factor) : 1);
-    // una variación de −100% dejaría el cierre anterior en cero (dividir por
-    // cero): esa fila también queda afuera
-    const den = d == null ? 0 : 1 + d / 100;
-    if (precio == null || !isFinite(precio) || d == null || !isFinite(d) || !(den > 0)) { sinTickers.push(base(f.ticker)); return; }
-    const antes = precio / den;
-    const mov = convertir(cant * fac * (precio - antes), f.moneda, cur, fxs);
-    const vHoy = convertir(cant * fac * precio, f.moneda, cur, fxs);
-    const vAyer = convertir(cant * fac * antes, f.moneda, cur, fxs);
-    // sin cotización del dólar no hay forma de sumarla en esta moneda
-    if (mov == null || !isFinite(mov) || vAyer == null || !isFinite(vAyer)) { sinTickers.push(base(f.ticker)); return; }
-    monto += mov; valor += (vHoy != null && isFinite(vHoy) ? vHoy : 0); previo += vAyer; con++;
-    if (f.id != null) porId[f.id] = { ticker: String(f.ticker || '').toUpperCase(), d, monto: mov, previo: antes };
-  });
-  const sin = filas.length - con, tks = [...new Set(sinTickers)];
-  if (!con) return { ...vacio, sin, sinTickers: tks };
-  return { monto, pct: previo > 0 ? monto / previo * 100 : null, valor, previo,
-           con, sin, total: filas.length, sinTickers: tks, porId };
 }
 const disciplina = () => cached('disc', async () => {
   if (!S.verificado) return { config: null, log: [] };
@@ -664,11 +582,8 @@ function pintarEncabezado() {
   else if (conMon && S.frescura) partes.push(S.frescura);
   // con la moneda en dólares, de dónde sale el dólar y qué edad tiene
   if (conMon && cur !== 'ARS' && S.fxSnap) { try { const e = etiquetaFx(S.fxSnap, cur === 'CCL' ? 'ccl' : 'mep'); if (e) partes.push(e); } catch (x) {} }
-  // el cartel del mercado va donde están los precios del usuario (las mismas
-  // pestañas que muestran la frescura); en la gestión del fondo no aparece
-  const mkt = !ges && conMon ? cartelMercado() : '';
   h.innerHTML = `<div class="izq">${sub ? `<a href="#panel/${sub.de}" data-go="${sub.de}" class="vp-enc-volver">← Mi cartera</a>` : ''}
-      ${propio ? '' : `<h1>${esc(tit)}</h1>`}<div class="sub">${mkt}<span>${partes.filter(Boolean).map(esc).join(' \u00b7 ')}</span></div></div>
+      ${propio ? '' : `<h1>${esc(tit)}</h1>`}<div class="sub">${partes.filter(Boolean).map(esc).join(' \u00b7 ')}</div></div>
     <div class="der">${conMon ? `<div class="vp-seg" role="group" aria-label="Moneda">${['ARS', 'CCL', 'MEP'].map(c =>
         `<button type="button" data-cur="${c}" class="${cur === c ? 'on' : ''}" aria-pressed="${cur === c}">${curEtq(c)}</button>`).join('')}</div>` : ''}
       ${tab === 'micartera' && S.verificado ? '<button type="button" class="vp-agregar" data-agregar>+ Agregar posición</button>' : ''}</div>`;
@@ -685,7 +600,6 @@ async function actualizarLateral() {
     S.fxSnap = f;
     if (cc.fallo) return;   // sin leer la cartera no se pisan los contadores con ceros
     S.frescura = cc.pos.length ? frescura(cc.precios) : '';
-    S.preciosMs = cc.pos.length ? frescuraMs(cc.precios) : null;
     pintarEncabezado();
     await contadores(cc, disc, bset);
   } catch (e) {}
@@ -697,7 +611,6 @@ window.addEventListener('valtia-precios', e => {
   const d = (e && e.detail) || {};
   if (!d.email || d.email !== S.email) return;
   S.frescura = d.n ? frescura(d.precios) : '';
-  S.preciosMs = d.n ? frescuraMs(d.precios) : null;
   if (d.fx) S.fxSnap = d.fx;
   if (CON_MONEDA.has(_tab)) pintarEncabezado();
 });
@@ -976,79 +889,20 @@ function tenencias(cc, bset) {
     especies: new Set(pos.filter(p => esRentaFija(p.ticker, bset)).map(p => base(p.ticker))),
   };
 }
-/* el sello del precio MÁS desactualizado, en milisegundos (null si no hay dato).
-   Manda el más viejo: decir "actualizados recién" porque uno de siete se
-   refrescó recién sería mentir sobre el resto. El cartel de mercado abierto
-   usa el mismo sello, así que las dos cosas nunca se contradicen. */
-function frescuraMs(precios) {
-  const ts = Object.values(precios || {}).map(p => (p || {}).actualizado_utc).filter(Boolean);
-  if (!ts.length) return null;
-  let ms = 0;
-  try { ms = Math.min(...ts.map(t => new Date(t.seconds ? t.seconds * 1000 : t).getTime())); } catch (e) { return null; }
-  return isFinite(ms) ? ms : null;
-}
 function frescura(precios) {
-  const ms = frescuraMs(precios);
-  if (ms == null) return '';
+  const ts = Object.values(precios || {}).map(p => p.actualizado_utc).filter(Boolean);
+  if (!ts.length) return '';
+  let ms = 0;
+  // manda la posición MÁS desactualizada: decir "actualizados recién" porque
+  // uno de siete se refrescó recién sería mentir sobre el resto
+  try { ms = Math.min(...ts.map(t => new Date(t.seconds ? t.seconds * 1000 : t).getTime())); } catch (e) { return ''; }
+  if (!isFinite(ms)) return '';
   const min = Math.round((Date.now() - ms) / 60000);
   if (min < 2) return 'precios actualizados recién';
   if (min < 60) return `precios actualizados hace ${min} min`;
   const h = Math.round(min / 60);
   return h < 24 ? `precios actualizados hace ${h} h` : 'precios del ' + new Date(ms).toLocaleDateString('es-AR');
 }
-
-/* ── ¿el mercado argentino está abierto? ──────────────────────────────────────
-   Abierto = día hábil, entre las 11:00 y las 17:00 de Buenos Aires, Y precios
-   actualizados hace menos de 30 minutos. La frescura es la que resuelve los
-   feriados: un 25 de mayo cae en la franja horaria pero no llegan precios
-   nuevos, así que el cartel dice "cerrado" sin que haya que mantener un
-   calendario de feriados.
-
-   La hora es SIEMPRE la de Buenos Aires (UTC−3, sin horario de verano), con el
-   mismo truco que hoyAR(): se corre el instante tres horas y se lee en UTC. La
-   zona horaria de la computadora del visitante no entra en la cuenta.
-
-   Sin dato de frescura no hay cartel: preferimos no decir nada antes que
-   adivinar. Y dentro de la franja con precios viejos tampoco prometemos cuándo
-   vuelve a abrir (si es feriado, no sabemos si mañana también lo es): se dice
-   "cerrado" y la frescura del encabezado explica el resto. */
-const RUEDA_DESDE = 11, RUEDA_HASTA = 17;
-const FRESCO_MIN = 30;
-const DIAS_SEM = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-const ahoraAR = () => new Date(Date.now() - 3 * 3600e3);   // ojo: leerlo con getUTC*
-const habilAR = d => d >= 1 && d <= 5;
-function proximaApertura(a) {
-  const dia = a.getUTCDay();
-  if (habilAR(dia) && a.getUTCHours() < RUEDA_DESDE) return `abre hoy ${RUEDA_DESDE}:00`;
-  let n = 1;
-  while (n < 8 && !habilAR((dia + n) % 7)) n++;
-  return `abre ${n === 1 ? 'mañana' : 'el ' + DIAS_SEM[(dia + n) % 7]} ${RUEDA_DESDE}:00`;
-}
-function estadoMercado(ms) {
-  if (ms == null || !isFinite(ms)) return null;
-  const min = (Date.now() - ms) / 60000;
-  if (!(min >= 0)) return null;              // reloj del visitante adelantado: no inventamos
-  const a = ahoraAR(), h = a.getUTCHours();
-  const enRueda = habilAR(a.getUTCDay()) && h >= RUEDA_DESDE && h < RUEDA_HASTA;
-  if (enRueda) return min < FRESCO_MIN
-    ? { abierto: true, txt: 'Mercado abierto', cuando: '' }
-    : { abierto: false, txt: 'Mercado cerrado', cuando: '' };
-  return { abierto: false, txt: 'Mercado cerrado', cuando: proximaApertura(a) };
-}
-function cartelMercado() {
-  const e = estadoMercado(S.preciosMs);
-  if (!e) return '';
-  return `<span class="vp-mkt ${e.abierto ? 'on' : 'off'}" data-mkt><i></i>${esc(e.txt)}${e.cuando ? `<em>${esc(e.cuando)}</em>` : ''}</span>`;
-}
-/* la hora avanza y los precios envejecen aunque nadie toque el panel: el cartel
-   se repinta solo (y solo él, para no robarle el foco a los botones de moneda) */
-setInterval(() => {
-  const h = $('vp-enc'); if (!h) return;
-  const viejo = h.querySelector('[data-mkt]'), nuevo = cartelMercado();
-  if (!viejo) { if (nuevo && CON_MONEDA.has(_tab)) pintarEncabezado(); return; }
-  if (!nuevo) { viejo.remove(); return; }
-  viejo.outerHTML = nuevo;
-}, 60000);
 
 /* ───────────────────────── INICIO ───────────────────────── */
 // El Resumen es el pantallazo de como vienen SUS inversiones: un solo bloque
@@ -1391,15 +1245,6 @@ const ctx = {
   toast, invalidar, refrescar, portalTab,
   radarDoc, radar, teaser, calendario, flujos, panelBonos, preciosInf, desglosePer, bonosSet, vencMapa, vencimientoDe,
   fx, carteraCalc, ventas, ajustes, disciplina, informes, noticias, seguidas, posicionesCartera, precioHoy,
-  // lo que se movió la cartera HOY, compartido por el Resumen y Mi cartera (la
-  // cuenta y lo que devuelve están documentados arriba de variacionDia()).
-  //   const d = await ctx.variacionDia(cc);   // cc = await ctx.carteraCalc()
-  //   d.monto / d.pct → el total del día en la moneda de cc.cur (null si nada trae variación)
-  //   d.porId[pos.id] → { ticker, d, monto, previo } para la columna "Hoy" de cada fila
-  //   d.con / d.sin / d.sinTickers → qué quedó afuera, para poder aclararlo
-  // Ojo: es async y no cachea (depende de cc y de la moneda elegida); las
-  // lecturas que usa adentro (bonosSet, panelBonos) sí están cacheadas.
-  variacionDia,
   tenencias, frescura, ordenComprar, mapaCarteras, alertasMail, compararSeguidas,
   // guarda la regla de inversión mensual ({ aporte US$/mes, compras por mes }). Devuelve
   // true o el mensaje de error. Refresca el plan y el Resumen.
