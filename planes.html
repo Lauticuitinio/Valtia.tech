@@ -89,6 +89,7 @@ main{max-width:1160px;margin:0 auto;padding:22px 52px 60px}
 .plan.pro .wl input::placeholder{color:rgba(255,255,255,.45)}
 .plan.pro .wl input:focus{border-color:var(--gold-claro)}
 .wl button{white-space:nowrap;padding:12px 16px}
+.wl button:disabled{opacity:.6;cursor:wait}
 #wl-msg{font-size:12.5px;margin-top:9px;line-height:1.5}
 
 /* título de sección: patrón .sec-h de Informes (Playfair + hairline que se estira) */
@@ -170,13 +171,19 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
       <div class="nota">Suscripciones online muy pronto — anotándote congelás el precio de lanzamiento</div>
       <div class="wl">
         <input type="email" id="wl-email" placeholder="tu@email.com" autocomplete="email" inputmode="email">
-        <button class="cta dorada" onclick="waitlistPro(event)">Anotarme</button>
+        <!-- El botón arranca apagado y lo enciende el módulo de abajo cuando
+             Firebase terminó de bajar: con onclick="waitlistPro(…)" un clic
+             apurado tiraba "waitlistPro is not defined" y no pasaba nada. -->
+        <button class="cta dorada" id="wl-btn" type="button" disabled>Anotarme</button>
       </div>
       <div id="wl-msg"></div>
       <ul>
         <li>Todas las carteras vivas, con cada rotación fechada y justificada</li>
         <li>Avisos de rotación por mail, el día que pasan</li>
-        <li>Radar de valuación completo: 34 activos con puntaje y veredicto diario</li>
+        <!-- El número sale del radar (radar/latest). Esta página no lo lee, así
+             que va escrito: al sumar activos al radar hay que actualizarlo acá.
+             Al 22/09/2026 el radar sigue 47. -->
+        <li>Radar de valuación completo: 47 activos con puntaje y veredicto diario</li>
         <li>Informes de research completos</li>
         <li>Panel de bonos completo: curva soberana con TIR, paridad y duration</li>
         <li>Fichas de activo destapadas, con informe y radar</li>
@@ -239,7 +246,7 @@ const app = getApps().length ? getApp() : initializeApp({
   projectId: 'valtia-analytics',
 });
 const db = getFirestore(app);
-window.waitlistPro = async function (e) {
+async function waitlistPro(e) {
   if (e) e.preventDefault();
   const inp = document.getElementById('wl-email');
   const msg = document.getElementById('wl-msg');
@@ -261,10 +268,18 @@ window.waitlistPro = async function (e) {
     msg.style.color = 'var(--redTx)';
     msg.textContent = 'No se pudo guardar — probá de nuevo en un rato.';
   }
-};
+}
+const btn = document.getElementById('wl-btn');
+if (btn) {
+  btn.disabled = false;
+  btn.addEventListener('click', waitlistPro);
+}
+// el campo no está adentro de un <form>: sin esto, Enter no hacía nada
+const inpWl = document.getElementById('wl-email');
+if (inpWl) inpWl.addEventListener('keydown', ev => { if (ev.key === 'Enter') waitlistPro(ev); });
 </script>
 <script type="module" src="nav-auth.js?v=7"></script>
 <script type="module" src="cotizaciones.js?v=3"></script>
-<script src="nav-menu.js?v=6"></script>
+<script src="nav-menu.js?v=7"></script>
 </body>
 </html>

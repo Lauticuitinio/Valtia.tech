@@ -144,14 +144,10 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 
 /* grilla radar + informe */
 .dos{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
-.dp-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin:18px 0}
-.dp-t{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
-.dp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:12px}
-.dp-chip{text-align:center}
-.dp-l{font-size:10.5px;color:var(--muted);margin-bottom:4px}
-.dp-v{font-family:'Cormorant Garamond',serif;font-size:21px;line-height:1}
-.dp-v.pos{color:#4caf50}.dp-v.neg{color:#ef5350}
-.dp-nota{font-size:11.5px;color:var(--muted);line-height:1.6;margin-top:12px}
+/* Acá vivían los .dp-* del desglose por período. Quedaron muertos cuando el
+   desglose pasó a pintarse con .rend / .rend-nota: ningún nodo de la página los
+   usa. Además eran de la piel vieja (--card, --border y --muted no existen en
+   esta página, y 'Cormorant Garamond' no se carga), así que se borran. */
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line)}
 .stats .st{background:#fff;padding:14px 16px}
 .stats .l{font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
@@ -197,6 +193,10 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 
 .empty-state{padding:80px 52px;text-align:center;font:400 15px 'IBM Plex Sans',sans-serif;color:var(--sub)}
 
+/* ── ficha de un activo del radar que todavía no tiene informe propio ── */
+.aviso-nf{background:var(--marfil);border:1px solid var(--line);border-left:3px solid var(--gold);padding:14px 20px;margin-bottom:22px;font:400 12.5px 'IBM Plex Sans',sans-serif;line-height:1.65;color:#2E2A24}
+.aviso-nf b{display:block;margin-bottom:5px;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2)}
+.vtv-host{scroll-margin-top:84px}
 
 /* ── estilos del lector de informes (compartidos con informes.html) ── */
 .fsr-badge{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;background:var(--gold);color:#fff;padding:4px 10px;text-transform:uppercase}
@@ -335,24 +335,6 @@ const db = getFirestore(app);
 const t = (new URLSearchParams(location.search).get("t") || "NVDA").toUpperCase();
 const emp = EMPRESAS.find(e => e.ticker === t);
 const ficha = document.getElementById("ficha");
-if (!emp) {
-  // Sin ficha de empresa. Antes todo caía en informes.html, también un bono:
-  // activo.html?t=AL30 era un callejón sin salida aunque AL30 tiene su propia
-  // ficha. Soberanos, Bopreal y letras se reconocen por el ticker; los CER y
-  // dólar linked (TX26, DICP…) no tienen patrón, así que ahí se consulta el
-  // panel. Es el camino raro: no demora la carga de ninguna ficha normal.
-  let destino = "informes.html";
-  try {
-    let bonos = null;
-    if (!esRentaFija(t)) {
-      const s = await getDoc(doc(db, "bonosPanel", "latest"));
-      if (s.exists()) bonos = new Set(Object.keys(JSON.parse(s.data().json || "{}").todos || {}));
-    }
-    if (esRentaFija(t, bonos)) destino = "bono.html?e=" + encodeURIComponent(especieBono(canon(t, bonos), bonos));
-  } catch (e) {}
-  location.replace(destino);
-  await new Promise(() => {});   // nada de lo que sigue aplica: la página se va
-}
 
 const nf = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const n1 = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -364,6 +346,312 @@ const signo = v => { v = r1(v); return (v > 0 ? "+" : "") + n1.format(v) + "%"; 
 const clase = v => r1(v) > 0 ? "up" : r1(v) < 0 ? "dn" : "";
 const venc = v => v ? `${String(v).slice(8, 10)}/${String(v).slice(5, 7)}/${String(v).slice(2, 4)}` : "";
 const fdate = v => v && v.toDate ? v.toDate().toISOString().slice(0, 10) : String(v || "").slice(0, 10);
+
+// ── barra de arriba: volver + buscador ──────────────────────────────────────
+// La usan las DOS fichas: la completa (empresas.js) y la de un activo del
+// radar que todavía no tiene informe. Antes vivía suelta adentro de la ficha
+// completa; se sacó afuera para no escribirla dos veces y que no se separen.
+const TOP_ROW = `<div class="top-row">
+    <span class="volver" id="volver">← Volver</span>
+    <div class="bx">
+      <input id="bx-input" type="search" placeholder="Buscar activo — NVDA, Apple, Bitcoin…" autocomplete="off">
+      <div class="bx-panel" id="bx-panel"></div>
+    </div>
+  </div>`;
+
+function montarTopRow() {
+  const volver = document.getElementById("volver");
+  if (volver) volver.addEventListener("click", () => {
+    if (document.referrer && document.referrer.startsWith(location.origin) && history.length > 1) history.back();
+    else location.href = "informes.html";
+  });
+  const bxInput = document.getElementById("bx-input");
+  const bxPanel = document.getElementById("bx-panel");
+  if (!bxInput || !bxPanel) return;
+  // bonos y letras en el buscador: se cargan del panel público la primera vez
+  let BONOS_BX = null;
+  async function cargarBonosBx() {
+    if (BONOS_BX) return;
+    BONOS_BX = [];
+    try {
+      const snap = await getDoc(doc(db, "bonosPanel", "latest"));
+      if (!snap.exists()) return;
+      const p = JSON.parse(snap.data().json || "{}");
+      const meter = (arr, nom) => (arr || []).forEach(b =>
+        BONOS_BX.push({ t: b.s, n: nom + (b.vence ? " · vence " + String(b.vence).slice(0, 10) : "") }));
+      meter(p.soberanos, "Soberano USD");
+      meter(p.bopreal, "Bopreal USD");
+      meter(p.tasa_fija, "Lecap / Boncap $");
+      meter(p.cer, "Bono CER $");
+      meter(p.dolar_linked, "Dólar linked $");
+    } catch (e) {}
+  }
+  const pintarLista = q => {
+    q = (q || "").trim().toLowerCase();
+    const items = EMPRESAS.filter(e => !q || e.ticker.toLowerCase().includes(q) || e.nombre.toLowerCase().includes(q));
+    const empHtml = SECTORES.map(s => {
+      const del = items.filter(e => e.sector === s.k);
+      if (!del.length) return "";
+      return `<div class="bx-g">${s.n}</div>` + del.map(e =>
+        `<div class="bx-it" data-t="${e.ticker}"><span>${esc(e.nombre)}</span><span class="tk">${e.ticker}</span></div>`).join("");
+    }).join("");
+    const bonosDel = (BONOS_BX || []).filter(b => !q || b.t.toLowerCase().includes(q));
+    const lim = q ? bonosDel : bonosDel.slice(0, 8);
+    const bonosHtml = lim.length
+      ? `<div class="bx-g">Bonos y letras</div>` + lim.map(b =>
+        `<div class="bx-it" data-b="${b.t}"><span>${esc(b.n)}</span><span class="tk">${b.t}</span></div>`).join("")
+      : "";
+    bxPanel.innerHTML = (empHtml + bonosHtml) || '<div class="bx-it">Sin resultados — probá con el ticker (AL30, S30O6…)</div>';
+    bxPanel.querySelectorAll(".bx-it[data-t]").forEach(it => it.addEventListener("mousedown", ev => {
+      ev.preventDefault();
+      location.href = "activo.html?t=" + it.dataset.t;
+    }));
+    bxPanel.querySelectorAll(".bx-it[data-b]").forEach(it => it.addEventListener("mousedown", ev => {
+      ev.preventDefault();
+      location.href = "bono.html?e=" + it.dataset.b;
+    }));
+  };
+  const abrirLista = () => {
+    pintarLista(bxInput.value);
+    bxPanel.classList.add("open");
+    cargarBonosBx().then(() => { if (bxPanel.classList.contains("open")) pintarLista(bxInput.value); });
+  };
+  bxInput.addEventListener("focus", abrirLista);
+  bxInput.addEventListener("input", abrirLista);
+  bxInput.addEventListener("blur", () => setTimeout(() => bxPanel.classList.remove("open"), 160));
+  bxInput.addEventListener("keydown", ev => {
+    if (ev.key === "Enter") {
+      const it = bxPanel.querySelector(".bx-it[data-t], .bx-it[data-b]");
+      if (it) location.href = it.dataset.t ? "activo.html?t=" + it.dataset.t : "bono.html?e=" + it.dataset.b;
+    }
+    if (ev.key === "Escape") bxPanel.classList.remove("open");
+  });
+}
+
+// ── activos del radar sin informe propio ────────────────────────────────────
+// El radar sigue más activos que empresas.js (AMD, PLTR, LLY, XLV, BRK-B…).
+// Todos esos caían en informes.html, y por eso las fechas de resultados del
+// calendario y de la Agenda del panel no llevaban a ningún lado. Ahora muestran
+// ficha con lo que sí sabemos —puntaje de valor, veredicto, RSI, calidad,
+// sector y próximos resultados— y para el precio, el gráfico, los fundamentos
+// y el técnico se usan los widgets oficiales de TradingView (tv.js).
+
+// Bolsa de cada símbolo, para armar el símbolo de TradingView ("NASDAQ:AMD").
+// Si un ticker no está acá va sin prefijo: TradingView elige la plaza, que es
+// peor que decírselo pero muchísimo mejor que dejar el hueco vacío.
+const BOLSA = {
+  AAPL: "NASDAQ", AMD: "NASDAQ", AMZN: "NASDAQ", ASML: "NASDAQ", AVGO: "NASDAQ", CME: "NASDAQ",
+  CRWD: "NASDAQ", DDOG: "NASDAQ", GGAL: "NASDAQ", GOOGL: "NASDAQ", INTC: "NASDAQ", KLAC: "NASDAQ",
+  LRCX: "NASDAQ", MELI: "NASDAQ", META: "NASDAQ", MSFT: "NASDAQ", MU: "NASDAQ", NFLX: "NASDAQ",
+  NVDA: "NASDAQ", PLTR: "NASDAQ", QQQ: "NASDAQ", SOUN: "NASDAQ", TSLA: "NASDAQ",
+  AI: "NYSE", BMA: "NYSE", "BRK-B": "NYSE", CEPU: "NYSE", JNJ: "NYSE", JPM: "NYSE", KO: "NYSE",
+  LLY: "NYSE", MA: "NYSE", MCD: "NYSE", NKE: "NYSE", NOW: "NYSE", PAM: "NYSE", SNOW: "NYSE",
+  TGS: "NYSE", TSM: "NYSE", V: "NYSE", VIST: "NYSE", WMT: "NYSE", YPF: "NYSE",
+  SPY: "AMEX", XLV: "AMEX",
+};
+// TradingView escribe las clases de acción con punto: BRK-B es BRK.B.
+const simboloTV = tk => {
+  const k = String(tk || "").toUpperCase();
+  const s = k.replace(/-/g, ".");
+  return BOLSA[k] ? BOLSA[k] + ":" + s : s;
+};
+
+async function fichaDelRadar(tk) {
+  let rd = null, ra = null, cal = [];
+  try {
+    const [rs, cs] = await Promise.all([
+      getDoc(doc(db, "radar", "latest")).catch(() => null),
+      getDoc(doc(db, "calendario", "latest")).catch(() => null),
+    ]);
+    if (!rs || !rs.exists()) return false;
+    rd = JSON.parse(rs.data().json || "{}");
+    ra = (rd.activos || []).find(a => String(a.sym || "").toUpperCase() === radarSym(tk)) || null;
+    if (!ra) return false;
+    try { cal = cs && cs.exists() ? (JSON.parse(cs.data().json || "{}").earnings || []) : []; } catch (e) { cal = []; }
+  } catch (e) { return false; }
+
+  const nomb = ra.nombre || tk;
+  const sec = ra.sector || "";
+  const sym = simboloTV(tk);
+  // ETF y cripto están en el radar (precio, RSI) pero no tienen balance:
+  // sin veredicto no se muestran ni fundamentos ni puntaje de valor.
+  const fundOk = !!(ra.veredicto && ra.veredicto !== "Sin cobertura");
+  document.title = `${nomb} (${tk}) — Valtia Analytics`;
+
+  const hoyAR = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+  const prox = cal.find(e => (String(e.ficha || "").toUpperCase() === tk || String(e.sym || "").toUpperCase() === radarSym(tk))
+                             && String(e.fecha) >= hoyAR) || null;
+  const cuando = f => { const d = Math.round((Date.parse(f) - Date.parse(hoyAR)) / 864e5);
+                        return d === 0 ? "hoy" : d === 1 ? "mañana" : `en ${d} días`; };
+  const fechaRadar = (() => { try { return rd.actualizado ? new Date(rd.actualizado).toLocaleDateString("es-AR") : ""; } catch (e) { return ""; } })();
+  const delRadar = fechaRadar ? " del " + fechaRadar : "";
+  const precio = Number(ra.precio) > 0 ? Number(ra.precio) : null;
+  const verClase = ra.veredicto === "Infravalorada" ? " infra" : ra.veredicto === "Estirada" ? " cara" : "";
+  const zonaRsi = ra.rsiZona === "Debil" ? "Débil" : (ra.rsiZona || "");
+  // posición relativa dentro del radar (quintiles), no un diagnóstico
+  const SALUD = [null, "Entre las más bajas", "Por debajo del medio", "En el medio", "Por encima del medio", "Entre las más altas"];
+  const nivel = ra.calidadNivel >= 1 && ra.calidadNivel <= 5 ? Math.round(ra.calidadNivel) : null;
+  const saludHtml = n => n ? `<div class="salud n${n}">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= n ? "on" : ""}"></i>`).join("")}</div>` : "";
+  const tope = v => Math.max(0, Math.min(100, Number(v))).toFixed(1);
+
+  ficha.innerHTML = `
+  ${TOP_ROW}
+  <div class="head">
+    <div>
+      <div class="sec">${esc(sec)}</div>
+      <h1>${esc(nomb)}<span>${esc(tk)}</span></h1>
+      <div class="head-meta">Cotiza en dólares · en el radar de valuación · todavía sin informe Valtia</div>
+    </div>
+    <div class="px">
+      <div class="p">${precio ? "US$" + nf.format(precio) : "—"}</div>
+      <div class="h">${precio ? `Cierre del radar${delRadar} · el precio en vivo está en el recuadro de TradingView` : "El radar todavía no publicó el precio de este activo"}</div>
+      <div class="acc"><a class="btn-acc prim" href="index.html?agregar=${encodeURIComponent(tk)}#panel/micartera">+ Agregar a Mi cartera</a></div>
+    </div>
+  </div>
+
+  <div class="aviso-nf"><b>Todavía sin informe de Valtia</b>
+    ${esc(nomb)} está en el radar${fundOk
+      ? ", así que tenés la lectura Valtia —puntaje de valor, veredicto, RSI y calidad relativa—, pero todavía no escribimos su informe"
+      : ", pero sin balance que valuar (es un ETF o una cripto) no hay puntaje ni veredicto, y tampoco tiene informe propio"}.
+    El precio, el gráfico${fundOk ? ", los fundamentos" : ""} y el análisis técnico de acá abajo los muestra TradingView:
+    no son cálculos de Valtia.
+  </div>
+
+  <div class="subnav" id="subnav"><a href="#general" class="on">General</a><a href="#grafico">Gráfico</a>${fundOk ? '<a href="#fundamentos">Fundamentos</a>' : ""}<a href="#tecnico">Técnico</a></div>
+
+  <div id="general"><div class="estado">
+    <div class="et"><div class="l">Valor razonable · Lectura Valtia</div>
+      ${fundOk
+        ? `<div class="v"><span class="ver-tag${verClase}">${esc(ra.veredicto)}</span>${ra.entrada ? '<span class="entrada" style="margin:0 0 0 10px" title="Puntaje de valor de 60 o más y RSI debajo de 45. Lectura automática, no una recomendación.">● barata y con RSI bajo</span>' : ""}</div>
+          <div class="barra"><i style="width:100%"></i>${ra.score != null ? `<b style="left:${tope(ra.score)}%"></b>` : ""}</div>
+          <div class="barra-l"><span>estirada</span><span>puntaje ${ra.score != null ? Math.round(ra.score) : "—"}/100</span><span>barata</span></div>
+          <div class="s">Qué tan barata cotiza frente a su familia sectorial, según el modelo de Valtia. Lectura automática, no una recomendación.</div>`
+        : `<div class="v">Sin cobertura</div><div class="s">No aplica: es un ETF o una cripto, sin balance que valuar.</div>`}
+    </div>
+    <div class="et"><div class="l">RSI (14)</div>
+      ${ra.rsi != null
+        ? `<div class="v">${n1.format(ra.rsi)}${zonaRsi ? ` <span style="font-weight:400;color:var(--sub)">${esc(zonaRsi)}</span>` : ""}</div>
+          <div class="barra"><i class="neutra" style="width:100%"></i><b style="left:${tope(ra.rsi)}%"></b></div>
+          <div class="barra-l"><span>sobrevendido</span><span>50</span><span>sobrecomprado</span></div>
+          <div class="s">Fuerza relativa de las últimas 14 ruedas. Describe cómo se movió el precio; no dice qué hacer.</div>`
+        : `<div class="v">—</div><div class="s">El radar todavía no publicó el RSI de este activo.</div>`}
+    </div>
+    <div class="et"><div class="l">Calidad relativa</div>
+      ${nivel
+        ? `<div class="v">${SALUD[nivel]}</div>${saludHtml(nivel)}
+          <div class="s">Deuda frente a su familia; crecimiento y margen frente al resto del radar. Es una posición relativa, no un diagnóstico de la empresa.</div>`
+        : `<div class="v">—</div><div class="s">${fundOk ? "Faltan datos: hacen falta 2 de 3 entre deuda, crecimiento y margen." : "No aplica: sin balance no hay calidad que comparar."}</div>`}
+    </div>
+    <div class="et"><div class="l">Próximos resultados</div>
+      ${prox
+        ? `<div class="v">${venc(prox.fecha)}</div>
+          <div class="s">${cuando(prox.fecha)} · fecha estimada por la empresa. <a href="calendario.html">Ver la agenda completa</a></div>`
+        : `<div class="v">—</div><div class="s">Sin fecha publicada para este activo. <a href="calendario.html">Ver la agenda completa</a></div>`}
+    </div>
+  </div></div>
+
+  <div class="ficha-grid">
+    <div class="col-main">
+      <div id="tv-precio" class="vtv-host"></div>
+      <div id="grafico" class="vtv-host"></div>
+      ${fundOk ? '<div id="fundamentos" class="vtv-host"></div>' : ""}
+    </div>
+    <div class="col-side">
+      <div class="card-w">
+        <div class="card-h"><span class="t">Lectura Valtia</span><span class="s">Radar diario · no es una recomendación</span></div>
+        <div class="punt">
+          <div class="pr" style="grid-template-columns:minmax(0,1fr)"><div>
+            <div class="pl">Puntaje de valor</div>
+            <div class="pv">${fundOk && ra.score != null ? Math.round(ra.score) + "/100" : "—"}</div>
+            <div class="ps">${fundOk ? "Qué tan barata cotiza frente a su familia sectorial: múltiplos y caja libre." : "Sin valuación: es un ETF o una cripto, no hay balance que comparar."}</div>
+          </div></div>
+          <div class="pr" style="grid-template-columns:minmax(0,1fr)"><div>
+            <div class="pl">Veredicto</div>
+            <div class="pv">${fundOk ? esc(ra.veredicto) : "Sin cobertura"}</div>
+            <div class="ps">${ra.entrada ? "En zona de compra: puntaje de valor de 60 o más y RSI debajo de 45." : `Lectura automática del radar${delRadar}.`}</div>
+          </div></div>
+          <div class="pr" style="grid-template-columns:minmax(0,1fr);border-bottom:none"><div>
+            <div class="pl">Sector</div>
+            <div class="pv">${esc(sec || "—")}</div>
+            <div class="ps">La familia con la que el radar lo compara.</div>
+          </div></div>
+        </div>
+      </div>
+      <div id="tecnico" class="vtv-host"></div>
+      <div class="card-w">
+        <div class="card-h"><span class="t">Informe Valtia</span><span class="badge" style="background:var(--marfil);color:var(--mut)">Próximamente</span></div>
+        <div class="inf-body">
+          <h3>Todavía no publicamos el informe de ${esc(nomb)}</h3>
+          <p>El equipo va sumando análisis fundamentales a pedido de los clientes: tesis, KPIs, valuación por año, FODA y riesgos. Si querés que ${esc(nomb)} sea el próximo, decínoslo.</p>
+          <a class="btn-leer" href="mailto:soporte@valtia.tech?subject=Quiero%20el%20informe%20de%20${encodeURIComponent(nomb)}">Pedir este análisis →</a>
+          <a class="btn-leer" href="informes.html" style="background:#fff;color:var(--ink);border:1px solid var(--line);margin-left:8px">Ver los publicados</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="tv-nota"></div>`;
+
+  montarTopRow();
+  document.querySelectorAll("#subnav a").forEach(a => a.addEventListener("click", () =>
+    document.querySelectorAll("#subnav a").forEach(x => x.classList.toggle("on", x === a))));
+
+  // Los widgets van al final y con import dinámico: tv.js se baja solo en las
+  // fichas que lo necesitan. Si no carga, la ficha ya está en pantalla.
+  const tv = await import("./tv.js?v=1").catch(() => null);
+  if (tv) {
+    // alto "auto": a 375px el symbol-info se apila y mide bastante más que los
+    // 170px del alto por defecto; con alto fijo quedaba cortado (.vtv recorta).
+    tv.widget("#tv-precio", "symbol-info", { symbol: sym },
+      { titulo: "Precio en vivo", fuente: "TradingView · puede tener demora", alto: "auto" });
+    // sin `alto`: el hueco y el iframe usan el mismo alto por defecto de tv.js
+    tv.widget("#grafico", "advanced-chart",
+      { symbol: sym, interval: "D", style: "1", withdateranges: true, allow_symbol_change: false, hide_side_toolbar: true, save_image: false },
+      { titulo: "Evolución del precio", fuente: "TradingView" });
+    if (fundOk) tv.widget("#fundamentos", "financials",
+      { symbol: sym, displayMode: "regular" },
+      { titulo: "Fundamentos", fuente: "TradingView · datos de la empresa" });
+    tv.widget("#tecnico", "technical-analysis",
+      { symbol: sym, interval: "1D", showIntervalTabs: true },
+      { titulo: "Análisis técnico", fuente: "TradingView · resumen de indicadores" });
+    tv.notaLegal("#tv-nota");
+  }
+  return true;
+}
+
+if (!emp) {
+  // Sin ficha de empresa. Antes TODO caía en informes.html, también un bono:
+  // activo.html?t=AL30 era un callejón sin salida aunque AL30 tiene su propia
+  // ficha. Ahora se prueban cuatro salidas, en orden:
+  //   1. el mismo activo escrito de otra forma (PAMP -> PAM, GGAL.BA -> GGAL);
+  //   2. renta fija -> bono.html. Soberanos, Bopreal y letras se reconocen por
+  //      el ticker; los CER y dólar linked (TX26, DICP…) no tienen patrón, así
+  //      que ahí se consulta el panel;
+  //   3. está en el radar pero sin informe -> ficha con lo que sabemos + TradingView;
+  //   4. no lo conocemos -> informes.html, como antes.
+  // Es el camino raro: no demora la carga de ninguna ficha normal.
+  const otra = tickerFicha(t);
+  if (otra && otra !== t) {
+    location.replace("activo.html?t=" + encodeURIComponent(otra));
+    await new Promise(() => {});
+  }
+  let destino = "";
+  try {
+    let bonos = null;
+    if (!esRentaFija(t)) {
+      const s = await getDoc(doc(db, "bonosPanel", "latest"));
+      if (s.exists()) bonos = new Set(Object.keys(JSON.parse(s.data().json || "{}").todos || {}));
+    }
+    if (esRentaFija(t, bonos)) destino = "bono.html?e=" + encodeURIComponent(especieBono(canon(t, bonos), bonos));
+  } catch (e) {}
+  if (!destino) {
+    let hecha = false;
+    try { hecha = await fichaDelRadar(t); } catch (e) { hecha = false; }
+    if (hecha) await new Promise(() => {});   // la ficha del radar ya está pintada
+    destino = "informes.html";
+  }
+  location.replace(destino);
+  await new Promise(() => {});   // nada de lo que sigue aplica: la página se va
+}
 
 document.title = `${emp.nombre} (${t}) — Valtia Analytics`;
 const sectorN = (SECTORES.find(s => s.k === emp.sector) || {}).n || "";
@@ -389,7 +677,7 @@ try {
   const hora = ts && ts.toDate ? ts.toDate().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false }) : "";
 
   // radar: lo público (veredicto, precio, RSI, recomendación, salud) más lo
-  // PRO (múltiplos, fundamentals, objetivo, precio justo) cuando las reglas
+  // PRO (múltiplos, fundamentos, objetivo, precio justo) cuando las reglas
   // dejaron leerlo. Va en una función porque el primer getDoc puede correr
   // antes de que Firestore conozca la sesión: al detectar PRO se vuelve a
   // pedir el doc y se repintan las partes que dependen de él.
@@ -450,7 +738,7 @@ try {
   const esCripto = /^(BTC|ETH)$/.test(t);
   const volTxt = v => (esCripto ? "US$" : "") + compacto.format(v);
   // ETF y cripto están en el radar (precio, RSI) pero no tienen balance:
-  // sin veredicto no se muestran filas de fundamentals vacías
+  // sin veredicto no se muestran filas de fundamentos vacías
   const fundOk = !!(ra && ra.veredicto && ra.veredicto !== "Sin cobertura");
   const cierres = serie.map(p => Number(p[1])).filter(v => isFinite(v) && v > 0);
   const sma = n => cierres.length >= n ? cierres.slice(-n).reduce((a, b) => a + b, 0) / n : null;
@@ -526,7 +814,7 @@ try {
   // sin acceso PRO los múltiplos NO están en la página: no hay blur que
   // sacar con devtools ni JSON que pedir por REST — el dato no viajó
   const proHtml = `<div class="stg" style="text-align:center;padding:22px 18px">
-      <div style="font:400 20px 'Playfair Display',serif;color:var(--text)">Los números detrás de la lectura son PRO</div>
+      <div style="font:400 20px 'Playfair Display',serif;color:var(--ink)">Los números detrás de la lectura son PRO</div>
       <p style="font-size:12.5px;color:var(--sub);max-width:420px;margin:6px auto 12px;line-height:1.6">
         El precio, el rango, el volumen, la lectura, la calidad relativa y el consenso de los analistas son gratis. Con PRO ves
         PER, P/Libro, EV/EBITDA, FCF yield, ROE, ROA, ingresos, ganancia, BPA, deuda, beta, el precio justo y el objetivo de los analistas.</p>
@@ -687,13 +975,7 @@ try {
   };
 
   ficha.innerHTML = `
-  <div class="top-row">
-    <span class="volver" id="volver">← Volver</span>
-    <div class="bx">
-      <input id="bx-input" type="search" placeholder="Buscar activo — NVDA, Apple, Bitcoin…" autocomplete="off">
-      <div class="bx-panel" id="bx-panel"></div>
-    </div>
-  </div>
+  ${TOP_ROW}
   <div class="head">
     <div>
       <div class="sec">${esc(sectorN)}</div>
@@ -824,71 +1106,8 @@ try {
     `<div class="fsr-state" id="informe" style="margin-top:26px">El informe completo de ${esc(emp.nombre)} es exclusivo para clientes de Valtia.<br>
      <a href="index.html?login=1">Ingresá con tu cuenta</a> para leerlo — o conocé los <a href="planes.html">planes</a>.</div>`;
 
-  // ── volver + buscador de activos ──
-  document.getElementById("volver").addEventListener("click", () => {
-    if (document.referrer && document.referrer.startsWith(location.origin) && history.length > 1) history.back();
-    else location.href = "informes.html";
-  });
-  const bxInput = document.getElementById("bx-input");
-  const bxPanel = document.getElementById("bx-panel");
-  // bonos y letras en el buscador: se cargan del panel público la primera vez
-  let BONOS_BX = null;
-  async function cargarBonosBx() {
-    if (BONOS_BX) return;
-    BONOS_BX = [];
-    try {
-      const snap = await getDoc(doc(db, "bonosPanel", "latest"));
-      if (!snap.exists()) return;
-      const p = JSON.parse(snap.data().json || "{}");
-      const meter = (arr, nom) => (arr || []).forEach(b =>
-        BONOS_BX.push({ t: b.s, n: nom + (b.vence ? " · vence " + String(b.vence).slice(0, 10) : "") }));
-      meter(p.soberanos, "Soberano USD");
-      meter(p.bopreal, "Bopreal USD");
-      meter(p.tasa_fija, "Lecap / Boncap $");
-      meter(p.cer, "Bono CER $");
-      meter(p.dolar_linked, "Dólar linked $");
-    } catch (e) {}
-  }
-  const pintarLista = q => {
-    q = (q || "").trim().toLowerCase();
-    const items = EMPRESAS.filter(e => !q || e.ticker.toLowerCase().includes(q) || e.nombre.toLowerCase().includes(q));
-    const empHtml = SECTORES.map(s => {
-      const del = items.filter(e => e.sector === s.k);
-      if (!del.length) return "";
-      return `<div class="bx-g">${s.n}</div>` + del.map(e =>
-        `<div class="bx-it" data-t="${e.ticker}"><span>${esc(e.nombre)}</span><span class="tk">${e.ticker}</span></div>`).join("");
-    }).join("");
-    const bonosDel = (BONOS_BX || []).filter(b => !q || b.t.toLowerCase().includes(q));
-    const lim = q ? bonosDel : bonosDel.slice(0, 8);
-    const bonosHtml = lim.length
-      ? `<div class="bx-g">Bonos y letras</div>` + lim.map(b =>
-        `<div class="bx-it" data-b="${b.t}"><span>${esc(b.n)}</span><span class="tk">${b.t}</span></div>`).join("")
-      : "";
-    bxPanel.innerHTML = (empHtml + bonosHtml) || '<div class="bx-it">Sin resultados — probá con el ticker (AL30, S30O6…)</div>';
-    bxPanel.querySelectorAll(".bx-it[data-t]").forEach(it => it.addEventListener("mousedown", ev => {
-      ev.preventDefault();
-      location.href = "activo.html?t=" + it.dataset.t;
-    }));
-    bxPanel.querySelectorAll(".bx-it[data-b]").forEach(it => it.addEventListener("mousedown", ev => {
-      ev.preventDefault();
-      location.href = "bono.html?e=" + it.dataset.b;
-    }));
-  };
-  const abrirLista = () => {
-    pintarLista(bxInput.value);
-    bxPanel.classList.add("open");
-    cargarBonosBx().then(() => { if (bxPanel.classList.contains("open")) pintarLista(bxInput.value); });
-  };
-  bxInput.addEventListener("focus", abrirLista);
-  bxInput.addEventListener("input", abrirLista);
-  bxInput.addEventListener("blur", () => setTimeout(() => bxPanel.classList.remove("open"), 160));
-  bxInput.addEventListener("keydown", ev => {
-    if (ev.key === "Enter") {
-      const it = bxPanel.querySelector(".bx-it[data-t], .bx-it[data-b]");
-      if (it) location.href = it.dataset.t ? "activo.html?t=" + it.dataset.t : "bono.html?e=" + it.dataset.b;
-    }
-    if (ev.key === "Escape") bxPanel.classList.remove("open");
-  });
+  // ── volver + buscador de activos (los mismos de la ficha del radar) ──
+  montarTopRow();
 
   // noticias del activo
   const lista = document.getElementById("act-news-list");
@@ -1091,6 +1310,6 @@ try {
 }
 </script>
 <script type="module" src="nav-auth.js?v=7"></script>
-<script src="nav-menu.js?v=6"></script>
+<script src="nav-menu.js?v=7"></script>
 </body>
 </html>

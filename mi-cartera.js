@@ -1564,6 +1564,39 @@ function asegurarEvolucion() {
 /* ── Firestore: carga, alta y baja de posiciones ── */
 let _el = null, _user = null, _pos = [], _precios = {}, _ventas = [], _ajustes = [];
 
+/* Los precios se piden DOCUMENTO POR DOCUMENTO, solo los tickers que el usuario
+   tiene. Antes se bajaba la colección "precios" entera —al entrar y otra vez
+   cada dos minutos— y se descartaba casi todo: con el catálogo creciendo eso se
+   paga en lecturas en cada refresco, y además obliga a dejar abierta la regla
+   de LISTAR la colección (con list abierto, cualquiera con sesión se lleva el
+   catálogo completo por REST). Es el mismo patrón que ya usa el Resumen.
+
+   De a tandas y no todo junto: una cartera de 200 posiciones largaría 200
+   lecturas en paralelo de una, y con el refresco cada dos minutos eso es una
+   tormenta contra Firestore. Un ticker sin documento no entra en el mapa y la
+   fila queda "Buscando precio…", igual que antes.
+
+   OJO con el catch vacío: un ticker que falla tampoco entra en el mapa, y eso
+   SÍ cambia respecto del código viejo. Antes, una falla de permisos o de red
+   al leer precios cortaba leerTodo() y el usuario veía el cartel de error de
+   initMiCartera(). Ahora, si fallan TODAS las lecturas, la tabla muestra
+   "Buscando precio…" en cada fila y no dice por qué. Es el precio de que un
+   ticker roto no arrastre a los demás; si alguna vez molesta, el arreglo es
+   contar los fallos y propagar sólo cuando no entró ni uno. */
+const TANDA_PRECIOS = 20;
+async function leerPrecios(db, tickers) {
+  const out = {};
+  for (let i = 0; i < tickers.length; i += TANDA_PRECIOS) {
+    await Promise.all(tickers.slice(i, i + TANDA_PRECIOS).map(async tk => {
+      try {
+        const s = await getDoc(doc(db, "precios", tk));
+        if (s.exists()) out[tk] = s.data();
+      } catch (e) {}
+    }));
+  }
+  return out;
+}
+
 async function leerTodo() {
   const db = getFirestore(getApp());
   const snap = await getDocs(collection(db, "inversores", _user.email, "cartera"));
@@ -1578,14 +1611,10 @@ async function leerTodo() {
     const sa = await getDocs(collection(db, "inversores", _user.email, "ajustes"));
     _ajustes = sa.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (e) { _ajustes = []; }
-  _precios = {};
   // también los tickers de los avisos: una posición que "desapareció" ya no
   // está en la cartera, pero su aviso muestra la cotización de referencia
   const tks = [...new Set([..._pos, ..._ajustes].map(p => String(p.ticker || "").toUpperCase()).filter(Boolean))];
-  if (tks.length) {
-    const px = await getDocs(collection(db, "precios"));
-    px.docs.forEach(d => { if (tks.includes(d.id)) _precios[d.id] = d.data(); });
-  }
+  _precios = tks.length ? await leerPrecios(db, tks) : {};
   // leerTodo arranca _precios de cero: en cada refresco hay que volver a
   // completar la renta fija desde el panel, o los bonos pierden el precio a los
   // dos minutos (en la primera carga el panel todavía no está y no hace nada)

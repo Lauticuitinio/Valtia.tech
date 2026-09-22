@@ -174,8 +174,14 @@ service cloud.firestore {
     // ── PRECIOS Y FUNDAMENTALS DE LOS TICKERS DE CLIENTES ──
     // El sync diario baja precio y ratios de cada ticker que algún cliente
     // tenga en su cartera, y les calcula la lectura Valtia contra el radar.
+    // get y NO list: la web pide precios/{TICKER} de a uno (panel.js y
+    // mi-cartera.js, con getDoc), así que listar la colección no le hace falta.
+    // Con "read" abierto, en cambio, cualquiera con sesión se bajaba por REST
+    // el catálogo entero —qué tickers siguen los clientes y la lectura Valtia
+    // de cada uno— en una sola consulta.
     match /precios/{ticker} {
-      allow read: if isAuthenticated();
+      allow get: if isAuthenticated();
+      allow list: if false;
       allow write: if false;
     }
 
@@ -289,8 +295,13 @@ service cloud.firestore {
     }
 
     // ── HISTORIAL DE PRECIOS (gráfico de la ficha de activo) ──
+    // Igual que precios: la ficha (activo.html) y la curva de evolución
+    // (mi-cartera.js) piden historialInformes/{TICKER} de a uno con getDoc.
+    // El dato es público, pero cada doc es una serie larga: con "list" abierto
+    // una sola consulta se lleva toda la historia de todos los tickers.
     match /historialInformes/{docId} {
-      allow read: if true;
+      allow get: if true;
+      allow list: if false;
       allow write: if false;
     }
 

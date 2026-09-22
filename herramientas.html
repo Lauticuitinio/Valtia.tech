@@ -124,6 +124,15 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .result-value{font:500 14px 'IBM Plex Mono',monospace;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right}
 .result-value.highlight{font:600 18px 'IBM Plex Mono',monospace;color:var(--gold2)}
 
+/* ATRIBUCIÓN DE TRADINGVIEW. Los embebidos son gratis y están permitidos en
+   sitios comerciales justamente porque queda este link: no se saca, no se
+   esconde con display:none y no se le cambia el destino. (Los widgets que
+   dibuja tv.js traen la suya, con estilo propio y más específico.) */
+.tradingview-widget-copyright{padding:8px 14px;font:400 10.5px 'IBM Plex Sans',sans-serif;line-height:1.5;color:var(--mut);border-top:1px solid var(--line)}
+.tradingview-widget-copyright a{color:var(--gold);text-decoration:none}
+.tradingview-widget-copyright a:hover{color:var(--gold2);text-decoration:underline}
+.tradingview-widget-copyright .blue-text{color:inherit}
+
 /* RADAR DE VALUACIÓN */
 .radar-strip{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
 .radar-stat{background:#fff;border:1px solid var(--line);padding:14px 18px;flex:1;min-width:130px;position:relative}
@@ -212,7 +221,8 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   .tool-title{font-size:22px}
   .dolar-chart-wrap{padding:16px}
 }
-/* la tabla de ratios no tiene contenedor con scroll: en teléfono scrollea ella */
+/* la tabla de ratios va adentro de .bp-table-wrap (overflow-x:auto): en teléfono
+   scrollea el contenedor, no la página */
 @media(max-width:600px){.ratios-table{white-space:nowrap}}
 </style>
 </head>
@@ -284,7 +294,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 <!-- RADAR DE VALUACIÓN PRO -->
 <div class="tool-content" id="tool-radar">
   <div class="tool-title">Radar de valuación Valtia</div>
-  <p class="tool-desc">Nuestra lectura sistemática de las acciones que seguimos: qué tan barata cotiza cada una frente a sus fundamentals, con puntaje de calidad y momento técnico.</p>
+  <p class="tool-desc">Nuestra lectura sistemática de las acciones que seguimos: qué tan barata cotiza cada una frente a sus fundamentos, con puntaje de calidad y momento técnico.</p>
 
   <div class="radar-strip" id="radar-strip"></div>
 
@@ -313,7 +323,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
     <div class="pro-overlay">
       <div class="pro-lock-icon">🔒</div>
       <h4>Radar completo PRO</h4>
-      <p>El radar completo — 34 activos con puntaje de valor y calidad por familia sectorial, EV/EBITDA, FCF yield, RSI y veredicto Valtia. Se actualiza todos los días.</p>
+      <p>El radar completo — <span id="radar-lock-n">todos los activos que seguimos</span> con puntaje de valor y calidad por familia sectorial, EV/EBITDA, FCF yield, RSI y veredicto Valtia. Se actualiza todos los días.</p>
       <a href="planes.html" class="btn">Ver planes →</a>
     </div>
   </div>
@@ -454,12 +464,19 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
           <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js" async>{"width":"100%","height":"300","defaultColumn":"overview","defaultScreen":"most_capitalized","market":"argentina","showToolbar":true,"colorTheme":"light","locale":"es"}</script>
         </div>
       </div>
+      <!-- Atribución obligatoria: va afuera del hueco de alto fijo para que el
+           iframe no la tape nunca. No se saca ni se esconde. -->
+      <div class="tradingview-widget-copyright"><a href="https://es.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Seguí los mercados en TradingView</span></a></div>
     </div>
-    <!-- PRO: EEUU + ETFs -->
-    <div style="position:relative;margin-top:16px">
-      <div class="preview-blur">
-        <div class="widget-box">
-          <div class="widget-header"><span class="widget-title">Acciones EEUU — S&P 500</span></div>
+    <!-- PRO: EEUU + ETFs.
+         El candado (blur + overlay opaco) tapa SOLO el hueco del widget: la
+         atribución de TradingView queda abajo, fuera del blur y fuera del
+         inset:0 del overlay. Una atribución borroneada es una atribución
+         escondida, y con eso el embebido queda fuera de los términos. -->
+    <div class="widget-box" style="margin-top:16px">
+      <div class="widget-header"><span class="widget-title">Acciones EEUU — S&amp;P 500</span></div>
+      <div style="position:relative">
+        <div class="preview-blur">
           <div style="height:300px">
             <div class="tradingview-widget-container" style="height:100%">
               <div class="tradingview-widget-container__widget" style="height:100%"></div>
@@ -467,13 +484,14 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
             </div>
           </div>
         </div>
+        <div class="pro-overlay">
+          <div class="pro-lock-icon">🔒</div>
+          <h4>Acciones EEUU + ETFs</h4>
+          <p>Accedé al screener completo de acciones americanas, ETFs sectoriales y análisis técnico integrado.</p>
+          <a href="planes.html" class="btn">Ver planes →</a>
+        </div>
       </div>
-      <div class="pro-overlay">
-        <div class="pro-lock-icon">🔒</div>
-        <h4>Acciones EEUU + ETFs</h4>
-        <p>Accedé al screener completo de acciones americanas, ETFs sectoriales y análisis técnico integrado.</p>
-        <a href="planes.html" class="btn">Ver planes →</a>
-      </div>
+      <div class="tradingview-widget-copyright"><a href="https://es.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Seguí los mercados en TradingView</span></a></div>
     </div>
   </div>
 </div>
@@ -488,16 +506,19 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
       <div class="tradingview-widget-container__widget" style="height:100%"></div>
       <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>{"colorTheme":"light","isTransparent":false,"width":"100%","height":"600","locale":"es","importanceFilter":"-1,0,1","countryFilter":"ar,us,eu,gb,cn,jp,br"}</script>
     </div>
+    <!-- Atribución obligatoria: afuera del contenedor de alto fijo. -->
+    <div class="tradingview-widget-copyright"><a href="https://es.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Seguí los mercados en TradingView</span></a></div>
   </div>
 </div>
 
 <!-- RATIOS CEDEARs -->
 <div class="tool-content" id="tool-ratios">
   <div class="tool-title">Ratios de conversión CEDEARs</div>
-  <p class="tool-desc">Cuántas acciones equivale cada CEDEAR. Indispensable para comparar precios con el mercado exterior.</p>
+  <p class="tool-desc">Cuántas acciones equivale cada CEDEAR. Indispensable para comparar precios con el mercado exterior.
+  Abajo tenés nueve de referencia escritos a mano y, más abajo, el listado completo de BYMA para buscar cualquier otro.</p>
   <div style="position:relative">
     <div class="widget-box">
-      <div class="widget-header"><span class="widget-title">CEDEARs de acciones — Ratios</span><span class="widget-source">Referencia · Confirmá el ratio vigente con tu broker</span></div>
+      <div class="widget-header"><span class="widget-title">CEDEARs de acciones — Ratios</span><span class="widget-source">5 de referencia · confirmá el ratio vigente con tu broker</span></div>
       <div class="bp-table-wrap"><table class="ratios-table">
         <thead><tr><th>CEDEAR</th><th>Empresa</th><th>Ratio</th><th>Equivalencia</th><th>Sector</th></tr></thead>
         <tbody>
@@ -512,7 +533,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
     <div style="position:relative;margin-top:16px">
       <div class="preview-blur">
         <div class="widget-box">
-          <div class="widget-header"><span class="widget-title">CEDEARs de ETFs + Acciones adicionales</span></div>
+          <div class="widget-header"><span class="widget-title">CEDEARs de ETFs + Acciones adicionales</span><span class="widget-source">4 de referencia</span></div>
           <div class="bp-table-wrap"><table class="ratios-table">
             <thead><tr><th>CEDEAR</th><th>Empresa</th><th>Ratio</th><th>Equivalencia</th><th>Sector</th></tr></thead>
             <tbody>
@@ -524,12 +545,29 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
           </table></div>
         </div>
       </div>
+      <!-- Acá decía "+60 CEDEARs … precio ARS y comparativa vs precio exterior"
+           y atrás del candado hay CUATRO filas escritas a mano, sin precio ni
+           comparativa. Prometer sesenta y mostrar cuatro es mentir: el texto
+           ahora dice lo que realmente se destapa, y los demás CEDEARs están
+           abajo, en el listado de BYMA. -->
       <div class="pro-overlay">
         <div class="pro-lock-icon">🔒</div>
-        <h4>Tabla completa PRO</h4>
-        <p>+60 CEDEARs de acciones y ETFs con ratios actualizados, precio ARS y comparativa vs precio exterior.</p>
+        <h4>El resto de la tabla</h4>
+        <p>Cuatro CEDEARs más de referencia —ETFs y acciones— con su ratio de conversión. Es una tabla corta y la estamos ampliando: el ratio de cualquier otro CEDEAR lo tenés gratis acá abajo, en el listado de BYMA.</p>
         <a href="planes.html" class="btn">Ver planes →</a>
       </div>
+    </div>
+
+    <!-- Todos los CEDEARs de BYMA, de TradingView: el nombre de cada papel trae
+         su ratio de conversión. Es un embebido: se MUESTRA, no se leen datos de
+         adentro (otro dominio, y los términos de TradingView lo prohíben). -->
+    <div style="margin-top:22px">
+      <div id="tv-cedears"></div>
+      <p style="font-size:12px;color:var(--sub);line-height:1.7;margin:0 0 8px;max-width:820px">
+        Buscá el CEDEAR por su ticker (AAPL, NVDA, TSLA…): el ratio de conversión viene en el nombre del papel.
+        Los ratios los fija cada emisor y se pueden ajustar — antes de operar, confirmalo con tu broker.
+      </p>
+      <div id="tv-cedears-nota"></div>
     </div>
   </div>
 </div>
@@ -586,6 +624,16 @@ function initHeatmap(name){
   s.text=JSON.stringify(HEATMAPS[name].cfg);
   wrap.appendChild(s);
   slot.appendChild(wrap);
+  // Estos cinco widgets se venían inyectando SIN la atribución de TradingView,
+  // que es la condición para usarlos gratis en un sitio comercial. Va afuera
+  // del hueco (que tiene alto fijo) para que el iframe no la tape nunca.
+  const cr=document.createElement('div');
+  cr.className='tradingview-widget-copyright';
+  const a=document.createElement('a');
+  a.href='https://es.tradingview.com/';a.rel='noopener nofollow';a.target='_blank';
+  a.innerHTML='<span class="blue-text">Seguí los mercados en TradingView</span>';
+  cr.appendChild(a);
+  slot.parentElement.appendChild(cr);
 }
 function switchSector(name,btn){
   document.querySelectorAll('[id^="heatmap-"]').forEach(el=>el.style.display='none');
@@ -754,8 +802,12 @@ async function loadRadar() {
   // PRO: tabla completa, ordenada por valor (más barato primero, sin cobertura al final)
   const orden = [...activos].sort((a, b) =>
     (a.score == null) - (b.score == null) || (b.score || 0) - (a.score || 0));
+  // el número de activos sale SIEMPRE del radar: escrito a mano quedaba viejo
+  // (decía 34 cuando el radar ya seguía 47)
   const rt = document.getElementById('radar-title');
   if (rt) rt.textContent = 'Radar completo — ' + activos.length + ' activos';
+  const rn = document.getElementById('radar-lock-n');
+  if (rn) rn.textContent = activos.length + ' activos';
   document.getElementById('radar-full').innerHTML = orden.map(a => {
     const z = zonaMap[a.rsiZona] || 'db';
     const w = a.score == null ? 0 : a.score;
@@ -1000,7 +1052,20 @@ loadRadar();
   new MutationObserver(() => { if (dibujado) { dibujar(); dibujarTem(); } }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 })();
 </script>
+<!-- LISTADO DE BYMA para la pestaña de CEDEARs (TradingView, vía tv.js) -->
+<script type="module">
+// La tabla de ratios de arriba son nueve papeles escritos a mano. Esto es el
+// listado real de BYMA: el nombre de cada CEDEAR trae su ratio de conversión.
+// Va con tv.js, que se ocupa del tema, de la carga diferida (la pestaña arranca
+// oculta, así que el widget recién se dibuja cuando alguien la abre) y de la
+// atribución obligatoria de TradingView.
+import { widget, notaLegal } from './tv.js?v=1';
+widget('#tv-cedears', 'screener',
+  { market: 'argentina', defaultColumn: 'overview', defaultScreen: 'most_capitalized', showToolbar: true },
+  { titulo: 'Todos los papeles de BYMA — buscá tu CEDEAR', fuente: 'TradingView · BYMA' });
+notaLegal('#tv-cedears-nota');
+</script>
 <script type="module" src="nav-auth.js?v=7"></script>
-<script src="nav-menu.js?v=6"></script>
+<script src="nav-menu.js?v=7"></script>
 </body>
 </html>

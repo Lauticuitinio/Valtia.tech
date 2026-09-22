@@ -15,6 +15,7 @@
     ['cartera.html', 'Carteras'],
     ['inversion-mensual.html', 'Inversión mensual'],
     ['disciplina.html', 'Candidatas del mes'],
+    ['mercados.html', 'Mercados'],
     ['noticias.html', 'Noticias'],
     ['informes.html', 'Informes'],
     ['herramientas.html', 'Herramientas'],
@@ -39,6 +40,10 @@
     '#vnav-menu{position:fixed;top:0;right:0;height:100%;width:min(78vw,300px);z-index:999;',
     'background:#0E1830;color:#fff;box-shadow:-12px 0 40px rgba(0,0,0,.35);',
     'transform:translateX(105%);visibility:hidden;transition:transform .22s ease,visibility .22s;display:flex;flex-direction:column;',
+    // con diez enlaces + el cambio de tema + el CTA, el panel mide ~655px: en una
+    // pantalla de 640 o menos (o una ventana de escritorio baja) el pie de
+    // Términos / Privacidad quedaba cortado y sin forma de llegar. Que scrollee.
+    'overflow-y:auto;overscroll-behavior:contain;',
     "padding:18px 0 24px;font-family:'IBM Plex Sans',system-ui,sans-serif}",
     '#vnav-menu .vn-top{display:flex;align-items:center;justify-content:space-between;padding:0 20px 14px;',
     'border-bottom:1px solid rgba(232,206,150,.18)}',
