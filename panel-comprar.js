@@ -231,7 +231,7 @@ export async function renderComprar(el, ctx) {
       const zona = ZONA_RSI[a.rsiZona] || a.rsiZona || '';
       // en qué carteras Valtia está (solo las que su plan deja leer): por la ficha y por el símbolo
       const enC = [...new Set([...((f && mapa[f]) || []), ...(mapa[a.sym] || [])])];
-      const tk = f ? `<a class="v3c-tk" href="activo.html?t=${encodeURIComponent(f)}">${esc(a.sym)}</a>`
+      const tk = f ? `<a class="v3c-tk" href="/activo?t=${encodeURIComponent(f)}">${esc(a.sym)}</a>`
         : `<span class="v3c-tk">${esc(a.sym)}</span>`;
       const tr = tonoRsi(r);
       return `<div class="v3c-row${a.entrada ? ' zona' : ''}" data-host>
@@ -277,7 +277,7 @@ export async function renderComprar(el, ctx) {
         ${conRatios ? '' : `<div class="v3c-pro">
           <b>Los números detrás de la lectura son PRO</b>
           <p>La lista completa, el veredicto y la zona de compra son gratis. Con PRO ves el PER, el EV/EBITDA, el rendimiento del flujo de caja libre (FCF), el ROE y el puntaje de calidad de cada uno.</p>
-          <a class="v3c-cta" href="planes.html">Ver planes</a></div>`}
+          <a class="v3c-cta" href="/planes">Ver planes</a></div>`}
       </div>
       <p class="v3c-nota">Zona de compra: puntaje de valor ≥ <span class="v3c-n">60</span> y RSI &lt; <span class="v3c-n">45</span>. Primero van las que están en zona y después el resto, por puntaje. Es la lectura automática de Valtia sobre <span class="v3c-n">${n}</span> activos${fecha ? `, radar del <span class="v3c-n">${esc(fecha)}</span>` : ''}; no es una recomendación personalizada. Precios en dólares, las argentinas por su ADR; la variación es la de los últimos <span class="v3c-n">30</span> días.</p>
       <p class="v3c-nota">"La compré" registra la compra en Mi cartera y en tu plan de inversión mensual, con el mercado, la cantidad, el precio que pagaste y el broker. Si compraste en BYMA (CEDEAR o acción local), el precio va en pesos.</p>

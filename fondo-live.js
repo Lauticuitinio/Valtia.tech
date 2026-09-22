@@ -311,10 +311,10 @@ function installShell() {
   main.className = "fl-main";
   main.innerHTML = `<div class="fl-topbar">
     <a onclick="flExitApp(event)">← Inicio</a>
-    <a href="noticias.html">Noticias</a>
-    <a href="cartera.html">Carteras</a>
-    <a href="informes.html">Informes</a>
-    <a href="herramientas.html">Herramientas</a>
+    <a href="/noticias">Noticias</a>
+    <a href="/cartera">Carteras</a>
+    <a href="/informes">Informes</a>
+    <a href="/herramientas">Herramientas</a>
     <span class="sep"></span>
     <span class="dom">VALTIA.TECH</span>
   </div>`;

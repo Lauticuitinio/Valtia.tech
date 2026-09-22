@@ -262,7 +262,7 @@ export async function renderResumen(el, ctx) {
           <a class="rs-lnk" href="#panel/agenda" data-go="agenda">Agenda completa →</a></div>
           <div data-rs="agenda">${ESQ_COL}</div></section>
         <section class="rs-min0"><div class="rs-col-h"><h3>Research reciente</h3>
-          <a class="rs-lnk" href="informes.html">Informes →</a></div>
+          <a class="rs-lnk" href="/informes">Informes →</a></div>
           <div data-rs="research">${ESQ_COL}</div></section>
       </div>
       ${tiene ? '<section class="rs-alertas"><div class="rs-col-h"><h3>Alertas por mail</h3></div><div id="vp-alertas"></div></section>' : ''}
@@ -761,7 +761,7 @@ async function pintarResearch(box, ctx, vivo, cc, bset) {
     // tres, como el prototipo: primero informes de lo que tiene, después hasta dos notas y el resto con informes
     const items = [...infs.filter(i => i.tuyo), ...notas, ...infs.filter(i => !i.tuyo)].slice(0, 3);
     if (!items.length) {
-      box.innerHTML = `<div class="rs-vac-card"><p class="rs-vac">${tiene ? 'Todavía no hay informes ni notas sobre tus activos.' : 'Todavía no hay informes para mostrar acá.'} <a class="rs-lnk" href="informes.html">Ver todos los informes →</a></p></div>`;
+      box.innerHTML = `<div class="rs-vac-card"><p class="rs-vac">${tiene ? 'Todavía no hay informes ni notas sobre tus activos.' : 'Todavía no hay informes para mostrar acá.'} <a class="rs-lnk" href="/informes">Ver todos los informes →</a></p></div>`;
       return;
     }
     box.innerHTML = `<div class="rs-rs">${items.map(it => `<a class="rs-r" href="${esc(it.href)}">

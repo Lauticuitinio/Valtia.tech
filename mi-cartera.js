@@ -1013,7 +1013,7 @@ function colLectura(f, inf, bonos, pro = false) {
   const lineaPro = conPro ? (pro ? `Hay un informe Valtia de ${esc(emp.nombre)}: lo leés en su ficha.`
                                  : `Hay un informe Valtia de ${esc(emp.nombre)}: lo leés completo con PRO.`) : "";
   const ver = px.veredicto && px.veredicto !== "Sin cobertura" ? px.veredicto : "";
-  const lkFicha = ficha ? `<a class="mc3-lk" href="activo.html?t=${encodeURIComponent(ficha)}${conPro ? "#informe" : ""}">${conPro && pro ? "Leer informe →" : "Ver la ficha →"}</a>`
+  const lkFicha = ficha ? `<a class="mc3-lk" href="/activo?t=${encodeURIComponent(ficha)}${conPro ? "#informe" : ""}">${conPro && pro ? "Leer informe →" : "Ver la ficha →"}</a>`
     : link ? `<a class="mc3-lk" href="${link}">Ver la ficha →</a>` : "";
   if (ver || px.rsi != null) {
     const frase = { Infravalorada: "La lectura de valor la marca infravalorada", "En precio": "La lectura de valor la ve en precio",
@@ -1043,7 +1043,7 @@ function colNoticias(f, nots) {
   }).slice(0, 2) : [];
   if (!hits.length) return tit + `<div class="mc3-txt" style="margin-top:8px">Sin noticias recientes.</div>`;
   return tit + `<div class="mc3-nots">${hits.map(n =>
-    `<a href="nota.html?n=${encodeURIComponent(n.id)}">${ddmm(n.fecha) ? `<span>${ddmm(n.fecha)}</span>` : ""}${esc(n.titulo)}</a>`).join("")}</div>`;
+    `<a href="/nota?n=${encodeURIComponent(n.id)}">${ddmm(n.fecha) ? `<span>${ddmm(n.fecha)}</span>` : ""}${esc(n.titulo)}</a>`).join("")}</div>`;
 }
 
 /* Próximo evento: el primero de la agenda del panel que toca esta posición */

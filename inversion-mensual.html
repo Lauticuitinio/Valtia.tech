@@ -103,14 +103,14 @@ footer.legal{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;f
 </head>
 <body>
 <nav>
-  <a class="brand" href="index.html">
+  <a class="brand" href="/">
     <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
     <div><div class="brand-name">VAL<em>T</em>IA</div><div class="brand-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
-    <a href="index.html">Inicio</a><a href="cartera.html">Carteras</a><a href="inversion-mensual.html" class="on">Inversión mensual</a><a href="noticias.html">Noticias</a><a href="informes.html">Informes</a><a href="herramientas.html">Herramientas</a><a href="planes.html">Planes</a>
+    <a href="/">Inicio</a><a href="/cartera">Carteras</a><a href="/inversion-mensual" class="on">Inversión mensual</a><a href="/noticias">Noticias</a><a href="/informes">Informes</a><a href="/herramientas">Herramientas</a><a href="/planes">Planes</a>
   </div>
-  <a class="nav-cta" href="index.html?login=crear" id="nav-cta">Ingresar / Crear cuenta</a>
+  <a class="nav-cta" href="/?login=crear" id="nav-cta">Ingresar / Crear cuenta</a>
 </nav>
 <div id="valtia-cot"></div>
 
@@ -182,7 +182,7 @@ footer.legal{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;f
       <div class="xt"><span></span><div><span>hoy</span><span>5 años</span><span>10 años</span><span>15 años</span><span>20 años</span></div></div>
     </div>
     <div class="hitos" id="hitos"></div>
-    <p class="note"><b>¿Y los bonos argentinos?</b> Suelen pagar bastante más que ese 5%, pero el país entró en default nueve veces desde su independencia: las primeras siete están contadas en Reinhart y Rogoff, <i>This Time Is Different</i> (2009), y después vinieron 2014 y 2020. A propósito no los usamos como supuesto a veinte años: una tasa alta con riesgo de no cobrar no es lo mismo que una tasa baja segura. Si querés ver cómo rinden hoy, están en <a class="src" href="herramientas.html">Herramientas</a> con el dato del día.</p>
+    <p class="note"><b>¿Y los bonos argentinos?</b> Suelen pagar bastante más que ese 5%, pero el país entró en default nueve veces desde su independencia: las primeras siete están contadas en Reinhart y Rogoff, <i>This Time Is Different</i> (2009), y después vinieron 2014 y 2020. A propósito no los usamos como supuesto a veinte años: una tasa alta con riesgo de no cobrar no es lo mismo que una tasa baja segura. Si querés ver cómo rinden hoy, están en <a class="src" href="/herramientas">Herramientas</a> con el dato del día.</p>
   </section>
 
   <div class="hr"></div>
@@ -200,9 +200,9 @@ footer.legal{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;f
     <button class="btn" id="guardar" disabled>Guardar y ver las candidatas →</button>
   </div>
 
-  <footer class="legal">Invertir implica riesgo de pérdida del capital y los rendimientos pasados no garantizan resultados futuros. Valtia no ejecuta operaciones ni custodia fondos. Los cálculos no descuentan impuestos y usan rendimientos promedio del pasado: sirven para entender el efecto del tiempo, no para predecir. Fuentes consultadas el 18 de septiembre de 2026. Es análisis general, no una recomendación para tu caso. · <a href="terminos.html" style="color:inherit;text-decoration:underline">Términos</a> · <a href="privacidad.html" style="color:inherit;text-decoration:underline">Privacidad</a></footer>
+  <footer class="legal">Invertir implica riesgo de pérdida del capital y los rendimientos pasados no garantizan resultados futuros. Valtia no ejecuta operaciones ni custodia fondos. Los cálculos no descuentan impuestos y usan rendimientos promedio del pasado: sirven para entender el efecto del tiempo, no para predecir. Fuentes consultadas el 18 de septiembre de 2026. Es análisis general, no una recomendación para tu caso. · <a href="/terminos" style="color:inherit;text-decoration:underline">Términos</a> · <a href="/privacidad" style="color:inherit;text-decoration:underline">Privacidad</a></footer>
 </main>
-<div class="site-foot"><span>© 2026 Valtia Analytics</span><a href="index.html">Inicio</a></div>
+<div class="site-foot"><span>© 2026 Valtia Analytics</span><a href="/">Inicio</a></div>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -428,7 +428,7 @@ function avisoReglaActual() {
 $('#guardar').onclick = async () => {
   const { aporte } = calc(), msg = $('#msg');
   if (!authResuelto) return;
-  if (!user) { location.href = 'index.html?login=crear'; return; }
+  if (!user) { location.href = '/?login=crear'; return; }
   if (!user.emailVerified) {
     msg.className = 'msg err';
     msg.textContent = 'Verificá tu mail antes de guardar la regla. Te mandamos un correo cuando creaste la cuenta; si no lo ves, mirá en correo no deseado.';
@@ -451,7 +451,7 @@ $('#guardar').onclick = async () => {
     await setDoc(ref, { ...prev, aporte: Math.round(aporte), compras: prev.compras || 1, creado: prev.creado || new Date().toISOString(), actualizado: new Date().toISOString() });
     cfgPrev = { ...prev, aporte: Math.round(aporte) };
     msg.className = 'msg ok'; msg.textContent = 'Regla guardada. Te llevamos a las candidatas del mes…';
-    setTimeout(() => location.href = 'disciplina.html', 900);
+    setTimeout(() => location.href = '/disciplina', 900);
   } catch (e) { msg.className = 'msg err'; msg.textContent = 'No se pudo guardar: ' + String(e).slice(0, 90); }
 };
 

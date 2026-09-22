@@ -120,28 +120,28 @@ footer a:hover{color:#E8CE96}
 </head>
 <body>
 <nav>
-  <a href="index.html" class="nav-brand">
+  <a href="/" class="nav-brand">
     <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
     <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
-    <a href="index.html">Inicio</a>
-    <a href="cartera.html">Carteras</a>
-    <a href="inversion-mensual.html">Inversión mensual</a>
-    <a href="noticias.html">Noticias</a>
-    <a href="informes.html">Informes</a>
-    <a href="herramientas.html">Herramientas</a>
-    <a href="planes.html">Planes</a>
+    <a href="/">Inicio</a>
+    <a href="/cartera">Carteras</a>
+    <a href="/mercados">Mercados</a>
+    <a href="/noticias">Noticias</a>
+    <a href="/informes">Informes</a>
+    <a href="/herramientas">Herramientas</a>
+    <a href="/planes">Planes</a>
   </div>
   <div class="nav-right">
-    <a href="index.html?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
+    <a href="/?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
   </div>
 </nav>
 <!-- cotizaciones en vivo (módulo único del sitio: cotizaciones.js) -->
 <div id="valtia-cot"></div>
 <div class="top-volver">
   <button class="volver" onclick="volver()">← Volver</button>
-  <a href="herramientas.html" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);text-decoration:none">Panel de bonos completo →</a>
+  <a href="/herramientas" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);text-decoration:none">Panel de bonos completo →</a>
 </div>
 <main id="main">
   <div class="state">Cargando la ficha…</div>
@@ -165,7 +165,7 @@ window.volver = () => {
       return;
     }
   } catch (e) {}
-  location.href = 'herramientas.html';
+  location.href = '/herramientas';
 };
 
 const $ = s => document.querySelector(s);
@@ -208,7 +208,7 @@ async function render() {
   // su versión en dólares.
   let e = (new URLSearchParams(location.search).get("e") || "").trim().toUpperCase()
     .replace(/\.BA$/, "").replace(/[^A-Z0-9]/g, "");
-  if (!e) { $("#main").innerHTML = `<div class="state">Elegí una especie desde el <a href="herramientas.html" style="color:var(--gold)">panel de bonos →</a></div>`; return; }
+  if (!e) { $("#main").innerHTML = `<div class="state">Elegí una especie desde el <a href="/herramientas" style="color:var(--gold)">panel de bonos →</a></div>`; return; }
   document.title = e + " — Ficha de bono · Valtia Analytics";
 
   let panel = null, flujos = null, asof = null;
@@ -242,7 +242,7 @@ async function render() {
     }
   }
   if (b) document.title = e + " — Ficha de bono · Valtia Analytics";
-  if (!b) { $("#main").innerHTML = `<div class="state">No encontramos la especie <b>${esc(e)}</b> en el panel.<br><br><a href="herramientas.html" style="color:var(--gold)">Ver el panel completo →</a></div>`; return; }
+  if (!b) { $("#main").innerHTML = `<div class="state">No encontramos la especie <b>${esc(e)}</b> en el panel.<br><br><a href="/herramientas" style="color:var(--gold)">Ver el panel completo →</a></div>`; return; }
 
   const enUSD = tipo === "soberanos" || tipo === "bopreal";
   const mon = enUSD ? "US$" : "$";
@@ -312,7 +312,7 @@ async function render() {
     ${fls ? `<p class="nota">Cronograma oficial (Dto. 701/2020 / prospecto BCRA): cupones + amortizaciones futuras por cada 100 de valor nominal.</p>` : ""}` : ""}
     <footer>Análisis de carácter general y educativo — no constituye asesoramiento financiero ni recomendación de compra o venta.
     Datos: BYMA vía IOL · condiciones de letras de la Secretaría de Finanzas vía ArgentinaDatos.
-    · <a href="terminos.html" style="text-decoration:underline">Términos</a> · <a href="privacidad.html" style="text-decoration:underline">Privacidad</a></footer>`;
+    · <a href="/terminos" style="text-decoration:underline">Términos</a> · <a href="/privacidad" style="text-decoration:underline">Privacidad</a></footer>`;
 
   const inp = $("#mi-precio"), out = $("#mi-out");
   if (inp && out) {

@@ -298,7 +298,7 @@ async function dibujar(el, ctx, seq) {
           ${log.length ? `<span><b>${esc(usdTxt(totalUsd))}</b> aportados</span>` : '<span>todavía sin compras registradas</span>'}
         </div>
         ${notaPesos ? `<div class="im-regla-nota">${notaPesos}</div>` : ''}
-        <div class="im-links"><a href="inversion-mensual.html">Recalcular la regla →</a><a href="disciplina.html">Historial completo →</a></div>
+        <div class="im-links"><a href="/inversion-mensual">Recalcular la regla →</a><a href="/disciplina">Historial completo →</a></div>
       </div>`;
   } else {
     regla = `<div class="im-card im-def">
@@ -312,7 +312,7 @@ async function dibujar(el, ctx, seq) {
         </div>
         <div class="im-def-c" id="im-porc"></div>
         <div class="im-msg" id="im-msg" role="status"></div>
-        <a class="im-ir" href="inversion-mensual.html">¿Cuánto aportar? Calculalo acá →</a>
+        <a class="im-ir" href="/inversion-mensual">¿Cuánto aportar? Calculalo acá →</a>
       </div>`;
   }
 
@@ -414,7 +414,7 @@ async function dibujar(el, ctx, seq) {
     const [vc, vb] = verColores(a.veredicto);
     const u = p > 0 && monto > 0 ? monto / p : null;
     const unidad = esCripto(a.sym) ? esc(base(a.sym)) : 'acc.';
-    const tk = f ? `<a class="tk" href="activo.html?t=${encodeURIComponent(f)}">${esc(a.sym)}</a>` : `<span class="tk">${esc(a.sym)}</span>`;
+    const tk = f ? `<a class="tk" href="/activo?t=${encodeURIComponent(f)}">${esc(a.sym)}</a>` : `<span class="tk">${esc(a.sym)}</span>`;
     return `<div class="im-cand" data-host>
         <div class="im-cand-row">
           <div class="im-cand-izq">

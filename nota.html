@@ -123,21 +123,21 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 <body>
 
 <nav>
-  <a href="index.html" class="nav-brand">
+  <a href="/" class="nav-brand">
     <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
     <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
-    <a href="index.html">Inicio</a>
-    <a href="cartera.html">Carteras</a>
-    <a href="inversion-mensual.html">Inversión mensual</a>
-    <a href="noticias.html" class="active">Noticias</a>
-    <a href="informes.html">Informes</a>
-    <a href="herramientas.html">Herramientas</a>
-    <a href="planes.html">Planes</a>
+    <a href="/">Inicio</a>
+    <a href="/cartera">Carteras</a>
+    <a href="/mercados">Mercados</a>
+    <a href="/noticias" class="active">Noticias</a>
+    <a href="/informes">Informes</a>
+    <a href="/herramientas">Herramientas</a>
+    <a href="/planes">Planes</a>
   </div>
   <div class="nav-right">
-    <a href="index.html?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
+    <a href="/?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
   </div>
 </nav>
 
@@ -155,13 +155,13 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 <div class="more-sec" id="more-sec" style="display:none">
   <div class="more-h2">Más noticias</div>
   <div class="more-grid" id="more-grid"></div>
-  <div class="ver-todas"><a href="noticias.html">Ver todas las noticias</a></div>
+  <div class="ver-todas"><a href="/noticias">Ver todas las noticias</a></div>
 </div>
 
 <footer>
-  <div class="footer-copy">© 2026 Valtia Analytics — Análisis de carácter general y educativo. No constituye asesoramiento financiero. · <a href="terminos.html" style="color:inherit;text-decoration:underline">Términos</a> · <a href="privacidad.html" style="color:inherit;text-decoration:underline">Privacidad</a></div>
+  <div class="footer-copy">© 2026 Valtia Analytics — Análisis de carácter general y educativo. No constituye asesoramiento financiero. · <a href="/terminos" style="color:inherit;text-decoration:underline">Términos</a> · <a href="/privacidad" style="color:inherit;text-decoration:underline">Privacidad</a></div>
   <div class="footer-links">
-    <a href="index.html">Inicio</a><a href="noticias.html">Noticias</a><a href="informes.html">Informes</a><a href="herramientas.html">Herramientas</a>
+    <a href="/">Inicio</a><a href="/noticias">Noticias</a><a href="/informes">Informes</a><a href="/herramientas">Herramientas</a>
   </div>
 </footer>
 
@@ -198,7 +198,7 @@ const fLong = s => {
   const p = String(s || "").slice(0, 10).split("-");
   return p.length === 3 ? `${Number(p[2])} de ${MES[Number(p[1]) - 1]} de ${p[0]}` : "";
 };
-const irA = id => { location.href = "nota.html?n=" + encodeURIComponent(id); };
+const irA = id => { location.href = "/nota?n=" + encodeURIComponent(id); };
 window.irA = irA;
 
 const layout = document.getElementById("layout");
@@ -210,7 +210,7 @@ try {
   const id = new URLSearchParams(location.search).get("n");
   const idx = docs.findIndex(d => d.docId === id);
   if (idx < 0) {
-    layout.innerHTML = '<div class="empty-state">Esta nota ya no está disponible: las noticias se renuevan todo el día. <a href="noticias.html">Ver las últimas noticias</a></div>';
+    layout.innerHTML = '<div class="empty-state">Esta nota ya no está disponible: las noticias se renuevan todo el día. <a href="/noticias">Ver las últimas noticias</a></div>';
     throw new Error("nota inexistente");
   }
   const a = docs[idx];
@@ -228,7 +228,7 @@ try {
 
   layout.innerHTML = `
   <article>
-    <a class="art-chip" href="noticias.html">${esc(catName(cats[0]))}</a>
+    <a class="art-chip" href="/noticias">${esc(catName(cats[0]))}</a>
     <h1 class="art-title">${esc(a.titulo)}</h1>
     <p class="art-bajada">${esc(a.resumen || "")}</p>
     ${a.imagen ? `<div class="art-img"><img src="${esc(a.imagen)}" alt="" onerror="if(!this.dataset.r){this.dataset.r=1;this.src='${portadaDe(cats[0])}'}else{this.parentElement.remove()}"></div>` : ""}
@@ -238,10 +238,10 @@ try {
     </div>
     <div class="art-content">${a.contenido || ""}</div>
     ${a.bot ? '<p class="art-legal">Nota informativa elaborada por Valtia a partir de información pública. No constituye recomendación de inversión.</p>' : ""}
-    <div class="art-tags">${cats.map(c => `<span class="art-tag" onclick="location.href='noticias.html'">${esc(catName(c))}</span>`).join("")}</div>
+    <div class="art-tags">${cats.map(c => `<span class="art-tag" onclick="location.href='/noticias'">${esc(catName(c))}</span>`).join("")}</div>
     ${(anterior || siguiente) ? `<div class="pn">
-      <div>${anterior ? `<a href="nota.html?n=${encodeURIComponent(anterior.docId)}"><span class="flecha">‹</span><span><div class="lbl">Noticia anterior</div><div class="tt">${esc(anterior.titulo)}</div></span></a>` : ""}</div>
-      <div>${siguiente ? `<a class="sig" href="nota.html?n=${encodeURIComponent(siguiente.docId)}"><span><div class="lbl">Noticia siguiente</div><div class="tt">${esc(siguiente.titulo)}</div></span><span class="flecha">›</span></a>` : ""}</div>
+      <div>${anterior ? `<a href="/nota?n=${encodeURIComponent(anterior.docId)}"><span class="flecha">‹</span><span><div class="lbl">Noticia anterior</div><div class="tt">${esc(anterior.titulo)}</div></span></a>` : ""}</div>
+      <div>${siguiente ? `<a class="sig" href="/nota?n=${encodeURIComponent(siguiente.docId)}"><span><div class="lbl">Noticia siguiente</div><div class="tt">${esc(siguiente.titulo)}</div></span><span class="flecha">›</span></a>` : ""}</div>
     </div>` : ""}
   </article>
   <aside class="rail">
@@ -267,7 +267,7 @@ try {
     const tags = document.querySelector(".art-tags");
     if (tags) tags.insertAdjacentHTML("beforebegin", `<div class="rel-inf">
       <div class="h">📊 Análisis Valtia</div>
-      ${emps.map(e => `<a href="activo.html?t=${e.ticker}">${e.nombre} — ficha Valtia: precio en vivo, radar, informe y noticias →</a>`).join("")}
+      ${emps.map(e => `<a href="/activo?t=${e.ticker}">${e.nombre} — ficha Valtia: precio en vivo, radar, informe y noticias →</a>`).join("")}
     </div>`);
   }
 
@@ -287,7 +287,7 @@ try {
   updateDoc(doc(db, "noticias", a.docId), { vistas: increment(1) }).catch(() => {});
 } catch (e) {
   if (!layout.innerHTML.includes("art-title") && !layout.innerHTML.includes("empty-state")) {
-    layout.innerHTML = '<div class="empty-state">No encontramos esta nota. <a href="noticias.html">Volver a Noticias</a></div>';
+    layout.innerHTML = '<div class="empty-state">No encontramos esta nota. <a href="/noticias">Volver a Noticias</a></div>';
   }
 }
 

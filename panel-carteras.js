@@ -210,13 +210,13 @@ function cardCartera(t, x, ctx) {
     const boton = S.verificado
       ? `<button type="button" class="v3ca-seg${sigue ? ' on' : ''}" data-seguir="${esc(id)}" data-nombre="${esc(nombre)}" data-on="${sigue ? '1' : '0'}">${sigue ? 'Dejar de seguir' : 'Seguir'}</button>`
       : '';
-    pie = `<a class="v3ca-link" href="cartera.html?c=${encodeURIComponent(id)}">Ver composición y tesis →</a>${boton}`;
+    pie = `<a class="v3ca-link" href="/cartera?c=${encodeURIComponent(id)}">Ver composición y tesis →</a>${boton}`;
   } else {
     // si la seguía cuando tenía acceso, que la pueda dejar de seguir desde acá
     const boton = sigue && S.verificado
       ? `<button type="button" class="v3ca-seg on" data-seguir="${esc(id)}" data-nombre="${esc(nombre)}" data-on="1">Dejar de seguir</button>`
-      : `<a class="v3ca-seg" href="planes.html">Ver planes</a>`;
-    pie = `<a class="v3ca-link" href="planes.html">Composición y rotaciones con PRO →</a>${boton}`;
+      : `<a class="v3ca-seg" href="/planes">Ver planes</a>`;
+    pie = `<a class="v3ca-link" href="/planes">Composición y rotaciones con PRO →</a>${boton}`;
   }
 
   return `<div class="v3ca-card${sigue ? ' sigue' : ''}">

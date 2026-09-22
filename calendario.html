@@ -94,21 +94,21 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 </head>
 <body>
 <nav>
-  <a href="index.html" class="nav-brand">
+  <a href="/" class="nav-brand">
     <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
     <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
-    <a href="index.html">Inicio</a>
-    <a href="cartera.html">Carteras</a>
-    <a href="inversion-mensual.html">Inversión mensual</a>
-    <a href="noticias.html">Noticias</a>
-    <a href="informes.html">Informes</a>
-    <a href="herramientas.html">Herramientas</a>
-    <a href="planes.html">Planes</a>
+    <a href="/">Inicio</a>
+    <a href="/cartera">Carteras</a>
+    <a href="/mercados">Mercados</a>
+    <a href="/noticias">Noticias</a>
+    <a href="/informes">Informes</a>
+    <a href="/herramientas">Herramientas</a>
+    <a href="/planes">Planes</a>
   </div>
   <div class="nav-right">
-    <a href="index.html?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
+    <a href="/?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
   </div>
 </nav>
 
@@ -137,9 +137,9 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   <div class="footer-copy">Fechas de resultados según los calendarios corporativos publicados (pueden cambiar); pagos de bonos según
   cronogramas oficiales (Dto. 701/2020 y prospectos BCRA); vencimientos de letras según condiciones de emisión.
   Análisis de carácter general y educativo, no constituye asesoramiento financiero.
-  · <a href="terminos.html" style="color:inherit;text-decoration:underline">Términos</a> · <a href="privacidad.html" style="color:inherit;text-decoration:underline">Privacidad</a></div>
+  · <a href="/terminos" style="color:inherit;text-decoration:underline">Términos</a> · <a href="/privacidad" style="color:inherit;text-decoration:underline">Privacidad</a></div>
   <div class="footer-links">
-    <a href="index.html">Inicio</a><a href="cartera.html">Carteras</a><a href="informes.html">Informes</a><a href="herramientas.html">Herramientas</a>
+    <a href="/">Inicio</a><a href="/cartera">Carteras</a><a href="/informes">Informes</a><a href="/herramientas">Herramientas</a>
   </div>
 </footer>
 
@@ -151,7 +151,7 @@ function volver() {
       return;
     }
   } catch (e) {}
-  location.href = 'index.html';
+  location.href = '/';
 }
 </script>
 <script type="module">

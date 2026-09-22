@@ -517,7 +517,7 @@ function instalarShell() {
       <div class="vp-plan-w"><span class="vp-plan${S.pro ? ' pro' : ''}" id="vp-plan">${etiquetaPlan()}</span></div>
       ${S.isAdmin ? `<a href="#panel/dashboard" class="vp-lat-l" data-m="inv" onclick="portalTab(event,'dashboard')">Gestión del fondo →</a>
       <a href="#panel/inicio" class="vp-lat-l" data-m="ges" onclick="portalTab(event,'inicio')">← Panel del inversor</a>` : ''}
-      <a href="herramientas.html" class="vp-lat-l">Herramientas y datos ↗</a>
+      <a href="/herramientas" class="vp-lat-l">Herramientas y datos ↗</a>
       <a href="#" class="vp-lat-l" onclick="valtiaPanel.salir(event)">← Volver al sitio</a>
       <button onclick="logout()">Cerrar sesión</button></div>`;
   if (!document.querySelector('.fl-layout')) {
@@ -561,7 +561,7 @@ function llenarSelectMovil() {
     const v = sel.value;
     if (v.charAt(0) !== '@') { portalTab(v); window.scrollTo(0, 0); return; }
     sel.value = _tab;
-    if (v === '@herr') location.href = 'herramientas.html';
+    if (v === '@herr') location.href = '/herramientas';
     else if (v === '@sitio') salir();
     else if (v === '@salir' && window.logout) window.logout();
   };
@@ -705,8 +705,8 @@ function bienvenida() {
       <a href="mailto:soporte@valtia.tech">soporte@valtia.tech</a>.</div>
     <div class="vp-bv-pie">
       <button class="vp-btn" id="vp-bv-ok">Empezar</button>
-      <a class="vp-ir" href="privacidad.html" style="margin:0">Privacidad</a>
-      <a class="vp-ir" href="terminos.html" style="margin:0">Términos</a>
+      <a class="vp-ir" href="/privacidad" style="margin:0">Privacidad</a>
+      <a class="vp-ir" href="/terminos" style="margin:0">Términos</a>
     </div>
   </div>`;
   const cerrar = () => {
@@ -1054,7 +1054,7 @@ async function compararSeguidas(ts, cc, bset, seg) {
     const nombre = (t && t.nombre) || (seg[id] || {}).nombre || id;
     if (t && t.visibilidad !== 'publico' && !S.pro) {
       return `<div class="vp-card"><h4>${esc(nombre)}</h4><p>Seguís esta cartera. Su composición es de Valtia PRO.</p>
-        <a class="vp-ir" href="planes.html">Ver planes →</a></div>`;
+        <a class="vp-ir" href="/planes">Ver planes →</a></div>`;
     }
     const pos = (await posicionesCartera(id)) || [];
     if (!pos.length) return '';
@@ -1154,8 +1154,8 @@ async function renderEmpresas() {
       // el precio de publicación está en dólares (el ADR): comparar contra el
       // precio en dólares de hoy, NUNCA contra el de una posición en pesos
       const pxUsd = f && pi[f] && pi[f].p != null ? pi[f].p : null;
-      if (docs.length) extra = `<p>📄 <a href="activo.html?t=${f}#informe" style="color:var(--link)">${esc(docs[0].titulo)}</a> · ${fmtF(docs[0].fecha)}${docs[0].precio_pub && pxUsd ? ` · ${pct((pxUsd / docs[0].precio_pub - 1) * 100, 1)} desde su publicación` : ''}</p>`;
-      else if (emp && emp.slug) extra = `<p>📄 Informe Valtia disponible con PRO · <a href="activo.html?t=${f}#informe" style="color:var(--link)">ver la ficha</a></p>`;
+      if (docs.length) extra = `<p>📄 <a href="/activo?t=${f}#informe" style="color:var(--link)">${esc(docs[0].titulo)}</a> · ${fmtF(docs[0].fecha)}${docs[0].precio_pub && pxUsd ? ` · ${pct((pxUsd / docs[0].precio_pub - 1) * 100, 1)} desde su publicación` : ''}</p>`;
+      else if (emp && emp.slug) extra = `<p>📄 Informe Valtia disponible con PRO · <a href="/activo?t=${f}#informe" style="color:var(--link)">ver la ficha</a></p>`;
       else if (f) extra = `<p class="vp-mut">Sin informe Valtia todavía · <a href="mailto:soporte@valtia.tech?subject=Análisis de ${f}" style="color:var(--link)">pedir este análisis</a></p>`;
       else extra = `<p class="vp-mut">Sin ficha en Valtia para este ticker.</p>`;
     }
@@ -1189,7 +1189,7 @@ async function noticiasDeMisEmpresas(el) {
     if (!emp || !emp.claves) return;
     const hits = ns.filter(n => { const t = (String(n.titulo) + ' ' + String(n.resumen || '')).toLowerCase(); return emp.claves.some(k => t.includes(k)); }).slice(0, 3);
     if (!hits.length) return;
-    b.innerHTML = `<div style="margin-top:8px;font-size:12.5px;line-height:1.6">${hits.map(n => `📰 <a href="nota.html?n=${esc(n.id)}" style="color:var(--text);text-decoration:none">${esc(n.titulo)}</a> <span class="vp-mut">· ${fmtF(n.fecha)}</span>`).join('<br>')}</div>`;
+    b.innerHTML = `<div style="margin-top:8px;font-size:12.5px;line-height:1.6">${hits.map(n => `📰 <a href="/nota?n=${esc(n.id)}" style="color:var(--text);text-decoration:none">${esc(n.titulo)}</a> <span class="vp-mut">· ${fmtF(n.fecha)}</span>`).join('<br>')}</div>`;
   });
 }
 
@@ -1226,12 +1226,12 @@ async function renderHerramientas() {
         <td>${ra.valorScore ?? '—'}</td>`; })() : `<td>${px.rsi != null ? num(px.rsi, 0) : '—'}</td>`}
       </tr>`;
     };
-    datos = `<p class="vp-sub">Lo que el sync sabe de cada uno de tus activos${S.pro ? '' : ' · ratios completos con PRO'}. El mapa de calor, el radar, los bonos y el dólar histórico están en <a href="herramientas.html" style="color:var(--link)">Herramientas y datos ↗</a>.</p>
+    datos = `<p class="vp-sub">Lo que el sync sabe de cada uno de tus activos${S.pro ? '' : ' · ratios completos con PRO'}. El mapa de calor, el radar, los bonos y el dólar histórico están en <a href="/herramientas" style="color:var(--link)">Herramientas y datos ↗</a>.</p>
       <div class="vp-tblwrap"><table class="vp-tbl"><thead><tr><th class="l">Activo</th><th>Precio</th><th class="l">Lectura</th>${rd.pro ? '<th>PER / TIR</th><th>P/Libro / MD</th><th>ROE / paridad</th><th>Deuda/EBITDA</th><th>Beta</th><th>Valor</th>' : '<th>RSI</th>'}</tr></thead>
       <tbody>${filas.map(fila).join('') || '<tr><td colspan="9" class="l vp-mut">Tus posiciones todavía no tienen datos del sync (9:00).</td></tr>'}</tbody></table></div>
-      ${!rd.pro ? `<p class="vp-nota">Con PRO ves PER, P/Libro, ROE, deuda sobre EBITDA y beta de tus acciones, y TIR, duration y paridad de tus bonos. <a href="planes.html" style="color:var(--link)">Ver planes →</a></p>` : `<p class="vp-nota">Múltiplos de yfinance al último cierre; para renta fija, la matemática propia del panel de bonos (cada 15 min en rueda).</p>`}`;
+      ${!rd.pro ? `<p class="vp-nota">Con PRO ves PER, P/Libro, ROE, deuda sobre EBITDA y beta de tus acciones, y TIR, duration y paridad de tus bonos. <a href="/planes" style="color:var(--link)">Ver planes →</a></p>` : `<p class="vp-nota">Múltiplos de yfinance al último cierre; para renta fija, la matemática propia del panel de bonos (cada 15 min en rueda).</p>`}`;
   }
-  el.innerHTML = datos || `<div class="vp-card" style="max-width:560px"><h4>Todavía no cargaste posiciones</h4><p>Cuando cargues tu cartera, acá vas a ver el precio, la lectura y los ratios de cada activo. Las herramientas del sitio están en <a href="herramientas.html" style="color:var(--link)">Herramientas y datos ↗</a>.</p><a class="vp-ir" href="#panel/micartera" data-go="micartera">Ir a Mi cartera →</a></div>`;
+  el.innerHTML = datos || `<div class="vp-card" style="max-width:560px"><h4>Todavía no cargaste posiciones</h4><p>Cuando cargues tu cartera, acá vas a ver el precio, la lectura y los ratios de cada activo. Las herramientas del sitio están en <a href="/herramientas" style="color:var(--link)">Herramientas y datos ↗</a>.</p><a class="vp-ir" href="#panel/micartera" data-go="micartera">Ir a Mi cartera →</a></div>`;
 }
 
 /* ── Contexto para los módulos de cada pestaña (panel-*.js) ────────────────────

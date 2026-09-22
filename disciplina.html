@@ -143,21 +143,21 @@ footer a:hover{color:#E8CE96}
 </head>
 <body>
 <nav>
-  <a href="index.html" class="nav-brand">
+  <a href="/" class="nav-brand">
     <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
     <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
-    <a href="index.html">Inicio</a>
-    <a href="cartera.html">Carteras</a>
-    <a href="inversion-mensual.html">Inversión mensual</a>
-    <a href="noticias.html">Noticias</a>
-    <a href="informes.html">Informes</a>
-    <a href="herramientas.html">Herramientas</a>
-    <a href="planes.html">Planes</a>
+    <a href="/">Inicio</a>
+    <a href="/cartera">Carteras</a>
+    <a href="/mercados">Mercados</a>
+    <a href="/noticias">Noticias</a>
+    <a href="/informes">Informes</a>
+    <a href="/herramientas">Herramientas</a>
+    <a href="/planes">Planes</a>
   </div>
   <div class="nav-right">
-    <a href="index.html?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
+    <a href="/?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
   </div>
 </nav>
 
@@ -196,7 +196,7 @@ window.volver = () => {
       return;
     }
   } catch (e) {}
-  location.href = 'index.html';
+  location.href = '/';
 };
 
 const $ = s => document.querySelector(s);
@@ -221,7 +221,7 @@ const fichaDe = sym => tickerFicha(sym) || sym;
 const linkTk = sym => {
   const tk = fichaDe(sym);
   return EMPRESAS.some(e => e.ticker === tk)
-    ? `<a href="activo.html?t=${tk}">${tk}</a>` : `<b>${esc(tk)}</b>`;
+    ? `<a href="/activo?t=${tk}">${tk}</a>` : `<b>${esc(tk)}</b>`;
 };
 
 /* ── datos públicos: radar (diario) + precios en vivo (15 min en rueda) ── */
@@ -295,7 +295,7 @@ async function registrarCompra(tickerFicha, cantidad, precio, broker = "") {
 /* ── vistas ── */
 function intro(publico) {
   return `
-    <a class="volver" href="inversion-mensual.html">← Inversión mensual</a>
+    <a class="volver" href="/inversion-mensual">← Inversión mensual</a>
     <div class="eye">Candidatas del mes · el método del inversor constante</div>
     <h1>Invertí todos los meses.<br>Nosotros te <em>marcamos</em> el ritmo.</h1>
     <p class="sub">El secreto del largo plazo no es acertarle al momento: es aportar siempre y comprar lo que está barato.
@@ -308,7 +308,7 @@ function intro(publico) {
     </div>
     ${publico ? `<div class="gate"><b>Armá tu plan con tu cuenta</b>
       <p>El plan, la racha y el historial son tuyos y viajan con tu cuenta. Entrá para definir tu regla y arrancar este mes.</p>
-      <a class="btn" href="index.html?login=crear" style="text-decoration:none;display:inline-block">Ingresá con tu cuenta →</a></div>` : ""}`;
+      <a class="btn" href="/?login=crear" style="text-decoration:none;display:inline-block">Ingresá con tu cuenta →</a></div>` : ""}`;
 }
 
 function candidatas(max) {
@@ -390,7 +390,7 @@ function vistaPlan() {
       <tbody>${cands.map(filaCandidata).join("") || '<tr><td colspan="7" class="mut" style="text-align:center">Ya tenés todo lo puntuado por el radar — constancia de acero.</td></tr>'}</tbody>
     </table></div>
     <div class="msg" id="msg-compra"></div>
-    <p class="nom" style="margin-top:10px">El puntaje y la lectura salen del <a href="herramientas.html" style="color:var(--gold)">radar de valuación Valtia</a> (valor relativo dentro del radar, no recomendación). Precio del día con actualización de rueda.</p>
+    <p class="nom" style="margin-top:10px">El puntaje y la lectura salen del <a href="/herramientas" style="color:var(--gold)">radar de valuación Valtia</a> (valor relativo dentro del radar, no recomendación). Precio del día con actualización de rueda.</p>
 
     <datalist id="d-brokers">${BROKERS.map(b => `<option value="${b}">`).join("")}</datalist>
     <div class="card" style="margin-top:18px">
@@ -414,7 +414,7 @@ function vistaPlan() {
     ` : ""}
     <footer>Candidatas del mes es una herramienta de organización personal de Valtia: registra las compras que vos decidís y hacés en tu broker.
     Valtia no ejecuta operaciones ni custodia fondos. La lectura del radar es análisis de carácter general y educativo,
-    no constituye asesoramiento financiero personalizado. Invertir implica riesgo de pérdida del capital. · <a href="terminos.html" style="color:inherit;text-decoration:underline">Términos</a> · <a href="privacidad.html" style="color:inherit;text-decoration:underline">Privacidad</a></footer>`;
+    no constituye asesoramiento financiero personalizado. Invertir implica riesgo de pérdida del capital. · <a href="/terminos" style="color:inherit;text-decoration:underline">Términos</a> · <a href="/privacidad" style="color:inherit;text-decoration:underline">Privacidad</a></footer>`;
 
   enganchar();
 }

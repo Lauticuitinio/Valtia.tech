@@ -160,21 +160,21 @@ main>.state{margin:10px 0 70px}
 </head>
 <body>
 <nav>
-  <a href="index.html" class="nav-brand">
+  <a href="/" class="nav-brand">
     <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
     <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
-    <a href="index.html">Inicio</a>
-    <a href="cartera.html" class="active">Carteras</a>
-    <a href="inversion-mensual.html">Inversión mensual</a>
-    <a href="noticias.html">Noticias</a>
-    <a href="informes.html">Informes</a>
-    <a href="herramientas.html">Herramientas</a>
-    <a href="planes.html">Planes</a>
+    <a href="/">Inicio</a>
+    <a href="/cartera" class="active">Carteras</a>
+    <a href="/mercados">Mercados</a>
+    <a href="/noticias">Noticias</a>
+    <a href="/informes">Informes</a>
+    <a href="/herramientas">Herramientas</a>
+    <a href="/planes">Planes</a>
   </div>
   <div class="nav-right">
-    <a href="index.html?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
+    <a href="/?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
   </div>
 </nav>
 
@@ -361,7 +361,7 @@ function lockedCard(t) {
       </div>
       <div class="spark"><canvas id="sp-t-${t.id}"></canvas></div>
       <div class="cta"><span class="meta">${t.posiciones} posiciones${t.ultimaRotacion ? " · última rotación " + t.ultimaRotacion.fecha : ""}</span>
-        <a class="go" href="planes.html">USD 19/mes →</a></div>
+        <a class="go" href="/planes">USD 19/mes →</a></div>
     </div>`;
 }
 
@@ -389,7 +389,7 @@ function renderCatalogo(carteras, user, teaser) {
       </div>
       <div class="spark"><canvas id="sp-${c.id}"></canvas></div>
       <div class="cta"><span class="meta">${c.posiciones.length} posiciones · track record real, sin backtest</span>
-        <a class="go" href="cartera.html?c=${c.id}">Ver cartera →</a></div>
+        <a class="go" href="/cartera?c=${c.id}">Ver cartera →</a></div>
     </div>`;
   }).join("");
   // el rótulo y el <h1> del catálogo viven ahora en el .masthead estático de la página
@@ -448,7 +448,7 @@ async function renderDetalle(c) {
   }).join("");
 
   $("#main").innerHTML = `
-    <div class="crumb"><a href="cartera.html">← Todas las carteras</a></div>
+    <div class="crumb"><a href="/cartera">← Todas las carteras</a></div>
     <div class="dhead">
       <div><div class="eye" style="margin-bottom:10px"><span class="badge">${c.codigo || c.slug}</span> ${RIESGO[c.nivelRiesgo] || ""}${PERFIL[c.perfil] ? " · " + PERFIL[c.perfil] : ""}${c.visibilidad === "borrador" ? ' · <span style="color:#B45309">Borrador · sin publicar</span>' : ""}</div>
         <h2 class="dnom" style="margin-bottom:6px">${c.nombre}</h2></div>
@@ -534,11 +534,11 @@ async function render() {
           <div style="font-family:'Playfair Display',serif;font-weight:700;font-variant-numeric:lining-nums;font-size:22px;line-height:1.2;color:var(--ink);margin-bottom:8px">${t.nombre}</div>
           ${t.retorno != null ? `<div style="margin-bottom:14px">Retorno real desde ${t.fechaInicio}: <b class="${cls(t.retorno)}" style="font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px">${fmtPct(t.retorno)}</b>${t.retornoBench != null ? ` · ${t.benchmark || "SPY"} <span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-variant-numeric:tabular-nums">${fmtPct(t.retornoBench)}</span>` : ""}</div>` : ""}
           La composición, la tesis y cada rotación con su razonamiento son de Valtia PRO.<br><br>
-          <a class="go" href="planes.html" style="color:var(--gold);font-weight:600">Conocé Valtia PRO · USD 19/mes →</a>
-          &nbsp;·&nbsp; <a href="cartera.html" style="color:var(--sub)">mirá las abiertas</a></div>`;
+          <a class="go" href="/planes" style="color:var(--gold);font-weight:600">Conocé Valtia PRO · USD 19/mes →</a>
+          &nbsp;·&nbsp; <a href="/cartera" style="color:var(--sub)">mirá las abiertas</a></div>`;
         return;
       }
-      $("#main").innerHTML = `<div class="state">No encontramos esa cartera. <a href="cartera.html" style="color:var(--gold)">Ver todas →</a></div>`;
+      $("#main").innerHTML = `<div class="state">No encontramos esa cartera. <a href="/cartera" style="color:var(--gold)">Ver todas →</a></div>`;
       return;
     }
     renderCatalogo(carteras, _user, teaser);

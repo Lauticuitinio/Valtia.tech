@@ -135,21 +135,21 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 <body>
 
 <nav>
-  <a href="index.html" class="nav-brand">
+  <a href="/" class="nav-brand">
     <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
     <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
-    <a href="index.html">Inicio</a>
-    <a href="cartera.html">Carteras</a>
-    <a href="inversion-mensual.html">Inversión mensual</a>
-    <a href="noticias.html">Noticias</a>
-    <a href="informes.html">Informes</a>
-    <a href="herramientas.html">Herramientas</a>
-    <a href="planes.html">Planes</a>
+    <a href="/">Inicio</a>
+    <a href="/cartera">Carteras</a>
+    <a href="/mercados" class="active">Mercados</a>
+    <a href="/noticias">Noticias</a>
+    <a href="/informes">Informes</a>
+    <a href="/herramientas">Herramientas</a>
+    <a href="/planes">Planes</a>
   </div>
   <div class="nav-right">
-    <a href="index.html?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
+    <a href="/?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
   </div>
 </nav>
 
@@ -192,9 +192,9 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
       <p>De las acciones argentinas nos importan tres cosas: la valuación contra su propia historia, la deuda
       en dólares de cada empresa y el flujo de caja que sostiene el precio. El precio del día es apenas el
       punto de partida.</p>
-      <p>Seguí por <a href="disciplina.html">Candidatas del mes</a> para ver cuáles pasan el filtro,
-      por <a href="informes.html">Informes</a> para leer la tesis completa y por
-      <a href="calendario.html">Calendario</a> para saber cuándo presenta resultados cada una.</p>
+      <p>Seguí por <a href="/disciplina">Candidatas del mes</a> para ver cuáles pasan el filtro,
+      por <a href="/informes">Informes</a> para leer la tesis completa y por
+      <a href="/calendario">Calendario</a> para saber cuándo presenta resultados cada una.</p>
     </div>
   </section>
 
@@ -213,8 +213,8 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
       despega del contado con liquidación, el CEDEAR está caro o barato por razones que no tienen que ver con
       la empresa.</p>
       <p>La tabla de ratios y el tipo de cambio implícito están en
-      <a href="herramientas.html#ratios">Herramientas</a>; la mirada de fondo sobre cada empresa, en
-      <a href="informes.html">Informes</a>.</p>
+      <a href="/herramientas#ratios">Herramientas</a>; la mirada de fondo sobre cada empresa, en
+      <a href="/informes">Informes</a>.</p>
     </div>
   </section>
 
@@ -232,8 +232,8 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
       el flujo de pagos que viene. Los bonos que ajustan por CER no están en TradingView, así que esos números
       los calculamos nosotros con los datos oficiales.</p>
       <p>El panel de bonos con tasas y curva está en
-      <a href="herramientas.html#bonos">Herramientas</a>, y cada cupón y cada vencimiento con su fecha, en
-      <a href="calendario.html">Calendario</a>.</p>
+      <a href="/herramientas#bonos">Herramientas</a>, y cada cupón y cada vencimiento con su fecha, en
+      <a href="/calendario">Calendario</a>.</p>
     </div>
   </section>
 
@@ -250,8 +250,8 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
       <p>Miramos EE.UU. por dos motivos: es de donde salen las empresas que después se compran acá como CEDEARs,
       y la tasa larga estadounidense —que no está en este listado, la seguimos por nuestra cuenta— es el piso
       contra el que se mide cualquier bono argentino.</p>
-      <p>El mapa de calor por sector está en <a href="herramientas.html#heatmap">Herramientas</a> y el
-      tamiz de valuación, en <a href="herramientas.html#radar">Radar de valuación</a>.</p>
+      <p>El mapa de calor por sector está en <a href="/herramientas#heatmap">Herramientas</a> y el
+      tamiz de valuación, en <a href="/herramientas#radar">Radar de valuación</a>.</p>
     </div>
   </section>
 
@@ -269,7 +269,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
       qué proporción de la cartera ocupa, cuánto se mueve y si el visitante puede bancar esa oscilación sin
       vender en el peor momento.</p>
       <p>Cómo la contamos dentro de una cartera está en
-      <a href="inversion-mensual.html">Inversión mensual</a>.</p>
+      <a href="/mercados" class="active">Mercados</a>.</p>
     </div>
   </section>
 
@@ -289,8 +289,8 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
       guardas: que el valor caiga dentro de una banda razonable y que el dato no tenga más de 96 horas. Si no
       pasa las guardas, mostramos que no hay dato: nunca inventamos un tipo de cambio.</p>
       <p>La serie histórica de los distintos dólares está en
-      <a href="herramientas.html#dolar">Herramientas</a>, y el rendimiento de las cauciones, en la
-      <a href="herramientas.html#cauciones">calculadora de cauciones</a>.</p>
+      <a href="/herramientas#dolar">Herramientas</a>, y el rendimiento de las cauciones, en la
+      <a href="/herramientas#cauciones">calculadora de cauciones</a>.</p>
     </div>
   </section>
 
@@ -304,9 +304,9 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 </main>
 
 <footer>
-  <div class="footer-copy">© 2026 Valtia Analytics · valtia.tech · <a href="terminos.html" style="color:inherit;text-decoration:underline">Términos</a> · <a href="privacidad.html" style="color:inherit;text-decoration:underline">Privacidad</a><br>Precios de mercado con demora, de carácter general y educativo: no constituyen asesoramiento financiero.</div>
+  <div class="footer-copy">© 2026 Valtia Analytics · valtia.tech · <a href="/terminos" style="color:inherit;text-decoration:underline">Términos</a> · <a href="/privacidad" style="color:inherit;text-decoration:underline">Privacidad</a><br>Precios de mercado con demora, de carácter general y educativo: no constituyen asesoramiento financiero.</div>
   <div class="footer-links">
-    <a href="index.html">Inicio</a><a href="informes.html">Informes</a><a href="herramientas.html">Herramientas</a><a href="calendario.html">Calendario</a>
+    <a href="/">Inicio</a><a href="/informes">Informes</a><a href="/herramientas">Herramientas</a><a href="/calendario">Calendario</a>
   </div>
 </footer>
 

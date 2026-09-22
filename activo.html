@@ -284,21 +284,21 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 <body>
 
 <nav>
-  <a href="index.html" class="nav-brand">
+  <a href="/" class="nav-brand">
     <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
     <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
-    <a href="index.html">Inicio</a>
-    <a href="cartera.html">Carteras</a>
-    <a href="inversion-mensual.html">Inversión mensual</a>
-    <a href="noticias.html">Noticias</a>
-    <a href="informes.html" class="active">Informes</a>
-    <a href="herramientas.html">Herramientas</a>
-    <a href="planes.html">Planes</a>
+    <a href="/">Inicio</a>
+    <a href="/cartera">Carteras</a>
+    <a href="/mercados">Mercados</a>
+    <a href="/noticias">Noticias</a>
+    <a href="/informes" class="active">Informes</a>
+    <a href="/herramientas">Herramientas</a>
+    <a href="/planes">Planes</a>
   </div>
   <div class="nav-right">
-    <a href="index.html?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
+    <a href="/?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
   </div>
 </nav>
 
@@ -310,9 +310,9 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 </div>
 
 <footer>
-  <div class="footer-copy">© 2026 Valtia Analytics — Análisis de carácter general y educativo. No constituye asesoramiento financiero. · <a href="terminos.html" style="color:inherit;text-decoration:underline">Términos</a> · <a href="privacidad.html" style="color:inherit;text-decoration:underline">Privacidad</a></div>
+  <div class="footer-copy">© 2026 Valtia Analytics — Análisis de carácter general y educativo. No constituye asesoramiento financiero. · <a href="/terminos" style="color:inherit;text-decoration:underline">Términos</a> · <a href="/privacidad" style="color:inherit;text-decoration:underline">Privacidad</a></div>
   <div class="footer-links">
-    <a href="index.html">Inicio</a><a href="noticias.html">Noticias</a><a href="informes.html">Informes</a><a href="herramientas.html">Herramientas</a>
+    <a href="/">Inicio</a><a href="/noticias">Noticias</a><a href="/informes">Informes</a><a href="/herramientas">Herramientas</a>
   </div>
 </footer>
 
@@ -368,7 +368,7 @@ function montarTopRow() {
   const volver = document.getElementById("volver");
   if (volver) volver.addEventListener("click", () => {
     if (document.referrer && document.referrer.startsWith(location.origin) && history.length > 1) history.back();
-    else location.href = "informes.html";
+    else location.href = "/informes";
   });
   const bxInput = document.getElementById("bx-input");
   const bxPanel = document.getElementById("bx-panel");
@@ -409,11 +409,11 @@ function montarTopRow() {
     bxPanel.innerHTML = (empHtml + bonosHtml) || '<div class="bx-it">Sin resultados — probá con el ticker (AL30, S30O6…)</div>';
     bxPanel.querySelectorAll(".bx-it[data-t]").forEach(it => it.addEventListener("mousedown", ev => {
       ev.preventDefault();
-      location.href = "activo.html?t=" + it.dataset.t;
+      location.href = "/activo?t=" + it.dataset.t;
     }));
     bxPanel.querySelectorAll(".bx-it[data-b]").forEach(it => it.addEventListener("mousedown", ev => {
       ev.preventDefault();
-      location.href = "bono.html?e=" + it.dataset.b;
+      location.href = "/bono?e=" + it.dataset.b;
     }));
   };
   const abrirLista = () => {
@@ -510,7 +510,7 @@ async function fichaDelRadar(tk) {
     <div class="px">
       <div class="p">${precio ? "US$" + nf.format(precio) : "—"}</div>
       <div class="h">${precio ? `Cierre del radar${delRadar} · el precio en vivo está en el recuadro de TradingView` : "El radar todavía no publicó el precio de este activo"}</div>
-      <div class="acc"><a class="btn-acc prim" href="index.html?agregar=${encodeURIComponent(tk)}#panel/micartera">+ Agregar a Mi cartera</a></div>
+      <div class="acc"><a class="btn-acc prim" href="/?agregar=${encodeURIComponent(tk)}#panel/micartera">+ Agregar a Mi cartera</a></div>
     </div>
   </div>
 
@@ -550,8 +550,8 @@ async function fichaDelRadar(tk) {
     <div class="et"><div class="l">Próximos resultados</div>
       ${prox
         ? `<div class="v">${venc(prox.fecha)}</div>
-          <div class="s">${cuando(prox.fecha)} · fecha estimada por la empresa. <a href="calendario.html">Ver la agenda completa</a></div>`
-        : `<div class="v">—</div><div class="s">Sin fecha publicada para este activo. <a href="calendario.html">Ver la agenda completa</a></div>`}
+          <div class="s">${cuando(prox.fecha)} · fecha estimada por la empresa. <a href="/calendario">Ver la agenda completa</a></div>`
+        : `<div class="v">—</div><div class="s">Sin fecha publicada para este activo. <a href="/calendario">Ver la agenda completa</a></div>`}
     </div>
   </div></div>
 
@@ -589,7 +589,7 @@ async function fichaDelRadar(tk) {
           <h3>Todavía no publicamos el informe de ${esc(nomb)}</h3>
           <p>El equipo va sumando análisis fundamentales a pedido de los clientes: tesis, KPIs, valuación por año, FODA y riesgos. Si querés que ${esc(nomb)} sea el próximo, decínoslo.</p>
           <a class="btn-leer" href="mailto:soporte@valtia.tech?subject=Quiero%20el%20informe%20de%20${encodeURIComponent(nomb)}">Pedir este análisis →</a>
-          <a class="btn-leer" href="informes.html" style="background:#fff;color:var(--ink);border:1px solid var(--line);margin-left:8px">Ver los publicados</a>
+          <a class="btn-leer" href="/informes" style="background:#fff;color:var(--ink);border:1px solid var(--line);margin-left:8px">Ver los publicados</a>
         </div>
       </div>
     </div>
@@ -636,7 +636,7 @@ if (!emp) {
   // Es el camino raro: no demora la carga de ninguna ficha normal.
   const otra = tickerFicha(t);
   if (otra && otra !== t) {
-    location.replace("activo.html?t=" + encodeURIComponent(otra));
+    location.replace("/activo?t=" + encodeURIComponent(otra));
     await new Promise(() => {});
   }
   let destino = "";
@@ -823,7 +823,7 @@ try {
       <p style="font-size:12.5px;color:var(--sub);max-width:420px;margin:6px auto 12px;line-height:1.6">
         El precio, el rango, el volumen, la lectura, la calidad relativa y el consenso de los analistas son gratis. Con PRO ves
         PER, P/Libro, EV/EBITDA, FCF yield, ROE, ROA, ingresos, ganancia, BPA, deuda, beta, el precio justo y el objetivo de los analistas.</p>
-      <a class="btn" href="planes.html" style="display:inline-block;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:var(--gold);color:#fff;padding:10px 22px;text-decoration:none;border-radius:4px">Ver planes</a>
+      <a class="btn" href="/planes" style="display:inline-block;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:var(--gold);color:#fff;padding:10px 22px;text-decoration:none;border-radius:4px">Ver planes</a>
     </div>`;
   // beta: SIEMPRE con su R2 al lado. Una beta que explica el 3% de la
   // variación no dice nada, y sin el R2 se lee como si dijera todo.
@@ -902,7 +902,7 @@ try {
         <div class="s">${conRatios
           ? (ra.justo ? `Precio justo <b>US$${nf.format(ra.justo)}</b> (<span class="${clase(ra.justoUpside)}">${signo(ra.justoUpside)}</span>): lo que valdría a los múltiplos medianos de su familia. Entre ${nf.format(ra.justoMin)} y ${nf.format(ra.justoMax)} según el múltiplo.`
                       : `Sin precio justo. ${motivoLargo(ra.justoMotivo)}`) + " Lectura automática, no una recomendación."
-          : `Qué tan barata cotiza frente a su familia sectorial, según el modelo de Valtia. Lectura automática, no una recomendación. El precio justo por múltiplos es <a href="planes.html">PRO</a>.`}</div>`
+          : `Qué tan barata cotiza frente a su familia sectorial, según el modelo de Valtia. Lectura automática, no una recomendación. El precio justo por múltiplos es <a href="/planes">PRO</a>.`}</div>`
       : `<div class="v">Sin cobertura</div><div class="s">${ra ? "No aplica: es un ETF o una cripto, sin balance que valuar." : "Este activo todavía no está en el radar de valuación de Valtia."}</div>`}
     </div>
     <div class="et"><div class="l">Rango del día</div>
@@ -927,7 +927,7 @@ try {
             : recoTxt() ? "Recomendación promedio de los analistas que cubren la acción." : fundOk ? "Ningún consenso publicado para este activo." : "No aplica: este activo no tiene cobertura de analistas."}</div>`
         : !fundOk ? `<div class="s">${recoTxt() ? "Promedio de las recomendaciones de analistas de terceros." : "No aplica: este activo no tiene cobertura de analistas."}</div>`
         : `<div class="lock" style="margin-top:6px"><div class="preview-blur"><div class="s">Objetivo promedio US$ ··· (+··%) de ·· analistas, entre ··· y ···.</div></div>
-           <div class="pro-overlay" style="background:transparent"><a href="planes.html" class="btn" style="padding:6px 14px">Objetivo: PRO</a></div></div>`}
+           <div class="pro-overlay" style="background:transparent"><a href="/planes" class="btn" style="padding:6px 14px">Objetivo: PRO</a></div></div>`}
     </div>
   </div>`;
 
@@ -939,11 +939,11 @@ try {
           + filaP("Calidad relativa", nivel() ? SALUD[nivel()] : "—", nivel() ? saludHtml(nivel()) + (conRatios && ra.calidadScore != null ? `calidad ${Math.round(ra.calidadScore)}/100 · ` : "") + "deuda frente a su familia; crecimiento y margen frente al radar. Es una posición relativa, no un diagnóstico" : "faltan datos: hacen falta 2 de 3 entre deuda, crecimiento y margen", gauge(!nivel() ? null : conRatios && ra.calidadScore != null ? ra.calidadScore : nivel() * 20 - 10))
         : filaP("Puntaje Valtia", "—", "sin valuación: es un ETF o una cripto, no hay balance que comparar", gauge(null))}
       ${filaP("Análisis técnico", tec ? tec.label : "—", tec ? tec.detalle + " · resumen automático de indicadores, no es una recomendación" : "hacen falta 60 ruedas de histórico", gauge(tec ? tec.gauge : null))}
-      ${fundOk || recoTxt() ? filaP("Opinión de analistas", recoTxt() || "—", conRatios && ra.nAnalistas && ra.target ? `promedio de ${ra.nAnalistas} analistas de terceros · objetivo US$${nf.format(ra.target)} (${signo(ra.upside)})` : recoTxt() ? `promedio de los analistas que la cubren · el objetivo es <a href="planes.html">PRO</a>` : "sin consenso publicado", gauge(ra.reco ? RECO_G[ra.reco] : null)) : ""}
+      ${fundOk || recoTxt() ? filaP("Opinión de analistas", recoTxt() || "—", conRatios && ra.nAnalistas && ra.target ? `promedio de ${ra.nAnalistas} analistas de terceros · objetivo US$${nf.format(ra.target)} (${signo(ra.upside)})` : recoTxt() ? `promedio de los analistas que la cubren · el objetivo es <a href="/planes">PRO</a>` : "sin consenso publicado", gauge(ra.reco ? RECO_G[ra.reco] : null)) : ""}
       ${!fundOk ? "" : `<div class="lock">${conRatios
         ? filaP("Valor razonable", ra.justo ? "US$" + nf.format(ra.justo) : "—", ra.justo ? `${signo(ra.justoUpside)} al precio de hoy · múltiplos medianos de su familia · entre ${nf.format(ra.justoMin)} y ${nf.format(ra.justoMax)}` : motivoLargo(ra.justoMotivo), gauge(gaugeJusto(ra.justoUpside)))
         : `<div class="preview-blur">${filaP("Valor razonable", "US$ · ·", "precio justo por múltiplos frente a su familia", gauge(null))}</div>
-           <div class="pro-overlay" style="background:rgba(246,243,236,.35)"><a href="planes.html" class="btn">Precio justo: PRO</a></div>`}
+           <div class="pro-overlay" style="background:rgba(246,243,236,.35)"><a href="/planes" class="btn">Precio justo: PRO</a></div>`}
       </div>`}
     </div>`;
 
@@ -974,7 +974,7 @@ try {
       if (ra.roe != null) tip(ra.roe >= 20 ? "b" : ra.roe < 5 ? "m" : "n", `<b>ROE ${n1.format(ra.roe)}%.</b> ${ra.roe >= 20 ? "Rentabilidad alta" : ra.roe < 5 ? "Rentabilidad baja" : "Rentabilidad razonable"} sobre el patrimonio.`);
       if (ra.growth != null) tip(ra.growth >= 15 ? "b" : ra.growth < 0 ? "m" : "n", `<b>Ingresos ${ra.growth >= 0 ? "crecen" : "caen"} ${signo(ra.growth)}</b> interanual.`);
     } else if (fundOk) {
-      tip("n", `<b>Con PRO</b> se suman las lecturas de precio justo, deuda, caja libre, ROE y crecimiento. <a href="planes.html">Ver planes →</a>`);
+      tip("n", `<b>Con PRO</b> se suman las lecturas de precio justo, deuda, caja libre, ROE y crecimiento. <a href="/planes">Ver planes →</a>`);
     }
     return tips.length ? tips.join("") : '<div class="vacio">Sin lecturas todavía: faltan datos del radar para este activo.</div>';
   };
@@ -991,7 +991,7 @@ try {
       <div class="p">${px.p ? "US$" + nf.format(px.p) : "—"}</div>
       ${px.d != null ? `<div class="d ${clase(px.d)}">${signo(px.d)} hoy</div>` : ""}
       ${hora ? `<div class="h">Actualizado ${hora} hs · cada 15 min en rueda</div>` : ""}
-      <div class="acc"><a class="btn-acc prim" href="index.html?agregar=${encodeURIComponent(t)}#panel/micartera">+ Agregar a Mi cartera</a></div>
+      <div class="acc"><a class="btn-acc prim" href="/?agregar=${encodeURIComponent(t)}#panel/micartera">+ Agregar a Mi cartera</a></div>
     </div>
   </div>
   <div class="subnav" id="subnav"><a href="#general" class="on">General</a><a href="#grafico">Gráfico</a><a href="#tecnico">Técnico</a><a href="#estadisticas">Estadísticas</a>${emp.slug ? '<a href="#informe">Informe</a>' : ""}<a href="#noticias">Noticias</a></div>
@@ -1040,7 +1040,7 @@ try {
           <h3>Todavía no publicamos el informe de ${esc(emp.nombre)}</h3>
           <p>El equipo va sumando análisis fundamentales a pedido de los clientes: tesis, KPIs, valuación por año, FODA y riesgos. Si querés que ${esc(emp.nombre)} sea el próximo, decínoslo.</p>
           <a class="btn-leer" href="mailto:soporte@valtia.tech?subject=Quiero%20el%20informe%20de%20${encodeURIComponent(emp.nombre)}">Pedir este análisis →</a>
-          <a class="btn-leer" href="informes.html" style="background:#fff;color:var(--ink);border:1px solid var(--line);margin-left:8px">Ver los publicados</a>
+          <a class="btn-leer" href="/informes" style="background:#fff;color:var(--ink);border:1px solid var(--line);margin-left:8px">Ver los publicados</a>
         ` : `
           <h3>Análisis fundamental de ${esc(emp.nombre)}</h3>
           <p>Tesis, KPIs, valuación por año, FODA y riesgos — el informe completo es exclusivo para clientes de Valtia.</p>
@@ -1053,7 +1053,7 @@ try {
   <div id="informe-full"></div>
 
   <div class="card-w act-news" id="noticias">
-    <div class="card-h"><span class="t">Noticias de ${esc(emp.nombre)}</span><a class="s" href="noticias.html">Ver todas →</a></div>
+    <div class="card-h"><span class="t">Noticias de ${esc(emp.nombre)}</span><a class="s" href="/noticias">Ver todas →</a></div>
     <div id="act-news-list"><div class="vacio">Buscando noticias…</div></div>
   </div>`;
 
@@ -1109,7 +1109,7 @@ try {
   if (inf) renderInforme(inf);
   else if (emp.slug) document.getElementById("informe-full").innerHTML =
     `<div class="fsr-state" id="informe" style="margin-top:26px">El informe completo de ${esc(emp.nombre)} es exclusivo para clientes de Valtia.<br>
-     <a href="index.html?login=1">Ingresá con tu cuenta</a> para leerlo — o conocé los <a href="planes.html">planes</a>.</div>`;
+     <a href="/?login=1">Ingresá con tu cuenta</a> para leerlo — o conocé los <a href="/planes">planes</a>.</div>`;
 
   // ── volver + buscador de activos (los mismos de la ficha del radar) ──
   montarTopRow();
@@ -1123,7 +1123,7 @@ try {
     })
     .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 5) : [];
   lista.innerHTML = notas.length ? notas.map(nn => `
-    <a href="nota.html?n=${encodeURIComponent(nn.id)}">
+    <a href="/nota?n=${encodeURIComponent(nn.id)}">
       <div class="im" style="${nn.imagen ? `background-image:url('${esc(nn.imagen)}'),url('img/noticias/${(nn.categorias || [])[0] === "wall" || (nn.categorias || [])[0] === "cripto" || (nn.categorias || [])[0] === "bonos" ? nn.categorias[0] : "local"}-1.svg')` : ""}"></div>
       <div><div class="tt">${esc(nn.titulo)}</div>
       <div class="f">${venc(String(nn.fecha))}</div></div>
@@ -1205,7 +1205,7 @@ try {
     const cab = `<div class="pl">Sentimiento de la comunidad</div>`;
     if (!user) {
       box.innerHTML = `<div class="pr" style="grid-template-columns:1fr;border-bottom:none"><div>${cab}<div class="pv">¿Alcista o bajista?</div>
-        <div class="ps"><a href="index.html?login=1">Ingresá</a> para votar y ver cómo lo ve la comunidad Valtia.</div></div></div>`;
+        <div class="ps"><a href="/?login=1">Ingresá</a> para votar y ver cómo lo ve la comunidad Valtia.</div></div></div>`;
       return;
     }
     // se cuenta con agregaciones (1 lectura cada 1.000 votos) y se lee solo el voto propio
@@ -1311,7 +1311,7 @@ try {
     } catch (e) {}
   });
 } catch (e) {
-  ficha.innerHTML = '<div class="empty-state">No pudimos cargar la ficha. <a href="informes.html">Volver a Informes</a></div>';
+  ficha.innerHTML = '<div class="empty-state">No pudimos cargar la ficha. <a href="/informes">Volver a Informes</a></div>';
 }
 </script>
 <script type="module" src="nav-auth.js?v=7"></script>

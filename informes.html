@@ -209,21 +209,21 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 <body>
 
 <nav>
-  <a href="index.html" class="nav-brand">
+  <a href="/" class="nav-brand">
     <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
     <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
-    <a href="index.html">Inicio</a>
-    <a href="cartera.html">Carteras</a>
-    <a href="inversion-mensual.html">Inversión mensual</a>
-    <a href="noticias.html">Noticias</a>
-    <a href="informes.html" class="active">Informes</a>
-    <a href="herramientas.html">Herramientas</a>
-    <a href="planes.html">Planes</a>
+    <a href="/">Inicio</a>
+    <a href="/cartera">Carteras</a>
+    <a href="/mercados">Mercados</a>
+    <a href="/noticias">Noticias</a>
+    <a href="/informes" class="active">Informes</a>
+    <a href="/herramientas">Herramientas</a>
+    <a href="/planes">Planes</a>
   </div>
   <div class="nav-right">
-    <a href="index.html?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
+    <a href="/?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
   </div>
 </nav>
 
@@ -251,7 +251,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
       <div class="inf-tools">
         <input class="inf-buscar" id="inf-buscar" type="search" placeholder="Buscar empresa o ticker — NVDA, Galicia, Walmart…" oninput="window.filtroTexto && filtroTexto(this.value)">
         <div class="sector-pills" id="sector-pills"></div>
-        <a class="ficha-link" href="activo.html?t=NVDA">📈 Fichas de activos</a>
+        <a class="ficha-link" href="/activo?t=NVDA">📈 Fichas de activos</a>
       </div>
       <div class="sin-resultados" id="sin-resultados" style="display:none">Ningún informe coincide con la búsqueda. Probá con otro nombre o ticker.</div>
       <div class="inf-grid">
@@ -295,9 +295,9 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 <a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail" style="background:#B08A3E;box-shadow:0 4px 16px rgba(176,138,62,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
 <footer>
-  <div class="footer-copy">© 2026 Valtia Analytics — Los informes son de carácter informativo y no constituyen asesoramiento financiero. · <a href="terminos.html" style="color:inherit;text-decoration:underline">Términos</a> · <a href="privacidad.html" style="color:inherit;text-decoration:underline">Privacidad</a></div>
+  <div class="footer-copy">© 2026 Valtia Analytics — Los informes son de carácter informativo y no constituyen asesoramiento financiero. · <a href="/terminos" style="color:inherit;text-decoration:underline">Términos</a> · <a href="/privacidad" style="color:inherit;text-decoration:underline">Privacidad</a></div>
   <div class="footer-links">
-    <a href="index.html">Inicio</a><a href="noticias.html">Noticias</a><a href="cartera.html">Carteras</a><a href="herramientas.html">Herramientas</a>
+    <a href="/">Inicio</a><a href="/noticias">Noticias</a><a href="/cartera">Carteras</a><a href="/herramientas">Herramientas</a>
   </div>
 </footer>
 
@@ -327,7 +327,7 @@ function openInforme(id){
   if(free){
     content.innerHTML=`<div class="modal-kicker">Informe · Gratuito · Valtia Analytics</div>${free.content}`;
   }else{
-    content.innerHTML=`<div class="modal-lock"><div class="ic">🔒</div><h3>Contenido exclusivo</h3><p>Este informe está disponible para suscriptores de los planes de asesoría. Accedé a análisis profundos por empresa, sector y estrategia de cartera.</p><a href="planes.html" class="modal-btn">Ver planes →</a></div>`;
+    content.innerHTML=`<div class="modal-lock"><div class="ic">🔒</div><h3>Contenido exclusivo</h3><p>Este informe está disponible para suscriptores de los planes de asesoría. Accedé a análisis profundos por empresa, sector y estrategia de cartera.</p><a href="/planes" class="modal-btn">Ver planes →</a></div>`;
   }
   modal.classList.add('open');
   document.body.style.overflow='hidden';
@@ -412,12 +412,12 @@ async function catalogo(user) {
       <p>${d.resumen || ""}</p>
       <div class="fsr-foot">
         <span class="lock">${d.visibilidad === "publico" ? "Acceso libre" : (pro ? "✓ Acceso habilitado" : "🔒 Exclusivo clientes")}</span>
-        <a class="go" href="informes.html?i=${d.slug || d.id}">Leer informe →</a>
+        <a class="go" href="/informes?i=${d.slug || d.id}">Leer informe →</a>
       </div>
     </div>`).join("");
   const html = `<div class="sec-h"><span>Registros de análisis</span><i></i></div>
     ${cards || `<div class="fsr-state">Los registros de análisis completos son exclusivos para clientes.<br>
-      <a href="index.html?login=1">Ingresá con tu cuenta</a> para leerlos.</div>`}
+      <a href="/?login=1">Ingresá con tu cuenta</a> para leerlos.</div>`}
     <div class="divider"></div>`;
   const holder = document.createElement("div");
   holder.id = "fsr-holder";
@@ -483,7 +483,7 @@ async function lector() {
     const d = snap.data();
     document.title = d.titulo + " — Valtia Analytics";
     content.innerHTML = `
-      <div class="fsr-crumb"><a href="informes.html">← Todos los informes</a></div>
+      <div class="fsr-crumb"><a href="/informes">← Todos los informes</a></div>
       <div class="fsr-reader">
         <div class="fsr-rhead">
           <div style="display:flex;gap:9px;margin-bottom:12px;flex-wrap:wrap"><span class="fsr-badge">${d.tipo || "Informe"}</span>${d.categorias ? `<span class="fsr-tag">${d.categorias}</span>` : ""}</div>
@@ -497,9 +497,9 @@ async function lector() {
     if (d.ticker) { bandaViva(d); noticiasRelacionadas(d); }
   } catch (e) {
     content.innerHTML = `
-      <div class="fsr-crumb"><a href="informes.html">← Todos los informes</a></div>
+      <div class="fsr-crumb"><a href="/informes">← Todos los informes</a></div>
       <div class="fsr-state">Este informe es exclusivo para clientes de Valtia.<br>
-        <a href="index.html?login=1">Ingresá con tu cuenta</a> para leerlo — o conocé los <a href="planes.html">planes</a>.</div>`;
+        <a href="/?login=1">Ingresá con tu cuenta</a> para leerlo — o conocé los <a href="/planes">planes</a>.</div>`;
   }
 }
 
@@ -526,7 +526,7 @@ async function bandaViva(d) {
       `<div class="s">salió a US$${nf.format(d.precio_pub)} el ${fpub}</div></div>`;
     if (hora) html += `<div class="lb"><div class="l">Datos</div><div class="v" style="font-size:14px;margin-top:8px">En vivo</div>` +
       `<div class="s">actualizado ${hora} hs</div></div>`;
-    html += `<a class="lb" href="activo.html?t=${d.ticker}" style="display:block"><div class="l">Ficha del activo</div>` +
+    html += `<a class="lb" href="/activo?t=${d.ticker}" style="display:block"><div class="l">Ficha del activo</div>` +
       `<div class="v" style="font-size:14px;margin-top:8px">${d.ticker} →</div>` +
       `<div class="s">gráfico, radar y noticias</div></a>`;
     document.getElementById("live-band").innerHTML = `<div class="live-band">${html}</div>`;
@@ -550,7 +550,7 @@ async function noticiasRelacionadas(d) {
     if (!rel.length) return;
     document.getElementById("rel-news").innerHTML = `<div class="rel-news">
       <div class="h">Últimas noticias de ${esc(emp.nombre)}</div>
-      ${rel.map(nn => `<a href="nota.html?n=${encodeURIComponent(nn.id)}">${esc(nn.titulo)}
+      ${rel.map(nn => `<a href="/nota?n=${encodeURIComponent(nn.id)}">${esc(nn.titulo)}
         <span class="f">${fdate(nn.fecha)}</span></a>`).join("")}
     </div>`;
   } catch (e) {}
