@@ -1,0 +1,108 @@
+# =============================================================
+#  Valtia Analytics - URLs limpias
+#  valtia.tech/noticias  en vez de  valtia.tech/noticias.html
+# -------------------------------------------------------------
+#  Apache (Hostinger). OJO: aca NO tocamos www / no-www ni el
+#  redirect a HTTPS. De eso ya se encarga el panel de Hostinger
+#  y meter mano de nuevo es la forma mas rapida de tirar el sitio.
+#
+#  Si despues de subir esto el sitio devuelve 500, el sospechoso
+#  numero uno es el bloque "Options" de abajo: comentalo y listo.
+# =============================================================
+
+# --- Pagina por defecto de cada carpeta ---
+DirectoryIndex index.html
+
+# --- Negociacion de contenido apagada ---------------------------
+# Con MultiViews prendido, Apache adivina solo que /noticias es
+# noticias.html, pero por un camino distinto al nuestro: se pisan
+# entre si y la query string a veces se pierde. Mejor apagarlo y
+# que todo pase por las reglas de abajo.
+<IfModule mod_negotiation.c>
+  Options -MultiViews
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # ===========================================================
+  #  1) /index.html  ->  /     (301, permanente)
+  # -----------------------------------------------------------
+  #  THE_REQUEST es la linea que mando el navegador de verdad
+  #  ("GET /index.html HTTP/1.1"). Mirando ahi -y no la URL ya
+  #  reescrita- nos aseguramos de redirigir solo pedidos reales
+  #  y nunca las reescrituras internas: asi no hay bucle.
+  #  El -f pide que el archivo exista antes de redirigir.
+  # ===========================================================
+  RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\s/+(?:[^?\s]*/)?index\.html[\s?]
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^(.*)index\.html$ /$1 [R=301,L,NE]
+
+  # ===========================================================
+  #  2) /pagina.html  ->  /pagina     (301, permanente)
+  # -----------------------------------------------------------
+  #  La query se conserva sola: cuando la sustitucion no trae
+  #  "?", mod_rewrite le pega la query original.
+  #      /activo.html?t=NVDA   ->  /activo?t=NVDA
+  #  El ancla (#panel/micartera) no viaja al servidor; la
+  #  reengancha el navegador despues del redirect.
+  #  NE = no vuelvas a escapar los caracteres de la URL.
+  #  Sin [NC]: respetamos mayusculas y minusculas, que en el
+  #  Linux de Hostinger /Noticias y /noticias NO son lo mismo.
+  # ===========================================================
+  RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\s/+[^?\s]+\.html[\s?]
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^(.+)\.html$ /$1 [R=301,L,NE]
+
+  # ===========================================================
+  #  3) /pagina/  ->  /pagina     (301, permanente)
+  # -----------------------------------------------------------
+  #  Una sola direccion para cada pagina: sacamos la barra final
+  #  cuando no es una carpeta de verdad y si existe el .html.
+  # ===========================================================
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+  RewriteRule ^(.+)/$ /$1 [R=301,L,NE]
+
+  # ===========================================================
+  #  4) /pagina  ->  sirve pagina.html   (interno, sin redirect)
+  # -----------------------------------------------------------
+  #  Las dos primeras condiciones son el seguro de vida: si lo
+  #  pedido YA existe como archivo (-f) o como carpeta (-d), no
+  #  lo tocamos. Eso deja intactos panel.js, tv.js, los .css,
+  #  los .json, las imagenes de /img y todo lo demas.
+  #  La tercera exige que el .html exista; si no, cae al 404 y
+  #  no inventamos nada.
+  # ===========================================================
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+  RewriteRule ^(.+)$ $1.html [L]
+</IfModule>
+
+# --- Tipos de archivo ----------------------------------------
+# Sin esto, Apache sirve el manifiesto como texto plano y el
+# navegador no lo toma para "agregar a la pantalla de inicio".
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
+</IfModule>
+
+# --- Archivos que no son para el visitante -------------------
+# firestore.rules y los .md de documentacion se publican junto
+# con el sitio porque viven en el repo. No hay credenciales ahi
+# -las reglas se aplican del lado del servidor- pero le muestran
+# a cualquiera como esta armada la base. Mejor que no se bajen.
+<IfModule mod_authz_core.c>
+  <FilesMatch "\.(rules|md)$">
+    Require all denied
+  </FilesMatch>
+</IfModule>
+
+# --- Pagina de error -----------------------------------------
+# No hay una pagina de 404 propia, asi que mostramos la home.
+# Ojo: es una ruta interna, no un redirect, asi que el navegador
+# sigue viendo el 404 (que es lo que Google necesita ver) pero
+# el visitante aterriza en algo usable en vez de la pantalla
+# blanca de Apache.
+ErrorDocument 404 /index.html

@@ -1,0 +1,16 @@
+{
+  "name": "Valtia Analytics",
+  "short_name": "Valtia",
+  "lang": "es",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#0E1830",
+  "background_color": "#0E1830",
+  "icons": [
+    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "/favicon-32.png", "type": "image/png", "sizes": "32x32" },
+    { "src": "/favicon-180.png", "type": "image/png", "sizes": "180x180" }
+  ]
+}

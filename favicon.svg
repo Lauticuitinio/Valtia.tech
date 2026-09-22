@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" width="34" height="34" role="img" aria-label="Valtia Analytics">
+  <!-- La marca del sitio (la misma del nav y del panel): cuadrado navy #1A3A5C
+       con la línea dorada #B8975A. El zigzag va simplificado a cuatro puntos y
+       con el trazo más grueso para que se siga leyendo a 16 px. -->
+  <rect width="34" height="34" rx="4" fill="#1A3A5C"/>
+  <polyline points="5,25 11,15 18,20 26,9" fill="none" stroke="#B8975A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="26" cy="9" r="3.4" fill="#B8975A"/>
+</svg>
