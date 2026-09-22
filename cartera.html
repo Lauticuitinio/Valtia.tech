@@ -44,7 +44,7 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 
 /* masthead centrado sobre la franja navy, con el título de la página */
 .masthead{background:#0E1830;padding:26px 52px 20px;text-align:center}
-.masthead .t{font:700 clamp(28px,3.4vw,40px) 'Playfair Display',serif;color:#fff;letter-spacing:.01em;line-height:1.12;text-wrap:balance}
+.masthead .t{font:700 clamp(30px,3.6vw,44px) 'Playfair Display',serif;color:#fff;letter-spacing:.01em;line-height:1.1;text-wrap:balance}
 .masthead .t em{color:#E8CE96;font-style:italic}
 .masthead .d{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(232,206,150,.75);margin-top:12px}
 
@@ -149,9 +149,12 @@ main>.state{margin:10px 0 70px}
 .grid>.state{grid-column:1/-1;margin-top:0}
 .state a{text-decoration:underline;text-underline-offset:3px}
 
+/* botón de mail flotante abajo a la izquierda (el mismo de activo.html / noticias.html) */
+.wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;transition:transform .2s;text-decoration:none}
+.wa-float:hover{transform:scale(1.1)}
+
 @media(max-width:880px){
   .masthead{padding-left:20px;padding-right:20px}
-  .masthead .t br{display:none}
   main{grid-template-columns:minmax(20px,1fr) minmax(0,1136px) minmax(20px,1fr)}
   footer{padding-left:20px;padding-right:20px}
 }
@@ -181,8 +184,8 @@ main>.state{margin:10px 0 70px}
 
 <!-- masthead: el título de la página sobre la franja navy (antes lo pintaba el JS en el catálogo) -->
 <div class="masthead">
-  <h1 class="t">Carteras que se <em>gestionan</em>, <br>no listas que se olvidan</h1>
-  <div class="d">Carteras vivas · seguimiento verificable</div>
+  <h1 class="t">Carteras <em>Valtia</em></h1>
+  <div class="d">Gestionadas y con seguimiento verificable</div>
 </div>
 
 <!-- cotizaciones en vivo (módulo único del sitio: cotizaciones.js) -->
@@ -190,6 +193,8 @@ main>.state{margin:10px 0 70px}
 <main id="main">
   <div class="state">Cargando carteras…</div>
 </main>
+
+<a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail" style="background:#B08A3E;box-shadow:0 4px 16px rgba(176,138,62,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -317,9 +322,12 @@ async function radarMapa() {
   } catch (e) {}
   return _radar;
 }
-// acciones a su ficha, bonos y letras a bono.html (activos.js decide)
+// acciones a su ficha, bonos y letras a bono.html (activos.js decide).
+// activos.js todavía devuelve la ruta con .html ('activo.html?t=NVDA'): acá se
+// sirve sin extensión, como el resto de los links internos del sitio.
+const sinHtml = h => h.replace(/\.html(?=\?|#|$)/, '');
 const linkFicha = tk => { const h = linkDe(tk); return h
-  ? `<a href="${h}" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--gold)">${tk}</a>` : tk; };
+  ? `<a href="/${sinHtml(h)}" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--gold)">${tk}</a>` : tk; };
 
 /* vidriera: las carteras PRO no se pueden LEER sin acceso (regla de
    Firestore), pero sus agregados —retorno real, curva, última rotación—
@@ -362,7 +370,7 @@ function lockedCard(t) {
       </div>
       <div class="spark"><canvas id="sp-t-${t.id}"></canvas></div>
       <div class="cta"><span class="meta">${t.posiciones} posiciones${t.ultimaRotacion ? " · última rotación " + t.ultimaRotacion.fecha : ""}</span>
-        <a class="go" href="/planes">USD 19/mes →</a></div>
+        <a class="go" href="/planes">Ver planes →</a></div>
     </div>`;
 }
 
@@ -389,13 +397,13 @@ function renderCatalogo(carteras, user, teaser) {
           : `<div class="mi"><div class="l">${rb != null ? "Benchmark " + c.benchmark : "Posiciones"}</div><div class="v">${rb != null ? `<span class="${cls(rb)}">${fmtPct(rb)}</span>` : c.posiciones.length}</div></div>`}
       </div>
       <div class="spark"><canvas id="sp-${c.id}"></canvas></div>
-      <div class="cta"><span class="meta">${c.posiciones.length} posiciones · track record real, sin backtest</span>
+      <div class="cta"><span class="meta">${c.posiciones.length} posiciones · historial real desde el lanzamiento</span>
         <a class="go" href="/cartera?c=${c.id}">Ver cartera →</a></div>
     </div>`;
   }).join("");
   // el rótulo y el <h1> del catálogo viven ahora en el .masthead estático de la página
   $("#main").innerHTML = `
-    <p class="sub">Cada cartera es una página viva: posiciones con tesis, precio de entrada registrado el día que entra, y cada rotación fechada con su razonamiento. El rendimiento se mide desde el lanzamiento — nunca con backtests.</p>
+    <p class="sub">Cada cartera se actualiza a diario: posiciones con tesis, precio de entrada registrado el día que entra, y cada rotación fechada con su razonamiento. El rendimiento se mide desde el lanzamiento.</p>
     <div class="honest">🔎 <span><b>Transparencia primero:</b> el historial se construye día a día con precios reales. Lo que ves es lo que fue.</span></div>
     <div class="grid">${cards || '<div class="state">Sin carteras activas todavía.</div>'}${bloqueadas.map(lockedCard).join("")}</div>
     <footer>Valtia Analytics no brinda asesoramiento financiero personalizado a través de estas carteras. La información es de carácter general y educativo; los rendimientos pasados no garantizan resultados futuros. Invertir en renta variable implica riesgo de pérdida del capital.</footer>`;
@@ -476,7 +484,7 @@ async function renderDetalle(c) {
     <div class="kpis">
       <div class="kpi"><div class="l">Retorno desde inicio</div><div class="v ${r!=null?cls(r):"mut"}">${r!=null?fmtPct(r):"—"}</div><div class="s">desde ${inicio}</div></div>
       ${rb != null ? `<div class="kpi"><div class="l">${c.benchmark} en igual período</div><div class="v ${cls(rb)}">${fmtPct(rb)}</div><div class="s">misma ventana temporal</div></div>` : ""}
-      ${dif != null ? `<div class="kpi"><div class="l">Diferencia vs benchmark</div><div class="v ${cls(dif)}">${fmtPct(dif)}</div><div class="s">alpha desde lanzamiento</div></div>` : ""}
+      ${dif != null ? `<div class="kpi"><div class="l">Diferencia vs benchmark</div><div class="v ${cls(dif)}">${fmtPct(dif)}</div><div class="s">acumulada desde el lanzamiento</div></div>` : ""}
       ${anual != null ? `<div class="kpi"><div class="l">Rentabilidad anualizada</div><div class="v ${cls(anual)}">${fmtPct(anual)}</div><div class="s">extrapolada · cartera de ${diasCalendario(c)} días</div></div>` : ""}
       ${riesgo != null ? `<div class="kpi"><div class="l">Calificación de riesgo</div><div class="v">${riesgo}</div><div class="s">volatilidad anualizada ${vol.toFixed(0)}%</div></div>` : ""}
       ${tsr(c.id) && tsr(c.id).maxDD != null ? `<div class="kpi"><div class="l">Peor caída</div><div class="v neg">${fmtPct(tsr(c.id).maxDD)}</div><div class="s">desde su máximo · ${tsr(c.id).nPuntos} ruedas</div></div>` : ""}
@@ -500,7 +508,7 @@ async function renderDetalle(c) {
     <div class="panel"><table>
       <thead><tr><th>Fecha</th><th>Activo</th><th>Acción</th><th class="num">Precio</th><th class="num">Ret. a la salida</th><th>Razonamiento</th></tr></thead>
       <tbody>${histRows || '<tr><td colspan="6" class="mut" style="text-align:center">Sin rotaciones todavía</td></tr>'}</tbody></table></div>
-    <footer><b>Metodología:</b> el índice de la cartera arranca en base 100 el día del lanzamiento (${inicio}) y se actualiza a diario con precios de mercado. No usamos backtests: todo el track record es posterior al lanzamiento y cada rotación queda registrada con fecha, precio y razonamiento. Esta información es de carácter general y no constituye asesoramiento financiero personalizado. Los rendimientos pasados no garantizan resultados futuros.</footer>`;
+    <footer><b>Metodología:</b> el índice de la cartera arranca en base 100 el día del lanzamiento (${inicio}) y se actualiza a diario con precios de mercado. No usamos backtests: todo el historial es posterior al lanzamiento y cada rotación queda registrada con fecha, precio y razonamiento. Esta información es de carácter general y no constituye asesoramiento financiero personalizado. Los rendimientos pasados no garantizan resultados futuros.</footer>`;
 
   charts.forEach(ch => ch.destroy()); charts = [];
   const subC = tok("--sub"), borderC = tok("--border");
@@ -535,7 +543,7 @@ async function render() {
           <div style="font-family:'Playfair Display',serif;font-weight:700;font-variant-numeric:lining-nums;font-size:22px;line-height:1.2;color:var(--ink);margin-bottom:8px">${t.nombre}</div>
           ${t.retorno != null ? `<div style="margin-bottom:14px">Retorno real desde ${t.fechaInicio}: <b class="${cls(t.retorno)}" style="font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px">${fmtPct(t.retorno)}</b>${t.retornoBench != null ? ` · ${t.benchmark || "SPY"} <span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-variant-numeric:tabular-nums">${fmtPct(t.retornoBench)}</span>` : ""}</div>` : ""}
           La composición, la tesis y cada rotación con su razonamiento son de Valtia PRO.<br><br>
-          <a class="go" href="/planes" style="color:var(--gold);font-weight:600">Conocé Valtia PRO · USD 19/mes →</a>
+          <a class="go" href="/planes" style="color:var(--gold);font-weight:600">Conocé Valtia PRO →</a>
           &nbsp;·&nbsp; <a href="/cartera" style="color:var(--sub)">mirá las abiertas</a></div>`;
         return;
       }
@@ -550,8 +558,8 @@ async function render() {
 // el catálogo cambia según haya sesión: se re-renderiza al resolver el auth
 onAuthStateChanged(getAuth(app), u => { _user = u; render(); });
 </script>
-<script type="module" src="nav-auth.js?v=7"></script>
+<script type="module" src="nav-auth.js?v=8"></script>
 <script type="module" src="cotizaciones.js?v=3"></script>
-<script src="nav-menu.js?v=7"></script>
+<script src="nav-menu.js?v=8"></script>
 </body>
 </html>

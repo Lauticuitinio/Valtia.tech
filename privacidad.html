@@ -44,7 +44,7 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 /* masthead centrado sobre la franja navy: rótulo, título y vigencia */
 .masthead{background:#0E1830;padding:26px 52px 20px;text-align:center}
 .masthead .eye{font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#E8CE96;margin-bottom:12px}
-.masthead .t{font:700 clamp(28px,3.6vw,44px)/1.1 'Playfair Display',serif;color:#fff;letter-spacing:.01em;text-wrap:balance}
+.masthead .t{font:700 clamp(30px,3.6vw,44px)/1.1 'Playfair Display',serif;color:#fff;letter-spacing:.01em;text-wrap:balance}
 .masthead .t em{color:#E8CE96;font-style:italic}
 .masthead .d{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(232,206,150,.75);margin-top:12px;line-height:1.6}
 
@@ -60,7 +60,9 @@ main ul{padding-left:20px;display:flex;flex-direction:column;gap:6px;margin-top:
 main b{color:var(--ink);font-weight:600}
 main a{color:var(--gold2);text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
 
-/* footer (el de Noticias) */
+/* footer + mail flotante (el de Noticias) */
+.wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;transition:transform .2s;text-decoration:none}
+.wa-float:hover{transform:scale(1.1)}
 footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:40px}
 .footer-copy{font:400 11px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
 .footer-links{display:flex;gap:20px}
@@ -118,8 +120,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
     avisamos, para no repetirlos. Los mails no incluyen cantidades ni montos de tu cartera.</li>
     <li><b>Preferencias locales:</b> algunas cosas se guardan en tu propio navegador (localStorage) y no llegan a nuestros
     servidores: el tema claro/oscuro, la moneda en la que mirás Mi Cartera y los números que cargás en
-    <a href="/inversion-mensual">Inversión mensual</a>
-    <a href="/mercados">Mercados</a> (ingresos y gastos). Ese último dato lo borramos de tu
+    <a href="/inversion-mensual">Inversión mensual</a> (ingresos y gastos). Ese último dato lo borramos de tu
     navegador cuando cerrás sesión, y no lo subimos: de esa página solo se guarda en tu cuenta el aporte mensual que
     elegís, porque es el que necesita el plan de compras.</li>
   </ul>
@@ -151,6 +152,8 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   <p>Si esta política cambia, actualizamos la fecha de vigencia y comunicamos los cambios relevantes en el sitio.</p>
 </main>
 
+<a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail" style="background:#B08A3E;box-shadow:0 4px 16px rgba(176,138,62,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
+
 <footer>
   <div class="footer-copy">Valtia Analytics · Córdoba, Argentina · <a href="/terminos" style="color:inherit;text-decoration:underline">Términos y Condiciones</a></div>
   <div class="footer-links">
@@ -169,7 +172,7 @@ function volver() {
   location.href = '/';
 }
 </script>
-<script type="module" src="nav-auth.js?v=7"></script>
-<script src="nav-menu.js?v=7"></script>
+<script type="module" src="nav-auth.js?v=8"></script>
+<script src="nav-menu.js?v=8"></script>
 </body>
 </html>

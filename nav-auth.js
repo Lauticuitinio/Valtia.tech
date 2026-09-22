@@ -54,7 +54,7 @@ onAuthStateChanged(getAuth(app), async user => {
   if (user) {
     if (cta) {
       cta.textContent = 'Mi Panel';
-      cta.setAttribute('href', 'index.html#panel/inicio');
+      cta.setAttribute('href', '/#panel/inicio');
       cta.removeAttribute('onclick');
     } else {
       // páginas sin CTA (ej. cartera.html): agregar el acceso al panel
@@ -69,7 +69,7 @@ onAuthStateChanged(getAuth(app), async user => {
   } else {
     if (cta) {
       cta.textContent = 'Ingresar / Crear cuenta';
-      cta.setAttribute('href', 'index.html?login=1');
+      cta.setAttribute('href', '/?login=1');
       cta.removeAttribute('onclick');
     }
     const extra = document.getElementById('nav-mipanel');

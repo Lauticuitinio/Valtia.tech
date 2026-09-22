@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Valtia Analytics — Research y Carteras Vivas</title>
+<title>Valtia Analytics — Research y carteras con seguimiento</title>
+<meta name="description" content="Research de mercados y carteras con seguimiento diario: cada posición con su tesis, cada rotación fechada y el rendimiento medido con precios reales.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="/favicon-180.png">
@@ -157,15 +158,14 @@ body.fl-app-on .wa-float{display:none}
     </div>
   </a>
   <div class="nav-links">
+    <a href="/" class="active">Inicio</a>
     <a href="/cartera">Carteras</a>
     <a href="/inversion-mensual">Inversión mensual</a>
     <a href="/mercados">Mercados</a>
     <a href="/noticias">Noticias</a>
-    <a href="#servicios">¿Qué hacemos?</a>
     <a href="/informes">Informes</a>
     <a href="/herramientas">Herramientas</a>
     <a href="#planes">Planes</a>
-    <a href="#contacto">Contacto</a>
   </div>
   <div class="nav-right">
     <button class="theme-btn" onclick="toggleTheme()" title="Cambiar tema"></button>
@@ -198,7 +198,6 @@ body.fl-app-on .wa-float{display:none}
 .v2g2{display:grid;grid-template-columns:1fr 1fr;gap:26px}
 .v2g3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
 .v2g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.v2stats{display:grid;grid-template-columns:repeat(3,1fr)}
 .v2foot{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:40px}
 .v2planes{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:start}
 @media(max-width:1020px){
@@ -208,14 +207,12 @@ body.fl-app-on .wa-float{display:none}
   .v2g4{grid-template-columns:repeat(2,1fr)}
   .v2foot{grid-template-columns:1fr 1fr}
 }
-@media(max-width:560px){.v2g4{grid-template-columns:1fr}.v2stats{grid-template-columns:1fr}.v2foot{grid-template-columns:1fr}}
+@media(max-width:560px){.v2g4{grid-template-columns:1fr}.v2foot{grid-template-columns:1fr}}
 @media(max-width:1100px){nav .nav-links{display:none}}
 nav .nav-links a,.nav-cta{white-space:nowrap}
-/* con 8 enlaces + tema + CTA, en estas dos franjas "Contacto" no entra sin partir renglón (sigue en el CTA final y en el pie) */
-@media(min-width:1101px) and (max-width:1180px),(min-width:1321px) and (max-width:1380px){nav .nav-links a[href="#contacto"]{display:none}}
 @keyframes val-pulse{0%,100%{opacity:1}50%{opacity:.3}}
 /* FAQ accordion sin JS */
-.v2faq{background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:12px;overflow:hidden}
+.v2faq{background:#fff;border:1px solid #E7E3DA;border-radius:12px;overflow:hidden}
 .v2faq summary{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;cursor:pointer;list-style:none;font:600 15.5px 'IBM Plex Sans',sans-serif;color:#14213D}
 .v2faq summary::-webkit-details-marker{display:none}
 .v2faq .sign{font:400 22px 'IBM Plex Sans',sans-serif;color:#B08A3E;flex:none;line-height:1}
@@ -237,32 +234,26 @@ a.v2plain{color:inherit;text-decoration:none}
       <p style="font:400 18px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.72);line-height:1.62;max-width:520px;margin-bottom:36px;text-wrap:pretty">Análisis claros y actualizados, carteras con seguimiento y las herramientas para invertir con criterio propio — tengas o no tiempo para ocuparte.</p>
       <div style="display:flex;gap:14px;align-items:center;margin-bottom:22px;flex-wrap:wrap">
         <a href="#" onclick="openLogin(event,'crear')" style="background:#B08A3E;color:#fff;font:600 15px 'IBM Plex Sans',sans-serif;padding:16px 32px;border-radius:11px;cursor:pointer;box-shadow:0 12px 28px rgba(176,138,62,.4);text-decoration:none">Empezá gratis →</a>
-        <a href="/cartera" style="color:#fff;font:600 15px 'IBM Plex Sans',sans-serif;padding:16px 28px;border-radius:11px;border:1px solid rgba(255,255,255,.25);cursor:pointer;text-decoration:none">Ver las carteras vivas</a>
+        <a href="/cartera" style="color:#fff;font:600 15px 'IBM Plex Sans',sans-serif;padding:16px 28px;border-radius:11px;border:1px solid rgba(255,255,255,.25);cursor:pointer;text-decoration:none">Ver las carteras</a>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;font:500 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.55)"><span style="color:#3FCE8A">✓</span>Gratis para siempre · sin tarjeta · sin vencimiento</div>
+      <div style="display:flex;align-items:center;gap:8px;font:500 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.55)"><span style="color:#3FCE8A">✓</span>La cuenta gratis no pide datos de pago</div>
     </div>
     <!-- proof card -->
     <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:24px;backdrop-filter:blur(6px)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span style="font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;color:rgba(255,255,255,.55);text-transform:uppercase">Cartera viva · seguimiento diario</span><span style="font:600 10px 'IBM Plex Mono',monospace;color:#3FCE8A">● EN VIVO</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span style="font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;color:rgba(255,255,255,.55);text-transform:uppercase">Carteras · seguimiento diario</span><span style="font:600 10px 'IBM Plex Mono',monospace;color:#3FCE8A">● EN VIVO</span></div>
       <div style="font:500 21px 'Playfair Display',serif;color:#fff;line-height:1.28;margin-bottom:16px">Cada movimiento, <span style="font-style:italic;color:#E8CE96">fechado y a la vista.</span></div>
       <svg viewBox="0 0 300 90" style="width:100%;height:80px;display:block;margin-bottom:16px" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="vg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3FCE8A" stop-opacity=".35"></stop><stop offset="1" stop-color="#3FCE8A" stop-opacity="0"></stop></linearGradient></defs><path d="M0,74 L30,68 L60,70 L90,55 L120,58 L150,44 L180,46 L210,30 L240,33 L270,18 L300,12" fill="none" stroke="#3FCE8A" stroke-width="2.5"></path><path d="M0,74 L30,68 L60,70 L90,55 L120,58 L150,44 L180,46 L210,30 L240,33 L270,18 L300,12 L300,90 L0,90 Z" fill="url(#vg)"></path></svg>
       <div style="display:flex;gap:10px;margin-bottom:16px">
         <div style="flex:1;background:rgba(255,255,255,.05);border-radius:10px;padding:12px 14px"><div style="font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;color:rgba(255,255,255,.45);text-transform:uppercase;margin-bottom:5px">Benchmark</div><div style="font:600 15px 'IBM Plex Mono',monospace;color:#fff">SPY</div></div>
-        <div style="flex:1;background:rgba(255,255,255,.05);border-radius:10px;padding:12px 14px"><div style="font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;color:rgba(255,255,255,.45);text-transform:uppercase;margin-bottom:5px">Backtests</div><div style="font:600 15px 'IBM Plex Mono',monospace;color:#fff">0</div></div>
+        <div style="flex:1;background:rgba(255,255,255,.05);border-radius:10px;padding:12px 14px"><div style="font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;color:rgba(255,255,255,.45);text-transform:uppercase;margin-bottom:5px">Precios</div><div style="font:600 15px 'IBM Plex Mono',monospace;color:#fff">Reales</div></div>
       </div>
       <div style="display:flex;align-items:center;gap:9px;font:500 12px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.6)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E8CE96" stroke-width="2" aria-hidden="true"><rect x="4" y="11" width="16" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>Creá tu cuenta para ver el rendimiento completo</div>
     </div>
   </div>
-  <!-- stat strip -->
-  <div class="v2stats" style="position:relative;border-top:1px solid rgba(255,255,255,.08);max-width:1340px;margin:0 auto">
-    <div style="padding:26px 5vw;text-align:center;border-right:1px solid rgba(255,255,255,.08)"><div style="font:700 30px 'Playfair Display',serif;color:#E8CE96;line-height:1;margin-bottom:7px">En vivo</div><div style="font:500 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.6)">Carteras con seguimiento diario</div></div>
-    <div style="padding:26px 5vw;text-align:center;border-right:1px solid rgba(255,255,255,.08)"><div style="font:700 30px 'Playfair Display',serif;color:#E8CE96;line-height:1;margin-bottom:7px">24/7</div><div style="font:500 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.6)">Datos reales · actualización diaria</div></div>
-    <div style="padding:26px 5vw;text-align:center"><div style="font:700 30px 'Playfair Display',serif;color:#E8CE96;line-height:1;margin-bottom:7px">100%</div><div style="font:500 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.6)">Decisiones fechadas y verificables</div></div>
-  </div>
 </div>
 
 <!-- ══════════ DOS CAMINOS ══════════ -->
-<div style="background:#F6F3EC;padding:88px 5vw">
+<div style="background:#fff;padding:88px 5vw">
   <div style="max-width:1340px;margin:0 auto">
     <div style="text-align:center;max-width:640px;margin:0 auto 52px">
       <div style="font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.18em;color:#B08A3E;text-transform:uppercase;margin-bottom:14px">¿Por dónde empezás?</div>
@@ -270,19 +261,19 @@ a.v2plain{color:inherit;text-decoration:none}
       <p style="font:400 16px 'IBM Plex Sans',sans-serif;color:#5A5346;line-height:1.6">Hacer crecer tu plata — tengas tiempo para ocuparte o no.</p>
     </div>
     <div class="v2g2">
-      <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:38px 36px;box-shadow:0 6px 24px rgba(20,33,61,.06);display:flex;flex-direction:column">
+      <div style="background:#fff;border:1px solid #E7E3DA;border-radius:16px;padding:38px 36px;display:flex;flex-direction:column">
         <div style="width:46px;height:46px;border-radius:11px;background:#B08A3E;color:#fff;display:grid;place-items:center;font:600 15px 'IBM Plex Mono',monospace;margin-bottom:22px">01</div>
         <h3 style="font:600 25px 'Playfair Display',serif;color:#14213D;line-height:1.16;margin-bottom:12px;text-wrap:pretty">Quiero invertir mi propio dinero</h3>
         <p style="font:400 14.5px 'IBM Plex Sans',sans-serif;color:#5A5346;line-height:1.62;margin-bottom:22px">Herramientas, análisis de mercado y acompañamiento para tomar mejores decisiones vos mismo.</p>
         <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:26px">
-          <div style="display:flex;align-items:flex-start;gap:10px;font:400 14px 'IBM Plex Sans',sans-serif;color:#3A362E"><span style="color:#1F7A4D;font-weight:600;margin-top:1px">✓</span>Carteras vivas y señales del sistema</div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font:400 14px 'IBM Plex Sans',sans-serif;color:#3A362E"><span style="color:#1F7A4D;font-weight:600;margin-top:1px">✓</span>Carteras con seguimiento y señales del sistema</div>
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 14px 'IBM Plex Sans',sans-serif;color:#3A362E"><span style="color:#1F7A4D;font-weight:600;margin-top:1px">✓</span>Panel de herramientas completo</div>
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 14px 'IBM Plex Sans',sans-serif;color:#3A362E"><span style="color:#1F7A4D;font-weight:600;margin-top:1px">✓</span>Informes que registran cada decisión</div>
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 14px 'IBM Plex Sans',sans-serif;color:#3A362E"><span style="color:#1F7A4D;font-weight:600;margin-top:1px">✓</span>Desde cualquier monto</div>
         </div>
         <a href="#planes" style="margin-top:auto;align-self:flex-start;font:600 14px 'IBM Plex Sans',sans-serif;color:#B08A3E;text-decoration:none">Ver planes →</a>
       </div>
-      <div style="background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:38px 36px;box-shadow:0 6px 24px rgba(20,33,61,.06);display:flex;flex-direction:column">
+      <div style="background:#fff;border:1px solid #E7E3DA;border-radius:16px;padding:38px 36px;display:flex;flex-direction:column">
         <div style="width:46px;height:46px;border-radius:11px;background:#14213D;color:#fff;display:grid;place-items:center;font:600 15px 'IBM Plex Mono',monospace;margin-bottom:22px">02</div>
         <h3 style="font:600 25px 'Playfair Display',serif;color:#14213D;line-height:1.16;margin-bottom:12px;text-wrap:pretty">Quiero una cartera a mi medida</h3>
         <p style="font:400 14.5px 'IBM Plex Sans',sans-serif;color:#5A5346;line-height:1.62;margin-bottom:22px">Armamos tu cartera sobre nuestros modelos, adaptada a tu perfil, tu horizonte y tu broker.</p>
@@ -292,39 +283,39 @@ a.v2plain{color:inherit;text-decoration:none}
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 14px 'IBM Plex Sans',sans-serif;color:#3A362E"><span style="color:#1F7A4D;font-weight:600;margin-top:1px">✓</span>Revisión periódica + línea directa</div>
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 14px 'IBM Plex Sans',sans-serif;color:#3A362E"><span style="color:#1F7A4D;font-weight:600;margin-top:1px">✓</span>Cupos limitados por trimestre</div>
         </div>
-        <a href="mailto:soporte@valtia.tech?subject=Entrevista%20cartera%20a%20medida" style="margin-top:auto;align-self:flex-start;font:600 14px 'IBM Plex Sans',sans-serif;color:#14213D;text-decoration:none">Solicitar entrevista →</a>
+        <a href="mailto:soporte@valtia.tech?subject=Cartera%20a%20medida" style="margin-top:auto;align-self:flex-start;font:600 14px 'IBM Plex Sans',sans-serif;color:#14213D;text-decoration:none">Escribinos →</a>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ══════════ CARTERAS VIVAS ══════════ -->
+<!-- ══════════ CARTERAS ══════════ -->
 <div style="background:#14213D;padding:88px 5vw">
   <div style="max-width:1340px;margin:0 auto">
     <div class="v2g2" style="gap:40px;align-items:end;margin-bottom:48px">
       <div>
-        <div style="font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.18em;color:#E8CE96;text-transform:uppercase;margin-bottom:14px">El producto central</div>
-        <h2 style="font:700 clamp(30px,3.4vw,42px) 'Playfair Display',serif;color:#fff;line-height:1.1;text-wrap:balance">Carteras vivas, no listas muertas</h2>
+        <div style="font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.18em;color:#E8CE96;text-transform:uppercase;margin-bottom:14px">Nuestras carteras</div>
+        <h2 style="font:700 clamp(30px,3.4vw,42px) 'Playfair Display',serif;color:#fff;line-height:1.1;text-wrap:balance">Cada cartera, con su historial a la vista</h2>
       </div>
-      <p style="font:400 15.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.68);line-height:1.66">Cada cartera es una página viva: posiciones con tesis, precio de entrada registrado el día que entra, y cada rotación fechada con su razón. El rendimiento se mide desde el lanzamiento con precios reales — nunca con backtests.</p>
+      <p style="font:400 15.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.68);line-height:1.66">Cada cartera se actualiza sola: posiciones con su tesis, precio de entrada registrado el día que entra y cada rotación fechada con su razón. El rendimiento se mide desde el lanzamiento con precios reales, no con backtests.</p>
     </div>
     <div class="v2g3">
       <a class="v2plain v2cart" href="/cartera?c=top10-sp500" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;overflow:hidden;display:block">
-        <div style="padding:22px 22px 0;display:flex;justify-content:space-between;align-items:center"><span style="font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.09em;color:#E8CE96;text-transform:uppercase">SP10 · Acceso libre</span><span style="font:600 9px 'IBM Plex Mono',monospace;color:#3FCE8A">● VIVA</span></div>
+        <div style="padding:22px 22px 0;display:flex;justify-content:space-between;align-items:center"><span style="font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.09em;color:#E8CE96;text-transform:uppercase">SP10 · Acceso libre</span><span style="font:600 9px 'IBM Plex Mono',monospace;color:#3FCE8A">● ACTIVA</span></div>
         <div style="padding:6px 22px 0"><h3 style="font:600 22px 'Playfair Display',serif;color:#fff;margin-bottom:4px">Top 10 S&amp;P 500</h3></div>
         <div style="padding:0 22px 12px"><span id="ret-top10-sp500" style="font:600 11.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.5)">Abierta · rebalanceo mensual</span></div>
         <svg viewBox="0 0 300 60" style="width:100%;height:52px;display:block;opacity:.85" preserveAspectRatio="none" aria-hidden="true"><path id="sph-top10-sp500" d="M0,50 L40,45 L80,47 L120,36 L160,38 L200,25 L240,20 L300,8" fill="none" stroke="#3FCE8A" stroke-width="2"></path></svg>
         <p style="padding:14px 22px 22px;font:400 13px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.62);line-height:1.56">Las 10 más grandes de EE.UU. en ponderación equitativa. Abierta para que veas exactamente cómo trabajamos.</p>
       </a>
       <a class="v2plain v2cart" href="/cartera?c=ia" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;overflow:hidden;display:block">
-        <div style="padding:22px 22px 0;display:flex;justify-content:space-between;align-items:center"><span style="font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.09em;color:#8FB8FF;text-transform:uppercase">IA · Riesgo alto</span><span style="font:600 9px 'IBM Plex Mono',monospace;color:#3FCE8A">● VIVA</span></div>
+        <div style="padding:22px 22px 0;display:flex;justify-content:space-between;align-items:center"><span style="font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.09em;color:#8FB8FF;text-transform:uppercase">IA · Riesgo alto</span><span style="font:600 9px 'IBM Plex Mono',monospace;color:#3FCE8A">● ACTIVA</span></div>
         <div style="padding:6px 22px 0"><h3 style="font:600 22px 'Playfair Display',serif;color:#fff;margin-bottom:4px">Cartera IA</h3></div>
         <div style="padding:0 22px 12px"><span id="ret-ia" style="font:600 11.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.5)">Solo suscriptores</span></div>
         <svg viewBox="0 0 300 60" style="width:100%;height:52px;display:block;opacity:.85" preserveAspectRatio="none" aria-hidden="true"><path id="sph-ia" d="M0,54 L40,50 L80,52 L120,40 L160,42 L200,28 L240,22 L300,6" fill="none" stroke="#3FCE8A" stroke-width="2"></path></svg>
         <p style="padding:14px 22px 22px;font:400 13px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.62);line-height:1.56">Empresas cuyo negocio depende de la adopción de IA — evitando las mega-caps para diversificar de verdad.</p>
       </a>
       <a class="v2plain v2cart" href="/cartera?c=semiconductores" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;overflow:hidden;display:block">
-        <div style="padding:22px 22px 0;display:flex;justify-content:space-between;align-items:center"><span style="font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.09em;color:#C6A6FF;text-transform:uppercase">SEMIS · Riesgo alto</span><span style="font:600 9px 'IBM Plex Mono',monospace;color:#3FCE8A">● VIVA</span></div>
+        <div style="padding:22px 22px 0;display:flex;justify-content:space-between;align-items:center"><span style="font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.09em;color:#C6A6FF;text-transform:uppercase">SEMIS · Riesgo alto</span><span style="font:600 9px 'IBM Plex Mono',monospace;color:#3FCE8A">● ACTIVA</span></div>
         <div style="padding:6px 22px 0"><h3 style="font:600 22px 'Playfair Display',serif;color:#fff;margin-bottom:4px">Semiconductores</h3></div>
         <div style="padding:0 22px 12px"><span id="ret-semiconductores" style="font:600 11.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.5)">Solo suscriptores</span></div>
         <svg viewBox="0 0 300 60" style="width:100%;height:52px;display:block;opacity:.85" preserveAspectRatio="none" aria-hidden="true"><path id="sph-semiconductores" d="M0,48 L40,46 L80,42 L120,44 L160,34 L200,32 L240,24 L300,14" fill="none" stroke="#3FCE8A" stroke-width="2"></path></svg>
@@ -336,7 +327,7 @@ a.v2plain{color:inherit;text-decoration:none}
 </div>
 
 <!-- ══════════ CÓMO TRABAJAMOS ══════════ -->
-<div id="servicios" style="background:#F6F3EC;padding:88px 5vw">
+<div id="servicios" style="background:#fff;padding:88px 5vw">
   <div style="max-width:1340px;margin:0 auto">
     <div style="max-width:640px;margin:0 auto 52px;text-align:center">
       <div style="font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.18em;color:#B08A3E;text-transform:uppercase;margin-bottom:14px">¿A qué nos dedicamos?</div>
@@ -344,19 +335,19 @@ a.v2plain{color:inherit;text-decoration:none}
       <p style="font:400 16px 'IBM Plex Sans',sans-serif;color:#5A5346;line-height:1.6">Cada tesis queda escrita, cada rotación queda fechada, y el resultado se mide con precios reales. Lo que decimos hoy, lo auditás mañana.</p>
     </div>
     <div class="v2g2" style="gap:22px">
-      <div style="display:flex;gap:20px;background:#fff;border:1px solid rgba(0,0,0,.07);border-radius:14px;padding:28px 30px">
+      <div style="display:flex;gap:20px;background:#fff;border:1px solid #E7E3DA;border-radius:14px;padding:28px 30px">
         <div style="font:700 26px 'Playfair Display',serif;color:#B08A3E;line-height:1;flex:none">01</div>
-        <div><h3 style="font:600 19px 'Playfair Display',serif;color:#14213D;margin-bottom:8px">Carteras vivas con seguimiento</h3><p style="font:400 14px 'IBM Plex Sans',sans-serif;color:#5A5346;line-height:1.6">Posiciones, tesis y benchmark. Cuando algo rota, te enterás con fecha, precio y razón.</p></div>
+        <div><h3 style="font:600 19px 'Playfair Display',serif;color:#14213D;margin-bottom:8px">Carteras con seguimiento</h3><p style="font:400 14px 'IBM Plex Sans',sans-serif;color:#5A5346;line-height:1.6">Posiciones, tesis y benchmark. Cuando algo rota, te enterás con fecha, precio y razón.</p></div>
       </div>
-      <div style="display:flex;gap:20px;background:#fff;border:1px solid rgba(0,0,0,.07);border-radius:14px;padding:28px 30px">
+      <div style="display:flex;gap:20px;background:#fff;border:1px solid #E7E3DA;border-radius:14px;padding:28px 30px">
         <div style="font:700 26px 'Playfair Display',serif;color:#B08A3E;line-height:1;flex:none">02</div>
         <div><h3 style="font:600 19px 'Playfair Display',serif;color:#14213D;margin-bottom:8px">Cada decisión tiene fundamento</h3><p style="font:400 14px 'IBM Plex Sans',sans-serif;color:#5A5346;line-height:1.6">Analizamos los números de cada empresa antes de invertir: rentabilidad, deuda y valuación.</p></div>
       </div>
-      <div style="display:flex;gap:20px;background:#fff;border:1px solid rgba(0,0,0,.07);border-radius:14px;padding:28px 30px">
+      <div style="display:flex;gap:20px;background:#fff;border:1px solid #E7E3DA;border-radius:14px;padding:28px 30px">
         <div style="font:700 26px 'Playfair Display',serif;color:#B08A3E;line-height:1;flex:none">03</div>
         <div><h3 style="font:600 19px 'Playfair Display',serif;color:#14213D;margin-bottom:8px">Señales y visión de mercado</h3><p style="font:400 14px 'IBM Plex Sans',sans-serif;color:#5A5346;line-height:1.6">Score técnico y fundamental sobre un universo curado, y lectura del régimen para saber cuánto riesgo tomar.</p></div>
       </div>
-      <div style="display:flex;gap:20px;background:#fff;border:1px solid rgba(0,0,0,.07);border-radius:14px;padding:28px 30px">
+      <div style="display:flex;gap:20px;background:#fff;border:1px solid #E7E3DA;border-radius:14px;padding:28px 30px">
         <div style="font:700 26px 'Playfair Display',serif;color:#B08A3E;line-height:1;flex:none">04</div>
         <div><h3 style="font:600 19px 'Playfair Display',serif;color:#14213D;margin-bottom:8px">Informes que registran decisiones</h3><p style="font:400 14px 'IBM Plex Sans',sans-serif;color:#5A5346;line-height:1.6">Research mensual de macro, cripto, renta fija y acciones — con las decisiones ejecutadas y registradas.</p></div>
       </div>
@@ -365,7 +356,8 @@ a.v2plain{color:inherit;text-decoration:none}
 </div>
 
 <!-- ══════════ HERRAMIENTAS ══════════ -->
-<div style="background:#EDE7DA;padding:88px 5vw">
+<!-- única franja crema de la home (#F6F3EC, el crema de la paleta) -->
+<div style="background:#F6F3EC;padding:88px 5vw">
   <div style="max-width:1340px;margin:0 auto">
     <div style="max-width:640px;margin:0 auto 48px;text-align:center">
       <div style="font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.18em;color:#B08A3E;text-transform:uppercase;margin-bottom:14px">Plataforma</div>
@@ -386,7 +378,7 @@ a.v2plain{color:inherit;text-decoration:none}
 </div>
 
 <!-- ══════════ PLANES ══════════ -->
-<div id="planes" style="background:#F6F3EC;padding:88px 5vw">
+<div id="planes" style="background:#fff;padding:88px 5vw">
   <div style="max-width:1340px;margin:0 auto">
     <div style="max-width:640px;margin:0 auto 52px;text-align:center">
       <div style="font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.18em;color:#B08A3E;text-transform:uppercase;margin-bottom:14px">Planes y precios</div>
@@ -395,14 +387,14 @@ a.v2plain{color:inherit;text-decoration:none}
     </div>
     <div class="v2planes">
       <!-- Gratis -->
-      <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(0,0,0,.1);background:#fff">
+      <div style="border-radius:16px;overflow:hidden;border:1px solid #E7E3DA;background:#fff">
         <div style="padding:30px 28px 24px">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span style="font:600 13px 'IBM Plex Sans',sans-serif;letter-spacing:.02em;color:#1F7A4D">Gratis</span></div>
-          <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px"><span style="font:700 38px 'Playfair Display',serif;color:#14213D">USD 0</span><span style="font:500 13px 'IBM Plex Sans',sans-serif;color:#8B8375">para siempre</span></div>
-          <div style="font:400 12.5px 'IBM Plex Sans',sans-serif;color:#8B8375;margin-bottom:22px">Sin tarjeta, sin vencimiento</div>
-          <a href="#" onclick="openLogin(event,'crear')" style="display:block;font:600 14px 'IBM Plex Sans',sans-serif;text-align:center;padding:13px;border-radius:10px;cursor:pointer;background:#EDE7DA;color:#14213D;text-decoration:none">Crear cuenta</a>
+          <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px"><span style="font:700 38px 'Playfair Display',serif;color:#14213D">USD 0</span><span style="font:500 13px 'IBM Plex Sans',sans-serif;color:#8B8375">al mes</span></div>
+          <div style="font:400 12.5px 'IBM Plex Sans',sans-serif;color:#8B8375;margin-bottom:22px">No pedimos datos de pago</div>
+          <a href="#" onclick="openLogin(event,'crear')" style="display:block;font:600 14px 'IBM Plex Sans',sans-serif;text-align:center;padding:13px;border-radius:10px;cursor:pointer;background:#fff;color:#14213D;border:1px solid #14213D;text-decoration:none">Crear cuenta</a>
         </div>
-        <div style="padding:22px 28px 30px;border-top:1px solid rgba(0,0,0,.08);display:flex;flex-direction:column;gap:12px">
+        <div style="padding:22px 28px 30px;border-top:1px solid #E7E3DA;display:flex;flex-direction:column;gap:12px">
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:#3A362E"><span style="color:#1F7A4D;font-weight:600;margin-top:1px">✓</span>Cartera Top 10 S&amp;P 500 completa</div>
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:#3A362E"><span style="color:#1F7A4D;font-weight:600;margin-top:1px">✓</span>Noticias y visión de mercado</div>
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:#3A362E"><span style="color:#1F7A4D;font-weight:600;margin-top:1px">✓</span>Cotizaciones en tiempo real</div>
@@ -414,8 +406,8 @@ a.v2plain{color:inherit;text-decoration:none}
       <div style="border-radius:16px;overflow:hidden;border:1px solid #B08A3E;background:#14213D;box-shadow:0 20px 48px rgba(20,33,61,.24)">
         <div style="padding:30px 28px 24px">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span style="font:600 13px 'IBM Plex Sans',sans-serif;letter-spacing:.02em;color:#E8CE96">Valtia PRO</span><span style="font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;background:#B08A3E;color:#fff;padding:3px 9px;border-radius:99px;text-transform:uppercase">Recomendado</span></div>
-          <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px"><span style="font:700 38px 'Playfair Display',serif;color:#fff">USD 19</span><span style="font:500 13px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.55)">/ mes</span></div>
-          <div style="font:400 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.55);margin-bottom:22px">Suscripciones online muy pronto — anotándote congelás el precio de lanzamiento</div>
+          <div style="margin-bottom:6px"><span style="font:700 clamp(22px,4.6vw,30px) 'Playfair Display',serif;color:#fff">Precio de lanzamiento — escribinos</span></div>
+          <div style="font:400 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.55);margin-bottom:22px;line-height:1.6">Contanos qué necesitás a <a href="mailto:soporte@valtia.tech?subject=Valtia%20PRO" style="color:#E8CE96;text-decoration:none">soporte@valtia.tech</a> y te pasamos las condiciones. El cobro por la web todavía no está abierto: si te anotás, te queda el precio de lanzamiento.</div>
           <div id="wl-pro">
             <div style="display:flex;gap:8px">
               <input type="email" id="wl-email" placeholder="tu@email.com" autocomplete="email" inputmode="email" style="flex:1;min-width:0;font:400 14px 'IBM Plex Sans',sans-serif;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;outline:none">
@@ -425,7 +417,7 @@ a.v2plain{color:inherit;text-decoration:none}
           </div>
         </div>
         <div style="padding:22px 28px 30px;border-top:1px solid rgba(255,255,255,.14);display:flex;flex-direction:column;gap:12px">
-          <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.85)"><span style="color:#E8CE96;font-weight:600;margin-top:1px">✓</span>Todas las carteras vivas, con cada rotación fechada y justificada</div>
+          <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.85)"><span style="color:#E8CE96;font-weight:600;margin-top:1px">✓</span>Todas las carteras, con cada rotación fechada y justificada</div>
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.85)"><span style="color:#E8CE96;font-weight:600;margin-top:1px">✓</span>Avisos de rotación por mail, el día que pasan</div>
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.85)"><span style="color:#E8CE96;font-weight:600;margin-top:1px">✓</span>Fichas de activo completas, con informe y radar destapados</div>
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.85)"><span style="color:#E8CE96;font-weight:600;margin-top:1px">✓</span>Radar de valuación completo</div>
@@ -435,14 +427,14 @@ a.v2plain{color:inherit;text-decoration:none}
         </div>
       </div>
       <!-- A medida -->
-      <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(0,0,0,.1);background:#fff">
+      <div style="border-radius:16px;overflow:hidden;border:1px solid #E7E3DA;background:#fff">
         <div style="padding:30px 28px 24px">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span style="font:600 13px 'IBM Plex Sans',sans-serif;letter-spacing:.02em;color:#B08A3E">Cartera a medida</span></div>
           <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px"><span style="font:700 38px 'Playfair Display',serif;color:#14213D">A consultar</span></div>
           <div style="font:400 12.5px 'IBM Plex Sans',sans-serif;color:#8B8375;margin-bottom:22px">Cupos limitados por trimestre</div>
-          <a href="mailto:soporte@valtia.tech?subject=Entrevista%20cartera%20a%20medida" style="display:block;font:600 14px 'IBM Plex Sans',sans-serif;text-align:center;padding:13px;border-radius:10px;cursor:pointer;background:#14213D;color:#fff;text-decoration:none">Solicitar entrevista</a>
+          <a href="mailto:soporte@valtia.tech?subject=Cartera%20a%20medida" style="display:block;font:600 14px 'IBM Plex Sans',sans-serif;text-align:center;padding:13px;border-radius:10px;cursor:pointer;background:#14213D;color:#fff;text-decoration:none">Escribinos</a>
         </div>
-        <div style="padding:22px 28px 30px;border-top:1px solid rgba(0,0,0,.08);display:flex;flex-direction:column;gap:12px">
+        <div style="padding:22px 28px 30px;border-top:1px solid #E7E3DA;display:flex;flex-direction:column;gap:12px">
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:#3A362E"><span style="color:#B08A3E;font-weight:600;margin-top:1px">✓</span>Todo lo de Valtia PRO incluido</div>
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:#3A362E"><span style="color:#B08A3E;font-weight:600;margin-top:1px">✓</span>Cartera armada según tu perfil y broker</div>
           <div style="display:flex;align-items:flex-start;gap:10px;font:400 13.5px 'IBM Plex Sans',sans-serif;color:#3A362E"><span style="color:#B08A3E;font-weight:600;margin-top:1px">✓</span>Revisión periódica de la cartera</div>
@@ -467,12 +459,12 @@ a.v2plain{color:inherit;text-decoration:none}
         <div style="font:400 12px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.6)">Fundador y gestor · Valtia Analytics · Córdoba, Argentina</div>
       </div>
     </div>
-    <p style="font:400 14px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.55);line-height:1.75;max-width:620px;margin:22px auto 0">Valtia es un proyecto personal: cada informe, cada cartera y cada herramienta los construye y firma la misma persona. Por eso todo el track record es público, fechado y sin backtests — acá la reputación es el producto.</p>
+    <p style="font:400 14px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.55);line-height:1.75;max-width:620px;margin:22px auto 0">Valtia es un proyecto personal: cada informe, cada cartera y cada herramienta los construye y firma la misma persona. Por eso todo el historial es público y fechado — acá la reputación se juega en cada decisión.</p>
   </div>
 </div>
 
 <!-- ══════════ FAQ ══════════ -->
-<div style="background:#F6F3EC;padding:88px 5vw">
+<div style="background:#fff;padding:88px 5vw">
   <div style="max-width:900px;margin:0 auto">
     <div style="text-align:center;margin-bottom:44px">
       <div style="font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.18em;color:#B08A3E;text-transform:uppercase;margin-bottom:14px">Preguntas frecuentes</div>
@@ -480,9 +472,9 @@ a.v2plain{color:inherit;text-decoration:none}
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
       <details class="v2faq" open><summary>¿Esto sirve si nunca invertí antes?<span class="sign"></span></summary><div class="ans">Sí. Las herramientas y el acompañamiento están pensados tanto para quienes empiezan como para inversores con experiencia. Podés arrancar desde el plan gratuito y subir cuando quieras.</div></details>
-      <details class="v2faq"><summary>¿Qué son las "carteras vivas"?<span class="sign"></span></summary><div class="ans">Cada cartera es una página que se actualiza: posiciones con su tesis, precio de entrada registrado el día que entra y cada rotación fechada con su razón. El rendimiento se mide desde el lanzamiento con precios reales.</div></details>
+      <details class="v2faq"><summary>¿Cómo funcionan las carteras?<span class="sign"></span></summary><div class="ans">Cada cartera es una página que se actualiza: posiciones con su tesis, precio de entrada registrado el día que entra y cada rotación fechada con su razón. El rendimiento se mide desde el lanzamiento con precios reales.</div></details>
       <details class="v2faq"><summary>¿Garantizan resultados?<span class="sign"></span></summary><div class="ans">No. Los mercados implican riesgos y los rendimientos pasados no garantizan resultados futuros. Lo que ofrecemos es análisis riguroso, seguimiento constante y decisiones fundamentadas y verificables.</div></details>
-      <details class="v2faq"><summary>¿Puedo usar el panel desde el celular?<span class="sign"></span></summary><div class="ans">Sí, el portal y las herramientas están optimizados para mobile. Accedés desde cualquier dispositivo con conexión a internet.</div></details>
+      <details class="v2faq"><summary>¿Puedo usar el panel desde el celular?<span class="sign"></span></summary><div class="ans">Sí, el portal y las herramientas están preparados para el celular. Accedés desde cualquier dispositivo con conexión a internet.</div></details>
       <details class="v2faq"><summary>¿Cómo cancelo o cambio mi suscripción?<span class="sign"></span></summary><div class="ans">Sin permanencia y sin dar explicaciones: hoy el alta y la baja se gestionan directo con nosotros, con un mail alcanza. Cuando lancemos las suscripciones online vas a poder cancelar desde tu cuenta, manteniendo el acceso hasta el final del período pagado.</div></details>
     </div>
   </div>
@@ -492,7 +484,7 @@ a.v2plain{color:inherit;text-decoration:none}
 <div id="contacto" style="background:#14213D;padding:88px 5vw;text-align:center">
   <div style="max-width:720px;margin:0 auto">
     <h2 style="font:700 clamp(32px,3.8vw,48px) 'Playfair Display',serif;color:#fff;line-height:1.1;margin-bottom:18px;text-wrap:balance">¿Querés <span style="font-style:italic;color:#E8CE96">empezar</span> a invertir mejor?</h2>
-    <p style="font:400 17px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.68);line-height:1.6;margin-bottom:34px">Creá tu cuenta gratis y mirá cómo trabajamos. Sin tarjeta, sin compromiso.</p>
+    <p style="font:400 17px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.68);line-height:1.6;margin-bottom:34px">Creá tu cuenta gratis y mirá cómo trabajamos. No pedimos datos de pago.</p>
     <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
       <a href="#" onclick="openLogin(event,'crear')" style="background:#B08A3E;color:#fff;font:600 15px 'IBM Plex Sans',sans-serif;padding:16px 34px;border-radius:11px;cursor:pointer;box-shadow:0 12px 28px rgba(176,138,62,.4);text-decoration:none">Empezá gratis →</a>
       <a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" style="color:#fff;font:600 15px 'IBM Plex Sans',sans-serif;padding:16px 28px;border-radius:11px;border:1px solid rgba(255,255,255,.25);cursor:pointer;text-decoration:none">Hablar con el equipo</a>
@@ -505,7 +497,7 @@ a.v2plain{color:inherit;text-decoration:none}
   <div class="v2foot" style="max-width:1340px;margin:0 auto;margin-bottom:40px">
     <div>
       <div style="font:700 20px 'Playfair Display',serif;color:#fff;margin-bottom:14px">VAL<span style="color:#E8CE96;font-style:italic">T</span>IA <span style="font:500 10px 'IBM Plex Sans',sans-serif;letter-spacing:.2em;color:rgba(255,255,255,.4);text-transform:uppercase">Analytics</span></div>
-      <p style="font:400 13px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.5);line-height:1.6;max-width:280px">Research de mercados y carteras con track record verificable. Córdoba, Argentina.</p>
+      <p style="font:400 13px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.5);line-height:1.6;max-width:280px">Research de mercados y carteras con historial verificable. Córdoba, Argentina.</p>
     </div>
     <div>
       <div style="font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;color:rgba(255,255,255,.45);text-transform:uppercase;margin-bottom:16px">Plataforma</div>
@@ -527,6 +519,7 @@ a.v2plain{color:inherit;text-decoration:none}
     <div>
       <div style="font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;color:rgba(255,255,255,.45);text-transform:uppercase;margin-bottom:16px">Contacto</div>
       <div style="display:flex;flex-direction:column;gap:11px">
+        <a href="#contacto" style="font:400 13px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.62);text-decoration:none">Contacto</a>
         <a href="mailto:soporte@valtia.tech" style="font:400 13px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.62);text-decoration:none">soporte@valtia.tech</a>
         <a href="#planes" style="font:400 13px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.62);text-decoration:none">Ver planes</a>
       </div>
@@ -609,7 +602,7 @@ a.v2plain{color:inherit;text-decoration:none}
       </svg>
     </div>
     <div class="modal-title">Acceso Valtia</div>
-    <div class="modal-sub">Ingresá o creá tu cuenta gratis — sin tarjeta, sin compromiso</div>
+    <div class="modal-sub">Ingresá o creá tu cuenta gratis — no pedimos datos de pago</div>
     <div class="lm-tabs">
       <button type="button" class="lm-tab on" id="lm-tab-ingresar" onclick="loginModo('ingresar')">Ingresar</button>
       <button type="button" class="lm-tab" id="lm-tab-crear" onclick="loginModo('crear')">Crear cuenta</button>
@@ -644,7 +637,7 @@ a.v2plain{color:inherit;text-decoration:none}
         <input type="password" id="signup-pass" placeholder="mínimo 6 caracteres" autocomplete="new-password">
       </div>
       <button class="btn-login" id="btn-signup" onclick="signupWithEmail()">Crear mi cuenta gratis</button>
-      <div style="font-size:12px;opacity:.6;text-align:center;margin-top:10px;line-height:1.6">Gratis para siempre: Mi Cartera, tu plan de Disciplina, noticias y herramientas. Sin tarjeta.</div>
+      <div style="font-size:12px;opacity:.6;text-align:center;margin-top:10px;line-height:1.6">La cuenta gratis incluye Mi Cartera, tu plan de Disciplina, noticias y herramientas. No pedimos datos de pago.</div>
     </div>
     <div class="login-2fa">🔒 Conexión cifrada · Firebase Authentication de Google</div>
     <div class="login-signup" id="lm-alt">¿No tenés cuenta? <a href="#" onclick="loginModo('crear');return false">Creala gratis en un minuto</a></div>
@@ -704,7 +697,7 @@ function loginModo(m){
     if(b)b.textContent=aviso;
   };
 });
-// llegada desde otra página: index.html?login=1 abre el modal (login=crear, la pestaña de registro)
+// llegada desde otra página: /?login=1 abre el modal (login=crear, la pestaña de registro)
 (function(){
   const q=new URLSearchParams(location.search);
   if(q.get('login')){
@@ -739,7 +732,7 @@ function updateNavUser(user,isAdmin){
     cta.textContent='Mi Panel';
     cta.setAttribute('onclick','goPortal(event)');
     mkt.forEach(a=>a.style.display='none');
-    if(pl)pl.setAttribute('href','planes.html');
+    if(pl)pl.setAttribute('href','/planes');
     const name=user.displayName||user.email.split('@')[0];
     document.getElementById('nav-username').textContent=name.split(' ')[0];
     document.getElementById('nav-avatar').textContent=(name[0]||'U').toUpperCase();
@@ -1320,6 +1313,6 @@ function updateChartTheme(){
 </script>
 <script type="module" src="fondo-live.js?v=24"></script>
 
-<script src="nav-menu.js?v=7"></script>
+<script src="nav-menu.js?v=8"></script>
 </body>
 </html>

@@ -46,7 +46,7 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 
 /* masthead centrado sobre la franja navy, con el título de la página */
 .masthead{background:#0E1830;padding:26px 52px 20px;text-align:center}
-.masthead .t{font:700 clamp(28px,3.4vw,40px) 'Playfair Display',serif;color:#fff;letter-spacing:.01em;line-height:1.1}
+.masthead .t{font:700 clamp(30px,3.6vw,44px) 'Playfair Display',serif;color:#fff;letter-spacing:.01em;line-height:1.1;text-wrap:balance}
 .masthead .t em{color:#E8CE96;font-style:italic}
 .masthead .d{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(232,206,150,.75);margin-top:12px}
 
@@ -117,6 +117,10 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 .footer-links a{font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase}
 .footer-links a:hover{color:#E8CE96}
 
+/* botón de mail flotante abajo a la izquierda (el mismo de activo.html / noticias.html) */
+.wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;transition:transform .2s;text-decoration:none}
+.wa-float:hover{transform:scale(1.1)}
+
 @media(max-width:880px){
   .masthead,.top-volver,main,footer{padding-left:20px;padding-right:20px}
 }
@@ -154,14 +158,14 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 
 <div class="top-volver"><button class="volver" onclick="volver()">← Volver</button></div>
 <main>
-  <p class="sub">Empezá gratis y subí cuando el research te haga falta. Sin permanencia, sin backtests inflados:
+  <p class="sub">Empezá gratis y pasá a PRO cuando necesites el análisis completo. Sin permanencia:
   todo lo que ves —carteras, radar, informes— se construye con precios reales desde el día del lanzamiento.</p>
 
   <div class="grid">
     <div class="plan">
       <div class="tag" style="color:var(--greenTx)">Gratis</div>
-      <div class="precio">USD 0 <small>para siempre</small></div>
-      <div class="nota">Sin tarjeta, sin vencimiento</div>
+      <div class="precio">USD 0 <small>/ mes</small></div>
+      <div class="nota">No pedimos tarjeta y la cuenta no caduca</div>
       <a class="cta suave" href="/?login=crear">Crear mi cuenta gratis</a>
       <ul>
         <li>Cartera Top 10 S&amp;P 500 completa, con tesis y rotaciones</li>
@@ -173,7 +177,9 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
     </div>
     <div class="plan pro">
       <div class="tag" style="color:var(--gold-claro)">Valtia PRO <span class="rec">Recomendado</span></div>
-      <div class="precio">USD 19 <small>/ mes</small></div>
+      <!-- El precio de PRO va sin número hasta que abra el cobro (SPEC, sección 0):
+           es una frase, así que usa .precio.txt (Playfair) y no Plex Mono. -->
+      <div class="precio txt">Precio de lanzamiento — escribinos</div>
       <div class="nota">Suscripciones online muy pronto — anotándote congelás el precio de lanzamiento</div>
       <div class="wl">
         <input type="email" id="wl-email" placeholder="tu@email.com" autocomplete="email" inputmode="email">
@@ -184,7 +190,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
       </div>
       <div id="wl-msg"></div>
       <ul>
-        <li>Todas las carteras vivas, con cada rotación fechada y justificada</li>
+        <li>Todas las carteras, con cada rotación fechada y justificada</li>
         <li>Avisos de rotación por mail, el día que pasan</li>
         <!-- El número sale del radar (radar/latest). Esta página no lo lee, así
              que va escrito: al sumar activos al radar hay que actualizarlo acá.
@@ -200,7 +206,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
       <div class="tag" style="color:var(--gold2)">Cartera a medida</div>
       <div class="precio txt">A consultar</div>
       <div class="nota">Cupos limitados: atención directa del gestor</div>
-      <a class="cta suave" href="mailto:soporte@valtia.tech?subject=Entrevista%20cartera%20a%20medida">Solicitar entrevista</a>
+      <a class="cta suave" href="mailto:soporte@valtia.tech?subject=Cartera%20a%20medida">Escribinos</a>
       <ul>
         <li>Todo lo de Valtia PRO incluido</li>
         <li>Cartera armada según tu perfil y broker</li>
@@ -214,13 +220,14 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   <div class="sec">Preguntas frecuentes</div>
   <details open><summary>¿Cómo pago Valtia PRO hoy?</summary>
     <p>Estamos terminando la pasarela de cobro online. Mientras tanto, anotándote en la lista te reservamos el
-    precio de lanzamiento de USD 19 y te escribimos apenas abra — el alta inicial se gestiona directo con nosotros.</p></details>
+    precio de lanzamiento y te escribimos apenas abra — el alta inicial se gestiona directo con nosotros.</p></details>
   <details><summary>¿Cómo cancelo?</summary>
     <p>Sin permanencia y sin dar explicaciones: hoy con un mail alcanza. Cuando lancemos las suscripciones online
     vas a poder cancelar desde tu cuenta, manteniendo el acceso hasta el final del período pagado.</p></details>
   <details><summary>¿Garantizan resultados?</summary>
     <p>No. Los mercados implican riesgo y los rendimientos pasados no garantizan resultados futuros. Lo que ofrecemos
-    es análisis riguroso y decisiones fundamentadas, fechadas y verificables — nunca backtests.</p></details>
+    es análisis riguroso y decisiones fundamentadas, fechadas y verificables: el historial se mide desde el día del
+    lanzamiento, no con simulaciones sobre el pasado.</p></details>
 
 </main>
 
@@ -231,6 +238,8 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
     <a href="/">Inicio</a><a href="/cartera">Carteras</a><a href="/informes">Informes</a><a href="/herramientas">Herramientas</a>
   </div>
 </footer>
+
+<a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail" style="background:#B08A3E;box-shadow:0 4px 16px rgba(176,138,62,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
 <script>
 function volver() {
@@ -284,8 +293,8 @@ if (btn) {
 const inpWl = document.getElementById('wl-email');
 if (inpWl) inpWl.addEventListener('keydown', ev => { if (ev.key === 'Enter') waitlistPro(ev); });
 </script>
-<script type="module" src="nav-auth.js?v=7"></script>
+<script type="module" src="nav-auth.js?v=8"></script>
 <script type="module" src="cotizaciones.js?v=3"></script>
-<script src="nav-menu.js?v=7"></script>
+<script src="nav-menu.js?v=8"></script>
 </body>
 </html>

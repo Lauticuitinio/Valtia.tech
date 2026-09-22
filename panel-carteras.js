@@ -71,7 +71,7 @@ const CSS = `
 @media(prefers-reduced-motion:reduce){.v3ca-sk{animation:none}}
 `;
 
-const INTRO = `<p class="v3ca-intro">Carteras vivas con historial real desde su lanzamiento, sin backtests: cada rotación queda fechada con su razonamiento. Seguí la que va con vos y el panel te avisa cuando rota y te muestra qué te falta para replicarla.</p>`;
+const INTRO = `<p class="v3ca-intro">Cada cartera tiene historial real desde el día de su lanzamiento y cada rotación queda fechada con su razón. Seguí la que va con vos y el panel te avisa cuando rota y te muestra qué te falta para replicarla.</p>`;
 
 // cada llamada nueva invalida a la anterior: si el usuario sigue una cartera
 // mientras la primera todavía carga, no la pisa un dibujo viejo

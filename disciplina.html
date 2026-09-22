@@ -17,7 +17,7 @@
      esquinas rectas. Solo claro. ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --navy:#0E1830;--navy2:#0B1327;--navy3:#14213D;
+  --navy:#0E1830;--navy2:#0B1327;
   --gold:#B08A3E;--gold2:#8A6A2F;--gold-claro:#E8CE96;  /* gold-claro: SOLO sobre fondo navy */
   --bg:#fff;--bg2:#F6F3EC;--bg3:#F6F3EC;
   --text:#101010;--sub:#57534A;--muted:#8B8375;
@@ -50,12 +50,6 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .masthead .d{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(232,206,150,.75);margin-top:12px}
 
 main{max-width:1160px;margin:0 auto;padding:22px 52px 60px;min-height:52vh}
-.eye{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:12px}
-/* volver a la página que define la regla: es un enlace, no un segundo kicker */
-.volver{display:inline-block;font-size:12.5px;letter-spacing:.02em;text-transform:none;color:var(--sub);text-decoration:none;margin-bottom:10px}
-.volver:hover{color:var(--gold)}
-h1{font:700 clamp(28px,3.4vw,40px) 'Playfair Display',serif;color:var(--ink);line-height:1.12;margin-bottom:14px;text-wrap:pretty}
-h1 em{font-style:italic;color:var(--gold)}
 .sub{color:var(--sub);font-size:15px;line-height:1.75;max-width:720px;margin-bottom:8px}
 /* título de sección: patrón .sec-h de Informes (Playfair + hairline que se
    estira). El JS pinta solo texto adentro, así que la hairline es un ::after
@@ -126,7 +120,7 @@ tbody tr:hover td{background:var(--marfil)}
 .otra input[type="number"]{font:500 14px 'IBM Plex Mono',monospace}
 .otra input:focus{border-color:var(--gold)}
 .state{border:1px dashed var(--line);text-align:center;padding:60px 20px;color:var(--sub);font-size:14px;margin-top:30px}
-/* el botón "← Volver" de arriba; el enlace .volver de la intro es otra cosa */
+/* el único "← Volver" de la página: el de arriba, antes del contenido */
 .top-volver{max-width:1160px;margin:0 auto;padding:20px 52px 0}
 .top-volver .volver{display:inline-block;font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);background:none;border:none;padding:0;margin:0;cursor:pointer}
 .top-volver .volver:hover{color:var(--gold)}
@@ -137,6 +131,9 @@ tbody tr:hover td{background:var(--marfil)}
 /* footer de Noticias (navy2), a sangre: el JS lo pinta adentro de <main> */
 footer{margin:48px calc(50% - 50vw) -60px;background:#0B1327;padding:28px calc(50vw - 50%);font:400 11px 'IBM Plex Sans',sans-serif;line-height:1.9;color:rgba(255,255,255,.55)}
 footer a:hover{color:#E8CE96}
+/* botón de mail flotante (el mismo de activo.html / noticias.html) */
+.wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;transition:transform .2s;text-decoration:none}
+.wa-float:hover{transform:scale(1.1)}
 @media(max-width:880px){.masthead,main,.top-volver{padding-left:20px;padding-right:20px}}
 @media(max-width:600px){.regla input{width:100%}.regla .campo{flex:1}}
 </style>
@@ -150,7 +147,7 @@ footer a:hover{color:#E8CE96}
   <div class="nav-links">
     <a href="/">Inicio</a>
     <a href="/cartera">Carteras</a>
-    <a href="/inversion-mensual">Inversión mensual</a>
+    <a href="/inversion-mensual" class="active">Inversión mensual</a>
     <a href="/mercados">Mercados</a>
     <a href="/noticias">Noticias</a>
     <a href="/informes">Informes</a>
@@ -162,8 +159,9 @@ footer a:hover{color:#E8CE96}
   </div>
 </nav>
 
+<!-- el título de la página va acá y en ningún otro lado: abajo arranca el contenido -->
 <div class="masthead">
-  <div class="t">Candidatas <em>del mes</em></div>
+  <h1 class="t">Candidatas <em>del mes</em></h1>
   <div class="d">Tu plan de compras, mes a mes</div>
 </div>
 
@@ -173,6 +171,8 @@ footer a:hover{color:#E8CE96}
 <main id="main">
   <div class="state">Cargando tu plan…</div>
 </main>
+
+<a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail" style="background:#B08A3E;box-shadow:0 4px 16px rgba(176,138,62,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -296,16 +296,13 @@ async function registrarCompra(tickerFicha, cantidad, precio, broker = "") {
 /* ── vistas ── */
 function intro(publico) {
   return `
-    <a class="volver" href="/inversion-mensual">← Inversión mensual</a>
-    <div class="eye">Candidatas del mes · el método del inversor constante</div>
-    <h1>Invertí todos los meses.<br>Nosotros te <em>marcamos</em> el ritmo.</h1>
-    <p class="sub">El secreto del largo plazo no es acertarle al momento: es aportar siempre y comprar lo que está barato.
+    <p class="sub">El método del inversor constante: no se trata de acertarle al momento, sino de aportar siempre y comprar lo que está barato.
     Definís tu regla —cuánto aportás por mes y en cuántas compras—, el radar te propone los activos mejor puntuados
     que todavía no tenés, y cada compra que marcás se agrega sola a Mi Cartera. Tu constancia queda a la vista.</p>
     <div class="pasos">
       <div class="paso"><div class="n">01</div><b>Tu regla, una vez</b><p>Elegí tu aporte mensual en dólares y en cuántas compras lo repartís. Es tu contrato con vos mismo.</p></div>
       <div class="paso"><div class="n">02</div><b>Candidatas del radar</b><p>Cada mes te mostramos lo mejor puntuado por la lectura Valtia que falta en tu cartera, con precio del día.</p></div>
-      <div class="paso"><div class="n">03</div><b>"La compré" y listo</b><p>Un click registra la compra en tu plan y en Mi Cartera al precio del día. Sin doble carga, sin planillas.</p></div>
+      <div class="paso"><div class="n">03</div><b>"La compré" y listo</b><p>Un clic registra la compra en tu plan y en Mi Cartera al precio del día. Sin doble carga, sin planillas.</p></div>
     </div>
     ${publico ? `<div class="gate"><b>Armá tu plan con tu cuenta</b>
       <p>El plan, la racha y el historial son tuyos y viajan con tu cuenta. Entrá para definir tu regla y arrancar este mes.</p>
@@ -385,9 +382,9 @@ function vistaPlan() {
       ${r ? `<div class="racha"><span class="fuego">🔥</span> <b>${r} mes${r > 1 ? "es" : ""}</b>&nbsp;seguido${r > 1 ? "s" : ""} cumpliendo tu plan &nbsp; ${chipsMeses()}</div>` : (_log.length ? `<div class="racha">${chipsMeses()}</div>` : "")}
     </div>
 
-    <div class="sec">Candidatas del mes · lo mejor del radar que no tenés</div>
+    <div class="sec">Lo mejor del radar que todavía no tenés</div>
     <div class="panel"><table>
-      <thead><tr><th>Activo</th><th class="num">Score</th><th>Lectura Valtia</th><th class="num">P/E</th><th class="num">RSI</th><th class="num">Precio hoy</th><th class="num"></th></tr></thead>
+      <thead><tr><th>Activo</th><th class="num">Puntaje</th><th>Lectura Valtia</th><th class="num">P/E</th><th class="num">RSI</th><th class="num">Precio hoy</th><th class="num"></th></tr></thead>
       <tbody>${cands.map(filaCandidata).join("") || '<tr><td colspan="7" class="mut" style="text-align:center">Ya tenés todo lo puntuado por el radar — constancia de acero.</td></tr>'}</tbody>
     </table></div>
     <div class="msg" id="msg-compra"></div>
@@ -479,7 +476,7 @@ async function render() {
       $("#main").innerHTML = intro(true) + `
         <div class="sec">Así se ve un mes del plan</div>
         <div class="panel"><table>
-          <thead><tr><th>Activo</th><th class="num">Score</th><th>Lectura Valtia</th><th class="num">P/E</th><th class="num">Precio hoy</th></tr></thead>
+          <thead><tr><th>Activo</th><th class="num">Puntaje</th><th>Lectura Valtia</th><th class="num">P/E</th><th class="num">Precio hoy</th></tr></thead>
           <tbody>${candidatas(3).map(a => {
             const px = precioDe(a.sym);
             return `<tr><td class="tk">${linkTk(a.sym)}<div class="nom">${esc(a.nombre)}</div></td>
@@ -489,7 +486,7 @@ async function render() {
               <td class="num">${px != null ? fmtUSD(px) : "—"}</td></tr>`;
           }).join("")}</tbody></table></div>
         <p class="nom" style="margin-top:10px">Muestra libre: las tres mejor puntuadas del radar hoy. Con tu cuenta ves cinco candidatas filtradas contra tu propia cartera.</p>
-        <footer>Disciplina Valtia es una herramienta de organización personal. La lectura del radar es análisis de carácter general y educativo, no constituye asesoramiento financiero personalizado.</footer>`;
+        <footer>Candidatas del mes es una herramienta de organización personal. La lectura del radar es análisis de carácter general y educativo, no constituye asesoramiento financiero personalizado.</footer>`;
       return;
     }
     if (!_user.emailVerified) {
@@ -497,7 +494,7 @@ async function render() {
       $("#main").innerHTML = intro(false) + `
         <div class="gate"><b>Verificá tu email para activar tu plan</b>
         <p>Al crear la cuenta te mandamos un mail de verificación a <b>${esc(_user.email)}</b>.
-        Abrilo, tocá el link y volvé — tu plan, tu racha y Mi Cartera se activan al instante. Revisá también spam.</p>
+        Abrilo, tocá el enlace y volvé — tu plan, tu racha y Mi Cartera se activan al instante. Mirá también en correo no deseado.</p>
         <button class="btn" onclick="location.reload()">Ya la verifiqué</button></div>`;
       return;
     }
@@ -509,8 +506,8 @@ async function render() {
 }
 onAuthStateChanged(getAuth(app), u => { _user = u; render(); });
 </script>
-<script type="module" src="nav-auth.js?v=7"></script>
+<script type="module" src="nav-auth.js?v=8"></script>
 <script type="module" src="cotizaciones.js?v=3"></script>
-<script src="nav-menu.js?v=7"></script>
+<script src="nav-menu.js?v=8"></script>
 </body>
 </html>

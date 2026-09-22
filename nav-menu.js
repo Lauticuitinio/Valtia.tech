@@ -3,26 +3,30 @@
 //   como pista) abre el panel al pasar el cursor; se cierra al salir de él.
 // · Angosto (<1100px): el nav de escritorio se oculta y el botón ☰ abre el
 //   mismo panel desde la derecha. El corte está en 1100 (y no en 880) porque
-//   los siete enlaces de la barra no entran por debajo de eso: antes se
+//   los ocho enlaces de la barra no entran por debajo de eso: antes se
 //   recortaban al medio contra el borde del contenedor.
 // Sin dependencias: se sirve como script clásico en cada página.
+// Las URLs van sin .html (el .htaccess redirige las viejas).
 (function () {
   var nav = document.querySelector('nav');
   if (!nav || document.getElementById('vnav-burger')) return;
 
   var LINKS = [
-    ['index.html', 'Inicio'],
-    ['cartera.html', 'Carteras'],
-    ['inversion-mensual.html', 'Inversión mensual'],
-    ['disciplina.html', 'Candidatas del mes'],
-    ['mercados.html', 'Mercados'],
-    ['noticias.html', 'Noticias'],
-    ['informes.html', 'Informes'],
-    ['herramientas.html', 'Herramientas'],
-    ['calendario.html', 'Calendario'],
-    ['planes.html', 'Planes'],
+    ['/', 'Inicio'],
+    ['/cartera', 'Carteras'],
+    ['/inversion-mensual', 'Inversión mensual'],
+    ['/disciplina', 'Candidatas del mes'],
+    ['/mercados', 'Mercados'],
+    ['/noticias', 'Noticias'],
+    ['/informes', 'Informes'],
+    ['/herramientas', 'Herramientas'],
+    ['/calendario', 'Calendario'],
+    ['/planes', 'Planes'],
   ];
-  var aca = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+  // nombre de la página, sin barra ni .html: '' en la home, 'noticias' en
+  // /noticias y también en /noticias.html (por si queda un link viejo)
+  var aca = (location.pathname.split('/').pop() || '').toLowerCase().replace(/\.html$/, '');
+  if (aca === 'index') aca = '';
 
   var st = document.createElement('style');
   st.textContent = [
@@ -93,7 +97,7 @@
     '<div class="vn-top"><span class="vn-brand">VAL<em style="color:#E8CE96">T</em>IA</span>' +
     '<button class="vn-x" aria-label="Cerrar menú">✕</button></div>' +
     LINKS.map(function (l) {
-      var on = aca === l[0] || (aca === '' && l[0] === 'index.html');
+      var on = aca === l[0].replace(/^\//, '');
       return '<a class="vn-link' + (on ? ' on' : '') + '" href="' + l[0] + '">' + l[1] + '</a>';
     }).join('') +
     '<a class="vn-link" id="vnav-tema" href="#" style="display:none">◐ &nbsp;Cambiar tema</a>' +
@@ -103,20 +107,22 @@
   document.body.appendChild(back);
   document.body.appendChild(menu);
 
-  // "Volver al panel": si el usuario vino del panel (index.html#panel/...) a
-  // una pagina del sitio, una pastilla fija lo devuelve a la misma seccion.
+  // "Volver al panel": si el usuario vino del panel (/#panel/...) a una
+  // pagina del sitio, una pastilla fija lo devuelve a la misma seccion.
   try {
     var tabPanel = sessionStorage.getItem('valtia-panel-tab');
     var ref = document.referrer || '';
     var deIndex = ref.indexOf(location.host) > -1 && /\/(index\.html)?(#|\?|$)/.test(ref.split(location.host)[1] || '');
-    if (tabPanel && deIndex && !/index\.html$/.test(aca) && aca !== '') {
+    if (tabPanel && deIndex && aca !== '') {
       var st2 = document.createElement('style');
-      st2.textContent = '#vnav-volver{position:fixed;left:18px;bottom:18px;z-index:996;background:#14213D;color:#E8CE96;border:1px solid #B08A3E;' +
+      // arriba del boton de mail flotante (abajo a la izquierda, 48px + 28 de
+      // margen): si comparten esquina la pastilla lo tapa entero en el celular
+      st2.textContent = '#vnav-volver{position:fixed;left:24px;bottom:88px;z-index:996;background:#14213D;color:#E8CE96;border:1px solid #B08A3E;' +
         'border-radius:20px;padding:9px 16px;font:600 11px "IBM Plex Sans",sans-serif;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;' +
         'box-shadow:0 6px 24px rgba(0,0,0,.35)}#vnav-volver:hover{background:#B08A3E;color:#14213D}';
       document.head.appendChild(st2);
       var v = document.createElement('a');
-      v.id = 'vnav-volver'; v.href = 'index.html#panel/' + tabPanel; v.textContent = '← Volver al panel';
+      v.id = 'vnav-volver'; v.href = '/#panel/' + tabPanel; v.textContent = '← Volver al panel';
       document.body.appendChild(v);
     }
   } catch (e) {}
@@ -130,7 +136,7 @@
     var logged = !!document.getElementById('nav-mipanel') ||
                  (navCta && navCta.textContent.indexOf('Mi Panel') > -1);
     cta.textContent = logged ? 'Mi Panel' : 'Ingresar / Crear cuenta';
-    cta.setAttribute('href', logged ? 'index.html#panel/inicio' : 'index.html?login=1');
+    cta.setAttribute('href', logged ? '/#panel/inicio' : '/?login=1');
   }
   function abrir() {
     syncCta();

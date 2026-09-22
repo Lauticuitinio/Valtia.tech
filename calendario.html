@@ -43,7 +43,7 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 
 /* masthead centrado sobre la franja navy, con el título de la página */
 .masthead{background:#0E1830;padding:26px 52px 20px;text-align:center}
-.masthead .t{font:700 clamp(28px,3.4vw,40px) 'Playfair Display',serif;color:#fff;letter-spacing:.01em;line-height:1.1;text-wrap:balance}
+.masthead .t{font:700 clamp(30px,3.6vw,44px) 'Playfair Display',serif;color:#fff;letter-spacing:.01em;line-height:1.1;text-wrap:balance}
 .masthead .t em{color:#E8CE96;font-style:italic}
 .masthead .d{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(232,206,150,.75);margin-top:12px}
 
@@ -88,6 +88,10 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 .footer-links a{font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase}
 .footer-links a:hover{color:#E8CE96}
 
+/* botón de mail flotante (el mismo de activo.html / noticias.html) */
+.wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;transition:transform .2s;text-decoration:none}
+.wa-float:hover{transform:scale(1.1)}
+
 @media(max-width:880px){.masthead,.top-volver,main,footer{padding-left:20px;padding-right:20px}}
 @media(max-width:480px){.ev{gap:10px;padding:12px}.ev .ic{width:22px}}
 </style>
@@ -102,7 +106,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
     <a href="/">Inicio</a>
     <a href="/cartera">Carteras</a>
     <a href="/inversion-mensual">Inversión mensual</a>
-    <a href="/mercados">Mercados</a>
+    <a href="/mercados" class="active">Mercados</a>
     <a href="/noticias">Noticias</a>
     <a href="/informes">Informes</a>
     <a href="/herramientas">Herramientas</a>
@@ -143,6 +147,8 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
     <a href="/">Inicio</a><a href="/cartera">Carteras</a><a href="/informes">Informes</a><a href="/herramientas">Herramientas</a>
   </div>
 </footer>
+
+<a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail" style="background:#B08A3E;box-shadow:0 4px 16px rgba(176,138,62,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
 <script>
 function volver() {
@@ -200,7 +206,7 @@ async function cargar() {
   const ev = [];
   if (cal) {
     (JSON.parse(cal.data().json || "{}").earnings || []).forEach(e => ev.push({
-      tipo: "ear", fecha: e.fecha, href: "activo.html?t=" + e.ficha,
+      tipo: "ear", fecha: e.fecha, href: "/activo?t=" + e.ficha,
       titulo: `Resultados de ${e.nombre}`, sub: `${e.sym} · fecha estimada por la empresa`,
     }));
   }
@@ -209,7 +215,7 @@ async function cargar() {
     Object.keys(f).forEach(par => {
       const esp = especieBono(par);
       (f[par].flujos || []).forEach(([fecha, monto]) => ev.push({
-        tipo: "cup", fecha, href: "bono.html?e=" + esp,
+        tipo: "cup", fecha, href: "/bono?e=" + esp,
         titulo: `${esp} paga US$ ${n2.format(monto)} por cada 100 VN`,
         sub: `bono ${f[par].ley === "NY" ? "ley Nueva York" : "ley Argentina"} · cupón y/o amortización`,
       }));
@@ -219,7 +225,7 @@ async function cargar() {
     (JSON.parse(pan.data().json || "{}").tasa_fija || []).forEach(l => {
       if (!l.vence) return;
       ev.push({
-        tipo: "let", fecha: String(l.vence).slice(0, 10), href: "bono.html?e=" + l.s,
+        tipo: "let", fecha: String(l.vence).slice(0, 10), href: "/bono?e=" + l.s,
         titulo: `Vence ${l.s}${l.vpv ? ` · paga $ ${n2.format(l.vpv)} por cada 100 VN${l.vpv_estimado ? " (estimado)" : ""}` : ""}`,
         sub: l.tirea != null ? `letra a tasa fija · TIREA de mercado ${String(l.tirea).replace(".", ",")}%` : "letra a tasa fija",
       });
@@ -271,8 +277,8 @@ cargar().catch(e => {
   document.getElementById("lista").innerHTML = `<div class="state">No se pudo cargar la agenda (${esc(String(e).slice(0, 120))}).</div>`;
 });
 </script>
-<script type="module" src="nav-auth.js?v=7"></script>
+<script type="module" src="nav-auth.js?v=8"></script>
 <script type="module" src="cotizaciones.js?v=3"></script>
-<script src="nav-menu.js?v=7"></script>
+<script src="nav-menu.js?v=8"></script>
 </body>
 </html>

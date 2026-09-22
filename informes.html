@@ -42,12 +42,15 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .masthead .t em{color:#E8CE96;font-style:italic}
 .masthead .d{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(232,206,150,.75);margin-top:12px}
 
-/* pills de filtro sobre franja oscura */
-.cat-nav{display:flex;padding:11px 52px;overflow-x:auto;background:#0B1327;position:sticky;top:64px;z-index:150;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06)}
-.cat-in{display:flex;align-items:center;gap:10px;min-width:max-content;margin:0 auto}
-.cat-nav div.pill{font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer;padding:8px 18px;border-radius:6px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);white-space:nowrap;transition:background .15s}
-.cat-nav div.pill:hover{background:rgba(255,255,255,.16);color:#fff}
-.cat-nav div.pill.on{background:#E8CE96;color:#0E1830;font-weight:600}
+/* filtros sobre la franja oscura: texto apagado, sin pastilla ni borde, y la
+   opción elegida con subrayado dorado de 2px. Si no entran, la fila se
+   desplaza de costado sin arrastrar la página. */
+.cat-nav{display:flex;padding:5px 52px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:#0B1327;position:sticky;top:64px;z-index:150;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06)}
+.cat-nav::-webkit-scrollbar{display:none}
+.cat-in{display:flex;align-items:flex-end;gap:22px;min-width:max-content;margin:0 auto}
+.cat-nav div.pill{font:500 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;cursor:pointer;padding:9px 1px;border:none;border-bottom:2px solid transparent;background:none;color:rgba(255,255,255,.58);white-space:nowrap;transition:color .15s,border-color .15s}
+.cat-nav div.pill:hover{color:#fff}
+.cat-nav div.pill.on{color:#E8CE96;font-weight:600;border-bottom-color:#E8CE96}
 
 .wrap{padding:32px 52px 60px;max-width:1160px;margin:0 auto}
 .sec-h{display:flex;align-items:center;gap:14px;margin:6px 0 20px}
@@ -187,10 +190,12 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .inf-tools{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:0 0 18px}
 .inf-buscar{flex:1;min-width:230px;padding:11px 14px;border:1px solid var(--line);background:#fff;font:400 13.5px 'IBM Plex Sans',sans-serif;color:var(--ink);outline:none}
 .inf-buscar:focus{border-color:var(--gold)}
-.sector-pills{display:flex;gap:8px;flex-wrap:wrap}
-.sector-pills .sp{font:500 11.5px 'IBM Plex Sans',sans-serif;cursor:pointer;padding:8px 14px;border:1px solid var(--line);background:#fff;color:var(--sub);white-space:nowrap;transition:all .15s}
-.sector-pills .sp:hover{border-color:var(--gold);color:var(--ink)}
-.sector-pills .sp.on{background:#0E1830;border-color:#0E1830;color:#fff}
+/* filtro por sector: mismos selectores de texto, sobre blanco. En pantalla
+   grande bajan de renglón; en teléfono la fila se desplaza de costado. */
+.sector-pills{display:flex;align-items:flex-end;gap:10px 20px;flex-wrap:wrap;min-width:0;max-width:100%}
+.sector-pills .sp{font:500 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;cursor:pointer;padding:8px 1px;border:none;border-bottom:2px solid transparent;background:none;color:var(--mut);white-space:nowrap;transition:color .15s,border-color .15s}
+.sector-pills .sp:hover{color:var(--ink)}
+.sector-pills .sp.on{color:var(--ink);font-weight:600;border-bottom-color:var(--gold)}
 .sin-resultados{padding:30px 0;font:400 14px 'IBM Plex Sans',sans-serif;color:var(--mut)}
 .ficha-link{font:600 11.5px 'IBM Plex Sans',sans-serif;padding:8px 14px;border:1px solid var(--gold);color:var(--gold2);white-space:nowrap;text-decoration:none}
 .ficha-link:hover{background:var(--gold);color:#fff}
@@ -203,7 +208,15 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 .wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;transition:transform .2s;text-decoration:none}
 .wa-float:hover{transform:scale(1.1)}
 
-@media(max-width:880px){.masthead,.cat-nav,.wrap,footer{padding-left:20px;padding-right:20px}.cat-nav{top:64px}.contact{padding:26px 22px}}
+@media(max-width:880px){
+  .masthead,.cat-nav,.wrap,footer{padding-left:20px;padding-right:20px}
+  .cat-nav{top:64px}
+  .contact{padding:26px 22px}
+  /* en teléfono el filtro por sector no baja de renglón: se desplaza de
+     costado y la página se queda quieta */
+  .sector-pills{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .sector-pills::-webkit-scrollbar{display:none}
+}
 </style>
 </head>
 <body>
@@ -393,7 +406,7 @@ async function catalogo(user) {
     card.dataset.buscar = `${d.titulo} ${emp.ticker || ""} ${emp.nombre || ""} ${d.categorias || ""}`.toLowerCase();
     // los informes de empresas viven en la ficha del activo (una sola página)
     card.onclick = () => location.href = emp.ticker
-      ? `activo.html?t=${emp.ticker}#informe` : `informes.html?i=${d.slug || d.id}`;
+      ? `/activo?t=${emp.ticker}#informe` : `/informes?i=${d.slug || d.id}`;
     card.innerHTML = `
       <div class="cover"><img src="${d.imagen}" alt="">${badge}</div>
       <div class="ccat">${d.categorias || "Informe"}</div>
@@ -475,7 +488,7 @@ async function lector() {
   // informes de empresas: redirigir a la ficha del activo (página única)
   const empFicha = EMPRESAS.find(e => e.slug === slug);
   if (empFicha && empFicha.ticker) {
-    location.replace(`activo.html?t=${empFicha.ticker}#informe`);
+    location.replace(`/activo?t=${empFicha.ticker}#informe`);
     return;
   }
   try {
@@ -562,7 +575,7 @@ onAuthStateChanged(getAuth(app), user => {
   else catalogo(user);
 });
 </script>
-<script type="module" src="nav-auth.js?v=7"></script>
-<script src="nav-menu.js?v=7"></script>
+<script type="module" src="nav-auth.js?v=8"></script>
+<script src="nav-menu.js?v=8"></script>
 </body>
 </html>

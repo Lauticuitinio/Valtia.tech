@@ -46,22 +46,23 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 
 /* masthead centrado sobre la franja navy, con el título de la página */
 .masthead{background:#0E1830;padding:26px 52px 20px;text-align:center}
-.masthead .t{font:700 clamp(28px,3.4vw,40px) 'Playfair Display',serif;color:#fff;letter-spacing:.01em;line-height:1.1;text-wrap:balance}
+.masthead .t{font:700 clamp(30px,3.6vw,44px) 'Playfair Display',serif;color:#fff;letter-spacing:.01em;line-height:1.1;text-wrap:balance}
 .masthead .t em{color:#E8CE96;font-style:italic}
 .masthead .d{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(232,206,150,.75);margin-top:12px}
 
 /* sube / baja */
 .up{color:var(--up)}.down{color:var(--dn)}.neutral{color:var(--muted)}
 
-/* TABS — pills como .sector-pills .sp de Informes (hairline; activo navy) */
-.tools-nav{display:flex;gap:8px;flex-wrap:wrap;padding:26px 52px 0;max-width:1280px;margin:0 auto;background:#fff}
-.tool-tab{font:500 11.5px 'IBM Plex Sans',sans-serif;cursor:pointer;padding:8px 14px;border:1px solid var(--line);border-radius:0;background:#fff;color:var(--sub);white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:7px}
-.tool-tab:hover{border-color:var(--gold);color:var(--ink)}
-.tool-tab.active{background:#0E1830;border-color:#0E1830;color:#fff}
+/* TABS — selectores de texto, sin pastilla ni borde: gris apagado y la
+   pestaña abierta en negro con subrayado dorado de 2px. En pantalla grande
+   las que no entran pasan al renglón de abajo; en teléfono la fila se
+   desplaza de costado (ver la media query del final). */
+.tools-nav{display:flex;align-items:flex-end;gap:12px 22px;flex-wrap:wrap;padding:26px 52px 0;max-width:1280px;margin:0 auto;background:#fff}
+.tool-tab{font:500 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;cursor:pointer;padding:8px 1px;border:none;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--mut);white-space:nowrap;transition:color .15s,border-color .15s;display:flex;align-items:center;gap:7px}
+.tool-tab:hover{color:var(--ink)}
+.tool-tab.active{color:var(--ink);font-weight:600;border-bottom-color:var(--gold)}
 .badge-f{font:700 8.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;padding:2px 5px;background:rgba(31,122,77,.1);color:var(--up)}
 .badge-p{font:700 8.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;padding:2px 5px;background:rgba(176,138,62,.12);color:var(--gold2)}
-.tool-tab.active .badge-f{background:rgba(255,255,255,.12);color:#7FD8A4}
-.tool-tab.active .badge-p{background:rgba(232,206,150,.16);color:#E8CE96}
 
 .tool-content{padding:30px 52px 20px;display:none;max-width:1280px;margin:0 auto}
 .tool-content.active{display:block}
@@ -74,11 +75,11 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .widget-title{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
 .widget-source{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--mut)}
 
-/* MAPA DE CALOR — sector tabs (mismas pills, un escalón más chicas) */
-.sector-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-.sector-tab{font:500 11px 'IBM Plex Sans',sans-serif;padding:6px 12px;border:1px solid var(--line);border-radius:0;cursor:pointer;background:#fff;color:var(--sub);white-space:nowrap;transition:all .15s}
-.sector-tab:hover{border-color:var(--gold);color:var(--ink)}
-.sector-tab.active{background:#0E1830;border-color:#0E1830;color:#fff}
+/* MAPA DE CALOR — sector tabs (mismos selectores de texto, un escalón más chicos) */
+.sector-tabs{display:flex;align-items:flex-end;gap:10px 20px;margin-bottom:16px;flex-wrap:wrap;max-width:100%}
+.sector-tab{font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;padding:6px 1px;border:none;border-bottom:2px solid transparent;border-radius:0;cursor:pointer;background:none;color:var(--mut);white-space:nowrap;transition:color .15s,border-color .15s}
+.sector-tab:hover{color:var(--ink)}
+.sector-tab.active{color:var(--ink);font-weight:600;border-bottom-color:var(--gold)}
 
 /* DÓLAR HISTÓRICO */
 .dolar-chart-wrap{background:#fff;border:1px solid var(--line);padding:24px;margin-bottom:20px}
@@ -220,6 +221,10 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 /* responsive: 52px en desktop, 20px por debajo de 880 (igual que Noticias) */
 @media(max-width:880px){
   .masthead,.tools-nav,.tool-content,footer{padding-left:20px;padding-right:20px}
+  /* en teléfono los selectores no bajan de renglón: la fila se desplaza de
+     costado y la página se queda quieta */
+  .tools-nav,.sector-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tools-nav::-webkit-scrollbar,.sector-tabs::-webkit-scrollbar{display:none}
 }
 @media(max-width:760px){
   .calc-grid{grid-template-columns:1fr;gap:20px}
@@ -1071,7 +1076,7 @@ widget('#tv-cedears', 'screener',
   { titulo: 'Todos los papeles de BYMA — buscá tu CEDEAR', fuente: 'TradingView · BYMA' });
 notaLegal('#tv-cedears-nota');
 </script>
-<script type="module" src="nav-auth.js?v=7"></script>
-<script src="nav-menu.js?v=7"></script>
+<script type="module" src="nav-auth.js?v=8"></script>
+<script src="nav-menu.js?v=8"></script>
 </body>
 </html>

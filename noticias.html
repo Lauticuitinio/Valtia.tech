@@ -42,14 +42,17 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .masthead .t em{color:#E8CE96;font-style:italic}
 .masthead .d{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(232,206,150,.75);margin-top:12px}
 
-/* secciones estilo Bloomberg: botones pill sobre franja oscura, arriba del ticker */
-.cat-nav{display:flex;padding:11px 52px;overflow-x:auto;background:#0B1327;position:sticky;top:64px;z-index:150;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06)}
+/* categorías sobre la franja oscura: texto apagado, sin pastilla ni borde, y
+   la sección abierta con subrayado dorado de 2px. Si no entran, la fila se
+   desplaza de costado y la página no se mueve. */
+.cat-nav{display:flex;padding:5px 52px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:#0B1327;position:sticky;top:64px;z-index:150;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06)}
+.cat-nav::-webkit-scrollbar{display:none}
 /* margin:auto en vez de justify-content:center — centra cuando entra y no
-   corta el primer pill cuando hay scroll horizontal */
-.cat-in{display:flex;align-items:center;gap:10px;min-width:max-content;margin:0 auto}
-.cat-nav div.pill{font:500 12px 'IBM Plex Sans',sans-serif;cursor:pointer;padding:8px 18px;border-radius:6px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.85);white-space:nowrap;transition:background .15s}
-.cat-nav div.pill:hover{background:rgba(255,255,255,.16);color:#fff}
-.cat-nav div.pill.on{background:#E8CE96;color:#0E1830;font-weight:600}
+   corta la primera categoría cuando hay desplazamiento de costado */
+.cat-in{display:flex;align-items:flex-end;gap:22px;min-width:max-content;margin:0 auto}
+.cat-nav div.pill{font:500 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;cursor:pointer;padding:9px 1px;border:none;border-bottom:2px solid transparent;background:none;color:rgba(255,255,255,.58);white-space:nowrap;transition:color .15s,border-color .15s}
+.cat-nav div.pill:hover{color:#fff}
+.cat-nav div.pill.on{color:#E8CE96;font-weight:600;border-bottom-color:#E8CE96}
 
 /* grilla principal */
 .wrap{padding:26px 52px 60px}
@@ -364,7 +367,7 @@ window.suscribirNews = async () => {
   }
 };
 </script>
-<script type="module" src="nav-auth.js?v=7"></script>
-<script src="nav-menu.js?v=7"></script>
+<script type="module" src="nav-auth.js?v=8"></script>
+<script src="nav-menu.js?v=8"></script>
 </body>
 </html>
