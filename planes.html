@@ -180,13 +180,13 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
       <!-- El precio de PRO va sin número hasta que abra el cobro (SPEC, sección 0):
            es una frase, así que usa .precio.txt (Playfair) y no Plex Mono. -->
       <div class="precio txt">Precio de lanzamiento — escribinos</div>
-      <div class="nota">Suscripciones online muy pronto — anotándote congelás el precio de lanzamiento</div>
+      <div class="nota">Dejanos tu mail y te escribimos con el precio de lanzamiento</div>
       <div class="wl">
         <input type="email" id="wl-email" placeholder="tu@email.com" autocomplete="email" inputmode="email">
         <!-- El botón arranca apagado y lo enciende el módulo de abajo cuando
              Firebase terminó de bajar: con onclick="waitlistPro(…)" un clic
              apurado tiraba "waitlistPro is not defined" y no pasaba nada. -->
-        <button class="cta dorada" id="wl-btn" type="button" disabled>Anotarme</button>
+        <button class="cta dorada" id="wl-btn" type="button" disabled>Escribinos</button>
       </div>
       <div id="wl-msg"></div>
       <ul>
