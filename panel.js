@@ -1,15 +1,15 @@
 // panel.js — el panel del inversor de valtia.tech.
-// Un solo shell (sidebar navy) para TODOS los logueados, ordenado como el
-// recorrido del inversor: Inicio → Qué comprar → Carteras Valtia → Mi cartera
-// → Mis empresas → Disciplina → Herramientas y datos. Fondo Valtia aparece
-// solo para clientes del fondo y Gestión solo para el admin (fondo-live.js).
+// Panel v3 (handoff de Lauti, 21/09/2026): un lateral en tres grupos —Tus
+// inversiones, Para decidir, Mercado— y un solo encabezado por pestaña con el
+// selector de moneda. El Fondo NO aparece en el panel del inversor: la gestión
+// del fondo (fondo-live.js) es otro modo del lateral y solo lo ve el admin.
 // Mi cartera vive en mi-cartera.js; acá se reutilizan su cálculo y sus tipos.
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { calcular, agruparPorBroker, normalizarTicker, convertir, reiniciarMiCartera, completarPreciosDeRentaFija }
-  from './mi-cartera.js?v=34';
-import { fxMercado, registrarImplicito } from './fx.js?v=1';
+  from './mi-cartera.js?v=37';
+import { fxMercado, registrarImplicito, etiquetaFx } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
@@ -19,52 +19,87 @@ import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe,
 const CSS = `
 body.fl-app-on nav:not(.portal-nav){display:none!important}
 body.fl-app-on #vnav-hot,body.fl-app-on #vnav-menu,body.fl-app-on #vnav-back{display:none!important}
+body.fl-app-on{background:var(--panel-bg)}
 body.fl-app-on #portal-view{padding:0!important;margin:0!important}
-.fl-layout{display:flex;align-items:stretch;gap:0;min-height:calc(100vh - 34px)}
+.fl-layout{display:flex;align-items:stretch;gap:0;min-height:calc(100vh - 34px);background:var(--panel-bg)}
+/* lateral (232px, navy): medidas y colores del prototipo */
 .fl-layout .portal-nav{display:flex;flex-direction:column;align-items:stretch;width:232px;flex:none;box-sizing:border-box;
-  height:100vh!important;gap:1px!important;border-bottom:none!important;background:#14213D!important;border:none;border-radius:0;
+  height:100vh!important;gap:0!important;border:none!important;background:#0E1830!important;border-radius:0;
   padding:18px 12px 14px!important;position:sticky;top:0;align-self:flex-start;max-height:100vh;overflow:auto}
-.fl-layout .portal-nav a{display:block!important;padding:9px 12px!important;margin:0 0 1px!important;border-radius:8px;
+.fl-layout .portal-nav a[data-tab]{display:flex!important;align-items:center;justify-content:space-between;gap:8px;
+  padding:10px 12px!important;margin:0 0 2px!important;border-radius:0;border-left:2px solid transparent;border-bottom:none!important;
   color:rgba(255,255,255,.62)!important;font:500 11px 'IBM Plex Sans',sans-serif!important;letter-spacing:.1em!important;
-  text-transform:uppercase;text-decoration:none;border-bottom:none!important;border-left:2px solid transparent}
-.fl-layout .portal-nav a:hover{background:rgba(255,255,255,.06);color:#fff!important}
-.fl-layout .portal-nav a.active{background:rgba(176,138,62,.18);color:#E8CE96!important;border-left-color:#B08A3E;font-weight:600!important}
-.vp-grp{font:600 8.5px 'IBM Plex Sans',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(255,255,255,.35);padding:14px 12px 5px}
-.vp-foot{margin-top:auto;padding-top:12px;border-top:1px solid rgba(255,255,255,.12)}
+  text-transform:uppercase;text-decoration:none;white-space:nowrap}
+.fl-layout .portal-nav a[data-tab]:hover{background:rgba(255,255,255,.06);color:#fff!important}
+.fl-layout .portal-nav a[data-tab].active{background:rgba(176,138,62,.18);color:#E8CE96!important;border-left-color:#B08A3E;font-weight:600!important}
+.fl-layout .portal-nav a.vp-lat-ext{display:flex!important;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px!important;
+  margin:0 0 2px!important;border-radius:0;border-left:2px solid transparent;border-bottom:none!important;color:rgba(255,255,255,.62)!important;
+  font:500 11px 'IBM Plex Sans',sans-serif!important;letter-spacing:.1em!important;text-transform:uppercase;text-decoration:none}
+.fl-layout .portal-nav a.vp-lat-ext:hover{background:rgba(255,255,255,.06);color:#fff!important}
+.vp-flecha{font-size:11px;letter-spacing:0;color:rgba(232,206,150,.7)}
+.vp-grp{font:600 8.5px 'IBM Plex Sans',sans-serif;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.5);padding:14px 12px 6px}
+.vp-foot{margin-top:auto;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;gap:2px}
 .fl-layout .portal-nav #portal-user-name{display:block;color:rgba(255,255,255,.85);font:600 11px 'IBM Plex Sans',sans-serif;
   padding:6px 12px 2px;margin:0!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.vp-plan{display:inline-block;margin:2px 12px 8px;font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;
-  color:#E8CE96;border:1px solid rgba(232,206,150,.45);border-radius:4px;padding:3px 7px}
-.vp-plan.pro{background:#B08A3E;color:#14213D;border-color:#B08A3E}
-.fl-layout .portal-nav a.vp-sitio{font-size:10px!important;color:rgba(255,255,255,.5)!important;text-transform:none;letter-spacing:.04em!important}
-.fl-layout .portal-nav button{color:#B08A3E!important;text-align:left;padding:6px 12px 2px!important;font:600 10px 'IBM Plex Sans',sans-serif!important;
+.vp-plan-w{padding:0 12px 8px}
+.vp-plan{display:inline-block;font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;
+  color:#E8CE96;background:transparent;border:1px solid rgba(232,206,150,.45);border-radius:2px;padding:3px 7px}
+.vp-plan.pro{background:#E8CE96;color:#0E1830;border-color:#E8CE96}
+.fl-layout .portal-nav a.vp-lat-l{display:block!important;padding:5px 12px!important;margin:0!important;border:none!important;border-radius:0;
+  font:500 10.5px 'IBM Plex Sans',sans-serif!important;letter-spacing:0!important;text-transform:none;color:rgba(255,255,255,.55)!important;text-decoration:none}
+.fl-layout .portal-nav a.vp-lat-l:hover{color:#fff!important}
+.fl-layout .portal-nav a.vp-lat-l[data-m]{color:#E8CE96!important}
+.fl-layout .portal-nav a.vp-lat-l[data-m]:hover{color:#fff!important}
+.fl-layout .portal-nav .vp-foot button{color:#B08A3E!important;text-align:left;padding:5px 12px 2px!important;font:600 10px 'IBM Plex Sans',sans-serif!important;
   letter-spacing:.12em!important;background:none;border:none;cursor:pointer;text-transform:uppercase}
+.fl-sbbrand{display:flex;align-items:center;gap:10px;padding:2px 10px 18px;text-decoration:none}
+.fl-sbbrand .nm{font:700 20px 'Playfair Display',serif;letter-spacing:.06em;color:#fff;line-height:1.1}
+.fl-sbbrand .nm em{color:#E8CE96;font-style:italic}
+.fl-sbbrand .sb{font:400 9px 'IBM Plex Sans',sans-serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4)}
+/* dos modos del lateral: el del inversor y (solo admin) la gestión del fondo. Nunca los dos
+   juntos. Van DESPUÉS de las reglas de los links y con su misma especificidad: si no, el
+   display:flex de a[data-tab] les gana y se ven las dos listas a la vez */
+.fl-layout .portal-nav a[data-m="ges"],.fl-layout .portal-nav div[data-m="ges"]{display:none!important}
+.fl-layout .portal-nav.modo-ges a[data-m="inv"],.fl-layout .portal-nav.modo-ges div[data-m="inv"]{display:none!important}
+.fl-layout .portal-nav.modo-ges a[data-m="ges"]{display:flex!important}
+.fl-layout .portal-nav.modo-ges a.vp-lat-l[data-m="ges"]{display:block!important}
+.fl-layout .portal-nav.modo-ges div[data-m="ges"]{display:block!important}
+.fl-layout .portal-nav.modo-ges{background:#0B1327!important}
+/* columna principal: encabezado único + contenido */
 .fl-main{flex:1;min-width:0;display:flex;flex-direction:column}
-.fl-topbar{display:flex;align-items:center;gap:4px;padding:9px 14px 9px 0;margin-left:22px;border-bottom:1px solid rgba(0,0,0,.08);
-  background:#FBF9F3;position:sticky;top:0;z-index:60;overflow-x:auto;scrollbar-width:none}
-.fl-topbar::-webkit-scrollbar{display:none}
-[data-theme="dark"] .fl-topbar{background:#0F1B30;border-bottom-color:rgba(255,255,255,.08)}
-.fl-topbar a{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#6B6456;
-  padding:7px 13px;border-radius:8px;text-decoration:none;white-space:nowrap;cursor:pointer}
-[data-theme="dark"] .fl-topbar a{color:rgba(240,237,232,.6)}
-.fl-topbar a:hover{background:rgba(176,138,62,.1);color:#8A6A2F}
-[data-theme="dark"] .fl-topbar a:hover{background:rgba(232,206,150,.1);color:#E8CE96}
-.fl-topbar .sep{flex:1}
-.fl-topbar .dom{font:600 9.5px 'IBM Plex Mono',monospace;letter-spacing:.12em;color:var(--link);white-space:nowrap}
-.fl-sbbrand{display:flex;align-items:center;gap:10px;padding:2px 10px 12px}
-.fl-sbbrand .lg{width:30px;height:30px;border:1.5px solid #B08A3E;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none}
-.fl-sbbrand .nm{font:500 15px 'Playfair Display',serif;letter-spacing:.18em;color:#fff}
-.fl-sbbrand .sb{font:500 7.5px 'IBM Plex Sans',sans-serif;letter-spacing:.3em;color:#B08A3E}
-.fl-layout .portal-content{flex:1;min-width:0;padding-left:22px}
+.vp-enc{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:22px 30px 16px;
+  border-bottom:1px solid var(--border);background:var(--panel-bg);position:sticky;top:0;z-index:60}
+.vp-enc h1{font:700 30px 'Playfair Display',serif;color:var(--text);line-height:1.1;margin:0;letter-spacing:.01em}
+.vp-enc .sub{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.vp-enc .der{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.vp-enc-volver{display:inline-block;font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--link);text-decoration:none;margin-bottom:6px}
+.vp-enc-volver:hover{color:var(--text)}
+/* selectores: sin caja; la opción activa lleva un subrayado dorado de 2px */
+.vp-seg{display:inline-flex;gap:2px;align-items:center}
+.vp-seg button{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;padding:8px 10px;cursor:pointer;color:var(--muted);
+  background:none;border:none;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s}
+.vp-seg button:hover{color:var(--text)}
+.vp-seg button.on{color:var(--text);border-bottom-color:#B08A3E}
+.vp-agregar{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--btn-tx);background:var(--btn-bg);
+  padding:10px 18px;border-radius:0;white-space:nowrap;border:1px solid var(--btn-bg);cursor:pointer;transition:background .15s}
+.vp-agregar:hover{background:var(--btn-hover);border-color:var(--btn-hover)}
+.fl-layout .portal-content > [id^="tab-"]{scroll-margin-top:160px}
+.fl-layout .portal-content{flex:1;min-width:0;padding:24px 34px 60px!important;box-sizing:border-box;width:100%}
+/* celular: el lateral se esconde y las secciones pasan a un selector arriba */
+.vp-mbar{display:none;position:sticky;top:0;z-index:61;height:50px;align-items:center;justify-content:space-between;gap:12px;padding:0 14px;background:#0E1830}
+.vp-mbrand{font:700 18px 'Playfair Display',serif;letter-spacing:.06em;color:#fff;white-space:nowrap}
+.vp-mbrand em{color:#E8CE96;font-style:italic}
+.vp-mbar select{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#E8CE96;background:rgba(255,255,255,.06);
+  border:1px solid rgba(232,206,150,.35);border-radius:0;padding:8px 10px;max-width:62vw;min-width:0}
+.vp-mder{display:flex;align-items:center;gap:8px;min-width:0}
+.vp-mbar select option,.vp-mbar select optgroup{color:#101010;background:#fff;text-transform:none}
 @media (max-width:920px){
   .fl-layout{flex-direction:column;min-height:0}
-  .fl-layout .portal-nav{width:100%;flex-direction:row;flex-wrap:wrap;position:static;height:auto!important;max-height:none;align-items:center;gap:2px;border-radius:0;padding:10px 8px!important}
-  .fl-sbbrand{padding:2px 10px;width:100%}
-  .vp-grp{display:none}
-  .vp-foot{margin:0;padding:0;border:none;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
-  .fl-layout .portal-nav a{display:inline-block!important;padding:7px 10px!important;font-size:10px!important}
-  .fl-layout .portal-content{padding:18px 14px 0}
-  .fl-topbar{margin-left:0;padding:8px 12px}
+  .fl-layout .portal-nav{display:none!important}
+  .vp-mbar{display:flex}
+  .vp-enc{position:static;padding:16px 16px 12px}
+  .vp-enc h1{font-size:25px}
+  .fl-layout .portal-content{padding:18px 14px 50px!important}
 }
 /* secciones del panel */
 .vp-sub{color:var(--sub);font-size:14px;line-height:1.7;max-width:720px;margin:-14px 0 22px}
@@ -87,7 +122,7 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 .vp-tag{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:2px;white-space:nowrap;display:inline-block}
 .vp-tag.infra{color:var(--green);background:rgba(31,122,77,.12)}.vp-tag.precio{color:var(--link);background:rgba(176,138,62,.14)}
 .vp-tag.cara{color:var(--red);background:rgba(178,58,58,.1)}.vp-tag.sin{color:var(--muted);background:rgba(120,130,140,.12)}
-.vp-tag.zona{color:#14213D;background:#E8CE96}.vp-tag.tengo{color:var(--sub);background:transparent;border:1px solid var(--border)}
+.vp-tag.zona{color:#0E1830;background:#E8CE96}.vp-tag.tengo{color:var(--sub);background:transparent;border:1px solid var(--border)}
 .vp-tag.pro{color:var(--link);border:1px solid var(--gold)}.vp-tag.gratis{color:var(--green);border:1px solid rgba(31,122,77,.5)}
 .vp-tblwrap{background:var(--card);border:1px solid var(--border);overflow-x:auto;position:relative}
 .vp-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
@@ -115,17 +150,13 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 .vp-form input,.vp-form select{padding:8px 10px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:13px;outline:none;min-width:90px}
 .vp-form input:focus,.vp-form select:focus{border-color:var(--gold)}
 .vp-msg{font-size:12.5px;margin-top:8px}
-.vp-cur{display:inline-flex;border:1px solid var(--border);overflow:hidden;vertical-align:middle}
-.vp-cur button{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.06em;padding:6px 12px;border:none;background:transparent;color:var(--muted);cursor:pointer}
-.vp-cur button+button{border-left:1px solid var(--border)}
-.vp-cur button.on{background:var(--btn-bg);color:var(--btn-tx)}
 .vp-pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:8px}
 .vp-paso{background:var(--card);border:1px solid var(--border);padding:16px 18px;cursor:pointer}
 .vp-paso .n{font:700 22px 'Playfair Display',serif;color:var(--gold);line-height:1}
 .vp-paso.ok .n{color:var(--green)}
 .vp-paso b{display:block;font-size:14px;color:var(--text);margin:8px 0 4px}
 .vp-paso p{font-size:12.5px;color:var(--sub);line-height:1.6;margin:0}
-.vp-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#14213D;color:#E8CE96;border:1px solid #B08A3E;padding:11px 18px;font-size:13px;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.vp-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#0E1830;color:#E8CE96;border:1px solid #B08A3E;padding:11px 18px;font-size:13px;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,.35)}
 .vp-bv{position:fixed;inset:0;z-index:1000;background:rgba(6,12,22,.72);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
 .vp-bv-caja{background:var(--card);border:1px solid var(--border);max-width:560px;width:100%;padding:26px 28px 22px;box-shadow:0 20px 60px rgba(0,0,0,.45);margin:auto}
 .vp-bv-caja .k{font:700 10px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--link)}
@@ -145,12 +176,7 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 /* acá los .pkpi van sueltos (no dentro del marco de .portal-kpis): cada uno es su propia tarjeta */
 .vp-kpis .pkpi{background:var(--card);border:1px solid var(--border)}
 /* Resumen: cabecera, bloque de estado, composicion y avisos */
-.vp-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
-.vp-head .portal-title{margin-bottom:2px}
-.vp-fecha{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .vp-hero{display:grid;gap:14px;margin-bottom:8px;align-items:stretch}
-@media(min-width:980px){.vp-hero.dos{grid-template-columns:minmax(0,1.85fr) minmax(0,1fr)}}
-.vp-hero:not(.dos) .vp-fondo{max-width:420px}
 .vp-estado{display:flex;flex-direction:column;gap:15px}
 .vp-est-top{display:flex;justify-content:space-between;gap:22px;flex-wrap:wrap}
 .vp-big{font:600 32px 'IBM Plex Mono',monospace;line-height:1.1;color:var(--text);
@@ -178,12 +204,6 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 .vp-aviso .vp-tag{flex:none}
 .vp-tag.warn{color:#7A5C26;background:rgba(224,169,62,.18)}
 [data-theme="dark"] .vp-tag.warn{color:#E0A93E}
-.vp-fondo{background:#14213D;border:1px solid #B08A3E;padding:18px 20px;display:flex;flex-direction:column;justify-content:center}
-.vp-fondo .l{font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#E8CE96}
-.vp-fondo .v{font:600 26px 'IBM Plex Mono',monospace;line-height:1.15;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin:7px 0 5px}
-.vp-fondo p{font-size:12px;color:rgba(255,255,255,.6);margin:0 0 16px;line-height:1.5}
-.vp-fondo .vp-btn{align-self:flex-start;background:#E8CE96;border-color:#E8CE96;color:#0E1830}
-.vp-fondo .vp-btn:hover{background:#fff;border-color:#fff}
 /* dos columnas: lo que cambio a la izquierda, lo que hay para decidir a la derecha */
 .vp-cols{display:grid;gap:8px 30px;align-items:start}
 @media(min-width:980px){.vp-cols{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}}
@@ -209,11 +229,12 @@ a.vp-buy:hover{border-color:var(--gold)}
 .vp-rsi .t{flex:1;height:4px;border-radius:3px;background:var(--bg3);overflow:hidden}
 .vp-rsi .t i{display:block;height:100%}
 .vp-rsi .v{font:600 10px 'IBM Plex Mono',monospace;color:var(--muted);white-space:nowrap}
-/* contadores del sidebar */
-.fl-layout .portal-nav a .vp-n{float:right;font:600 9.5px 'IBM Plex Mono',monospace;letter-spacing:0;
-  color:rgba(255,255,255,.45);background:rgba(255,255,255,.08);border-radius:4px;padding:1px 5px}
-.fl-layout .portal-nav a.active .vp-n{color:#14213D;background:#E8CE96}
-@media (max-width:920px){.fl-layout .portal-nav a .vp-n{float:none;margin-left:6px}}
+/* contadores del lateral (la pastilla del prototipo) */
+.fl-layout .portal-nav a .vp-n{font:600 9px 'IBM Plex Mono',monospace;letter-spacing:0;color:#E8CE96;background:rgba(232,206,150,.16);
+  padding:2px 6px;border-radius:2px;flex:none;text-transform:none}
+.fl-layout .portal-nav a.active .vp-n{color:#0E1830;background:#E8CE96}
+.vp-sub{margin:0 0 20px}
+.vp-sec:first-child{margin-top:0}
 `;
 
 /* ───────────────────────── estado y utilidades ───────────────────────── */
@@ -236,7 +257,6 @@ const curEtq = c => c === 'ARS' ? 'ARS' : c === 'CCL' ? 'USD CCL' : 'USD MEP';
 const curMoneda = c => c === 'ARS' ? 'ARS' : 'USD';
 const BROKERS = ['IOL', 'PPI', 'Balanz', 'Bull Market', 'Cocos', 'Binance', 'Lemon', 'Belo', 'Otro'];
 const brokerPref = () => { try { return localStorage.getItem('valtia-mc-broker') || ''; } catch (e) { return ''; } };
-const titulo = t => `<div class="portal-title">${t}</div>`;
 
 function toast(msg) {
   const d = document.createElement('div'); d.className = 'vp-toast'; d.textContent = msg;
@@ -253,9 +273,12 @@ let _c = {};
 const cached = (k, f) => {
   const e = _c[k];
   if (e && e.u === S.email) return e.p;
-  const p = f().catch(() => null);
-  _c[k] = { u: S.email, p };
-  return p;
+  // si la lectura falla (red, token que todavía no llegó), la entrada se borra: la
+  // próxima llamada vuelve a intentar en vez de servir el fallo toda la sesión
+  const e2 = { u: S.email, p: null };
+  e2.p = f().catch(() => { if (_c[k] === e2) delete _c[k]; return null; });
+  _c[k] = e2;
+  return e2.p;
 };
 const invalidar = (...ks) => ks.forEach(k => { delete _c[k]; });
 async function docJson(col) {
@@ -342,10 +365,11 @@ const ajustes = () => cached('aj', async () => {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 });
 async function carteraCalc() {
-  const c = (await cartera()) || { pos: [], precios: {} };
+  const leida = await cartera();
+  const c = leida || { pos: [], precios: {} };
   const f = (await fx()) || { ccl: null, mep: null };
   // los bonos del panel van explícitos: sin ellos AL30 se leería en dólares
-  return { ...c, fx: f, cur: curVista(), r: calcular(c.pos, c.precios, curVista(), f, (await bonosSet()) || new Set()) };
+  return { ...c, fallo: !leida, fx: f, cur: curVista(), r: calcular(c.pos, c.precios, curVista(), f, (await bonosSet()) || new Set()) };
 }
 const disciplina = () => cached('disc', async () => {
   if (!S.verificado) return { config: null, log: [] };
@@ -388,28 +412,33 @@ async function precioHoy(sym) {
   return a ? a.precio : null;
 }
 
-/* ───────────────────────── shell: sidebar + topbar + ruteo ───────────────────────── */
-// El orden es el del inversor mirando SU plata: primero cómo viene, después
-// qué hacer con ella, y al final las herramientas. Antes "Qué comprar" y las
-// carteras se metían entre el resumen y la cartera propia.
+/* ───────────────────────── shell: lateral + encabezado + ruteo ───────────────────────── */
+// El lateral es el del handoff Panel v3: tres grupos. "Mis empresas" y
+// "Herramientas y datos" dejan de ser pestañas: la primera pasa (etapa 3) al
+// desplegable de cada fila de Mi cartera y la segunda es un link al sitio.
+// Mientras tanto se siguen abriendo desde Mi cartera (SUBVISTAS): no se pierde nada.
 const TABS = [
   { g: 'Tus inversiones', id: 'inicio', t: 'Resumen' },
   { g: 'Tus inversiones', id: 'micartera', t: 'Mi cartera' },
-  { g: 'Tus inversiones', id: 'empresas', t: 'Mis empresas' },
-  { g: 'Para decidir', id: 'comprar', t: 'Qué comprar' },
+  { g: 'Para decidir', id: 'comprar', t: 'Qué comprar', tit: 'Qué comprar hoy' },
   { g: 'Para decidir', id: 'carteras', t: 'Carteras Valtia' },
   { g: 'Para decidir', id: 'disciplina', t: 'Inversión mensual' },
-  { g: 'Herramientas', id: 'herramientas', t: 'Herramientas y datos' },
-  { g: 'Fondo Valtia', id: 'fondocli', t: 'Tu posición', cliente: true },
-  { g: 'Gestión', id: 'dashboard', t: 'Fondo · Dashboard', admin: true },
-  { g: 'Gestión', id: 'rendimientos', t: 'Rendimientos', admin: true },
-  { g: 'Gestión', id: 'movimientos', t: 'Movimientos', admin: true },
-  { g: 'Gestión', id: 'fondo', t: 'Balance consolidado', admin: true },
-  { g: 'Gestión', id: 'senales', t: 'Señales', admin: true },
-  { g: 'Gestión', id: 'analisis', t: 'Análisis de cartera', admin: true },
-  { g: 'Gestión', id: 'informes', t: 'Lector de informes', admin: true },
-  { g: 'Gestión', id: 'admin', t: 'Inversores', admin: true },
 ];
+const SUBVISTAS = {
+  empresas: { t: 'Mis empresas', de: 'micartera' },
+  herramientas: { t: 'Datos de tus activos', de: 'micartera' },
+};
+// la gestión del fondo: la llena fondo-live.js y solo existe para el admin
+const GESTION = [
+  { id: 'dashboard', t: 'Fondo · Dashboard' }, { id: 'rendimientos', t: 'Rendimientos' },
+  { id: 'movimientos', t: 'Posiciones' }, { id: 'fondo', t: 'Balance consolidado' },
+  { id: 'senales', t: 'Señales' }, { id: 'analisis', t: 'Análisis de cartera' },
+  { id: 'informes', t: 'Lector de informes' }, { id: 'admin', t: 'Inversores' },
+];
+const ES_GESTION = new Set(GESTION.map(x => x.id));
+// el selector de moneda va donde cambia las cifras. En Qué comprar, Carteras e
+// Inversión mensual todo está en dólares: un selector que no hace nada confunde
+const CON_MONEDA = new Set(['inicio', 'micartera', 'empresas', 'herramientas']);
 const NUEVOS = ['inicio', 'comprar', 'carteras', 'empresas', 'disciplina', 'herramientas'];
 // tabs que este usuario puede abrir: los divs de Gestión y Fondo viven en el
 // HTML para todos, así que sin este set cualquiera llega por #panel/admin
@@ -419,8 +448,19 @@ const _render = { inicio: renderInicio, comprar: renderComprar, carteras: render
                   disciplina: renderDisciplina, herramientas: renderHerramientas };
 const _hecho = {};
 
+function pintarPlan() {
+  ['vp-plan', 'vp-plan-m'].forEach(id => { const c = $(id); if (c) { c.textContent = etiquetaPlan(); c.classList.toggle('pro', S.pro); } });
+}
 function etiquetaPlan() {
   return S.isAdmin ? 'Admin' : S.cliente ? 'Cliente · a medida' : S.pro ? 'PRO' : S.verificado ? 'Gratis' : 'Gratis · verificá tu mail';
+}
+const nombreUsuario = () => (S.user && S.user.displayName) || String(S.email || '').split('@')[0];
+const primerNombre = () => String(nombreUsuario() || '').split(' ')[0];
+function hoyLargo() {
+  try {
+    const s = new Date(hoyAR() + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  } catch (e) { return ''; }
 }
 
 function instalarShell() {
@@ -428,36 +468,45 @@ function instalarShell() {
   const nav = document.querySelector('.portal-nav'), content = document.querySelector('.portal-content');
   if (!nav || !content) return;
   NUEVOS.forEach(id => { if (!$('tab-' + id)) { const d = document.createElement('div'); d.id = 'tab-' + id; d.style.display = 'none'; content.appendChild(d); } });
-  const grupos = [];
-  _permitidos = new Set(['micartera']);
-  TABS.forEach(t => {
-    if (t.admin && !S.isAdmin) return;
-    if (t.cliente && !S.cliente) return;
-    _permitidos.add(t.id);
-    let g = grupos.find(x => x.g === t.g); if (!g) grupos.push(g = { g: t.g, items: [] });
-    g.items.push(t);
-  });
-  const link = t => `<a href="#panel/${t.id}" id="${t.id}-tab" data-tab="${t.id}" onclick="portalTab(event,'${t.id}')">${t.t}</a>`;
+  _permitidos = new Set(['micartera'].concat(NUEVOS));
+  // "Tu posición en el fondo" no tiene lugar en el lateral del inversor (el
+  // handoff saca el Fondo del panel); la ruta queda para el cliente del fondo
+  if (S.cliente) _permitidos.add('fondocli');
+  if (S.isAdmin) GESTION.forEach(x => _permitidos.add(x.id));
+  const link = (x, m) => `<a href="#panel/${x.id}" id="${x.id}-tab" data-tab="${x.id}" data-m="${m}" onclick="portalTab(event,'${x.id}')"><span>${x.t}</span></a>`;
+  const grupos = [...new Set(TABS.map(x => x.g))];
   nav.innerHTML = `<div class="fl-sbbrand">
-      <div class="lg"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M1 12 L5 6 L8 9 L12 3 L15 6" fill="none" stroke="#B08A3E" stroke-width="1.5"/></svg></div>
-      <div><div class="nm">VALTIA</div><div class="sb">ANALYTICS</div></div></div>` +
-    grupos.map(g => `<div class="vp-grp">${g.g}</div>` + g.items.map(link).join('')).join('') +
-    `<div class="vp-foot"><span id="portal-user-name">—</span><span class="vp-plan${S.pro ? ' pro' : ''}" id="vp-plan">${etiquetaPlan()}</span>
-      <a href="#" class="vp-sitio" onclick="valtiaPanel.salir(event)">← Volver al sitio</a>
+      <svg width="32" height="32" viewBox="0 0 34 34" fill="none" aria-hidden="true"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+      <div><div class="nm">VAL<em>T</em>IA</div><div class="sb">Analytics</div></div></div>` +
+    grupos.map(g => `<div class="vp-grp" data-m="inv">${g}</div>` + TABS.filter(x => x.g === g).map(x => link(x, 'inv')).join('')).join('') +
+    // la Agenda es la etapa 4 del handoff: hasta entonces abre el calendario del sitio
+    `<div class="vp-grp" data-m="inv">Mercado</div>
+    <a class="vp-lat-ext" data-m="inv" href="calendario.html" title="Resultados, cupones y vencimientos de los próximos 120 días">Agenda <span class="vp-flecha">↗</span></a>` +
+    (S.isAdmin ? `<div class="vp-grp" data-m="ges">Gestión del fondo</div>` + GESTION.map(x => link(x, 'ges')).join('') : '') +
+    `<div class="vp-foot"><span id="portal-user-name">${esc(nombreUsuario())}</span>
+      <div class="vp-plan-w"><span class="vp-plan${S.pro ? ' pro' : ''}" id="vp-plan">${etiquetaPlan()}</span></div>
+      ${S.isAdmin ? `<a href="#panel/dashboard" class="vp-lat-l" data-m="inv" onclick="portalTab(event,'dashboard')">Gestión del fondo →</a>
+      <a href="#panel/inicio" class="vp-lat-l" data-m="ges" onclick="portalTab(event,'inicio')">← Panel del inversor</a>` : ''}
+      <a href="herramientas.html" class="vp-lat-l">Herramientas y datos ↗</a>
+      <a href="#" class="vp-lat-l" onclick="valtiaPanel.salir(event)">← Volver al sitio</a>
       <button onclick="logout()">Cerrar sesión</button></div>`;
   if (!document.querySelector('.fl-layout')) {
     const wrap = document.createElement('div'); wrap.className = 'fl-layout';
     nav.parentElement.insertBefore(wrap, nav); wrap.appendChild(nav);
     const main = document.createElement('div'); main.className = 'fl-main';
-    main.innerHTML = `<div class="fl-topbar">
-      <a onclick="valtiaPanel.salir(event)">← Sitio</a>
-      <a href="noticias.html">Noticias</a>
-      <a href="calendario.html">Calendario</a>
-      <a href="informes.html">Informes</a>
-      <a href="planes.html">Planes</a>
-      <span class="sep"></span><span class="dom">VALTIA.TECH</span></div>`;
     main.appendChild(content); wrap.appendChild(main);
   }
+  // si el shell lo armó otro (fondo-live.js arma el suyo con una barra de
+  // links), se le cambia la barra por el encabezado del panel
+  const main = document.querySelector('.fl-main');
+  if (main && !$('vp-enc')) {
+    const tb = main.querySelector('.fl-topbar'); if (tb) tb.remove();
+    main.insertAdjacentHTML('afterbegin', `<div class="vp-mbar"><span class="vp-mbrand">VAL<em>T</em>IA</span>
+      <span class="vp-mder"><span class="vp-plan" id="vp-plan-m"></span><select id="vp-msel" aria-label="Sección del panel"></select></span></div>
+      <header class="vp-enc" id="vp-enc"></header>`);
+  }
+  llenarSelectMovil();
+  pintarPlan();
   document.body.classList.add('fl-app-on');
   const og = window.goPortal;
   window.goPortal = e => { if (og) og(e); document.body.classList.add('fl-app-on'); portalTab(_tab); };
@@ -468,21 +517,101 @@ function instalarShell() {
   }
 }
 
+/* en el celular el lateral se esconde: las mismas secciones, en un selector */
+function llenarSelectMovil() {
+  const sel = $('vp-msel'); if (!sel) return;
+  const opt = (v, x) => `<option value="${v}">${esc(x)}</option>`;
+  const grupos = [...new Set(TABS.map(x => x.g))];
+  sel.innerHTML = (S.cliente ? '<option value="fondocli" hidden>Tu posición en el fondo</option>' : '') + grupos.map(g => `<optgroup label="${g}">${TABS.filter(x => x.g === g).map(x => opt(x.id, x.t)).join('')}</optgroup>`).join('') +
+    `<optgroup label="Mi cartera en detalle">${Object.entries(SUBVISTAS).map(([id, s]) => opt(id, s.t)).join('')}</optgroup>` +
+    (S.isAdmin ? `<optgroup label="Gestión del fondo">${GESTION.map(x => opt(x.id, x.t)).join('')}</optgroup>` : '') +
+    `<optgroup label="Más">${opt('@agenda', 'Agenda ↗')}${opt('@herr', 'Herramientas y datos ↗')}${opt('@sitio', '← Volver al sitio')}${opt('@salir', 'Cerrar sesión')}</optgroup>`;
+  sel.value = _tab;
+  sel.onchange = () => {
+    const v = sel.value;
+    if (v.charAt(0) !== '@') { portalTab(v); window.scrollTo(0, 0); return; }
+    sel.value = _tab;
+    if (v === '@agenda') location.href = 'calendario.html';
+    else if (v === '@herr') location.href = 'herramientas.html';
+    else if (v === '@sitio') salir();
+    else if (v === '@salir' && window.logout) window.logout();
+  };
+}
+
+/* un solo encabezado para todo el panel: título, fecha y frescura, y a la
+   derecha la moneda (y "+ Agregar posición" en Mi cartera) */
+function pintarEncabezado() {
+  const h = $('vp-enc'); if (!h) return;
+  const tab = _tab, ges = ES_GESTION.has(tab), sub = SUBVISTAS[tab], ficha = TABS.find(x => x.id === tab);
+  // la gestión del fondo (fondo-live.js) y la posición en el fondo pintan su propio título
+  const propio = ges || tab === 'fondocli';
+  const tit = ges ? 'Gestión del fondo' : tab === 'inicio' ? 'Hola, ' + primerNombre()
+    : sub ? sub.t : tab === 'fondocli' ? 'Tu posición en el fondo' : ficha ? (ficha.tit || ficha.t) : '';
+  const cur = curVista(), conMon = CON_MONEDA.has(tab);
+  const partes = [hoyLargo()];
+  if (ges) partes.push('solo lo ves vos, como administrador');
+  else if (conMon && S.frescura) partes.push(S.frescura);
+  // con la moneda en dólares, de dónde sale el dólar y qué edad tiene
+  if (conMon && cur !== 'ARS' && S.fxSnap) { try { const e = etiquetaFx(S.fxSnap, cur === 'CCL' ? 'ccl' : 'mep'); if (e) partes.push(e); } catch (x) {} }
+  h.innerHTML = `<div class="izq">${sub ? `<a href="#panel/${sub.de}" data-go="${sub.de}" class="vp-enc-volver">← Mi cartera</a>` : ''}
+      ${propio ? '' : `<h1>${esc(tit)}</h1>`}<div class="sub">${partes.filter(Boolean).map(esc).join(' \u00b7 ')}</div></div>
+    <div class="der">${conMon ? `<div class="vp-seg" role="group" aria-label="Moneda">${['ARS', 'CCL', 'MEP'].map(c =>
+        `<button type="button" data-cur="${c}" class="${cur === c ? 'on' : ''}" aria-pressed="${cur === c}">${curEtq(c)}</button>`).join('')}</div>` : ''}
+      ${tab === 'micartera' && S.verificado ? '<button type="button" class="vp-agregar" data-agregar>+ Agregar posición</button>' : ''}</div>`;
+}
+
+/* contadores del lateral y frescura del encabezado: no dependen de que el
+   usuario pase por el Resumen (antes solo se llenaban ahí) */
+let _latSeq = 0;
+async function actualizarLateral() {
+  const email = S.email, seq = ++_latSeq;
+  try {
+    const [cc, disc, bset, f] = await Promise.all([carteraCalc(), disciplina(), bonosSet(), fx()]);
+    if (S.email !== email || seq !== _latSeq) return;
+    S.fxSnap = f;
+    if (cc.fallo) return;   // sin leer la cartera no se pisan los contadores con ceros
+    S.frescura = cc.pos.length ? frescura(cc.precios) : '';
+    pintarEncabezado();
+    await contadores(cc, disc, bset);
+  } catch (e) {}
+}
+
+// Mi cartera relee los precios cada 2 minutos: la frescura del encabezado es la
+// de esa tabla (con la regla de acá: manda la posición más desactualizada)
+window.addEventListener('valtia-precios', e => {
+  const d = (e && e.detail) || {};
+  if (!d.email || d.email !== S.email) return;
+  S.frescura = d.n ? frescura(d.precios) : '';
+  if (d.fx) S.fxSnap = d.fx;
+  if (CON_MONEDA.has(_tab)) pintarEncabezado();
+});
+
 export function portalTab(e, tab) {
   if (typeof e === 'string') { tab = e; e = null; }
   if (e && e.preventDefault) e.preventDefault();
   if (!$('tab-' + tab) || !_permitidos.has(tab)) tab = 'inicio';
   document.querySelectorAll('.portal-content > [id^="tab-"]').forEach(el => { el.style.display = el.id === 'tab-' + tab ? 'block' : 'none'; });
-  document.querySelectorAll('.portal-nav a[data-tab]').forEach(a => a.classList.toggle('active', a.dataset.tab === tab));
+  // una subvista de Mi cartera deja marcada a Mi cartera en el lateral
+  const enLateral = (SUBVISTAS[tab] || {}).de || tab;
+  document.querySelectorAll('.portal-nav a[data-tab]').forEach(a => {
+    const on = a.dataset.tab === enLateral;
+    a.classList.toggle('active', on);
+    if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  });
+  const nav = document.querySelector('.portal-nav');
+  if (nav) nav.classList.toggle('modo-ges', ES_GESTION.has(tab));
   _tab = tab;
+  const sel = $('vp-msel'); if (sel) sel.value = tab;
   try { sessionStorage.setItem('valtia-panel-tab', tab); sessionStorage.setItem('valtia-panel-user', S.email || ''); } catch (x) {}
   if (location.hash !== '#panel/' + tab) history.replaceState(null, '', '#panel/' + tab);
+  pintarEncabezado();
   if (e) window.scrollTo(0, 0);
   if (_render[tab] && !_hecho[tab]) { _hecho[tab] = true; _render[tab](); }
   if (window.flResizeCharts) window.flResizeCharts();
 }
 function refrescar(...tabs) {
   tabs.forEach(t => { _hecho[t] = false; if (t === _tab) portalTab(t); });
+  if (tabs.includes('inicio') || tabs.includes('disciplina')) actualizarLateral();
 }
 function abrirDesdeHash() {
   const m = /^#panel\/([a-z-]+)/.exec(location.hash);
@@ -579,7 +708,13 @@ function reiniciarEstado() {
 
 /* punto de entrada: lo llama enterPortal (index.html) para todo usuario */
 export async function iniciarPanel({ user, isAdmin, data }) {
-  if (S.email && S.email !== user.email) reiniciarEstado();
+  if (S.email && S.email !== user.email) {
+    // otra cuenta en la misma página: nada del estado anterior (panel, Mi cartera, gestión
+    // del fondo) puede sobrevivir. Recargar es lo único que lo garantiza del todo
+    reiniciarEstado();
+    location.replace(location.pathname);
+    return;
+  }
   // pestaña recordada de OTRO usuario (o de una sesión cerrada): se descarta
   try {
     if (sessionStorage.getItem('valtia-panel-user') !== user.email) {
@@ -591,20 +726,21 @@ export async function iniciarPanel({ user, isAdmin, data }) {
   S.verificado = !!user.emailVerified;
   S.cliente = S.data.valorActual != null || S.data.capitalNeto != null;
   S.pro = S.isAdmin || S.cliente;
+  S.frescura = ''; S.fxSnap = null;
   instalarShell();
   abrirDesdeHash();
   bienvenida();
+  actualizarLateral();
   const antesPro = S.pro;
   await detectarPlan();
-  const chip = $('vp-plan');
-  if (chip) { chip.textContent = etiquetaPlan(); chip.classList.toggle('pro', S.pro); }
+  pintarPlan();
   // el plan se resuelve después del primer render: si resultó PRO, hay que
   // rehacer lo que se dibujó con el plan provisorio Y tirar el caché de
   // informes (se pidió con el filtro de visibilidad de un usuario gratis)
   if (S.pro && !antesPro) {
     invalidar('inf');
     refrescar('inicio', 'comprar', 'carteras', 'empresas', 'herramientas');
-  }
+  } else actualizarLateral();   // el contador de carteras depende del plan
 }
 
 /* ───────────────────────── compra: "La compré" ───────────────────────── */
@@ -684,9 +820,10 @@ document.addEventListener('change', e => {
 });
 
 document.addEventListener('click', async e => {
-  const t = e.target.closest('[data-go],[data-compra],[data-ok],[data-cancel],[data-seguir],.vp-cur button');
+  const t = e.target.closest('[data-go],[data-compra],[data-ok],[data-cancel],[data-seguir],.vp-seg button[data-cur],[data-agregar]');
   if (!t) return;
-  if (t.dataset.go) { e.preventDefault(); portalTab(t.dataset.go); return; }
+  if (t.dataset.go) { e.preventDefault(); portalTab(t.dataset.go); window.scrollTo(0, 0); return; }
+  if (t.matches('[data-agregar]')) { e.preventDefault(); if (window.__mcAbrirForm) window.__mcAbrirForm(); return; }
   if (t.dataset.seguir) {
     e.preventDefault(); t.disabled = true;
     await seguirCartera(t.dataset.seguir, t.dataset.nombre, t.dataset.on !== '1');
@@ -702,8 +839,9 @@ document.addEventListener('click', async e => {
   }
   if (t.dataset.ok) { e.preventDefault(); t.disabled = true; await registrarCompra(t.dataset.ok, t.closest('.vp-form')); t.disabled = false; return; }
   if (t.dataset.cancel) { e.preventDefault(); t.closest('.vp-form').remove(); return; }
-  if (t.matches('.vp-cur button')) {
+  if (t.matches('.vp-seg button[data-cur]')) {
     try { localStorage.setItem('valtia-mc-cur', t.dataset.cur); } catch (x) {}
+    pintarEncabezado();
     refrescar('inicio', 'empresas', 'herramientas');
     if (window.__mcRecargar) window.__mcRecargar();
   }
@@ -734,7 +872,6 @@ function frescura(precios) {
   const h = Math.round(min / 60);
   return h < 24 ? `precios actualizados hace ${h} h` : 'precios del ' + new Date(ms).toLocaleDateString('es-AR');
 }
-const selectorCur = () => `<span class="vp-cur">${['ARS', 'CCL', 'MEP'].map(c => `<button data-cur="${c}" class="${curVista() === c ? 'on' : ''}">${curEtq(c)}</button>`).join('')}</span>`;
 
 /* ───────────────────────── INICIO ───────────────────────── */
 // El Resumen es el pantallazo de como vienen SUS inversiones: un solo bloque
@@ -746,23 +883,20 @@ const fmtC = iso => { const [aa, mm, dd] = String(iso || '').slice(0, 10).split(
 const COLB = ['#B08A3E', '#4E6E9E', '#6FA287', '#D8B87A', '#9B7BA8', '#8C8477'];
 const COLM = { ARS: '#9EC7A8', USD: '#3F8F63' };
 
-function cabecera(nombre, fresco) {
-  let f = '';
-  try { f = new Date(hoyAR() + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }); } catch (e) {}
-  return `<div class="vp-head"><div>${titulo('Hola, ' + nombre)}
-    <div class="vp-fecha">${esc(f)}${fresco ? ' \u00b7 ' + esc(fresco) : ''}</div></div>${selectorCur()}</div>`;
-}
-
 async function renderInicio() {
-  const el = $('tab-inicio');
-  const nombre = esc((S.user.displayName || S.email.split('@')[0]).split(' ')[0]);
-  el.innerHTML = titulo('Hola, ' + nombre) + '<p class="vp-cargando">Armando tu panorama\u2026</p>';
+  const el = $('tab-inicio'), email = S.email;
+  el.innerHTML = '<p class="vp-cargando">Armando tu panorama\u2026</p>';
   const [cc, disc, bset, vs] = await Promise.all([carteraCalc(), disciplina(), bonosSet(), ventas()]);
+  if (S.email !== email) return;
+  if (cc.fallo) {
+    el.innerHTML = `<div class="vp-card" style="max-width:560px"><h4>No pudimos leer tu cartera</h4>
+      <p>Puede ser la conexión. Tus posiciones siguen guardadas: probá de nuevo en un momento.</p>
+      <button class="vp-btn" style="margin-top:12px" onclick="valtiaPanel.refrescar()">Reintentar</button></div>`;
+    return;
+  }
   const tiene = cc.pos.length > 0;
-  const fondo = S.cliente ? tarjetaFondo() : '';
-  let h = cabecera(nombre, tiene ? frescura(cc.precios) : '');
-  h += tiene ? `<div class="vp-hero${fondo ? ' dos' : ''}">${bloqueEstado(cc, vs || [])}${fondo}</div>`
-             : bloqueCamino(cc, disc) + (fondo ? `<div class="vp-hero">${fondo}</div>` : '');
+  // el Fondo no va en el panel del inversor (handoff Panel v3)
+  let h = tiene ? `<div class="vp-hero">${bloqueEstado(cc, vs || [])}</div>` : bloqueCamino(cc, disc);
   // vendió todo: sin posiciones no hay bloque de estado, pero lo realizado se sigue viendo
   if (!tiene && (vs || []).length) h += tarjetaRealizado(cc, vs);
   h += `<div class="vp-cols">
@@ -776,6 +910,7 @@ async function renderInicio() {
     </div>`;
   el.innerHTML = h;
   cambios(cc, disc); top3(cc); carterasMini(cc); contadores(cc, disc, bset);
+  S.frescura = tiene ? frescura(cc.precios) : ''; pintarEncabezado();
   if (tiene) alertasMail();
 }
 
@@ -847,15 +982,6 @@ async function alertasMail() {
     }
     btn.disabled = false;
   });
-}
-
-function tarjetaFondo() {
-  const v = Number(S.data.valorActual) || 0, t = S.data.actualizado_utc;
-  const f = t ? new Date(t.seconds ? t.seconds * 1000 : t).toLocaleDateString('es-AR') : '';
-  return `<div class="vp-fondo"><div class="l">Fondo Valtia \u00b7 a medida</div>
-    <div class="v">$${Math.round(v).toLocaleString('es-AR')}</div>
-    <p>a precios de mercado${f ? ' \u00b7 actualizada el ' + f : ''}</p>
-    <a class="vp-btn" href="#panel/fondocli" data-go="fondocli">Ver el detalle \u2192</a></div>`;
 }
 
 /* una barra de composicion con su leyenda: [{nombre, peso, color}] */
@@ -947,9 +1073,6 @@ function contadorNav(id, txt, tit) {
 async function contadores(cc, disc, bset) {
   const n = cc.r.filas.length;
   contadorNav('micartera', n ? String(n) : '', n ? `${n} posici${n === 1 ? '\u00f3n' : 'ones'} cargadas` : '');
-  // "Mis empresas" agrupa los lotes del mismo activo: se cuenta lo mismo que muestra
-  const claves = new Set(cc.r.filas.map(f => esRentaFija(f.ticker, bset) ? base(f.ticker) : (tickerFicha(f.ticker) || base(f.ticker))));
-  contadorNav('empresas', claves.size ? String(claves.size) : '', `${claves.size} activos distintos`);
   if (disc && disc.config) {
     const mes = hoyAR().slice(0, 7), obj = Math.max(1, Number(disc.config.compras) || 1);
     const hechas = (disc.log || []).filter(c => String(c.fecha || '').slice(0, 7) === mes).length;
@@ -958,6 +1081,11 @@ async function contadores(cc, disc, bset) {
   try {
     const z = (await radar()).filter(a => a.entrada).length;
     contadorNav('comprar', z ? z + ' \u25ce' : '', `${z} activos en zona de compra`);
+  } catch (e) {}
+  try {
+    const ts = (await teaser()) || [];
+    const vis = ts.filter(x => x.visibilidad === 'publico' || S.pro).length;
+    contadorNav('carteras', vis ? String(vis) : '', `${vis} cartera${vis === 1 ? '' : 's'} con tu plan`);
   } catch (e) {}
 }
 
@@ -1152,7 +1280,7 @@ function ordenComprar(act) {
 
 async function renderComprar() {
   const el = $('tab-comprar');
-  el.innerHTML = titulo('Qué comprar hoy') + '<p class="vp-cargando">Cargando el radar…</p>';
+  el.innerHTML = '<p class="vp-cargando">Cargando el radar…</p>';
   const [rd, cc, pi] = await Promise.all([radarDoc(), carteraCalc(), preciosInf()]);
   // el gate lo define lo que Firestore dejó leer, no una variable del cliente
   const conRatios = !!rd.pro;
@@ -1176,8 +1304,8 @@ async function renderComprar() {
       <td data-host><button class="vp-btn mini sec" data-compra="${esc(a.sym)}" data-px="${p != null && f ? p : ''}" ${blur ? 'disabled' : ''}>La compré</button></td>
     </tr>`;
   };
-  el.innerHTML = titulo('Qué comprar hoy') + `
-    <p class="vp-sub">Una sola lista, con el criterio a la vista: primero lo que está en <b>zona de compra</b> (puntaje de valor ≥ 60 y RSI &lt; 45), después por puntaje de valor. Es la lectura propia de Valtia sobre ${lista.length} activos${fecha ? ', radar del ' + fecha : ''}; no es una recomendación personalizada. Los precios son en dólares (las argentinas por su ADR).</p>
+  const enZona = lista.filter(a => a.entrada).length, yaTenes = lista.filter(a => ten.radar.has(a.sym)).length;
+  el.innerHTML = `<p class="vp-sub">Radar sobre ${lista.length} activos · <b>${enZona} en zona de compra</b> · ${yaTenes} ya ${yaTenes === 1 ? 'la tenés' : 'las tenés'} · <a href="#panel/carteras" data-go="carteras" style="color:var(--link)">Ver carteras Valtia →</a></p>
     ${DATALIST}
     <div class="vp-tblwrap"><table class="vp-tbl"><thead><tr>
       <th class="l">Activo</th><th class="l">Lectura Valtia</th><th>Valor</th><th>Precio</th><th>RSI</th>${conRatios ? '<th>PER</th><th>EV/EBITDA</th><th>FCF yield</th><th>ROE</th><th>Calidad</th>' : ''}<th></th></tr></thead>
@@ -1187,6 +1315,7 @@ async function renderComprar() {
         <p style="font-size:12.5px;color:var(--sub);margin:4px 0 10px">La lista completa, el veredicto y la zona de compra son gratis. Con PRO ves el PER, EV/EBITDA, FCF yield, ROE y el puntaje de calidad de cada uno.</p>
         <a class="vp-btn" href="planes.html">Ver planes</a></div>` : ''}
     </div>
+    <p class="vp-nota">Zona de compra: puntaje de valor ≥ 60 y RSI &lt; 45; primero van las que están en zona y después el resto por puntaje. Radar${fecha ? ' del ' + fecha : ''}: es la lectura propia de Valtia, no una recomendación personalizada. Precios en dólares (las argentinas por su ADR).</p>
     <p class="vp-nota">"La compré" registra la compra en Mi cartera y en tu plan de inversión mensual, con el mercado, la cantidad, el precio que pagaste y el broker. Si compraste en BYMA (CEDEAR o acción local), el precio va en pesos.</p>`;
 }
 
@@ -1228,7 +1357,7 @@ function cardCartera(t, extra, sigue) {
 
 async function renderCarteras() {
   const el = $('tab-carteras');
-  el.innerHTML = titulo('Carteras Valtia') + '<p class="vp-cargando">Cargando…</p>';
+  el.innerHTML = '<p class="vp-cargando">Cargando…</p>';
   const [ts, cc, bset, seg] = await Promise.all([teaser(), carteraCalc(), bonosSet(), seguidas()]);
   const ten = tenencias(cc, bset);
   const cards = await Promise.all((ts || []).map(async t => {
@@ -1246,7 +1375,7 @@ async function renderCarteras() {
     }
     return cardCartera(t, extra, !!seg[t.id]);
   }));
-  el.innerHTML = titulo('Carteras Valtia') + `<p class="vp-sub">Carteras vivas con track record real desde su lanzamiento, sin backtests: cada rotación queda fechada con su razonamiento. Seguí la que va con vos y el panel te avisa sus rotaciones y te compara contra lo que ya tenés.</p>
+  el.innerHTML = `<p class="vp-sub">Carteras vivas con track record real desde su lanzamiento, sin backtests: cada rotación queda fechada con su razonamiento. Seguí la que va con vos y el panel te avisa sus rotaciones y te compara contra lo que ya tenés.</p>
     <div class="vp-grid">${cards.join('') || '<p class="vp-nota">Las carteras no están disponibles ahora.</p>'}</div>
     <div id="vp-comparar"></div>`;
   compararSeguidas(ts || [], cc, bset, seg);
@@ -1318,10 +1447,10 @@ async function compararSeguidas(ts, cc, bset, seg) {
 /* ───────────────────────── MIS EMPRESAS ───────────────────────── */
 async function renderEmpresas() {
   const el = $('tab-empresas');
-  el.innerHTML = titulo('Mis empresas') + '<p class="vp-cargando">Cruzando tu cartera con informes, noticias y agenda…</p>';
+  el.innerHTML = '<p class="vp-cargando">Cruzando tu cartera con informes, noticias y agenda…</p>';
   const cc = await carteraCalc();
   if (!cc.pos.length) {
-    el.innerHTML = titulo('Mis empresas') + `<p class="vp-sub">Acá vas a ver, para cada activo que tengas, el informe Valtia, las últimas noticias y su próximo evento (resultados, cupón o vencimiento).</p>
+    el.innerHTML = `<p class="vp-sub">Acá vas a ver, para cada activo que tengas, el informe Valtia, las últimas noticias y su próximo evento (resultados, cupón o vencimiento).</p>
       <div class="vp-card" style="max-width:520px"><h4>Todavía no cargaste posiciones</h4><p>Cargá tu cartera y esta sección se arma sola.</p><a class="vp-ir" href="#panel/micartera" data-go="micartera">Ir a Mi cartera →</a></div>`;
     return;
   }
@@ -1389,7 +1518,7 @@ async function renderEmpresas() {
       <div data-noticias="${esc(g.rf ? '' : (tickerFicha(g.k) || ''))}"></div>
       ${link ? `<a class="vp-ir" href="${link}">Ver ficha completa →</a>` : ''}</div>`;
   });
-  el.innerHTML = titulo('Mis empresas') + `<p class="vp-sub">Todo lo que Valtia sabe de cada activo que tenés: informe, noticias y próximo evento. ${selectorCur()}</p>
+  el.innerHTML = `<p class="vp-sub">Todo lo que Valtia sabe de cada activo que tenés: informe, noticias y próximo evento.</p>
     <div class="vp-grid">${cards.join('')}</div>`;
   noticiasDeMisEmpresas(el);
 }
@@ -1412,9 +1541,9 @@ const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', '
 const mesAnterior = m => { let [a, mm] = m.split('-').map(Number); mm--; if (!mm) { mm = 12; a--; } return a + '-' + String(mm).padStart(2, '0'); };
 async function renderDisciplina() {
   const el = $('tab-disciplina');
-  el.innerHTML = titulo('Inversión mensual') + '<p class="vp-cargando">Cargando tu plan…</p>';
+  el.innerHTML = '<p class="vp-cargando">Cargando tu plan…</p>';
   if (!S.verificado) {
-    el.innerHTML = titulo('Inversión mensual') + `<div class="vp-card" style="max-width:520px"><h4>Verificá tu email para activar tu plan</h4><p>Te mandamos un mail al registrarte. Abrilo, tocá el link y recargá.</p></div>`;
+    el.innerHTML = `<div class="vp-card" style="max-width:520px"><h4>Verificá tu email para activar tu plan</h4><p>Te mandamos un mail al registrarte. Abrilo, tocá el link y recargá.</p></div>`;
     return;
   }
   const [disc, cc, pi] = await Promise.all([disciplina(), carteraCalc(), preciosInf()]);
@@ -1436,8 +1565,7 @@ async function renderDisciplina() {
       <td>${p && monto ? num(monto / p, 3) : '—'}</td>
       <td data-host><button class="vp-btn mini sec" data-compra="${esc(a.sym)}" data-px="${p != null && f ? p : ''}">La compré</button></td></tr>`;
   };
-  el.innerHTML = titulo('Inversión mensual') + `
-    <p class="vp-sub">El método del inversor constante: una regla mensual, candidatas del radar que todavía no tenés, y cada compra marcada se suma sola a Mi cartera.</p>
+  el.innerHTML = `
     ${DATALIST}
     ${config ? `<div class="vp-kpis">
         <div class="pkpi"><div class="pkpi-label">Tu regla</div><div class="pkpi-value">US$${Number(config.aporte || 0).toLocaleString('es-AR')}</div><div class="pkpi-sub">por mes en ${obj} compra${obj > 1 ? 's' : ''} (US$${Math.round(monto).toLocaleString('es-AR')} c/u)</div></div>
@@ -1469,27 +1597,15 @@ async function renderDisciplina() {
 }
 
 /* ───────────────────────── HERRAMIENTAS Y DATOS ───────────────────────── */
-const HERRAMIENTAS = [
-  ['heatmap', 'Mapa de calor', 'Acciones y CEDEARs del día, en un vistazo.', false],
-  ['calendario', 'Calendario económico', 'Eventos macro de la semana.', false],
-  ['dolar', 'Dólar histórico', 'Oficial, MEP, CCL y blue en el tiempo.', false],
-  ['cauciones', 'Calculadora de cauciones', 'Cuánto rinde colocar pesos a plazo.', false],
-  ['radar', 'Radar de valuación', 'Los 34 activos con múltiplos por familia, calidad y zona de compra.', true],
-  ['acciones', 'Acciones ARG / EE.UU.', 'Tabla comparada de las principales.', true],
-  ['bonos', 'Bonos soberanos', 'TIR, paridad, duration, curva y letras a tasa fija.', true],
-  ['ratios', 'Ratios de CEDEARs', 'Múltiplos de los CEDEARs más operados.', true],
-];
 async function renderHerramientas() {
   const el = $('tab-herramientas');
-  el.innerHTML = titulo('Herramientas y datos') + '<p class="vp-cargando">Cargando…</p>';
+  el.innerHTML = '<p class="vp-cargando">Cargando…</p>';
   const cc = await carteraCalc();
   const bp = await panelBonos(), bset = await bonosSet();
   const rd = await radarDoc();
   const porSym = {};
   (rd.activos || []).forEach(a => { porSym[a.sym] = a; });
   const m = curMoneda(cc.cur);
-  const cards = HERRAMIENTAS.map(([id, t, p, pro]) => `<div class="vp-card"><div class="l">${pro ? `<span class="vp-tag ${S.pro ? 'gratis' : 'pro'}" style="padding:1px 6px">${S.pro ? 'incluida' : 'PRO'}</span>` : '<span class="vp-tag gratis" style="padding:1px 6px">gratis</span>'}</div>
-      <h4>${t}</h4><p>${p}</p><a class="vp-ir" href="herramientas.html#${id}">${pro && !S.pro ? 'Ver con PRO →' : 'Abrir →'}</a></div>`).join('');
   let datos = '';
   if (cc.pos.length) {
     const filas = [...new Map(cc.r.filas.map(f => [String(f.ticker).toUpperCase(), f])).values()].filter(f => f.px);
@@ -1510,12 +1626,12 @@ async function renderHerramientas() {
         <td>${ra.valorScore ?? '—'}</td>`; })() : `<td>${px.rsi != null ? num(px.rsi, 0) : '—'}</td>`}
       </tr>`;
     };
-    datos = `<div class="vp-sec">Datos de tus activos<small>lo que el sync sabe de cada uno${S.pro ? '' : ' · ratios completos con PRO'}</small></div>
+    datos = `<p class="vp-sub">Lo que el sync sabe de cada uno de tus activos${S.pro ? '' : ' · ratios completos con PRO'}. El mapa de calor, el radar, los bonos y el dólar histórico están en <a href="herramientas.html" style="color:var(--link)">Herramientas y datos ↗</a>.</p>
       <div class="vp-tblwrap"><table class="vp-tbl"><thead><tr><th class="l">Activo</th><th>Precio</th><th class="l">Lectura</th>${rd.pro ? '<th>PER / TIR</th><th>P/Libro / MD</th><th>ROE / paridad</th><th>Deuda/EBITDA</th><th>Beta</th><th>Valor</th>' : '<th>RSI</th>'}</tr></thead>
       <tbody>${filas.map(fila).join('') || '<tr><td colspan="9" class="l vp-mut">Tus posiciones todavía no tienen datos del sync (9:00).</td></tr>'}</tbody></table></div>
       ${!rd.pro ? `<p class="vp-nota">Con PRO ves PER, P/Libro, ROE, deuda sobre EBITDA y beta de tus acciones, y TIR, duration y paridad de tus bonos. <a href="planes.html" style="color:var(--link)">Ver planes →</a></p>` : `<p class="vp-nota">Múltiplos de yfinance al último cierre; para renta fija, la matemática propia del panel de bonos (cada 15 min en rueda).</p>`}`;
   }
-  el.innerHTML = titulo('Herramientas y datos') + `<div class="vp-grid">${cards}</div>${datos}`;
+  el.innerHTML = datos || `<div class="vp-card" style="max-width:560px"><h4>Todavía no cargaste posiciones</h4><p>Cuando cargues tu cartera, acá vas a ver el precio, la lectura y los ratios de cada activo. Las herramientas del sitio están en <a href="herramientas.html" style="color:var(--link)">Herramientas y datos ↗</a>.</p><a class="vp-ir" href="#panel/micartera" data-go="micartera">Ir a Mi cartera →</a></div>`;
 }
 
 /* exposición global para los onclick del HTML */

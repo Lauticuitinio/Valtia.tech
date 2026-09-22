@@ -13,14 +13,13 @@ import { simular, serieReal, combinar, recortar, resumen, serieDe } from './evol
 import { validarVenta, armarVenta, planDeshacer, resultadoVenta, resumenVentas, tenencia, monedaFactor,
          cantidadAjuste, validarAjuste, ventaDesdeAjuste, ajusteDesdeVenta, restoDeAjuste }
   from './ventas.js?v=6';
-import { fxMercado, etiquetaFx, convertir } from './fx.js?v=1';
+import { fxMercado, convertir } from './fx.js?v=1';
 export { convertir } from './fx.js?v=1';
 
 const STYLE = `
 .mc-wrap{width:100%}
 /* botones y campos heredan la tipografía de la página (si no, el navegador les pone Arial) */
 .mc-wrap button,.mc-wrap input,.mc-wrap select,.mc-wrap textarea{font-family:inherit}
-.mc-head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:18px}
 .mc-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px}
 .mc-k{background:var(--card);border:1px solid var(--border);padding:16px 18px}
 .mc-k .l{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
@@ -125,14 +124,6 @@ const STYLE = `
 .mc-prev td{padding:8px 10px;border-bottom:.5px solid var(--border);color:var(--text)}
 .mc-prev tr:last-child td{border-bottom:none}
 .mc-bad{color:var(--red)}
-.mc-live{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
-.mc-dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block}
-.mc-cur{display:flex;gap:0;border:1px solid var(--border);overflow:hidden}
-.mc-cur button{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.06em;
-  padding:7px 13px;border:none;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
-.mc-cur button+button{border-left:1px solid var(--border)}
-.mc-cur button.on{background:var(--btn-bg);color:var(--btn-tx)}
-.mc-curwrap{display:flex;flex-direction:column;align-items:flex-end;gap:7px}
 .mc-form select{width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);
   color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:13.5px;outline:none}
 .mc-form select:focus{border-color:var(--gold)}
@@ -162,6 +153,14 @@ const STYLE = `
 .mc-evo-nota{font-size:11.5px;color:var(--muted);line-height:1.6;margin-top:8px}
 .mc-brks .b{font:500 11.5px 'IBM Plex Mono',monospace;color:var(--sub);border:1px solid var(--border);border-radius:6px;padding:4px 11px}
 .mc-brks .b b{color:var(--text)}
+.mc-form{scroll-margin-top:160px}
+.mc-cerrar{margin-left:auto;font:600 10.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);background:none;border:none;cursor:pointer;padding:8px 4px}
+.mc-cerrar:hover{color:var(--text)}
+.mc-subnav{font-size:12px;color:var(--muted);margin:0 0 10px}
+.mc-subnav a{color:var(--link);text-decoration:none;font-weight:600}
+.mc-subnav a:hover{color:var(--text)}
+.mc-subnav span{margin:0 4px}
 `;
 
 /* ── brokers y mercados ──
@@ -676,30 +675,16 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   const escrito = escritoEnAvisos(el);
   const r = calcular(posiciones, precios);
   const cur = curLabel();
-  // "CCL $1.598 · dolarapi, hace 12 min": con la fuente y la edad, para que
-  // el que ve otro CCL en el panel de bonos sepa que son dos mediciones
-  const fxTxt = _cur === "CCL" ? etiquetaFx(_fx, "ccl")
-              : _cur === "MEP" ? etiquetaFx(_fx, "mep") : "";
-  const cabecera = `
-    <div class="mc-head"><div>
-      <div class="portal-title" style="margin-bottom:0">Mi cartera</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:6px">Seguimiento de tus posiciones con la valuación de Valtia
-        · <a href="disciplina.html" style="color:var(--link);text-decoration:none">Las candidatas del mes →</a></div>
-    </div>
-    <div class="mc-curwrap">
-      <div class="mc-cur">
-        <button data-cur="ARS" class="${_cur === "ARS" ? "on" : ""}">Pesos</button>
-        <button data-cur="CCL" class="${_cur === "CCL" ? "on" : ""}">USD CCL</button>
-        <button data-cur="MEP" class="${_cur === "MEP" ? "on" : ""}">USD MEP</button>
-      </div>
-      ${opts.frescura ? `<div class="mc-live"><span class="mc-dot"${String(opts.frescura).startsWith("Precios del") ? ' style="background:#E0A93E"' : ""}></span>${esc(opts.frescura)}${fxTxt ? " · " + fxTxt : ""}</div>` : ""}
-    </div></div>`;
+  // Panel v3: el título, la fecha, la frescura de los precios, el selector de
+  // moneda y de dónde sale el dólar van en el encabezado único del panel
+  const cabecera = "";
 
   const form = `
-    <div class="mc-form">
+    <div class="mc-form" id="mc-form"${formVisible(posiciones.length) ? "" : " hidden"}>
       <div class="mc-tabs">
         <button class="mc-tab on" data-modo="uno">Agregar una</button>
         <button class="mc-tab" data-modo="imp">Importar desde Excel</button>
+        ${posiciones.length ? '<button class="mc-cerrar" data-cerrar-form aria-label="Cerrar el formulario">Cerrar ✕</button>' : ""}
       </div>
       <datalist id="mc-brokers">${BROKERS.map(b => `<option value="${b}">`).join("")}</datalist>
       <div id="mc-modo-uno">
@@ -726,8 +711,8 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
         <div id="mc-prev"></div>
         <button class="mc-btn" id="mc-imp-btn" style="margin-top:12px">Revisar</button>
       </div>
-      <div class="mc-msg" id="mc-msg"></div>
-    </div>`;
+    </div>
+    <div class="mc-msg" id="mc-msg"></div>`;
 
   const fxFalta = posiciones.length && (
     (_cur === "ARS" && !_fx.ccl && r.filas.some(f => f.moneda !== "ARS")) ||
@@ -818,6 +803,8 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     <div class="mc-evo" id="mc-evo"></div>
     ${reparto}
     ${form}
+    <div class="mc-subnav">Cada activo en detalle: <a href="#panel/empresas" data-go="empresas">informes, noticias y agenda →</a>
+      <span>·</span> <a href="#panel/herramientas" data-go="herramientas">ratios y datos →</a></div>
     <div class="mc-tblwrap"><table class="mc-tbl">
       <thead><tr>
         ${th("ticker", "Activo", "l")}${th("cantidad", "Cant.")}${th("dCompra", "Compra")}
@@ -1101,6 +1088,7 @@ function pintar() {
   renderMiCartera(_el, _pos, _precios, { frescura: frescura(), onRerender: enganchar,
                                          bonos: _bonos, rentaFija: rf, desg: _desg, ventas: _ventas, ajustes: _ajustes });
   enganchar();
+  try { window.dispatchEvent(new CustomEvent("valtia-precios", { detail: { email: _user && _user.email, precios: _precios, n: _pos.length, fx: _fx } })); } catch (e) {}
 }
 
 /* variaciones por período ya calculadas por el sync (doc público) */
@@ -1189,11 +1177,7 @@ function enganchar() {
   });
   const ib = _el.querySelector("#mc-imp-btn");
   if (ib) ib.onclick = revisarImport;
-  _el.querySelectorAll(".mc-cur button").forEach(b => b.onclick = () => {
-    _cur = b.dataset.cur;
-    try { localStorage.setItem("valtia-mc-cur", _cur); } catch (e) {}
-    pintar();
-  });
+  _el.querySelectorAll("[data-cerrar-form]").forEach(b => b.onclick = () => abrirFormulario(false));
 }
 
 /* cotizaciones para convertir (misma fuente que la barra del sitio) */
@@ -1205,6 +1189,30 @@ async function cargarFx() { _fx = await fxMercado(); }
 
 /* ── importar: primero muestra qué entendió, después confirma ── */
 let _porImportar = null;
+
+/* el formulario de alta: cerrado mientras haya posiciones, hasta que se toca
+   "+ Agregar posición" en el encabezado del panel. El estado sobrevive a los
+   repintados (el refresco de precios cada 2 min vuelve a dibujar todo). */
+let _formAbierto = false;
+const formVisible = n => _formAbierto || !n;
+export function abrirFormulario(abrir) {
+  _formAbierto = abrir == null ? (!_pos.length || !_formAbierto) : !!abrir;
+  const f = _el && _el.querySelector("#mc-form");
+  if (!f) return _formAbierto;
+  f.hidden = !formVisible(_pos.length);
+  if (f.hidden) {
+    const uno = f.querySelector("#mc-modo-uno"), imp = f.querySelector("#mc-modo-imp");
+    if (uno) uno.style.display = "block";
+    if (imp) imp.style.display = "none";
+    f.querySelectorAll(".mc-tab").forEach(x => x.classList.toggle("on", x.dataset.modo === "uno"));
+  }
+  if (!f.hidden && _formAbierto) {
+    try { f.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) { f.scrollIntoView(); }
+    const i = f.querySelector("#mc-ticker");
+    if (i) try { i.focus({ preventScroll: true }); } catch (e) {}
+  }
+  return _formAbierto;
+}
 
 async function revisarImport() {
   const txt = _el.querySelector("#mc-paste").value;
@@ -1626,6 +1634,7 @@ function prellenarDesdeUrl() {
   let tk = "";
   try { tk = (new URLSearchParams(location.search).get("agregar") || "").trim().toUpperCase().slice(0, 12); } catch (e) {}
   if (!tk || !/^[A-Z0-9.\-]+$/.test(tk)) return;
+  abrirFormulario(true);
   const inp = _el.querySelector("#mc-ticker"), sel = _el.querySelector("#mc-mercado");
   if (!inp || !sel) return;
   inp.value = tk;
@@ -1662,7 +1671,7 @@ async function quitar(id) {
    anterior. Las llama el panel apenas detecta que cambió el mail. */
 export function reiniciarMiCartera() {
   _el = null; _user = null; _pos = []; _precios = {}; _ventas = []; _ajustes = [];
-  _porImportar = null;
+  _porImportar = null; _formAbierto = false;
   if (_evoChart) { try { _evoChart.destroy(); } catch (e) {} _evoChart = null; }
   Object.assign(_evo, { email: null, cargado: false, cargando: null, error: false,
                         intento: 0, fotos: [], series: {}, spy: [], ccl: [] });
@@ -1681,14 +1690,14 @@ export async function initMiCartera(user, el) {
   asegurarEstilo();
   if (!user.emailVerified) {
     // sin verificar, las reglas de Firestore bloquean la cartera del usuario
-    el.innerHTML = `<div class="portal-title">Mi cartera</div>
-      <div class="mc-empty"><h4>Verificá tu email para activar Mi Cartera</h4>
+    el.innerHTML = `<div class="mc-empty"><h4>Verificá tu email para activar Mi Cartera</h4>
       <p>Te mandamos un mail de verificación a <b>${esc(user.email)}</b>. Abrilo, tocá el link
       y recargá la página — tus posiciones y el plan de inversión mensual se activan al instante.</p></div>`;
     return;
   }
-  el.innerHTML = `<div class="portal-title">Mi cartera</div><p style="color:var(--sub);font-size:14px">Cargando tus posiciones…</p>`;
+  el.innerHTML = `<p style="color:var(--sub);font-size:14px">Cargando tus posiciones…</p>`;
   // el panel (panel.js) avisa cuando registra una compra o cambia la moneda
+  window.__mcAbrirForm = () => abrirFormulario();
   window.__mcRecargar = async () => {
     _cur = pref("valtia-mc-cur", "ARS");
     try { await Promise.all([leerTodo(), cargarFx()]); pintar(); } catch (e) {}
@@ -1712,8 +1721,8 @@ export async function initMiCartera(user, el) {
         const act = document.activeElement;
         if (act && _el.contains(act) && /INPUT|TEXTAREA/.test(act.tagName)) return;
         // pestaña Importar abierta = el usuario está armando el paste: no pisar
-        const imp = _el.querySelector("#mc-modo-imp");
-        if (imp && imp.style.display !== "none") return;
+        const imp = _el.querySelector("#mc-modo-imp"), fm = _el.querySelector("#mc-form");
+        if (imp && imp.style.display !== "none" && fm && !fm.hidden) return;
         // formulario de venta abierto: no pisarlo (salvo el aviso de "esperá el precio",
         // que justamente necesita el refresco para que el precio llegue)
         if (_el.querySelector(".mc-vrow:not(.mc-vrow-espera)")) return;
@@ -1723,7 +1732,6 @@ export async function initMiCartera(user, el) {
       }, 120000);
     }
   } catch (e) {
-    el.innerHTML = `<div class="portal-title">Mi cartera</div>
-      <p style="color:var(--sub);font-size:14px">No pudimos cargar tu cartera (${esc(String(e).slice(0, 120))}).</p>`;
+    el.innerHTML = `<p style="color:var(--sub);font-size:14px">No pudimos cargar tu cartera (${esc(String(e).slice(0, 120))}).</p>`;
   }
 }
