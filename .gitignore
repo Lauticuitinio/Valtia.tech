@@ -3,3 +3,6 @@ serviceAccountKey.json
 node_modules/
 dev-data/
 dev-portal.html
+# archivos temporales de las pruebas del panel (tokens de cuentas de prueba)
+_tok*.txt
+_aud.js

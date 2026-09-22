@@ -229,3 +229,89 @@ export function resumen(puntos = []) {
   const cartera = (z.cartera / a.cartera - 1) * 100, spy = (z.spy / a.spy - 1) * 100;
   return { cartera, spy, diferencia: cartera - spy, desde: a.fecha, hasta: z.fecha };
 }
+
+/* ── Contra qué se compara la cartera (Resumen del Panel v3) ─────────────────
+   Cada índice se expresa en la MISMA moneda que la cartera y en base 100 al
+   primer punto. Series: spy [[fecha, cierre, ..., sin dividendos]], ccl y mep
+   [[fecha, venta]], merval [[fecha, cierre en pesos]], inflacion [[fin de mes,
+   variación mensual %]].
+   - S&P 500: en dólares tal cual; en pesos, por el CCL de cada día.
+   - Merval: en pesos tal cual; en dólares, dividido el CCL o el MEP del día.
+   - Dólar y la inflación argentina: solo tienen sentido contra una cartera en
+     pesos. En dólares, "el dólar" es una línea plana y la inflación en pesos no
+     se compara con nada: no se ofrecen. */
+export const BENCHS = {
+  SPY: { corto: "S&P 500", monedas: ["ARS", "CCL", "MEP"] },
+  MERV: { corto: "Merval", monedas: ["ARS", "CCL", "MEP"] },
+  CCL: { corto: "Dólar", monedas: ["ARS"] },
+  INF: { corto: "Inflación", monedas: ["ARS"] },
+};
+export const nombreBench = (b, moneda) =>
+  b === "SPY" ? "S&P 500" : b === "MERV" ? (moneda === "ARS" ? "Merval" : "Merval en dólares")
+  : b === "CCL" ? "Dólar CCL" : b === "INF" ? "Inflación" : b;
+export const benchsDisponibles = moneda => Object.keys(BENCHS).filter(k => BENCHS[k].monedas.includes(moneda));
+
+/* índice de precios acumulado (base 100 un mes antes del primer dato) a una
+   fecha. Dentro del mes se interpola de forma geométrica entre los cierres;
+   después del último dato publicado queda en el último valor (no se inventa
+   la inflación del mes en curso). null antes del primer dato. */
+export function indiceInflacion(mensual = [], fecha) {
+  const m = (mensual || []).filter(x => Array.isArray(x) && x[0] && isFinite(Number(x[1])))
+    .sort((a, b) => (String(a[0]) < String(b[0]) ? -1 : 1));
+  if (!m.length) return null;
+  const t = s => Date.parse(String(s).slice(0, 10) + "T12:00:00Z");
+  const f = t(fecha);
+  let nivel = 100, ini = t(m[0][0]) - 30 * 864e5;
+  if (f < ini) return null;
+  for (const [fin, v] of m) {
+    const tf = t(fin), k = 1 + Number(v) / 100;
+    if (f <= tf) return nivel * Math.pow(k, Math.max(0, Math.min(1, (f - ini) / (tf - ini || 1))));
+    nivel *= k; ini = tf;
+  }
+  return nivel;
+}
+
+/* valor "crudo" del índice elegido en la moneda elegida, a una fecha. null
+   si falta cualquier dato de ese día (el punto no se dibuja). */
+export function valorBench(b, moneda, fecha, s = {}) {
+  const cambio = moneda === "MEP" ? valorAl(s.mep, fecha) : valorAl(s.ccl, fecha);
+  if (b === "SPY") {
+    const v = valorAl(s.spy, fecha, true);
+    if (v == null) return null;
+    if (moneda !== "ARS") return v;
+    const c = valorAl(s.ccl, fecha);
+    return c ? v * c : null;
+  }
+  if (b === "MERV") {
+    const v = valorAl(s.merval, fecha);
+    if (v == null) return null;
+    if (moneda === "ARS") return v;
+    return cambio ? v / cambio : null;
+  }
+  if (moneda !== "ARS") return null;
+  if (b === "CCL") return valorAl(s.ccl, fecha);
+  if (b === "INF") return indiceInflacion(s.inflacion, fecha);
+  return null;
+}
+
+/* Pasa los puntos de la cartera (base 100, en dólares CCL) a otra moneda y les
+   agrega el índice elegido, todo rebasado a 100 en el primer punto que tiene
+   los dos datos. Para el MEP la cartera se calcula aparte (simular() con la
+   serie del MEP): esto solo resuelve pesos (× CCL del día) y el índice. */
+export function compararCon(puntos = [], { bench = "SPY", moneda = "CCL", series = {} } = {}) {
+  const out = [];
+  for (const x of puntos) {
+    let c = x.cartera;
+    if (moneda === "ARS") {
+      const k = valorAl(series.ccl, x.fecha);
+      if (!k) continue;
+      c = c * k;
+    }
+    const b = valorBench(bench, moneda, x.fecha, series);
+    if (!(c > 0) || !(b > 0)) continue;
+    out.push({ ...x, cartera: c, bench: b });
+  }
+  if (!out.length) return [];
+  const c0 = out[0].cartera, b0 = out[0].bench;
+  return out.map(x => ({ ...x, cartera: x.cartera / c0 * 100, bench: x.bench / b0 * 100 }));
+}

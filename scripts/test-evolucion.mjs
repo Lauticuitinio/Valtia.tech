@@ -1,5 +1,6 @@
 // Pruebas de evolucion.js (evolución de Mi cartera contra el S&P 500).  node scripts/test-evolucion.mjs
-import { valorAl, serieDe, simular, serieReal, combinar, recortar, resumen } from "../evolucion.js";
+import { valorAl, serieDe, simular, serieReal, combinar, recortar, resumen,
+  indiceInflacion, valorBench, compararCon, benchsDisponibles, nombreBench } from "../evolucion.js";
 
 let fallos = 0, casos = 0;
 const cerca = (a, b, tol = 1e-6) => a != null && b != null && Math.abs(a - b) <= tol;
@@ -166,6 +167,36 @@ check("recortar rebasa a 100", rec.length === 4 && cerca(rec[0].cartera, 100) &&
 const res = resumen(rec);
 check("resumen", res && cerca(res.cartera, comb[comb.length - 1].cartera / 120 * 100 - 100) && cerca(res.diferencia, res.cartera - res.spy) && res.hasta === "2026-09-18");
 check("resumen con un punto: null", resumen(rec.slice(0, 1)) === null);
+
+// ── contra qué se compara (Resumen del Panel v3) ──
+const inf = [["2026-06-30", 2], ["2026-07-31", 3], ["2026-08-31", 1]];
+check("inflación antes de todo: null", indiceInflacion(inf, "2026-01-01") === null);
+check("inflación a fin de junio: 102", cerca(indiceInflacion(inf, "2026-06-30"), 102));
+check("inflación a fin de julio: 102×1,03", cerca(indiceInflacion(inf, "2026-07-31"), 102 * 1.03));
+check("inflación a fin de agosto", cerca(indiceInflacion(inf, "2026-08-31"), 102 * 1.03 * 1.01));
+const mitad = indiceInflacion(inf, "2026-07-15");
+check("inflación a mitad de mes: entre los dos cierres", mitad > 102 && mitad < 102 * 1.03, mitad);
+check("inflación del mes en curso: no se inventa", cerca(indiceInflacion(inf, "2026-09-20"), 102 * 1.03 * 1.01));
+check("inflación desordenada o con basura", cerca(indiceInflacion([["2026-07-31", 3], ["x"], ["2026-06-30", 2]], "2026-07-31"), 102 * 1.03));
+
+const S = { spy: [["2026-09-01", 500], ["2026-09-02", 510]], ccl: [["2026-09-01", 1500], ["2026-09-02", 1530]],
+            mep: [["2026-09-01", 1450], ["2026-09-02", 1460]], merval: [["2026-09-01", 2e6], ["2026-09-02", 2.1e6]], inflacion: inf };
+check("S&P en dólares: tal cual", valorBench("SPY", "CCL", "2026-09-02", S) === 510 && valorBench("SPY", "MEP", "2026-09-02", S) === 510);
+check("S&P en pesos: × CCL del día", valorBench("SPY", "ARS", "2026-09-02", S) === 510 * 1530);
+check("Merval en pesos: tal cual", valorBench("MERV", "ARS", "2026-09-02", S) === 2.1e6);
+check("Merval en CCL: ÷ CCL", cerca(valorBench("MERV", "CCL", "2026-09-02", S), 2.1e6 / 1530));
+check("Merval en MEP: ÷ MEP", cerca(valorBench("MERV", "MEP", "2026-09-02", S), 2.1e6 / 1460));
+check("dólar e inflación en dólares: no se ofrecen", valorBench("CCL", "CCL", "2026-09-02", S) === null && valorBench("INF", "MEP", "2026-09-02", S) === null);
+check("disponibles en pesos: los cuatro", benchsDisponibles("ARS").join() === "SPY,MERV,CCL,INF");
+check("disponibles en dólares: S&P y Merval", benchsDisponibles("CCL").join() === "SPY,MERV" && benchsDisponibles("MEP").join() === "SPY,MERV");
+check("nombres", nombreBench("MERV", "ARS") === "Merval" && nombreBench("MERV", "CCL") === "Merval en dólares");
+const pts = [{ fecha: "2026-09-01", cartera: 100, tipo: "sim" }, { fecha: "2026-09-02", cartera: 110, tipo: "real" }];
+const enUsd = compararCon(pts, { bench: "SPY", moneda: "CCL", series: S });
+check("en dólares: la cartera no cambia y el S&P se rebasa", enUsd.length === 2 && cerca(enUsd[1].cartera, 110) && cerca(enUsd[1].bench, 102) && enUsd[1].tipo === "real");
+const enArs = compararCon(pts, { bench: "CCL", moneda: "ARS", series: S });
+check("en pesos: la cartera × CCL del día", cerca(enArs[1].cartera, 110 * 1530 / 1500) && cerca(enArs[1].bench, 102));
+check("sin el dato del índice ese día: el punto no va", compararCon(pts, { bench: "MERV", moneda: "CCL", series: { ...S, merval: [["2026-09-02", 2.1e6]] } }).length === 1);
+check("sin datos: vacío", compararCon([], { bench: "SPY", moneda: "CCL", series: S }).length === 0);
 
 console.log(fallos ? `${fallos} FALLAS de ${casos}` : `OK ${casos} casos`);
 process.exit(fallos ? 1 : 0);

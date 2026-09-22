@@ -33,7 +33,7 @@
   --text:#F4F1EA;--sub:rgba(244,241,234,.74);--muted:rgba(244,241,234,.58);
   --border:rgba(232,206,150,.16);--card:#121E3A;
   --gold:#E8CE96;--gold2:#fff;--link:#E8CE96;
-  --panel-bg:#0E1830;
+  --panel-bg:#0B1327;
   --green:#5FCB8E;--red:#F08A8A;
   --btn-bg:#E8CE96;--btn-tx:#0E1830;--btn-hover:#fff;
 }
@@ -798,7 +798,7 @@ function updateChartTheme(){
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   import { getDatabase, ref, push, onValue, serverTimestamp as dbTimestamp }
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-  import { iniciarPanel } from './panel.js?v=37';
+  import { iniciarPanel } from './panel.js?v=39';
 
   
   // ── FIREBASE CONFIG ──
@@ -1180,7 +1180,7 @@ function updateChartTheme(){
 
     // "Mi cartera": seguimiento de las posiciones propias (todo usuario con
     // sesión, admin incluido). Se carga aparte para no demorar el portal.
-    import('./mi-cartera.js?v=37')
+    import('./mi-cartera.js?v=38')
       .then(m => m.initMiCartera(user, document.getElementById('tab-micartera')))
       .catch(() => {});
   }

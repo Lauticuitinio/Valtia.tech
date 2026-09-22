@@ -8,10 +8,16 @@ import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, quer
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { calcular, agruparPorBroker, normalizarTicker, convertir, reiniciarMiCartera, completarPreciosDeRentaFija }
-  from './mi-cartera.js?v=37';
+  from './mi-cartera.js?v=38';
 import { fxMercado, registrarImplicito, etiquetaFx } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
+import { renderResumen } from './panel-resumen.js?v=1';
+import { renderComprar as renderComprarV3 } from './panel-comprar.js?v=1';
+import { renderCarteras as renderCarterasV3 } from './panel-carteras.js?v=1';
+import { renderMensual } from './panel-mensual.js?v=1';
+import { renderAgenda } from './panel-agenda.js?v=1';
+import { eventos } from './panel-eventos.js?v=1';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
   from './activos.js?v=7';
 
@@ -20,6 +26,22 @@ const CSS = `
 body.fl-app-on nav:not(.portal-nav){display:none!important}
 body.fl-app-on #vnav-hot,body.fl-app-on #vnav-menu,body.fl-app-on #vnav-back{display:none!important}
 body.fl-app-on{background:var(--panel-bg)}
+/* Colores del prototipo Panel v3 como variables: los módulos de cada pestaña usan
+   ESTO y no hex sueltos, así el tema oscuro sigue funcionando.
+   --v3-navy es el azul de los bloques sólidos (con texto claro encima) y no cambia;
+   --v3-serie es el color de la línea de "tu cartera" (azul en claro, dorado en oscuro). */
+body.fl-app-on{--v3-bg:#fff;--v3-card:#fff;--v3-line:#E7E3DA;--v3-line2:#E7E3DA;--v3-track:#F6F3EC;--v3-track2:#F6F3EC;
+  --v3-ink:#101010;--v3-sub:#57534A;--v3-mut:#8B8375;--v3-navy:#0E1830;--v3-serie:#0E1830;--v3-area:rgba(14,24,48,.06);
+  --v3-gold:#B08A3E;--v3-gold2:#8A6A2F;--v3-goldL:#E8CE96;--v3-goldS:#E8CE96;--v3-goldBg:rgba(176,138,62,.14);--v3-goldTint:#F6F3EC;
+  --v3-up:#1F7A4D;--v3-upBg:rgba(31,122,77,.12);--v3-dn:#B23A3A;--v3-dnBg:rgba(178,58,58,.1);
+  --v3-warn:#9A5A12;--v3-warnBg:rgba(200,120,30,.12);--v3-bench:#8B8375;--v3-cero:#8B8375;--v3-azul:#2B5FB0;
+  --v3-hover:#F6F3EC;--v3-hl:#F6F3EC;--v3-navyBg:rgba(14,24,48,.07);--v3-neutro:rgba(139,131,117,.12)}
+[data-theme="dark"] body.fl-app-on{--v3-bg:#0B1327;--v3-card:#121E3A;--v3-line:rgba(232,206,150,.16);--v3-line2:rgba(255,255,255,.07);
+  --v3-track:rgba(255,255,255,.08);--v3-track2:rgba(255,255,255,.05);--v3-ink:#F4F1EA;--v3-sub:rgba(244,241,234,.74);--v3-mut:rgba(244,241,234,.58);
+  --v3-navy:#15254A;--v3-serie:#E8CE96;--v3-area:rgba(232,206,150,.08);--v3-gold:#D9BE85;--v3-gold2:#E8CE96;--v3-goldL:#E8CE96;--v3-goldS:#B08A3E;
+  --v3-goldBg:rgba(232,206,150,.14);--v3-goldTint:rgba(232,206,150,.12);--v3-up:#5FCB8E;--v3-upBg:rgba(95,203,142,.14);--v3-dn:#F08A8A;
+  --v3-dnBg:rgba(240,138,138,.14);--v3-warn:#E0A93E;--v3-warnBg:rgba(224,169,62,.14);--v3-bench:#9FB0C2;--v3-cero:rgba(244,241,234,.3);
+  --v3-hover:rgba(255,255,255,.04);--v3-hl:rgba(232,206,150,.06);--v3-navyBg:rgba(232,206,150,.1);--v3-neutro:rgba(244,241,234,.1);--v3-azul:#8FB3E8}
 body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 .fl-layout{display:flex;align-items:stretch;gap:0;min-height:calc(100vh - 34px);background:var(--panel-bg)}
 /* lateral (232px, navy): medidas y colores del prototipo */
@@ -27,13 +49,13 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
   height:100vh!important;gap:0!important;border:none!important;background:#0E1830!important;border-radius:0;
   padding:18px 12px 14px!important;position:sticky;top:0;align-self:flex-start;max-height:100vh;overflow:auto}
 .fl-layout .portal-nav a[data-tab]{display:flex!important;align-items:center;justify-content:space-between;gap:8px;
-  padding:10px 12px!important;margin:0 0 2px!important;border-radius:0;border-left:2px solid transparent;border-bottom:none!important;
+  padding:10px 12px!important;margin:0 0 2px!important;border-radius:8px;border-left:2px solid transparent;border-bottom:none!important;
   color:rgba(255,255,255,.62)!important;font:500 11px 'IBM Plex Sans',sans-serif!important;letter-spacing:.1em!important;
   text-transform:uppercase;text-decoration:none;white-space:nowrap}
 .fl-layout .portal-nav a[data-tab]:hover{background:rgba(255,255,255,.06);color:#fff!important}
 .fl-layout .portal-nav a[data-tab].active{background:rgba(176,138,62,.18);color:#E8CE96!important;border-left-color:#B08A3E;font-weight:600!important}
 .fl-layout .portal-nav a.vp-lat-ext{display:flex!important;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px!important;
-  margin:0 0 2px!important;border-radius:0;border-left:2px solid transparent;border-bottom:none!important;color:rgba(255,255,255,.62)!important;
+  margin:0 0 2px!important;border-radius:8px;border-left:2px solid transparent;border-bottom:none!important;color:rgba(255,255,255,.62)!important;
   font:500 11px 'IBM Plex Sans',sans-serif!important;letter-spacing:.1em!important;text-transform:uppercase;text-decoration:none}
 .fl-layout .portal-nav a.vp-lat-ext:hover{background:rgba(255,255,255,.06);color:#fff!important}
 .vp-flecha{font-size:11px;letter-spacing:0;color:rgba(232,206,150,.7)}
@@ -43,7 +65,7 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
   padding:6px 12px 2px;margin:0!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .vp-plan-w{padding:0 12px 8px}
 .vp-plan{display:inline-block;font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;
-  color:#E8CE96;background:transparent;border:1px solid rgba(232,206,150,.45);border-radius:2px;padding:3px 7px}
+  color:#E8CE96;background:transparent;border:1px solid rgba(232,206,150,.45);border-radius:4px;padding:3px 7px}
 .vp-plan.pro{background:#E8CE96;color:#0E1830;border-color:#E8CE96}
 .fl-layout .portal-nav a.vp-lat-l{display:block!important;padding:5px 12px!important;margin:0!important;border:none!important;border-radius:0;
   font:500 10.5px 'IBM Plex Sans',sans-serif!important;letter-spacing:0!important;text-transform:none;color:rgba(255,255,255,.55)!important;text-decoration:none}
@@ -52,7 +74,7 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 .fl-layout .portal-nav a.vp-lat-l[data-m]:hover{color:#fff!important}
 .fl-layout .portal-nav .vp-foot button{color:#B08A3E!important;text-align:left;padding:5px 12px 2px!important;font:600 10px 'IBM Plex Sans',sans-serif!important;
   letter-spacing:.12em!important;background:none;border:none;cursor:pointer;text-transform:uppercase}
-.fl-sbbrand{display:flex;align-items:center;gap:10px;padding:2px 10px 18px;text-decoration:none}
+.fl-sbbrand{display:flex;align-items:center;gap:10px;padding:2px 10px 18px}
 .fl-sbbrand .nm{font:700 20px 'Playfair Display',serif;letter-spacing:.06em;color:#fff;line-height:1.1}
 .fl-sbbrand .nm em{color:#E8CE96;font-style:italic}
 .fl-sbbrand .sb{font:400 9px 'IBM Plex Sans',sans-serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4)}
@@ -80,9 +102,9 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
   background:none;border:none;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s}
 .vp-seg button:hover{color:var(--text)}
 .vp-seg button.on{color:var(--text);border-bottom-color:#B08A3E}
-.vp-agregar{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--btn-tx);background:var(--btn-bg);
-  padding:10px 18px;border-radius:0;white-space:nowrap;border:1px solid var(--btn-bg);cursor:pointer;transition:background .15s}
-.vp-agregar:hover{background:var(--btn-hover);border-color:var(--btn-hover)}
+.vp-agregar{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#0E1830;background:#E8CE96;
+  padding:9px 16px;border-radius:7px;white-space:nowrap;border:none;cursor:pointer;transition:background .15s}
+.vp-agregar:hover{background:#fff;box-shadow:inset 0 0 0 1px #E8CE96}
 .fl-layout .portal-content > [id^="tab-"]{scroll-margin-top:160px}
 .fl-layout .portal-content{flex:1;min-width:0;padding:24px 34px 60px!important;box-sizing:border-box;width:100%}
 /* celular: el lateral se esconde y las secciones pasan a un selector arriba */
@@ -90,7 +112,7 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 .vp-mbrand{font:700 18px 'Playfair Display',serif;letter-spacing:.06em;color:#fff;white-space:nowrap}
 .vp-mbrand em{color:#E8CE96;font-style:italic}
 .vp-mbar select{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#E8CE96;background:rgba(255,255,255,.06);
-  border:1px solid rgba(232,206,150,.35);border-radius:0;padding:8px 10px;max-width:62vw;min-width:0}
+  border:1px solid rgba(232,206,150,.35);border-radius:7px;padding:8px 10px;max-width:62vw;min-width:0}
 .vp-mder{display:flex;align-items:center;gap:8px;min-width:0}
 .vp-mbar select option,.vp-mbar select optgroup{color:#101010;background:#fff;text-transform:none}
 @media (max-width:920px){
@@ -110,10 +132,10 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 .vp-nota{font-size:12px;color:var(--muted);line-height:1.7;margin-top:10px;max-width:760px}
 .vp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
 .vp-card{background:var(--card);border:1px solid var(--border);padding:16px 18px;position:relative}
-.vp-card h4{font:600 17.5px 'Playfair Display',serif;color:var(--text);margin:0 0 7px;line-height:1.25}
+.vp-card h4{font:700 17.5px 'Playfair Display',serif;color:var(--text);margin:0 0 7px;line-height:1.25}
 .vp-card p{font-size:13px;color:var(--sub);line-height:1.65;margin:0}
 .vp-card .l{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-.vp-card a.vp-ir{display:inline-block;margin-top:10px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--link);text-decoration:none}
+a.vp-ir,.vp-card a.vp-ir{display:inline-block;margin-top:10px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--link);text-decoration:none}
 .vp-fila{display:flex;gap:10px;align-items:baseline;text-decoration:none;background:var(--bg3);border:1px solid var(--border);padding:11px 14px;margin-bottom:8px;color:var(--text);font-size:13px;line-height:1.5}
 .vp-fila b{color:var(--text)}
 .vp-chips{display:flex;gap:8px;flex-wrap:wrap;margin:-8px 0 20px}
@@ -158,7 +180,7 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 .vp-paso p{font-size:12.5px;color:var(--sub);line-height:1.6;margin:0}
 .vp-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#0E1830;color:#E8CE96;border:1px solid #B08A3E;padding:11px 18px;font-size:13px;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,.35)}
 .vp-bv{position:fixed;inset:0;z-index:1000;background:rgba(6,12,22,.72);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
-.vp-bv-caja{background:var(--card);border:1px solid var(--border);max-width:560px;width:100%;padding:26px 28px 22px;box-shadow:0 20px 60px rgba(0,0,0,.45);margin:auto}
+.vp-bv-caja{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:560px;width:100%;padding:26px 28px 22px;box-shadow:0 20px 60px rgba(0,0,0,.45);margin:auto}
 .vp-bv-caja .k{font:700 10px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--link)}
 .vp-bv-caja h3{font:700 25px 'Playfair Display',serif;color:var(--text);margin:8px 0 10px;line-height:1.15}
 .vp-bv-caja p{font-size:13.5px;color:var(--sub);line-height:1.7;margin:0 0 14px}
@@ -229,9 +251,14 @@ a.vp-buy:hover{border-color:var(--gold)}
 .vp-rsi .t{flex:1;height:4px;border-radius:3px;background:var(--bg3);overflow:hidden}
 .vp-rsi .t i{display:block;height:100%}
 .vp-rsi .v{font:600 10px 'IBM Plex Mono',monospace;color:var(--muted);white-space:nowrap}
+/* forma del prototipo Panel v3: cards 12px, internas 10px, métricas 8px, pills 4px, botones 5-7px. Sin sombras */
+.vp-card,.vp-tblwrap,.vp-paso,.vp-form,.vp-kpis .pkpi{border-radius:12px}
+.vp-ev,.vp-buy,.vp-fila{border-radius:10px}
+.vp-tag,.vp-pill{border-radius:4px}
+.vp-btn{border-radius:6px}
 /* contadores del lateral (la pastilla del prototipo) */
 .fl-layout .portal-nav a .vp-n{font:600 9px 'IBM Plex Mono',monospace;letter-spacing:0;color:#E8CE96;background:rgba(232,206,150,.16);
-  padding:2px 6px;border-radius:2px;flex:none;text-transform:none}
+  padding:2px 6px;border-radius:4px;flex:none;text-transform:none}
 .fl-layout .portal-nav a.active .vp-n{color:#0E1830;background:#E8CE96}
 .vp-sub{margin:0 0 20px}
 .vp-sec:first-child{margin-top:0}
@@ -288,12 +315,13 @@ async function docJson(col) {
 const radarDoc = () => cached('radar', async () => {
   // el doc PRO puede dar permission-denied: eso NO es un error, es el gate
   const [pub, pro] = await Promise.all([docJson('radar'), docJson('radarPro')]);
+  if (!pub) throw new Error('radar');
   const m = mergeRadar(pub, pro);
   return { ...m, _ts: (pub || {})._ts };
 });
-const radar = async () => (await radarDoc()).activos || [];
+const radar = async () => ((await radarDoc()) || {}).activos || [];
 /* ¿pudo leer los fundamentals? Es el gate REAL, no el plan declarado */
-const radarPro = async () => !!(await radarDoc()).pro;
+const radarPro = async () => !!((await radarDoc()) || {}).pro;
 const teaser = () => cached('teaser', async () => ((await docJson('carterasTeaser')) || {}).carteras || []);
 const calendario = () => cached('cal', async () => ((await docJson('calendario')) || {}).earnings || []);
 const flujos = () => cached('flujos', async () => (await docJson('bonosFlujos')) || {});
@@ -423,6 +451,7 @@ const TABS = [
   { g: 'Para decidir', id: 'comprar', t: 'Qué comprar', tit: 'Qué comprar hoy' },
   { g: 'Para decidir', id: 'carteras', t: 'Carteras Valtia' },
   { g: 'Para decidir', id: 'disciplina', t: 'Inversión mensual' },
+  { g: 'Mercado', id: 'agenda', t: 'Agenda', tit: 'Agenda del mercado' },
 ];
 const SUBVISTAS = {
   empresas: { t: 'Mis empresas', de: 'micartera' },
@@ -439,13 +468,17 @@ const ES_GESTION = new Set(GESTION.map(x => x.id));
 // el selector de moneda va donde cambia las cifras. En Qué comprar, Carteras e
 // Inversión mensual todo está en dólares: un selector que no hace nada confunde
 const CON_MONEDA = new Set(['inicio', 'micartera', 'empresas', 'herramientas']);
-const NUEVOS = ['inicio', 'comprar', 'carteras', 'empresas', 'disciplina', 'herramientas'];
+const NUEVOS = ['inicio', 'comprar', 'carteras', 'empresas', 'disciplina', 'herramientas', 'agenda'];
 // tabs que este usuario puede abrir: los divs de Gestión y Fondo viven en el
 // HTML para todos, así que sin este set cualquiera llega por #panel/admin
 let _permitidos = new Set(NUEVOS.concat(['micartera']));
 let _tab = 'inicio';
-const _render = { inicio: renderInicio, comprar: renderComprar, carteras: renderCarteras, empresas: renderEmpresas,
-                  disciplina: renderDisciplina, herramientas: renderHerramientas };
+// cada pestaña del Panel v3 vive en su módulo (panel-*.js) y recibe el contexto;
+// Mis empresas y Datos de tus activos siguen acá, como subvistas de Mi cartera
+const enModulo = (f, id) => () => f($('tab-' + id), ctx).catch(() => {});
+const _render = { inicio: enModulo(renderResumen, 'inicio'), comprar: enModulo(renderComprarV3, 'comprar'),
+                  carteras: enModulo(renderCarterasV3, 'carteras'), disciplina: enModulo(renderMensual, 'disciplina'),
+                  agenda: enModulo(renderAgenda, 'agenda'), empresas: renderEmpresas, herramientas: renderHerramientas };
 const _hecho = {};
 
 function pintarPlan() {
@@ -479,9 +512,6 @@ function instalarShell() {
       <svg width="32" height="32" viewBox="0 0 34 34" fill="none" aria-hidden="true"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
       <div><div class="nm">VAL<em>T</em>IA</div><div class="sb">Analytics</div></div></div>` +
     grupos.map(g => `<div class="vp-grp" data-m="inv">${g}</div>` + TABS.filter(x => x.g === g).map(x => link(x, 'inv')).join('')).join('') +
-    // la Agenda es la etapa 4 del handoff: hasta entonces abre el calendario del sitio
-    `<div class="vp-grp" data-m="inv">Mercado</div>
-    <a class="vp-lat-ext" data-m="inv" href="calendario.html" title="Resultados, cupones y vencimientos de los próximos 120 días">Agenda <span class="vp-flecha">↗</span></a>` +
     (S.isAdmin ? `<div class="vp-grp" data-m="ges">Gestión del fondo</div>` + GESTION.map(x => link(x, 'ges')).join('') : '') +
     `<div class="vp-foot"><span id="portal-user-name">${esc(nombreUsuario())}</span>
       <div class="vp-plan-w"><span class="vp-plan${S.pro ? ' pro' : ''}" id="vp-plan">${etiquetaPlan()}</span></div>
@@ -512,7 +542,7 @@ function instalarShell() {
   window.goPortal = e => { if (og) og(e); document.body.classList.add('fl-app-on'); portalTab(_tab); };
   if (!document.querySelector('link[href*="Playfair"]')) {
     const l = document.createElement('link'); l.rel = 'stylesheet';
-    l.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap';
+    l.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap';
     document.head.appendChild(l);
   }
 }
@@ -525,14 +555,13 @@ function llenarSelectMovil() {
   sel.innerHTML = (S.cliente ? '<option value="fondocli" hidden>Tu posición en el fondo</option>' : '') + grupos.map(g => `<optgroup label="${g}">${TABS.filter(x => x.g === g).map(x => opt(x.id, x.t)).join('')}</optgroup>`).join('') +
     `<optgroup label="Mi cartera en detalle">${Object.entries(SUBVISTAS).map(([id, s]) => opt(id, s.t)).join('')}</optgroup>` +
     (S.isAdmin ? `<optgroup label="Gestión del fondo">${GESTION.map(x => opt(x.id, x.t)).join('')}</optgroup>` : '') +
-    `<optgroup label="Más">${opt('@agenda', 'Agenda ↗')}${opt('@herr', 'Herramientas y datos ↗')}${opt('@sitio', '← Volver al sitio')}${opt('@salir', 'Cerrar sesión')}</optgroup>`;
+    `<optgroup label="Más">${opt('@herr', 'Herramientas y datos ↗')}${opt('@sitio', '← Volver al sitio')}${opt('@salir', 'Cerrar sesión')}</optgroup>`;
   sel.value = _tab;
   sel.onchange = () => {
     const v = sel.value;
     if (v.charAt(0) !== '@') { portalTab(v); window.scrollTo(0, 0); return; }
     sel.value = _tab;
-    if (v === '@agenda') location.href = 'calendario.html';
-    else if (v === '@herr') location.href = 'herramientas.html';
+    if (v === '@herr') location.href = 'herramientas.html';
     else if (v === '@sitio') salir();
     else if (v === '@salir' && window.logout) window.logout();
   };
@@ -789,7 +818,7 @@ async function registrarCompra(sym, form) {
   }
   toast(`${tk} agregada a Mi cartera y a tu plan del mes`);
   invalidar('cartera', 'disc');
-  refrescar('inicio', 'comprar', 'carteras', 'disciplina', 'empresas', 'herramientas');
+  refrescar('inicio', 'comprar', 'carteras', 'disciplina', 'empresas', 'herramientas', 'agenda');
   if (window.__mcRecargar) window.__mcRecargar();
 }
 
@@ -801,8 +830,10 @@ async function seguirCartera(id, nombre, seguir) {
     toast(seguir ? `Seguís ${nombre}` : `Dejaste de seguir ${nombre}`);
     invalidar('seg');
     refrescar('carteras', 'inicio', 'comprar');
+    return true;
   } catch (e) {
     toast('No se pudo guardar (' + String(e.code || e).slice(0, 40) + ')');
+    return false;
   }
 }
 
@@ -826,7 +857,7 @@ document.addEventListener('click', async e => {
   if (t.matches('[data-agregar]')) { e.preventDefault(); if (window.__mcAbrirForm) window.__mcAbrirForm(); return; }
   if (t.dataset.seguir) {
     e.preventDefault(); t.disabled = true;
-    await seguirCartera(t.dataset.seguir, t.dataset.nombre, t.dataset.on !== '1');
+    if (!(await seguirCartera(t.dataset.seguir, t.dataset.nombre, t.dataset.on !== '1'))) t.disabled = false;
     return;
   }
   if (t.dataset.compra) {
@@ -882,37 +913,6 @@ function frescura(precios) {
 const fmtC = iso => { const [aa, mm, dd] = String(iso || '').slice(0, 10).split('-'); return dd && mm ? `${dd}/${mm}` : String(iso || ''); };
 const COLB = ['#B08A3E', '#4E6E9E', '#6FA287', '#D8B87A', '#9B7BA8', '#8C8477'];
 const COLM = { ARS: '#9EC7A8', USD: '#3F8F63' };
-
-async function renderInicio() {
-  const el = $('tab-inicio'), email = S.email;
-  el.innerHTML = '<p class="vp-cargando">Armando tu panorama\u2026</p>';
-  const [cc, disc, bset, vs] = await Promise.all([carteraCalc(), disciplina(), bonosSet(), ventas()]);
-  if (S.email !== email) return;
-  if (cc.fallo) {
-    el.innerHTML = `<div class="vp-card" style="max-width:560px"><h4>No pudimos leer tu cartera</h4>
-      <p>Puede ser la conexión. Tus posiciones siguen guardadas: probá de nuevo en un momento.</p>
-      <button class="vp-btn" style="margin-top:12px" onclick="valtiaPanel.refrescar()">Reintentar</button></div>`;
-    return;
-  }
-  const tiene = cc.pos.length > 0;
-  // el Fondo no va en el panel del inversor (handoff Panel v3)
-  let h = tiene ? `<div class="vp-hero">${bloqueEstado(cc, vs || [])}</div>` : bloqueCamino(cc, disc);
-  // vendió todo: sin posiciones no hay bloque de estado, pero lo realizado se sigue viendo
-  if (!tiene && (vs || []).length) h += tarjetaRealizado(cc, vs);
-  h += `<div class="vp-cols">
-      <div><div class="vp-sec">Qu\u00e9 cambi\u00f3${tiene ? ' en tu cartera' : ''}<small id="vp-nov"></small></div>
-        <div id="vp-cambios"><p class="vp-cargando">Buscando novedades\u2026</p></div>
-        <div id="vp-alertas"></div></div>
-      <div><div class="vp-sec">Qu\u00e9 comprar hoy<small><a href="#panel/comprar" data-go="comprar" style="color:var(--link)">lista completa \u2192</a></small></div>
-        <div id="vp-top3"><p class="vp-cargando">Cargando el radar\u2026</p></div>
-        <div class="vp-sec">Carteras Valtia<small><a href="#panel/carteras" data-go="carteras" style="color:var(--link)">ver todas \u2192</a></small></div>
-        <div id="vp-cart3"></div></div>
-    </div>`;
-  el.innerHTML = h;
-  cambios(cc, disc); top3(cc); carterasMini(cc); contadores(cc, disc, bset);
-  S.frescura = tiene ? frescura(cc.precios) : ''; pintarEncabezado();
-  if (tiene) alertasMail();
-}
 
 /* ── alertas por mail: la config la guarda el usuario; los mails los manda
    alertas_cartera.py (máximo uno por día, apagadas por defecto). Los campos
@@ -984,83 +984,6 @@ async function alertasMail() {
   });
 }
 
-/* una barra de composicion con su leyenda: [{nombre, peso, color}] */
-function barraComp(tit, items) {
-  if (!items.length) return '';
-  return `<div><div class="l">${tit}</div>
-    <div class="vp-bar">${items.map(i => `<i style="width:${i.peso.toFixed(1)}%;background:${i.color}"></i>`).join('')}</div>
-    <div class="vp-leg">${items.map(i => `<span><i style="background:${i.color}"></i>${esc(i.nombre)} <b>${num(i.peso, i.peso >= 10 ? 0 : 1)}%</b></span>`).join('')}</div></div>`;
-}
-
-function tarjetaRealizado(cc, vs) {
-  const m = curMoneda(cc.cur), anio = hoyAR().slice(0, 4);
-  const rz = resumenVentas(vs, (v, mon) => mon === curMoneda(cc.cur) ? v : convertir(v, mon, cc.cur, cc.fx), anio);
-  const o = rz.delAnio.n || rz.delAnio.sinCosto ? rz.delAnio : rz;
-  // sin dólar para convertir, el total no se afirma: se muestra por moneda (y el rótulo lo dice)
-  const porMon = Object.entries(o.porMoneda).map(([mm, v]) => moneyS(v, mm)).join(' · ');
-  const tit = (o === rz.delAnio ? `Resultado realizado en ${anio}` : 'Resultado realizado')
-    + (o.n && o.totalCompleto ? ` · ${curEtq(cc.cur)}` : o.n && porMon ? ' · por moneda (sin cotización del dólar)' : '');
-  return `<div class="vp-card" style="max-width:520px;margin-bottom:18px"><div class="l">${tit}</div>
-    <h4 class="${o.n && o.totalCompleto ? cls(o.total) : 'vp-mut'}">${o.n && o.totalCompleto ? moneyS(o.total, m) : o.n && porMon ? porMon : '—'}</h4>
-    <p>${[o.n ? `${o.n} ${o.n === 1 ? 'venta' : 'ventas'}` : '',
-          // convertido: el importe original también (como en Mi cartera)
-          o.n && o.totalCompleto && (Object.keys(o.porMoneda).length > 1 || Object.keys(o.porMoneda)[0] !== m) ? porMon : '',
-          o.sinCosto ? `${o.sinCosto} sin precio de compra` : ''].filter(Boolean).join(' · ')}. No te quedan posiciones abiertas.</p>
-    <a class="vp-ir" href="#panel/micartera" data-go="micartera">Ver tus ventas →</a></div>`;
-}
-
-function bloqueEstado(cc, vs = []) {
-  const r = cc.r, m = curMoneda(cc.cur), n = r.filas.length;
-  // lo realizado del año, al lado de lo no realizado (se convierte igual que el resto)
-  const anio = hoyAR().slice(0, 4);
-  const rz = resumenVentas(vs, (v, mon) => mon === curMoneda(cc.cur) ? v : convertir(v, mon, cc.cur, cc.fx), anio).delAnio;
-  // dos causas distintas de "no suma al total": sin precio del sync, o sin
-  // cotizacion del dolar para convertir. Van abajo, separadas de la composicion.
-  const conPx = r.filas.filter(f => f.dValor != null).length;
-  const sinPx = r.filas.filter(f => f.actual == null).length;
-  const sinFx = r.filas.filter(f => f.actual != null && f.dValor == null).length;
-  const brokers = agruparPorBroker(r.filas, r.total);
-  const porMoneda = {};
-  r.filas.forEach(f => { if (f.dValor != null) porMoneda[f.moneda] = (porMoneda[f.moneda] || 0) + f.dValor; });
-  const barB = brokers.filter(b => b.peso > 0).map((b, i) => ({ nombre: b.broker, peso: b.peso, color: COLB[i % COLB.length] }));
-  const barM = Object.entries(porMoneda).filter(([, v]) => r.total > 0 && v > 0)
-    .map(([k, v]) => ({ nombre: k === 'ARS' ? 'En pesos' : 'En d\u00f3lares', peso: v / r.total * 100, color: COLM[k] || COLM.USD }))
-    .sort((x, y) => y.peso - x.peso);
-  const avisos = [];
-  if (sinPx) avisos.push(['Atenci\u00f3n', `${sinPx} posici${sinPx > 1 ? 'ones esperan' : '\u00f3n espera'} el precio del sync de las 9:00 y qued${sinPx > 1 ? 'an' : 'a'} fuera del total.`]);
-  if (sinFx) avisos.push(['Atenci\u00f3n', `Sin cotizaci\u00f3n del d\u00f3lar: ${sinFx} posici${sinFx > 1 ? 'ones no suman' : '\u00f3n no suma'} al valor convertido.`]);
-  if (cc.cur !== 'ARS') avisos.push(['Nota', 'El costo y el valor se convierten con la cotizaci\u00f3n de hoy, as\u00ed que el rendimiento es el mismo que en pesos: no es tu retorno medido en d\u00f3lares.']);
-  return `<div class="vp-card vp-estado">
-    <div class="vp-est-top">
-      <div><div class="l">Valor de tu cartera</div>
-        <div class="vp-big">${money(r.total, m)}</div>
-        <div class="vp-linea"><b class="${cls(r.plTot)}">${moneyS(r.plTot, m)}</b>
-          ${r.plTotPct != null ? `<span class="vp-pill ${r.plTotPct >= 0 ? 'pos' : 'neg'}">${pct(r.plTotPct)}</span>` : ''}
-          <span>no realizado sobre ${money(r.costoTot, m)} invertidos</span>
-          ${rz.n || rz.sinCosto ? `<a href="#panel/micartera" data-go="micartera" style="text-decoration:none;color:inherit">· <b class="${rz.n && rz.totalCompleto ? cls(rz.total) : 'vp-mut'}" style="font-size:13px">${rz.n && rz.totalCompleto ? moneyS(rz.total, m) : rz.n ? Object.entries(rz.porMoneda).map(([mm, x]) => moneyS(x, mm)).join(' · ') || '—' : '—'}</b> realizado en ${anio}${rz.n && !rz.totalCompleto ? ' (por moneda, sin cotización del dólar)' : ''}${rz.sinCosto ? ` (sin contar ${rz.sinCosto} sin precio de compra)` : ''}</a>` : ''}</div></div>
-      <div class="vp-cob"><div class="l">Cobertura</div>
-        <div class="n">${conPx} <small>de</small> ${n}</div>
-        <p>posici${n === 1 ? '\u00f3n' : 'ones'} con precio, en ${brokers.length} broker${brokers.length === 1 ? '' : 's'}</p>
-        <a class="vp-ir" href="#panel/micartera" data-go="micartera">Ver mi cartera \u2192</a></div>
-    </div>
-    ${barB.length || barM.length ? `<div class="vp-comp">${barraComp('Por broker', barB)}${barraComp('Por moneda', barM)}</div>` : ''}
-    ${avisos.length ? `<div class="vp-avisos">${avisos.map(([t, x]) =>
-      `<div class="vp-aviso"><span class="vp-tag ${t === 'Nota' ? 'tengo' : 'warn'}">${t}</span><span>${x}</span></div>`).join('')}</div>` : ''}
-  </div>`;
-}
-
-function bloqueCamino(cc, disc) {
-  const compras = (disc && disc.log || []).length;
-  const pasos = [
-    { ok: compras > 0, go: 'comprar', t: 'Mir\u00e1 qu\u00e9 comprar hoy', p: 'La lectura Valtia de 34 activos, con los que est\u00e1n en zona de compra primero.' },
-    { ok: cc.pos.length > 0, go: 'micartera', t: 'Carg\u00e1 tu cartera', p: 'Lo que ya ten\u00e9s en IOL, PPI, Balanz o Binance. Se importa pegando desde Excel.' },
-    { ok: !!(disc && disc.config), go: 'disciplina', t: 'Defin\u00ed tu inversi\u00f3n mensual', p: 'Cu\u00e1nto aport\u00e1s por mes y en cu\u00e1ntas compras. Te marcamos el ritmo.' },
-  ];
-  return `<p class="vp-sub">Tu panel arma un panorama completo de tus inversiones, est\u00e9n en el broker que est\u00e9n. Tres pasos para empezar:</p>
-    <div class="vp-pasos">${pasos.map((s, i) => `<div class="vp-paso${s.ok ? ' ok' : ''}" data-go="${s.go}"><div class="n">${s.ok ? '\u2713' : '0' + (i + 1)}</div><b>${s.t}</b><p>${s.p}</p></div>`).join('')}</div>
-    ${!S.verificado ? `<p class="vp-nota">Verific\u00e1 tu email para activar Mi cartera y tu inversi\u00f3n mensual (te mandamos el link al registrarte).</p>` : ''}`;
-}
-
 /* ── contadores del sidebar: cuanto hay detras de cada seccion ── */
 function contadorNav(id, txt, tit) {
   const a = document.querySelector(`.portal-nav a[data-tab="${id}"]`); if (!a) return;
@@ -1087,236 +1010,17 @@ async function contadores(cc, disc, bset) {
     const vis = ts.filter(x => x.visibilidad === 'publico' || S.pro).length;
     contadorNav('carteras', vis ? String(vis) : '', `${vis} cartera${vis === 1 ? '' : 's'} con tu plan`);
   } catch (e) {}
-}
-
-/* ── que cambio: tres bloques con sentido propio ── */
-const GRUPOS = [[1, 'Para actuar hoy'], [2, 'Agenda de tus activos'], [3, 'Research y carteras']];
-async function cambios(cc, disc) {
-  const box = $('vp-cambios'); if (!box) return;
-  const items = [];
-  const ev = (g, iso, txt, accion, go, href) => items.push({ g, iso: iso || '', txt, accion, go, href });
-  // con bonosSet la detección de renta fija sale del panel (245 especies); sin
-  // él caía en el regex de activos.js, que no matchea CER ni dólar linked
-  const tiene = cc.pos.length > 0, ten = tenencias(cc, await bonosSet()), hoy = hoyAR();
-  // avisos del sync: una baja en el broker que todavía no se respondió
   try {
-    const c4 = n => num(n, 4).replace(/,0+$/, '');
-    ((await ajustes()) || []).forEach(a => ev(1, hoy, `<b>${esc(base(a.ticker))}</b> ${a.tipo === 'desaparecio'
-      ? `ya no aparece en ${esc(a.broker)}` : `bajó en ${esc(a.broker)} de ${c4(a.cantidadAntes)} a ${c4(a.cantidadBroker)}`}: ¿vendiste ${c4(cantidadAjuste(a))}?`, 'Cartera', 'micartera'));
+    const h = hoyAR(), hasta = new Date(Date.parse(h + 'T12:00:00Z') + 30 * 864e5).toISOString().slice(0, 10);
+    const mios = (await eventos(ctx, { desde: h, hasta })).filter(e => e.mio).length;
+    contadorNav('agenda', mios ? String(mios) : '', `${mios} evento${mios === 1 ? '' : 's'} de tus activos en los próximos 30 días`);
   } catch (e) {}
-  try {
-    const act = await radar();
-    if (tiene) {
-      act.filter(a => ten.radar.has(a.sym)).forEach(a => {
-        if (a.entrada) ev(1, hoy, `<b>${esc(a.sym)}</b> est\u00e1 hoy en zona de compra seg\u00fan el radar (valor ${a.score ?? '\u2014'}, RSI ${a.rsi != null ? a.rsi.toFixed(0) : '\u2014'}).`, 'Ver', 'comprar');
-        else if (a.rsi != null && a.rsi > 70) ev(1, hoy, `<b>${esc(a.sym)}</b> viene sobrecomprado (RSI ${a.rsi.toFixed(0)}).`, 'Cartera', 'micartera');
-        else if (a.rsi != null && a.rsi < 30) ev(1, hoy, `<b>${esc(a.sym)}</b> est\u00e1 sobrevendido (RSI ${a.rsi.toFixed(0)}).`, 'Cartera', 'micartera');
-      });
-    } else {
-      const zona = act.filter(a => a.entrada);
-      if (zona.length) ev(1, hoy, `<b>${zona.length} activo${zona.length > 1 ? 's' : ''} en zona de compra</b> hoy: ${zona.map(a => esc(a.sym)).slice(0, 5).join(', ')}`, 'Ver', 'comprar');
-    }
-  } catch (e) {}
-  try {
-    const cal = await calendario();
-    cal.filter(c => c.fecha >= hoy && enDias(c.fecha) <= (tiene ? 7 : 3) && (!tiene || ten.fichas.has(c.ficha)))
-      .forEach(c => ev(2, c.fecha, `<b>${esc(c.nombre)}</b> presenta resultados el ${fmtF(c.fecha)}${enDias(c.fecha) === 0 ? ' (hoy)' : ''}.`, 'Calendario', null, 'calendario.html'));
-  } catch (e) {}
-  // la guarda es especies, no pares: `pares` es el índice para cruzar contra
-  // bonosFlujos, y lo que el bloque recorre es `especies`
-  if (tiene && ten.especies.size) {
-    try {
-      const fl = await flujos(), bp = (await panelBonos()) || {}, vm = (await vencMapa()) || {};
-      cc.pos.forEach(p => {
-        if (!ten.especies.has(base(p.ticker))) return;
-        // los soberanos se indexan por el par (AL30) y los Bopreal por su
-        // simbolo completo (BPA7D): se prueban las dos formas
-        const esp = base(p.ticker), par = fl[esp] ? esp : parBono(esp), d = fl[par];
-        if (!d || !d.flujos) return;
-        // el pago final no se anuncia dos veces: si el flujo cae el día del
-        // vencimiento, el aviso que vale es el del vencimiento
-        d.flujos.filter(([f]) => f >= hoy && enDias(f) <= 30 && f !== vencimientoDe(esp, vm)).slice(0, 1).forEach(([f, monto]) => {
-          const est = (Number(p.cantidad) || 0) * Number(monto) / 100;
-          ev(2, f, `<b>${esc(base(p.ticker))}</b> paga el ${fmtF(f)}: ~US$${est.toLocaleString('es-AR', { maximumFractionDigits: 0 })} por tus ${Number(p.cantidad).toLocaleString('es-AR')} VN (estimado).`,
-            'Bono', null, 'bono.html?e=' + encodeURIComponent(especieBono(par)));
-        });
-      });
-      // vencimientos: toda la renta fija, no solo las letras. De 0 a 7 días es
-      // plata que cae en la cuenta y hay que decidir qué hacer con ella, así que
-      // va a "Para actuar hoy"; de 8 a 30 alcanza con tenerlo agendado.
-      const tf = bp.tasa_fija || [];
-      // la especie tal como la nombra el panel, para que el link no invente
-      // tickers: especieBono() le pega una D a todo lo que no sea letra y
-      // convertiría TX26 en TX26D, que no existe
-      const espSet = new Set(GRUPOS_RF.flatMap(g => (bp[g] || []).map(x => x && x.s).filter(Boolean)));
-      // se agrupa por par: AL30, AL30D y AL30C son el mismo bono y el mismo
-      // vencimiento. Un aviso por bono, no uno por lote ni uno por moneda.
-      const porBono = new Map();
-      cc.pos.forEach(p => {
-        const e = base(p.ticker);
-        if (!ten.especies.has(e)) return;
-        const k = parBono(e), a = porBono.get(k) || { vn: 0, tk: e };
-        a.vn += Number(p.cantidad) || 0;
-        porBono.set(k, a);
-      });
-      porBono.forEach(({ vn, tk }, esp) => {
-        const venc = vencimientoDe(esp, vm);
-        if (!venc || venc < hoy) return;
-        const d = enDias(venc); if (d > 30) return;
-        const canon = [tk, esp, especieBono(esp)].find(x => espSet.has(x)) || esp;
-        // el importe solo se muestra si sale de un dato publicado: el vpv de la
-        // letra (pesos por 100 VN) o el último flujo del bono (dólares). Si no
-        // hay ninguno de los dos, se avisa el vencimiento sin número.
-        const letra = tf.find(l => l.s === canon);
-        const fd = fl[tk] || fl[esp] || fl[especieBono(esp)] || {};
-        const fin = ((fd.flujos || []).find(([f]) => f === venc) || [])[1];
-        const est = letra && letra.vpv != null ? { m: vn * Number(letra.vpv) / 100, s: '$ ' }
-          : fin != null ? { m: vn * Number(fin) / 100, s: 'US$' } : null;
-        const vnT = vn.toLocaleString('es-AR');
-        // "es el último pago" y no "te devuelven todo": en las amortizantes
-        // (TX26, TX28, DICP, PARP, CUAP) la fecha es la última cuota, no un pago
-        // único, y ya vinieron cuotas antes.
-        const plata = est ? `te acreditan ~${est.s}${num(est.m, 0)} por tus ${vnT} VN (estimado)`
-          : `es el último pago de tus ${vnT} VN`;
-        const href = 'bono.html?e=' + encodeURIComponent(canon);
-        if (d <= 7) {
-          // la columna de fecha del grupo 1 dice "hoy" para todo: la fecha real
-          // del vencimiento tiene que ir adentro del texto
-          const cuando = d === 0 ? 'hoy' : d === 1 ? 'mañana' : `en ${d} días`;
-          ev(1, venc, `<b>${esc(tk)}</b> vence ${cuando} (${fmtF(venc)}): ${plata} y esa plata te queda disponible para reinvertir.`, 'Bono', null, href);
-        } else {
-          ev(2, venc, `<b>${esc(tk)}</b> vence el ${fmtF(venc)}, en ${d} días: ${plata}.`, 'Bono', null, href);
-        }
-      });
-    } catch (e) {}
-  }
-  try {
-    const inf = (await informes()) || [];
-    const corte = new Date(Date.now() - 14 * 86400e3).toISOString().slice(0, 10);
-    inf.filter(d => String(d.fecha).slice(0, 10) >= corte && (!tiene || (d.ticker && ten.fichas.has(String(d.ticker).toUpperCase()))))
-      .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, tiene ? 5 : 2)
-      .forEach(d => ev(3, d.fecha, `Informe${d.ticker ? ' de <b>' + esc(d.ticker) + '</b>' : ''}: ${esc(d.titulo)}`,
-        'Leer', null, d.ticker ? 'activo.html?t=' + encodeURIComponent(d.ticker) + '#informe' : 'informes.html'));
-  } catch (e) {}
-  try {
-    const corte = new Date(Date.now() - 14 * 86400e3).toISOString().slice(0, 10);
-    const seg = (await seguidas()) || {};
-    const hayseg = Object.keys(seg).length > 0;
-    ((await teaser()) || []).forEach(t => {
-      const u = t.ultimaRotacion;
-      if (!u || u.fecha < corte) return;
-      // si el usuario eligio carteras, solo se le avisan las suyas
-      if (hayseg && !seg[t.id]) return;
-      // el movimiento (que y en que sentido) es contenido de la cartera: si el
-      // usuario no la puede abrir, solo se le anuncia que hubo rotacion
-      const abierta = t.visibilidad === 'publico' || S.pro;
-      ev(3, u.fecha, abierta && u.ticker
-        ? `<b>${esc(t.nombre)}</b> rot\u00f3 el ${fmtF(u.fecha)}: ${esc(u.accion)} ${esc(u.ticker)}.`
-        : `<b>${esc(t.nombre)}</b> rot\u00f3 el ${fmtF(u.fecha)}.`, 'Abrir', null, 'cartera.html?c=' + t.id);
-    });
-  } catch (e) {}
-  if (disc && disc.config) {
-    const mes = hoy.slice(0, 7), obj = Math.max(1, Number(disc.config.compras) || 1);
-    const hechas = (disc.log || []).filter(c => String(c.fecha || '').slice(0, 7) === mes).length;
-    if (hechas < obj) ev(1, hoy, `<b>Inversión mensual</b>: este mes te falta${obj - hechas > 1 ? 'n' : ''} ${obj - hechas} compra${obj - hechas > 1 ? 's' : ''} de ${obj}.`, 'Plan', 'disciplina');
-    else ev(1, hoy, `<b>Inversión mensual</b>: plan del mes cumplido (${hechas} de ${obj}).`, 'Plan', 'disciplina');
-  }
-  const nov = $('vp-nov');
-  if (nov) nov.textContent = items.length ? `${items.length} novedad${items.length > 1 ? 'es' : ''}` : '';
-  if (!items.length) {
-    box.innerHTML = `<p class="vp-nota">${tiene ? 'Nada nuevo sobre tus activos hoy: sin zona de compra, resultados ni pagos en los pr\u00f3ximos d\u00edas.' : 'Sin novedades hoy.'}</p>`;
-    return;
-  }
-  box.innerHTML = GRUPOS.map(([g, t]) => {
-    const del = items.filter(x => x.g === g);
-    if (!del.length) return '';
-    // la agenda va del evento mas cercano al mas lejano; el research, al reves
-    del.sort((x, y) => g === 3 ? String(y.iso).localeCompare(String(x.iso)) : String(x.iso).localeCompare(String(y.iso)));
-    return `<div class="vp-evg">${t}</div>` + del.map(x =>
-      `<a class="vp-ev" ${x.go ? `href="#panel/${x.go}" data-go="${x.go}"` : `href="${x.href}"`}>
-        <span class="d">${x.g === 1 ? 'hoy' : esc(fmtC(x.iso))}</span><span class="t">${x.txt}</span><span class="a">${x.accion}</span></a>`).join('');
-  }).join('');
-}
-
-/* ── que comprar: veredicto, zona y el nivel de RSI de un vistazo ── */
-async function top3(cc) {
-  const box = $('vp-top3'); if (!box) return;
-  const ten = tenencias(cc), pi = (await preciosInf()) || {};
-  const lista = ordenComprar(await radar()).filter(a => !ten.radar.has(a.sym)).slice(0, 3);
-  box.innerHTML = lista.map(a => {
-    const f = tickerFicha(a.sym), p = f && pi[f] && pi[f].p != null ? pi[f].p : a.precio, r = a.rsi;
-    const col = r == null ? 'var(--muted)' : r < 30 ? 'var(--green)' : r > 70 ? 'var(--red)' : 'var(--gold)';
-    const cuerpo = `<div class="h"><span><span class="tk">${esc(a.sym)}</span> <span class="nm">${esc(a.nombre)}</span></span>
-        <span class="px">${p != null ? 'US$' + num(p, 2) : '\u2014'}</span></div>
-      <div class="tg"><span class="vp-tag ${verCls(a.veredicto)}">${esc(a.veredicto)}</span>
-        ${a.entrada ? '<span class="vp-tag zona">\u25ce zona de compra</span>' : ''}
-        <span class="sc">${esc(a.sector || '')}</span></div>
-      <div class="vp-rsi"><div class="t"><i style="width:${r == null ? 0 : Math.max(2, Math.min(100, r))}%;background:${col}"></i></div>
-        <span class="v">RSI ${r != null ? r.toFixed(0) : '\u2014'}</span></div>`;
-    return f ? `<a class="vp-buy" href="activo.html?t=${f}">${cuerpo}</a>` : `<div class="vp-buy">${cuerpo}</div>`;
-  }).join('') || '<p class="vp-nota">El radar no est\u00e1 disponible ahora.</p>';
-}
-
-async function carterasMini(cc) {
-  const box = $('vp-cart3'); if (!box) return;
-  const ts = (await teaser()) || [];
-  box.innerHTML = ts.map(t => {
-    const priv = t.visibilidad && t.visibilidad !== 'publico', abierta = !priv || S.pro;
-    const etq = !priv ? '<span class="vp-tag gratis">Gratis</span>'
-      : S.pro ? '<span class="vp-tag tengo">\u2713 Acceso</span>' : '<span class="vp-tag pro">PRO</span>';
-    const sub = [PERFIL[t.perfil] || '', RIESGO[t.nivelRiesgo] || '', t.ultimaRotacion ? 'rot\u00f3 el ' + fmtC(t.ultimaRotacion.fecha) : ''].filter(Boolean).join(' \u00b7 ');
-    const cuerpo = `<div class="h"><span class="nb">${esc(t.nombre)}</span>${etq}</div>
-      <div class="tg"><span class="sc">${esc(sub)}</span></div>
-      <div style="font-size:12.5px;color:var(--sub)">Desde ${t.fechaInicio ? fmtF(t.fechaInicio) : 'inicio'}: <b class="${cls(t.retorno)}">${pct(t.retorno, 1)}</b>${t.retornoBench != null ? ` \u00b7 ${esc(t.benchmark || 'SPY')} ${pct(t.retornoBench, 1)}` : ''}</div>`;
-    return abierta ? `<a class="vp-buy" href="cartera.html?c=${esc(t.id)}">${cuerpo}</a>` : `<div class="vp-buy">${cuerpo}</div>`;
-  }).join('') || '<p class="vp-nota">Las carteras no est\u00e1n disponibles ahora.</p>';
 }
 
 /* ───────────────────────── QUÉ COMPRAR ───────────────────────── */
 function ordenComprar(act) {
   return act.filter(a => a.veredicto && (a.veredicto !== 'Sin cobertura' || a.entrada))
     .sort((x, y) => (y.entrada ? 1 : 0) - (x.entrada ? 1 : 0) || (y.score || 0) - (x.score || 0) || (x.rsi || 99) - (y.rsi || 99));
-}
-
-async function renderComprar() {
-  const el = $('tab-comprar');
-  el.innerHTML = '<p class="vp-cargando">Cargando el radar…</p>';
-  const [rd, cc, pi] = await Promise.all([radarDoc(), carteraCalc(), preciosInf()]);
-  // el gate lo define lo que Firestore dejó leer, no una variable del cliente
-  const conRatios = !!rd.pro;
-  const ten = tenencias(cc);
-  const lista = ordenComprar(rd.activos || []);
-  const enCarteras = await mapaCarteras();
-  const fecha = rd._ts ? new Date(rd._ts.seconds ? rd._ts.seconds * 1000 : rd._ts).toLocaleDateString('es-AR') : (rd.snapshot || '');
-  const LIBRES = lista.length;   // la lista es gratis; lo que se paga son los múltiplos
-  const fila = (a, i) => {
-    const f = tickerFicha(a.sym), p = f && pi[f] && pi[f].p != null ? pi[f].p : a.precio;
-    const tengo = ten.radar.has(a.sym);
-    const enC = (enCarteras[f || a.sym] || []).map(c => `<span class="vp-tag tengo">en ${esc(c)}</span>`).join(' ');
-    const blur = !S.pro && i >= LIBRES;
-    return `<tr class="${blur ? 'vp-blur' : ''}">
-      <td class="l">${f ? `<a class="tk" href="activo.html?t=${f}">${esc(a.sym)}</a>` : `<span class="tk">${esc(a.sym)}</span>`}<span class="nm">${esc(a.nombre)} · ${esc(a.sector || '')}</span></td>
-      <td class="l"><span class="vp-tag ${verCls(a.veredicto)}">${esc(a.veredicto)}</span> ${a.entrada ? '<span class="vp-tag zona">◎ zona de compra</span>' : ''} ${a.pierdePlata ? '<span class="vp-tag warn" title="El puntaje mide qué tan barata cotiza; esta empresa hoy no gana dinero">no gana plata</span>' : ''} ${tengo ? '<span class="vp-tag tengo">lo tenés</span>' : ''} ${enC}</td>
-      <td>${a.score ?? '—'}</td>
-      <td>${p != null ? 'US$' + num(p, 2) : '—'}</td>
-      <td>${a.rsi != null ? a.rsi.toFixed(0) : '—'}<span class="nm">${esc(a.rsiZona || '')}</span></td>
-      ${conRatios ? `<td>${a.per != null ? num(a.per, 1) + 'x' : '—'}</td><td>${a.evebitda != null ? num(a.evebitda, 1) + 'x' : '—'}</td><td>${a.fcfy != null ? num(a.fcfy, 1) + '%' : '—'}</td><td>${a.roe != null ? num(a.roe, 0) + '%' : '—'}</td><td>${a.calidadScore ?? '—'}</td>` : ''}
-      <td data-host><button class="vp-btn mini sec" data-compra="${esc(a.sym)}" data-px="${p != null && f ? p : ''}" ${blur ? 'disabled' : ''}>La compré</button></td>
-    </tr>`;
-  };
-  const enZona = lista.filter(a => a.entrada).length, yaTenes = lista.filter(a => ten.radar.has(a.sym)).length;
-  el.innerHTML = `<p class="vp-sub">Radar sobre ${lista.length} activos · <b>${enZona} en zona de compra</b> · ${yaTenes} ya ${yaTenes === 1 ? 'la tenés' : 'las tenés'} · <a href="#panel/carteras" data-go="carteras" style="color:var(--link)">Ver carteras Valtia →</a></p>
-    ${DATALIST}
-    <div class="vp-tblwrap"><table class="vp-tbl"><thead><tr>
-      <th class="l">Activo</th><th class="l">Lectura Valtia</th><th>Valor</th><th>Precio</th><th>RSI</th>${conRatios ? '<th>PER</th><th>EV/EBITDA</th><th>FCF yield</th><th>ROE</th><th>Calidad</th>' : ''}<th></th></tr></thead>
-      <tbody>${lista.map(fila).join('')}</tbody></table>
-      ${!conRatios ? `<div style="border-top:1px solid var(--border);padding:16px 18px;text-align:center">
-        <b style="font:700 18px 'Playfair Display',serif;color:var(--text);display:block">Los números detrás de la lectura son PRO</b>
-        <p style="font-size:12.5px;color:var(--sub);margin:4px 0 10px">La lista completa, el veredicto y la zona de compra son gratis. Con PRO ves el PER, EV/EBITDA, FCF yield, ROE y el puntaje de calidad de cada uno.</p>
-        <a class="vp-btn" href="planes.html">Ver planes</a></div>` : ''}
-    </div>
-    <p class="vp-nota">Zona de compra: puntaje de valor ≥ 60 y RSI &lt; 45; primero van las que están en zona y después el resto por puntaje. Radar${fecha ? ' del ' + fecha : ''}: es la lectura propia de Valtia, no una recomendación personalizada. Precios en dólares (las argentinas por su ADR).</p>
-    <p class="vp-nota">"La compré" registra la compra en Mi cartera y en tu plan de inversión mensual, con el mercado, la cantidad, el precio que pagaste y el broker. Si compraste en BYMA (CEDEAR o acción local), el precio va en pesos.</p>`;
 }
 
 /* en qué carteras Valtia está cada ticker (solo las que el usuario puede leer) */
@@ -1332,55 +1036,8 @@ async function mapaCarteras() {
 }
 
 /* ───────────────────────── CARTERAS VALTIA ───────────────────────── */
-function sparkline(serie) {
-  if (!serie || serie.length < 2) return '';
-  const ys = serie.map(s => Number(s[1])), mn = Math.min(...ys), mx = Math.max(...ys), rg = mx - mn || 1;
-  const pts = ys.map((y, i) => `${(i / (ys.length - 1) * 100).toFixed(1)},${(30 - (y - mn) / rg * 28 + 1).toFixed(1)}`).join(' ');
-  return `<svg class="vp-spark" viewBox="0 0 100 32" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="#B08A3E" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`;
-}
 const RIESGO = { conservador: 'Riesgo bajo', moderado: 'Riesgo medio', agresivo: 'Riesgo alto' };
 const PERFIL = { 'renta-fija': 'Renta fija', 'renta-mixta': 'Renta mixta', 'renta-variable': 'Renta variable' };
-function cardCartera(t, extra, sigue) {
-  const priv = t.visibilidad && t.visibilidad !== 'publico', bloqueada = priv && !S.pro;
-  return `<div class="vp-card"><div class="l">${esc(t.codigo || t.id)} · ${RIESGO[t.nivelRiesgo] || esc(t.nivelRiesgo || '')}${PERFIL[t.perfil] ? ' · ' + PERFIL[t.perfil] : ''}${priv ? ` · <span class="vp-tag pro" style="padding:1px 6px">PRO</span>` : ''}</div>
-    <h4>${esc(t.nombre)}</h4>
-    ${sparkline(t.serie)}
-    <p>Desde ${t.fechaInicio ? fmtF(t.fechaInicio) : 'inicio'}: <b class="${cls(t.retorno)}">${pct(t.retorno, 2)}</b>${t.retornoBench != null ? ` · ${esc(t.benchmark || 'SPY')} ${pct(t.retornoBench, 2)}` : ''} · ${t.posiciones} posiciones${t.ultimaRotacion ? ` · última rotación ${fmtF(t.ultimaRotacion.fecha)}` : ''}</p>
-    ${t.tir != null ? `<p style="margin-top:4px">Rinde <b>${num(t.tir, 1)}% anual en dólares</b> si se mantiene a vencimiento${t.tirPeso != null && t.tirPeso < 99 ? ` (sobre el ${t.tirPeso}% en bonos)` : ''}.</p>` : ''}
-    ${extra || ''}
-    ${bloqueada ? `<a class="vp-ir" href="planes.html">Composición y rotaciones con PRO →</a>`
-      : `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">
-          <a class="vp-ir" style="margin:0" href="cartera.html?c=${esc(t.id)}">Ver composición y tesis →</a>
-          ${S.verificado && sigue != null ? `<button class="vp-btn mini ${sigue ? '' : 'sec'}" data-seguir="${esc(t.id)}" data-nombre="${esc(t.nombre)}" data-on="${sigue ? '1' : '0'}">${sigue ? '✓ Siguiendo' : 'Seguir'}</button>` : ''}
-        </div>`}</div>`;
-}
-
-async function renderCarteras() {
-  const el = $('tab-carteras');
-  el.innerHTML = '<p class="vp-cargando">Cargando…</p>';
-  const [ts, cc, bset, seg] = await Promise.all([teaser(), carteraCalc(), bonosSet(), seguidas()]);
-  const ten = tenencias(cc, bset);
-  const cards = await Promise.all((ts || []).map(async t => {
-    let extra = '';
-    if (cc.pos.length && (t.visibilidad === 'publico' || S.pro)) {
-      const pos = (await posicionesCartera(t.id)) || [];
-      if (pos.length) {
-        // un bono se cuenta como tenido en cualquiera de sus especies
-        // (AL30 y AL30D son el mismo título): se compara por el par
-        const tenido = k => esRentaFija(k, bset) ? ten.pares.has(parBono(base(k)))
-                                                 : ten.fichas.has(k) || ten.radar.has(radarSym(k));
-        const faltan = pos.map(p => String(p.ticker || '').toUpperCase()).filter(k => !tenido(k));
-        extra = `<p style="margin-top:6px">Tenés <b>${pos.length - faltan.length} de ${pos.length}</b>${faltan.length ? ` · te faltan ${faltan.slice(0, 4).map(esc).join(', ')}${faltan.length > 4 ? ' y ' + (faltan.length - 4) + ' más' : ''}` : ' · la tenés completa'}.</p>`;
-      }
-    }
-    return cardCartera(t, extra, !!seg[t.id]);
-  }));
-  el.innerHTML = `<p class="vp-sub">Carteras vivas con track record real desde su lanzamiento, sin backtests: cada rotación queda fechada con su razonamiento. Seguí la que va con vos y el panel te avisa sus rotaciones y te compara contra lo que ya tenés.</p>
-    <div class="vp-grid">${cards.join('') || '<p class="vp-nota">Las carteras no están disponibles ahora.</p>'}</div>
-    <div id="vp-comparar"></div>`;
-  compararSeguidas(ts || [], cc, bset, seg);
-}
-
 /* Comparación contra las carteras que sigue: qué le falta y con qué peso.
    Solo de las que puede leer (la regla de Firestore manda). */
 async function compararSeguidas(ts, cc, bset, seg) {
@@ -1429,7 +1086,7 @@ async function compararSeguidas(ts, cc, bset, seg) {
         <tbody>${filas.map(f => `<tr>
           <td class="l">${(h => h ? `<a class="tk" href="${h}">${esc(base(f.k))}</a>` : `<span class="tk">${esc(base(f.k))}</span>`)(linkDe(f.k, bset))}</td>
           <td>${f.objetivo ? f.objetivo.toFixed(0) + '%' : '—'}</td>
-          <td>${f.pesoMio != null && f.pesoMio > 0 ? f.pesoMio.toFixed(1) + '%' : '—'}</td>
+          <td>${f.pesoMio != null && f.pesoMio > 0 ? num(f.pesoMio, 1) + '%' : '—'}</td>
           <td class="l">${f.tengo
             ? (f.dif != null && Math.abs(f.dif) > 5
                 ? `<span class="vp-tag ${f.dif > 0 ? 'cara' : 'precio'}">${f.dif > 0 ? 'te pasás' : 'te falta'} ${Math.abs(f.dif).toFixed(0)} pts</span>`
@@ -1539,70 +1196,13 @@ async function noticiasDeMisEmpresas(el) {
 /* ───────────────────────── DISCIPLINA ───────────────────────── */
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 const mesAnterior = m => { let [a, mm] = m.split('-').map(Number); mm--; if (!mm) { mm = 12; a--; } return a + '-' + String(mm).padStart(2, '0'); };
-async function renderDisciplina() {
-  const el = $('tab-disciplina');
-  el.innerHTML = '<p class="vp-cargando">Cargando tu plan…</p>';
-  if (!S.verificado) {
-    el.innerHTML = `<div class="vp-card" style="max-width:520px"><h4>Verificá tu email para activar tu plan</h4><p>Te mandamos un mail al registrarte. Abrilo, tocá el link y recargá.</p></div>`;
-    return;
-  }
-  const [disc, cc, pi] = await Promise.all([disciplina(), carteraCalc(), preciosInf()]);
-  const config = disc && disc.config, log = (disc && disc.log) || [];
-  const hoy = hoyAR(), mes = hoy.slice(0, 7);
-  const obj = Math.max(1, Number(config && config.compras) || 1);
-  const comprasEn = m => log.filter(c => String(c.fecha || '').slice(0, 7) === m).length;
-  let racha = 0;
-  if (config) { let m = mes; if (comprasEn(m) >= obj) racha++; m = mesAnterior(m); for (let i = 0; i < 120 && comprasEn(m) >= obj; i++) { racha++; m = mesAnterior(m); } }
-  const hechas = comprasEn(mes), faltan = Math.max(0, obj - hechas);
-  const ten = tenencias(cc);
-  const cand = ordenComprar(await radar()).filter(a => a.score != null && !ten.radar.has(a.sym)).slice(0, 5);
-  const monto = config ? (Number(config.aporte) || 0) / obj : 0;
-  const filaC = a => {
-    const f = tickerFicha(a.sym), p = f && pi[f] && pi[f].p != null ? pi[f].p : a.precio;
-    return `<tr><td class="l">${f ? `<a class="tk" href="activo.html?t=${f}">${esc(a.sym)}</a>` : `<span class="tk">${esc(a.sym)}</span>`}<span class="nm">${esc(a.nombre)}</span></td>
-      <td class="l"><span class="vp-tag ${verCls(a.veredicto)}">${esc(a.veredicto)}</span> ${a.entrada ? '<span class="vp-tag zona">◎ zona</span>' : ''}</td>
-      <td>${a.score ?? '—'}</td><td>${p != null ? 'US$' + num(p, 2) : '—'}</td>
-      <td>${p && monto ? num(monto / p, 3) : '—'}</td>
-      <td data-host><button class="vp-btn mini sec" data-compra="${esc(a.sym)}" data-px="${p != null && f ? p : ''}">La compré</button></td></tr>`;
-  };
-  el.innerHTML = `
-    ${DATALIST}
-    ${config ? `<div class="vp-kpis">
-        <div class="pkpi"><div class="pkpi-label">Tu regla</div><div class="pkpi-value">US$${Number(config.aporte || 0).toLocaleString('es-AR')}</div><div class="pkpi-sub">por mes en ${obj} compra${obj > 1 ? 's' : ''} (US$${Math.round(monto).toLocaleString('es-AR')} c/u)</div></div>
-        <div class="pkpi"><div class="pkpi-label">${MESES[Number(mes.slice(5)) - 1]}</div><div class="pkpi-value ${faltan ? '' : 'pos'}">${hechas} / ${obj}</div><div class="pkpi-sub">${faltan ? `te falta${faltan > 1 ? 'n' : ''} ${faltan}` : 'plan cumplido ✓'}</div></div>
-        <div class="pkpi"><div class="pkpi-label">Racha</div><div class="pkpi-value">${racha ? '🔥 ' + racha : '—'}</div><div class="pkpi-sub">${racha ? `mes${racha > 1 ? 'es' : ''} seguido${racha > 1 ? 's' : ''} cumpliendo` : 'arrancá este mes'}</div></div>
-        <div class="pkpi"><div class="pkpi-label">Compras registradas</div><div class="pkpi-value">${log.length}</div><div class="pkpi-sub"><a href="disciplina.html" style="color:var(--link)">historial y regla →</a></div></div>
-      </div>`
-    : `<div class="vp-card" style="max-width:640px;margin-bottom:22px"><h4>Definí tu regla</h4><p>Cuánto aportás por mes en dólares y en cuántas compras lo repartís. Es tu contrato con vos mismo.</p>
-        <div class="vp-form" style="border:none;padding:10px 0 0">
-          <div><label>Aporte mensual (USD)</label><input type="number" id="vp-d-aporte" min="1" step="any" value="200" style="width:120px"></div>
-          <div><label>Compras por mes</label><input type="number" id="vp-d-compras" min="1" max="6" step="1" value="2" style="width:90px"></div>
-          <button class="vp-btn mini" id="vp-d-guardar">Guardar mi regla</button><div class="vp-msg" id="vp-d-msg" style="width:100%"></div></div></div>`}
-    <div class="vp-sec">Candidatas del mes<small>lo mejor puntuado del radar que no tenés</small></div>
-    <div class="vp-tblwrap"><table class="vp-tbl"><thead><tr><th class="l">Activo</th><th class="l">Lectura</th><th>Valor</th><th>Precio</th><th>Sugerido</th><th></th></tr></thead>
-      <tbody>${cand.map(filaC).join('') || '<tr><td colspan="6" class="l vp-mut">El radar no está disponible ahora.</td></tr>'}</tbody></table></div>
-    <p class="vp-nota">"Sugerido" es la cantidad que entra con tu monto por compra al precio de hoy en dólares. Si comprás en BYMA, cargá la cantidad y el precio en pesos.</p>
-    ${log.length ? `<div class="vp-sec">Últimas compras</div><div class="vp-tblwrap"><table class="vp-tbl" style="min-width:420px"><thead><tr><th class="l">Fecha</th><th class="l">Activo</th><th>Cantidad</th><th>Precio</th><th class="l">Broker</th></tr></thead>
-      <tbody>${log.sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 8).map(c => `<tr><td class="l">${fmtF(c.fecha)}</td><td class="l"><b>${esc(c.ticker)}</b></td><td>${Number(c.cantidad).toLocaleString('es-AR')}</td><td>${num(c.precio, 2)}</td><td class="l">${esc(c.broker || '—')}</td></tr>`).join('')}</tbody></table></div>` : ''}`;
-  const g = $('vp-d-guardar');
-  if (g) g.onclick = async () => {
-    const aporte = Number($('vp-d-aporte').value), compras = Math.round(Number($('vp-d-compras').value));
-    const msg = $('vp-d-msg');
-    if (!(aporte > 0) || !(compras >= 1)) { msg.innerHTML = '<span class="vp-neg">Completá el aporte y las compras por mes.</span>'; return; }
-    try {
-      await setDoc(doc(db(), 'inversores', S.email, 'disciplina', 'config'), { aporte, compras, creado: new Date().toISOString() }, { merge: true });
-      toast('Regla guardada'); invalidar('disc'); refrescar('disciplina', 'inicio');
-    } catch (e) { msg.innerHTML = `<span class="vp-neg">No se pudo guardar (${esc(String(e.code || e).slice(0, 80))}).</span>`; }
-  };
-}
-
 /* ───────────────────────── HERRAMIENTAS Y DATOS ───────────────────────── */
 async function renderHerramientas() {
   const el = $('tab-herramientas');
   el.innerHTML = '<p class="vp-cargando">Cargando…</p>';
   const cc = await carteraCalc();
   const bp = await panelBonos(), bset = await bonosSet();
-  const rd = await radarDoc();
+  const rd = (await radarDoc()) || {};
   const porSym = {};
   (rd.activos || []).forEach(a => { porSym[a.sym] = a; });
   const m = curMoneda(cc.cur);
@@ -1634,6 +1234,36 @@ async function renderHerramientas() {
   el.innerHTML = datos || `<div class="vp-card" style="max-width:560px"><h4>Todavía no cargaste posiciones</h4><p>Cuando cargues tu cartera, acá vas a ver el precio, la lectura y los ratios de cada activo. Las herramientas del sitio están en <a href="herramientas.html" style="color:var(--link)">Herramientas y datos ↗</a>.</p><a class="vp-ir" href="#panel/micartera" data-go="micartera">Ir a Mi cartera →</a></div>`;
 }
 
+/* ── Contexto para los módulos de cada pestaña (panel-*.js) ────────────────────
+   Cada módulo exporta render<Pestaña>(el, ctx) y NO importa panel.js (sería un
+   import circular): todo lo que necesita del panel le llega acá. Los datos son los
+   mismos getters cacheados por cuenta que usa el resto del panel. */
+const ctx = {
+  get S() { return S; },
+  $, esc, hoyAR, enDias, fmtF, fmtC, money, moneyS, pct, num, cls, verCls,
+  curVista, curEtq, curMoneda, BROKERS, brokerPref, DATALIST, RIESGO, PERFIL, MESES, mesAnterior, EMPRESAS,
+  toast, invalidar, refrescar, portalTab,
+  radarDoc, radar, teaser, calendario, flujos, panelBonos, preciosInf, desglosePer, bonosSet, vencMapa, vencimientoDe,
+  fx, carteraCalc, ventas, ajustes, disciplina, informes, noticias, seguidas, posicionesCartera, precioHoy,
+  tenencias, frescura, ordenComprar, mapaCarteras, alertasMail, compararSeguidas,
+  // guarda la regla de inversión mensual ({ aporte US$/mes, compras por mes }). Devuelve
+  // true o el mensaje de error. Refresca el plan y el Resumen.
+  guardarRegla: async ({ aporte, compras }) => {
+    aporte = Number(aporte); compras = Math.round(Number(compras));
+    if (!(aporte > 0) || !(compras >= 1 && compras <= 6)) return 'Completá el aporte y las compras por mes (de 1 a 6).';
+    try {
+      await setDoc(doc(db(), 'inversores', S.email, 'disciplina', 'config'), { aporte, compras, creado: new Date().toISOString() }, { merge: true });
+      toast('Regla guardada'); invalidar('disc'); refrescar('disciplina', 'inicio');
+      return true;
+    } catch (e) { return 'No se pudo guardar (' + String(e.code || e).slice(0, 80) + ').'; }
+  },
+  // abre Mi cartera con el formulario de alta abierto
+  agregarPosicion: () => { portalTab('micartera'); window.scrollTo(0, 0); setTimeout(() => { if (window.__mcAbrirForm) window.__mcAbrirForm(true); }, 50); },
+  // abre Mi cartera con la fila de ese activo desplegada (la implementa mi-cartera.js)
+  verPosicion: tk => { portalTab('micartera'); window.scrollTo(0, 0); if (window.__mcAbrirFila) window.__mcAbrirFila(tk); },
+};
+window.__valtiaCtx = ctx;
+
 /* exposición global para los onclick del HTML */
 window.portalTab = portalTab;
-window.valtiaPanel = { salir, portalTab, iniciarPanel, refrescar: () => { invalidar('cartera', 'disc', 'ventas', 'aj'); refrescar('inicio', 'comprar', 'disciplina', 'empresas', 'herramientas', 'carteras'); } };
+window.valtiaPanel = { salir, portalTab, iniciarPanel, refrescar: () => { invalidar('cartera', 'disc', 'ventas', 'aj'); refrescar('inicio', 'comprar', 'disciplina', 'empresas', 'herramientas', 'carteras', 'agenda'); } };
