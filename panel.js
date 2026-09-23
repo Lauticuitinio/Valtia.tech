@@ -16,8 +16,10 @@ import { renderResumen } from './panel-resumen.js?v=3';
 import { renderComprar as renderComprarV3 } from './panel-comprar.js?v=1';
 import { renderCarteras as renderCarterasV3 } from './panel-carteras.js?v=2';
 import { renderMensual } from './panel-mensual.js?v=1';
+import { renderAlertas, contarNoLeidas } from './panel-alertas.js?v=1';
 import { renderAgenda } from './panel-agenda.js?v=1';
 import { renderCuenta } from './panel-cuenta.js?v=1';
+import { renderOperar } from './panel-operar.js?v=1';
 import { eventos } from './panel-eventos.js?v=1';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
   from './activos.js?v=7';
@@ -526,6 +528,8 @@ async function precioHoy(sym) {
 const TABS = [
   { g: 'Tus inversiones', id: 'inicio', t: 'Resumen' },
   { g: 'Tus inversiones', id: 'micartera', t: 'Mi cartera' },
+  // lo que Valtia hizo en sus carteras: compras, ventas, pesos y rotaciones
+  { g: 'Tus inversiones', id: 'alertas', t: 'Alertas' },
   { g: 'Para decidir', id: 'comprar', t: 'Qué comprar', tit: 'Qué comprar hoy' },
   { g: 'Para decidir', id: 'carteras', t: 'Carteras Valtia' },
   { g: 'Para decidir', id: 'disciplina', t: 'Inversión mensual' },
@@ -539,6 +543,9 @@ const SUBVISTAS = {
 };
 // la gestión del fondo: la llena fondo-live.js y solo existe para el admin
 const GESTION = [
+  // Operar carteras (panel-operar.js) va primera: es lo que más se usa y lo
+  // único de este grupo que ESCRIBE las carteras modelo
+  { id: 'operar', t: 'Operar carteras' },
   { id: 'dashboard', t: 'Fondo · Dashboard' }, { id: 'rendimientos', t: 'Rendimientos' },
   { id: 'movimientos', t: 'Posiciones' }, { id: 'fondo', t: 'Balance consolidado' },
   { id: 'senales', t: 'Señales' }, { id: 'analisis', t: 'Análisis de cartera' },
@@ -548,7 +555,7 @@ const ES_GESTION = new Set(GESTION.map(x => x.id));
 // el selector de moneda va donde cambia las cifras. En Qué comprar, Carteras e
 // Inversión mensual todo está en dólares: un selector que no hace nada confunde
 const CON_MONEDA = new Set(['inicio', 'micartera', 'empresas', 'herramientas']);
-const NUEVOS = ['inicio', 'comprar', 'carteras', 'empresas', 'disciplina', 'herramientas', 'agenda', 'cuenta'];
+const NUEVOS = ['inicio', 'alertas', 'comprar', 'carteras', 'empresas', 'disciplina', 'herramientas', 'agenda', 'cuenta'];
 // tabs que este usuario puede abrir: los divs de Gestión y Fondo viven en el
 // HTML para todos, así que sin este set cualquiera llega por #panel/admin
 let _permitidos = new Set(NUEVOS.concat(['micartera']));
@@ -558,7 +565,9 @@ let _tab = 'inicio';
 const enModulo = (f, id) => () => f($('tab-' + id), ctx).catch(() => {});
 const _render = { inicio: enModulo(renderResumen, 'inicio'), comprar: enModulo(renderComprarV3, 'comprar'),
                   carteras: enModulo(renderCarterasV3, 'carteras'), disciplina: enModulo(renderMensual, 'disciplina'),
+                  alertas: enModulo(renderAlertas, 'alertas'),
                   agenda: enModulo(renderAgenda, 'agenda'), cuenta: enModulo(renderCuenta, 'cuenta'),
+                  operar: enModulo(renderOperar, 'operar'),
                   empresas: renderEmpresas, herramientas: renderHerramientas };
 const _hecho = {};
 
@@ -726,7 +735,8 @@ export function portalTab(e, tab) {
 }
 function refrescar(...tabs) {
   tabs.forEach(t => { _hecho[t] = false; if (t === _tab) portalTab(t); });
-  if (tabs.includes('inicio') || tabs.includes('disciplina')) actualizarLateral();
+  // Alertas también repinta el lateral: su pastilla es la de las no leídas
+  if (tabs.includes('inicio') || tabs.includes('disciplina') || tabs.includes('alertas')) actualizarLateral();
 }
 function abrirDesdeHash() {
   const m = /^#panel\/([a-z-]+)/.exec(location.hash);
@@ -854,7 +864,7 @@ export async function iniciarPanel({ user, isAdmin, data }) {
   // informes (se pidió con el filtro de visibilidad de un usuario gratis)
   if (S.pro && !antesPro) {
     invalidar('inf');
-    refrescar('inicio', 'comprar', 'carteras', 'empresas', 'herramientas', 'cuenta');
+    refrescar('inicio', 'alertas', 'comprar', 'carteras', 'empresas', 'herramientas', 'cuenta');
   } else actualizarLateral();   // el contador de carteras depende del plan
 }
 
@@ -1170,6 +1180,12 @@ async function contadores(cc, disc, bset) {
   try {
     const z = (await radar()).filter(a => a.entrada).length;
     contadorNav('comprar', z ? z + ' \u25ce' : '', `${z} activos en zona de compra`);
+  } catch (e) {}
+  // las alertas que todav\u00eda no ley\u00f3 (solo las que su plan le deja leer). Si la
+  // colecci\u00f3n no se puede leer, el lateral va sin pastilla y nada m\u00e1s
+  try {
+    const sl = await contarNoLeidas(ctx);
+    contadorNav('alertas', sl ? String(sl) : '', `${sl} alerta${sl === 1 ? '' : 's'} sin leer`);
   } catch (e) {}
   try {
     const ts = (await teaser()) || [];

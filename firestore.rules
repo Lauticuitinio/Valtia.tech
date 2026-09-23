@@ -156,6 +156,20 @@ service cloud.firestore {
         allow read: if esDuenio();
         allow write: if false;
       }
+      // ── QUÉ HIZO EL USUARIO CON CADA ALERTA DE LAS CARTERAS MODELO ──
+      // Un doc por alerta con { leida, hecha, cuando }: la marca privada de si
+      // la leyó y si la replicó en su broker (pestaña Alertas del panel). Es
+      // suya y de nadie más, y no cambia ninguna cartera. El panel escribe con
+      // merge, por eso ningún campo es obligatorio, pero no puede aparecer
+      // ninguno que no sea estos tres.
+      match /alertasEstado/{alertaId} {
+        allow read, delete: if esDuenio();
+        allow create, update: if esDuenio()
+          && request.resource.data.keys().hasOnly(['leida', 'hecha', 'cuando'])
+          && (!('leida' in request.resource.data) || request.resource.data.leida is bool)
+          && (!('hecha' in request.resource.data) || request.resource.data.hecha is bool)
+          && request.resource.data.cuando == request.time;
+      }
     }
 
     // ── BAJA DE LAS ALERTAS EN UN CLIC ──
@@ -254,6 +268,24 @@ service cloud.firestore {
       match /posiciones/{p} { allow read: if carteraLegible(); allow write: if isAdmin(); }
       match /historial/{h}  { allow read: if carteraLegible(); allow write: if isAdmin(); }
       match /valores/{v}    { allow read: if carteraLegible(); allow write: if isAdmin(); }
+    }
+
+    // ── ALERTAS DE LAS CARTERAS MODELO ──
+    // Las escribe SOLO el admin, desde la pantalla Operar del panel
+    // (panel-operar.js): cada compra, venta o cambio de peso de una cartera
+    // modelo, con su precio y su razón. Nacen en estado "borrador" —la
+    // operación todavía no se publicó y no la ve nadie más que el admin— y
+    // recién se pueden leer cuando Lauti las publica: estado "publicado".
+    // La visibilidad es la de la cartera, achicada por el destino elegido
+    // (publico / clientes), con la misma escala que carterasModelo.
+    // Ojo: una regla no recorta un listado, lo rechaza entero. Por eso la
+    // consulta de panel-alertas.js pide siempre estas dos condiciones.
+    match /alertas/{alertaId} {
+      allow read: if isAdmin()
+                  || (resource.data.estado == 'publicado'
+                      && (resource.data.visibilidad == 'publico'
+                          || (resource.data.visibilidad == 'clientes' && esCliente())));
+      allow write: if isAdmin();
     }
 
     // ── VIDRIERA DE CARTERAS (teaser público) ──
