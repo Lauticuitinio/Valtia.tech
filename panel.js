@@ -8,15 +8,16 @@ import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, quer
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { calcular, agruparPorBroker, normalizarTicker, reiniciarMiCartera, completarPreciosDeRentaFija }
-  from './mi-cartera.js?v=40';
+  from './mi-cartera.js?v=41';
 import { fxMercado, registrarImplicito, etiquetaFx } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
-import { renderResumen } from './panel-resumen.js?v=2';
+import { renderResumen } from './panel-resumen.js?v=3';
 import { renderComprar as renderComprarV3 } from './panel-comprar.js?v=1';
 import { renderCarteras as renderCarterasV3 } from './panel-carteras.js?v=2';
 import { renderMensual } from './panel-mensual.js?v=1';
 import { renderAgenda } from './panel-agenda.js?v=1';
+import { renderCuenta } from './panel-cuenta.js?v=1';
 import { eventos } from './panel-eventos.js?v=1';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
   from './activos.js?v=7';
@@ -529,6 +530,8 @@ const TABS = [
   { g: 'Para decidir', id: 'carteras', t: 'Carteras Valtia' },
   { g: 'Para decidir', id: 'disciplina', t: 'Inversión mensual' },
   { g: 'Mercado', id: 'agenda', t: 'Agenda', tit: 'Agenda del mercado' },
+  // último grupo del lateral: el plan, los datos de la cuenta y los avisos por mail
+  { g: 'Tu cuenta', id: 'cuenta', t: 'Mi cuenta' },
 ];
 const SUBVISTAS = {
   empresas: { t: 'Mis empresas', de: 'micartera' },
@@ -545,7 +548,7 @@ const ES_GESTION = new Set(GESTION.map(x => x.id));
 // el selector de moneda va donde cambia las cifras. En Qué comprar, Carteras e
 // Inversión mensual todo está en dólares: un selector que no hace nada confunde
 const CON_MONEDA = new Set(['inicio', 'micartera', 'empresas', 'herramientas']);
-const NUEVOS = ['inicio', 'comprar', 'carteras', 'empresas', 'disciplina', 'herramientas', 'agenda'];
+const NUEVOS = ['inicio', 'comprar', 'carteras', 'empresas', 'disciplina', 'herramientas', 'agenda', 'cuenta'];
 // tabs que este usuario puede abrir: los divs de Gestión y Fondo viven en el
 // HTML para todos, así que sin este set cualquiera llega por #panel/admin
 let _permitidos = new Set(NUEVOS.concat(['micartera']));
@@ -555,7 +558,8 @@ let _tab = 'inicio';
 const enModulo = (f, id) => () => f($('tab-' + id), ctx).catch(() => {});
 const _render = { inicio: enModulo(renderResumen, 'inicio'), comprar: enModulo(renderComprarV3, 'comprar'),
                   carteras: enModulo(renderCarterasV3, 'carteras'), disciplina: enModulo(renderMensual, 'disciplina'),
-                  agenda: enModulo(renderAgenda, 'agenda'), empresas: renderEmpresas, herramientas: renderHerramientas };
+                  agenda: enModulo(renderAgenda, 'agenda'), cuenta: enModulo(renderCuenta, 'cuenta'),
+                  empresas: renderEmpresas, herramientas: renderHerramientas };
 const _hecho = {};
 
 function pintarPlan() {
@@ -850,7 +854,7 @@ export async function iniciarPanel({ user, isAdmin, data }) {
   // informes (se pidió con el filtro de visibilidad de un usuario gratis)
   if (S.pro && !antesPro) {
     invalidar('inf');
-    refrescar('inicio', 'comprar', 'carteras', 'empresas', 'herramientas');
+    refrescar('inicio', 'comprar', 'carteras', 'empresas', 'herramientas', 'cuenta');
   } else actualizarLateral();   // el contador de carteras depende del plan
 }
 
@@ -1133,7 +1137,9 @@ async function alertasMail() {
       actualizado: serverTimestamp(),
     };
     try {
-      await setDoc(doc(db(), 'inversores', S.email, 'alertas', 'config'), nuevo);
+      // merge: el mismo documento guarda los avisos por mail de Mi cuenta
+      // (campos "avisos" y "frecuenciaAvisos"). Sin merge, guardar acá los borraba.
+      await setDoc(doc(db(), 'inversores', S.email, 'alertas', 'config'), nuevo, { merge: true });
       msg.textContent = nuevo.activo
         ? `Listo: llegan a ${S.email}, ${nuevo.frecuencia === 'semanal' ? 'los lunes' : 'cuando haya novedades'} (máximo uno por día).`
         : 'Listo: alertas apagadas.';

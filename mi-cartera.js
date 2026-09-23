@@ -214,21 +214,70 @@ const STYLE = `
 .mc-btn.sec:hover{border-color:var(--v3-gold)}
 .mc-btn-mini{padding:7px 12px;font-size:10px}
 .mc-msg{font-size:12px;margin-top:10px}
-.mc-form{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;padding:18px 20px;margin-bottom:18px;scroll-margin-top:160px}
-.mc-form .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(140px,100%),1fr));gap:12px;align-items:end}
-.mc-form label{display:block;font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-mut);margin-bottom:5px}
-.mc-form input,.mc-form select{width:100%;padding:10px 12px;background:var(--v3-card);border:1px solid var(--v3-line);border-radius:6px;
-  color:var(--v3-ink);font:400 14px 'IBM Plex Sans',system-ui,sans-serif;outline:none}
-.mc-form select{font-size:13.5px}
-.mc-form input:focus,.mc-form select:focus{border-color:var(--v3-gold)}
 .mc-tabs{display:flex;gap:2px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
 .mc-tab{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;padding:7px 10px;background:none;border:none;
   border-bottom:2px solid transparent;color:var(--v3-mut);cursor:pointer;white-space:nowrap;transition:color .15s}
 .mc-tab:hover{color:var(--v3-ink)}
 .mc-tab.on{color:var(--v3-ink);border-bottom-color:var(--v3-gold)}
-.mc-cerrar{margin-left:auto;font:600 10px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--v3-mut);background:none;border:none;cursor:pointer;padding:8px 4px}
-.mc-cerrar:hover{color:var(--v3-ink)}
+
+/* ── el modal de alta (prototipo, "Agregar activo") ──
+   Cuelga de <body> y no de la pestaña: los repintados de la tabla (el refresco
+   de precios cada 2 min) no pueden borrar lo que el usuario está tipeando.
+   El velo es el navy de la piel con transparencia; como el texto sobre el
+   dorado claro, es de los pocos literales, porque es el mismo en los dos temas. */
+.mc-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:rgba(14,24,48,.45);color:var(--v3-ink);font-family:'IBM Plex Sans',system-ui,sans-serif}
+.mc-modal button,.mc-modal input,.mc-modal select,.mc-modal textarea{font-family:inherit}
+.mc-mdl{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:14px;width:100%;max-width:560px;min-width:0;
+  max-height:calc(100vh - 40px);display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(14,24,48,.25)}
+.mc-mdl-hd{display:flex;align-items:flex-start;gap:12px;padding:22px 24px 0}
+.mc-mdl-hd h3{font:700 22px 'Playfair Display',serif;color:var(--v3-ink);margin:0;line-height:1.2;flex:1;min-width:0}
+.mc-mdl-x{font-size:17px;line-height:1;color:var(--v3-mut);background:none;border:1px solid transparent;border-radius:6px;
+  cursor:pointer;padding:5px 9px;flex:none}
+.mc-mdl-x:hover{color:var(--v3-ink);border-color:var(--v3-line)}
+.mc-mdl .mc-tabs{margin:14px 24px 0}
+/* overscroll-behavior: llegar al final del modal no arrastra la página de atrás */
+.mc-mdl-bd{padding:16px 24px 6px;overflow-y:auto;overscroll-behavior:contain;flex:1;min-height:0}
+.mc-mdl-pie{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;
+  padding:14px 24px 20px;border-top:1px solid var(--v3-line)}
+.mc-mdl-pie .mc-msg{margin:0;margin-right:auto;flex:1 1 170px;min-width:0;line-height:1.5}
+.mc-gr{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:14px}
+.mc-mdl label,.mc-mdl .mc-lbl{display:block;font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--v3-sub);margin-bottom:6px}
+.mc-mdl input,.mc-mdl select{width:100%;box-sizing:border-box;padding:10px 12px;background:var(--v3-card);
+  border:1px solid var(--v3-line);border-radius:8px;color:var(--v3-ink);font:400 14px 'IBM Plex Sans',system-ui,sans-serif;outline:none}
+.mc-mdl select{font-size:13.5px}
+.mc-mdl input:focus,.mc-mdl select:focus{border-color:var(--v3-gold)}
+.mc-mdl input#mc-ticker{font:600 14px 'IBM Plex Mono',monospace;text-transform:uppercase}
+/* el nombre no se escribe: sale del catálogo de activos.js */
+.mc-mdl .fijo{box-sizing:border-box;font:500 13.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut);padding:10px 12px;
+  border:1px solid var(--v3-line);border-radius:8px;background:var(--v3-track2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-mdl .fijo.ok{color:var(--v3-ink)}
+.mc-sub{font-size:11.5px;color:var(--v3-mut);line-height:1.6;margin-top:8px;min-height:1px}
+.mc-sub b{color:var(--v3-sub);font:600 11.5px 'IBM Plex Mono',monospace}
+.mc-k2{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-sub);margin:20px 0 8px}
+.mc-cmps{display:flex;flex-direction:column;gap:8px}
+.mc-cmp-hd,.mc-cmp{display:grid;grid-template-columns:1.15fr .85fr .95fr 28px;gap:8px;align-items:center}
+.mc-cmp-hd{font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);padding:0 9px 2px}
+.mc-cmp{border:1px solid var(--v3-line);border-radius:9px;padding:8px}
+.mc-cmp input{padding:8px;border-radius:6px;border-color:var(--v3-line2);font:500 12.5px 'IBM Plex Mono',monospace;min-width:0}
+.mc-cmp input[type="number"]{text-align:right}
+.mc-cmp-x{background:none;border:none;color:var(--v3-mut);font-size:16px;line-height:1;cursor:pointer;padding:4px;border-radius:5px}
+.mc-cmp-x:hover{color:var(--v3-dn)}
+.mc-cmp-x[disabled]{opacity:.3;cursor:default}
+.mc-mas{font:600 12px 'IBM Plex Sans',sans-serif;color:var(--v3-gold);background:none;border:none;cursor:pointer;padding:9px 0 2px}
+.mc-mas:hover{color:var(--v3-gold2)}
+.mc-res{background:var(--v3-track2);border-radius:9px;padding:12px 14px;margin-top:16px;font-size:12.5px;color:var(--v3-sub)}
+.mc-res .f{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.mc-res .f+.f{margin-top:7px}
+/* el Mono y el nowrap son para los NÚMEROS (los dos renglones de arriba). La
+   nota de abajo es prosa: si hereda esto, la frase de la cantidad negativa sale
+   en Mono de 14 px y en un solo renglón de 470 px, y el cuerpo del modal se
+   desplaza para el costado a 375 px justo cuando hay algo para leer. */
+.mc-res .f b{font:600 14px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-ink);white-space:nowrap}
+.mc-res .nota{font-size:11.5px;color:var(--v3-mut);line-height:1.6;margin-top:9px}
+.mc-res .nota b{font:600 11.5px 'IBM Plex Sans',system-ui,sans-serif;color:inherit;white-space:normal}
+.mc-res .nota.bad{color:var(--v3-dn)}
 .mc-imp textarea{width:100%;min-height:120px;padding:12px;background:var(--v3-card);border:1px solid var(--v3-line);border-radius:6px;
   color:var(--v3-ink);font:400 12.5px 'IBM Plex Mono',ui-monospace,monospace;outline:none;resize:vertical}
 .mc-imp textarea:focus{border-color:var(--v3-gold)}
@@ -334,7 +383,26 @@ const STYLE = `
   .mc3-cols{padding:14px 14px 18px}
   .mc-vrow{padding:12px 14px}
 }
-@media (max-width:760px){.mc-form{padding:16px}}
+/* en el celular el modal ocupa toda la pantalla, y la compra pasa a dos
+   renglones (fecha arriba, cantidad y precio abajo): a 375 px entra sin
+   desplazamiento horizontal */
+@media (max-width:640px){
+  .mc-modal{padding:0}
+  .mc-mdl{max-width:none;height:100%;max-height:none;border:none;border-radius:0}
+  .mc-mdl-hd{padding:16px 16px 0}
+  .mc-mdl .mc-tabs{margin:12px 16px 0}
+  .mc-mdl-bd{padding:14px 16px 6px}
+  /* el mensaje ocupa su propio renglón (vacío no mide nada) y los dos botones
+     entran juntos abajo, en vez de caer uno por línea */
+  .mc-mdl-pie{padding:12px 16px 16px}
+  .mc-mdl-pie .mc-msg{flex:1 1 100%;margin-right:0}
+  .mc-cmp-hd{display:none}
+  .mc-cmp{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 28px;grid-template-areas:"fe fe qu" "ca px qu"}
+  .mc-cmp>[data-c-fecha]{grid-area:fe}
+  .mc-cmp>[data-c-cant]{grid-area:ca}
+  .mc-cmp>[data-c-px]{grid-area:px}
+  .mc-cmp>.mc-cmp-x{grid-area:qu}
+}
 `;
 
 /* ── brokers y mercados ──
@@ -773,11 +841,24 @@ let _orden = { col: "dValor", desc: true };
 /* los estilos se aseguran acá (y no solo al iniciar) para que cualquier
    render —incluido uno con datos de prueba— se vea igual que en producción */
 function asegurarEstilo() {
-  if (typeof document === "undefined" || document.getElementById("v3-css-micartera")) return;
+  if (typeof document === "undefined") return;
+  asegurarBrokers();
+  if (document.getElementById("v3-css-micartera")) return;
   const st = document.createElement("style");
   st.id = "v3-css-micartera";
   st.textContent = STYLE;
   document.head.appendChild(st);
+}
+
+/* La lista de brokers cuelga de <body> y no de la pestaña: la usan el modal de
+   alta (que vive afuera de _el) y el chip «Broker» del desplegable de cada
+   fila. Una sola, así no hay dos elementos con el mismo id. */
+function asegurarBrokers() {
+  if (typeof document === "undefined" || !document.body || document.getElementById("mc-brokers")) return;
+  const d = document.createElement("datalist");
+  d.id = "mc-brokers";
+  d.innerHTML = BROKERS.map(b => `<option value="${esc(b)}">`).join("");
+  document.body.appendChild(d);
 }
 
 /* ── ventas y resultado realizado (el cálculo vive en ventas.js) ── */
@@ -1382,40 +1463,9 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   // moneda y de dónde sale el dólar van en el encabezado único del panel
   const cabecera = "";
 
-  const form = `
-    <div class="mc-form" id="mc-form"${formVisible(posiciones.length) ? "" : " hidden"}>
-      <div class="mc-tabs">
-        <button class="mc-tab on" data-modo="uno">Agregar una</button>
-        <button class="mc-tab" data-modo="imp">Importar desde Excel</button>
-        ${posiciones.length ? '<button class="mc-cerrar" data-cerrar-form aria-label="Cerrar el formulario">Cerrar ✕</button>' : ""}
-      </div>
-      <datalist id="mc-brokers">${BROKERS.map(b => `<option value="${b}">`).join("")}</datalist>
-      <div id="mc-modo-uno">
-        <div class="row">
-          <div><label>Mercado</label><select id="mc-mercado">${MERCADOS.map(([k, n]) => `<option value="${k}"${pref("valtia-mc-mercado", "byma") === k ? " selected" : ""}>${n}</option>`).join("")}</select></div>
-          <div><label>Ticker</label><input id="mc-ticker" placeholder="GGAL, AL30, NVDA…" maxlength="12" autocomplete="off"></div>
-          <div><label>Cantidad</label><input id="mc-cant" type="number" step="any" min="0" placeholder="10"></div>
-          <div><label>Precio de compra</label><input id="mc-precio" type="number" step="any" min="0" placeholder="en la moneda del mercado"></div>
-          <div><label>Broker / cuenta</label><input id="mc-broker" list="mc-brokers" placeholder="IOL, PPI, Binance…" maxlength="24" value="${esc(pref("valtia-mc-broker", ""))}"></div>
-          <div><label>Fecha (opcional)</label><input id="mc-fecha" type="date"></div>
-          <div><button class="mc-btn" id="mc-add">Agregar posición</button></div>
-        </div>
-      </div>
-      <div id="mc-modo-imp" class="mc-imp" style="display:none">
-        <div class="row" style="margin-bottom:12px">
-          <div><label>¿De qué mercado es este resumen?</label><select id="mc-imp-mercado">${MERCADOS.map(([k, n]) => `<option value="${k}"${pref("valtia-mc-mercado", "byma") === k ? " selected" : ""}>${n}</option>`).join("")}</select></div>
-          <div><label>Broker / cuenta</label><input id="mc-imp-broker" list="mc-brokers" placeholder="IOL, PPI, Binance…" maxlength="24" value="${esc(pref("valtia-mc-broker", ""))}"></div>
-        </div>
-        <div class="mc-hint">Copiá las filas del resumen de tu broker y pegalas acá: una posición por línea, en el orden
-          <b>ticker · cantidad · precio de compra · fecha</b>. Sirven tabulaciones, comas o punto y coma, y los números
-          pueden venir como 1.900,50 o 1900.50. El encabezado se ignora solo. Si elegís BYMA, "GGAL" se guarda como la
-          acción local en pesos (GGAL.BA); los bonos y letras quedan tal cual.</div>
-        <textarea id="mc-paste" placeholder="GGAL	100	4.500	2026-03-10&#10;AL30	1000	85.400&#10;NVDA;20;38.000"></textarea>
-        <div id="mc-prev"></div>
-        <button class="mc-btn" id="mc-imp-btn" style="margin-top:12px">Revisar</button>
-      </div>
-    </div>
-    <div class="mc-msg" id="mc-msg"></div>`;
+  // el alta vive en un modal (abrirModal), afuera de acá: lo único que queda en
+  // la pestaña es el renglón donde se escriben sus mensajes
+  const form = `<div class="mc-msg" id="mc-msg"></div>`;
 
   const fxFalta = posiciones.length && (
     (_cur === "ARS" && !_fx.ccl && r.filas.some(f => f.moneda !== "ARS")) ||
@@ -1437,10 +1487,12 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     el.innerHTML = `<div class="mc-wrap">${cabecera}${bloqueAjustes(opts.ajustes || [], precios, opts.bonos || new Set())}${form}
       ${(opts.ventas || []).length ? `<div class="mc3-top"><span></span><div class="mc3-ctrl">${ojo}</div></div>` : ""}
       ${(opts.ventas || []).length ? `<div class="mc-empty"><h4>No te quedan posiciones abiertas</h4>
-        <p>Tus ventas y su resultado están más abajo. Si compraste algo nuevo, cargalo con el formulario.</p></div>` : `<div class="mc-empty">
+        <p>Tus ventas y su resultado están más abajo. Si compraste algo nuevo, cargalo acá.</p>
+        <button type="button" class="mc-btn" data-mc-abrir style="margin-top:16px">+ Agregar posición</button></div>` : `<div class="mc-empty">
         <h4>Todavía no cargaste posiciones</h4>
         <p>Agregá lo que tenés —acciones, CEDEARs o cripto— con la cantidad y el precio al que compraste.
            Al día siguiente vas a ver el valor actualizado, tu resultado y la lectura de Valtia sobre cada activo.</p>
+        <button type="button" class="mc-btn" data-mc-abrir style="margin-top:16px">+ Agregar posición</button>
       </div>`}${seccionVentas(opts.ventas || [], cur)}</div>`;
     reponerEscrito(el, escrito);
     _abierta = null; _ajAbierto = null;
@@ -1887,8 +1939,6 @@ function engancharDetalle(root) {
 }
 
 function enganchar() {
-  const add = _el.querySelector("#mc-add");
-  if (add) add.onclick = agregar;
   engancharDetalle(_el);
   _el.querySelectorAll("[data-deshacer]").forEach(b => b.onclick = () => deshacerVenta(b.dataset.deshacer, b));
   _el.querySelectorAll(".mc-aj").forEach(card => {
@@ -1899,15 +1949,8 @@ function enganchar() {
     if (tengo) tengo.onclick = () => recuperarAjuste(card, tengo);
     vistaAjuste(card);
   });
-  _el.querySelectorAll(".mc-tab").forEach(t => t.onclick = () => {
-    _el.querySelectorAll(".mc-tab").forEach(x => x.classList.toggle("on", x === t));
-    const imp = t.dataset.modo === "imp";
-    _el.querySelector("#mc-modo-uno").style.display = imp ? "none" : "block";
-    _el.querySelector("#mc-modo-imp").style.display = imp ? "block" : "none";
-  });
-  const ib = _el.querySelector("#mc-imp-btn");
-  if (ib) ib.onclick = revisarImport;
-  _el.querySelectorAll("[data-cerrar-form]").forEach(b => b.onclick = () => abrirFormulario(false));
+  // el botón del estado vacío: el del encabezado lo maneja panel.js (__mcAbrirForm)
+  _el.querySelectorAll("[data-mc-abrir]").forEach(b => b.onclick = () => abrirFormulario(true));
 }
 
 /* cotizaciones para convertir (misma fuente que la barra del sitio) */
@@ -1920,43 +1963,329 @@ async function cargarFx() { _fx = await fxMercado(); }
 /* ── importar: primero muestra qué entendió, después confirma ── */
 let _porImportar = null;
 
-/* el formulario de alta: cerrado mientras haya posiciones, hasta que se toca
-   "+ Agregar posición" en el encabezado del panel. El estado sobrevive a los
-   repintados (el refresco de precios cada 2 min vuelve a dibujar todo). */
-let _formAbierto = false;
-const formVisible = n => _formAbierto || !n;
-export function abrirFormulario(abrir) {
-  _formAbierto = abrir == null ? (!_pos.length || !_formAbierto) : !!abrir;
-  const f = _el && _el.querySelector("#mc-form");
-  if (!f) return _formAbierto;
-  f.hidden = !formVisible(_pos.length);
-  if (f.hidden) {
-    const uno = f.querySelector("#mc-modo-uno"), imp = f.querySelector("#mc-modo-imp");
-    if (uno) uno.style.display = "block";
-    if (imp) imp.style.display = "none";
-    f.querySelectorAll(".mc-tab").forEach(x => x.classList.toggle("on", x.dataset.modo === "uno"));
+/* ══════════════════ el modal de alta ══════════════════
+   Reemplaza a la tarjeta que se desplegaba arriba de la tabla. Dos decisiones
+   que NO se discuten y que explican por qué esto es más simple de lo que
+   parece en el prototipo:
+
+   1) SIN MIGRACIÓN. Por detrás se sigue guardando como siempre: un documento
+      por compra en inversores/{email}/cartera, con ticker, cantidad,
+      precioCompra, fecha, broker, moneda y factor. La "lista de compras" del
+      modal es una comodidad de carga —tres compras del mismo activo en un solo
+      paso—, no un cambio de modelo: cada renglón sale como su propio documento,
+      igual que si se hubieran cargado de a una.
+   2) SIN VENTAS. Acá solo entran compras. Para vender ya está «Vendí» en la
+      fila, que es lo único que deja la venta registrada con su resultado. Si
+      alguien escribe una cantidad negativa se le dice dónde va.
+
+   El modal cuelga de <body> y no de _el: así el refresco de precios (que
+   redibuja la pestaña entera cada 2 minutos) no puede borrar lo que se está
+   tipeando. _modal guarda el nodo, a quién devolverle el foco y el escuchador
+   de teclado que hay que sacar al cerrar. */
+let _modal = null;
+const $m = sel => (_modal ? _modal.el.querySelector(sel) : null);
+
+const FOCO = 'a[href],button:not([disabled]):not([hidden]),input:not([disabled]),select:not([disabled]),textarea:not([disabled])';
+/* el foco no se escapa del diálogo mientras está abierto */
+function atraparFoco(caja, ev) {
+  const f = [...caja.querySelectorAll(FOCO)]
+    .filter(x => x.offsetWidth || x.offsetHeight || x.getClientRects().length);
+  if (!f.length) return;
+  const a = f[0], z = f[f.length - 1], act = document.activeElement;
+  if (!caja.contains(act)) { ev.preventDefault(); (ev.shiftKey ? z : a).focus(); return; }
+  if (!ev.shiftKey && act === z) { ev.preventDefault(); a.focus(); }
+  else if (ev.shiftKey && act === a) { ev.preventDefault(); z.focus(); }
+}
+
+const opcMercados = sel => MERCADOS.map(([k, n]) =>
+  `<option value="${k}"${sel === k ? " selected" : ""}>${n}</option>`).join("");
+
+/* un renglón de la lista de compras. Los valores viven en el DOM: agregar o
+   sacar un renglón no repinta los demás, así que no se pierde lo escrito ni
+   el cursor. La cantidad NO lleva min="0" a propósito: si alguien escribe una
+   negativa queremos poder explicarle que las ventas van por otro lado. */
+const filaCompraHTML = (hoy, v = {}) => `<div class="mc-cmp" data-cmp>
+    <input type="date" data-c-fecha max="${hoy}" value="${esc(v.fecha || "")}" aria-label="Fecha de la compra">
+    <input type="number" step="any" inputmode="decimal" data-c-cant placeholder="Cantidad" value="${esc(v.cant ?? "")}" aria-label="Cantidad comprada">
+    <input type="number" step="any" min="0" inputmode="decimal" data-c-px placeholder="Precio" value="${esc(v.px ?? "")}" aria-label="Precio de compra">
+    <button type="button" class="mc-cmp-x" data-c-quitar aria-label="Sacar esta compra" title="Sacar esta compra">×</button>
+  </div>`;
+
+function modalHTML() {
+  const mkt = pref("valtia-mc-mercado", "byma");
+  const brk = esc(pref("valtia-mc-broker", ""));
+  return `<div class="mc-mdl" role="dialog" aria-modal="true" aria-labelledby="mc-mdl-t">
+    <div class="mc-mdl-hd">
+      <h3 id="mc-mdl-t">Agregar activo</h3>
+      <button type="button" class="mc-mdl-x" data-mc-cerrar aria-label="Cerrar">✕</button>
+    </div>
+    <div class="mc-tabs" role="group" aria-label="Cómo querés cargarlo">
+      <button type="button" class="mc-tab on" data-modo="uno" aria-pressed="true">Una por una</button>
+      <button type="button" class="mc-tab" data-modo="imp" aria-pressed="false">Pegar desde planilla</button>
+    </div>
+    <div class="mc-mdl-bd">
+      <div id="mc-modo-uno">
+        <div class="mc-gr">
+          <div><label for="mc-mercado">Mercado</label><select id="mc-mercado">${opcMercados(mkt)}</select></div>
+          <div><label for="mc-broker">Broker / cuenta</label>
+            <input id="mc-broker" list="mc-brokers" placeholder="IOL, PPI, Binance…" maxlength="24" value="${brk}" autocomplete="off"></div>
+          <div><label for="mc-ticker">Símbolo</label>
+            <input id="mc-ticker" placeholder="GGAL, AL30, NVDA…" maxlength="12" autocomplete="off" spellcheck="false"></div>
+          <div><div class="mc-lbl" id="mc-nombre-k">Nombre</div>
+            <div class="fijo" id="mc-nombre" aria-labelledby="mc-nombre-k">—</div></div>
+        </div>
+        <div class="mc-sub" id="mc-guarda"></div>
+        <div class="mc-k2">Tus compras</div>
+        <div class="mc-cmp-hd" aria-hidden="true"><span>Fecha</span><span>Cantidad</span><span>Precio</span><span></span></div>
+        <div class="mc-cmps" id="mc-compras"></div>
+        <button type="button" class="mc-mas" id="mc-mas">+ Agregar otra compra</button>
+        <div class="mc-res">
+          <div class="f"><span>Precio promedio de compra</span><b id="mc-prom">—</b></div>
+          <div class="f"><span>Total invertido</span><b id="mc-tot">—</b></div>
+          <div class="nota" id="mc-resnota"></div>
+        </div>
+      </div>
+      <div id="mc-modo-imp" class="mc-imp" style="display:none">
+        <div class="mc-gr" style="margin-bottom:12px">
+          <div><label for="mc-imp-mercado">¿De qué mercado es este resumen?</label>
+            <select id="mc-imp-mercado">${opcMercados(mkt)}</select></div>
+          <div><label for="mc-imp-broker">Broker / cuenta</label>
+            <input id="mc-imp-broker" list="mc-brokers" placeholder="IOL, PPI, Binance…" maxlength="24" value="${brk}" autocomplete="off"></div>
+        </div>
+        <div class="mc-hint">Copiá las filas del resumen de tu broker y pegalas acá: una posición por línea, en el orden
+          <b>ticker · cantidad · precio de compra · fecha</b>. Sirven tabulaciones, comas o punto y coma, y los números
+          pueden venir como 1.900,50 o 1900.50. El encabezado se ignora solo. Si elegís BYMA, "GGAL" se guarda como la
+          acción local en pesos (GGAL.BA); los bonos y letras quedan tal cual.</div>
+        <textarea id="mc-paste" aria-label="Filas pegadas de tu broker" placeholder="GGAL	100	4.500	2026-03-10&#10;AL30	1000	85.400&#10;NVDA;20;38.000"></textarea>
+        <div id="mc-prev"></div>
+        <button type="button" class="mc-btn" id="mc-imp-btn" style="margin-top:12px">Revisar</button>
+      </div>
+    </div>
+    <div class="mc-mdl-pie">
+      <div class="mc-msg" id="mc-mdl-msg"></div>
+      <button type="button" class="mc-btn sec" data-mc-cerrar>Cancelar</button>
+      <button type="button" class="mc-btn" id="mc-add" disabled>Guardar</button>
+    </div>
+  </div>`;
+}
+
+/* lo que define la moneda y el factor: el mercado elegido y el ticker ya
+   normalizado. Es la MISMA cuenta que hace guardarCompras() al grabar; la
+   única diferencia es que acá se usa el set de bonos que ya está en memoria
+   (al guardar se espera el de Firestore), así la vista previa nunca dice una
+   moneda y el documento guarda otra. */
+function contextoModal() {
+  const mercado = ($m("#mc-mercado") || {}).value || "byma";
+  const crudo = (($m("#mc-ticker") || {}).value || "").trim().toUpperCase();
+  const tk = crudo ? normalizarTicker(crudo, mercado, _bonos) : "";
+  const moneda = tk ? monedaMercado(mercado, tk, _bonos) : (mercado === "byma" ? "ARS" : "USD");
+  return { mercado, crudo, tk, moneda, factor: tk && _bonos.has(tk) ? 0.01 : 1 };
+}
+
+const leerCompras = () => [...(_modal ? _modal.el.querySelectorAll("[data-cmp]") : [])].map(r => ({
+  fila: r,
+  fecha: r.querySelector("[data-c-fecha]").value || "",
+  cant: parseFloat(r.querySelector("[data-c-cant]").value),
+  px: parseFloat(r.querySelector("[data-c-px]").value),
+}));
+
+/* el nombre del activo sale del catálogo (activos.js): no se escribe ni se
+   inventa. Si el activo no está, se dice que no está y se carga igual. */
+function nombreCatalogo(tk) {
+  if (!tk) return { txt: "—", ok: false };
+  if (tickerFicha(tk)) return { txt: nombreDe(tk), ok: true };
+  if (esRentaFija(tk, _bonos)) return { txt: "Renta fija BYMA · cotiza por 100 VN", ok: true };
+  return { txt: "No está en nuestro catálogo", ok: false };
+}
+
+/* el precio promedio y el total, en vivo. Promedio ponderado por cantidad
+   —el mismo número que después muestran la fila y el desplegable— y en la
+   moneda del mercado elegido, que es la moneda en la que se guarda el precio.
+   Va con montoTxt() y no con money(): "Ocultar $" no puede tapar un número que
+   la persona está tipeando en ese mismo momento. */
+function actualizarModal() {
+  if (!_modal) return;
+  const { tk, moneda, factor } = contextoModal();
+  const nom = nombreCatalogo(tk);
+  const nEl = $m("#mc-nombre");
+  if (nEl) { nEl.textContent = nom.txt; nEl.classList.toggle("ok", nom.ok); }
+  const unidad = factor !== 1 ? "cada 100 VN" : "por unidad";
+  const enQue = moneda === "ARS" ? "en pesos" : "en dólares";
+  const g = $m("#mc-guarda");
+  if (g) g.innerHTML = tk
+    ? `Se guarda como <b>${esc(tk)}</b> · el precio va ${enQue}, ${unidad}.`
+    : "Escribilo como lo ves en tu broker.";
+
+  const todas = leerCompras();
+  const val = todas.filter(c => isFinite(c.cant) && c.cant > 0);
+  const negativa = todas.some(c => isFinite(c.cant) && c.cant < 0);
+  const cant = val.reduce((s, c) => s + c.cant, 0);
+  // una compra sin precio entra con precio 0, igual que siempre: suma cantidad
+  // y no suma plata (la fila después avisa "sin precio de compra")
+  const invertido = val.reduce((s, c) => s + c.cant * (isFinite(c.px) && c.px > 0 ? c.px : 0), 0);
+  const sinPx = val.filter(c => !(isFinite(c.px) && c.px > 0)).length;
+  const prom = cant > 0 && invertido > 0 ? invertido / cant : null;
+  const pEl = $m("#mc-prom"), tEl = $m("#mc-tot");
+  if (pEl) pEl.textContent = prom == null ? "—" : montoTxt(prom, moneda) + (factor !== 1 ? " / 100 VN" : "");
+  if (tEl) tEl.textContent = invertido > 0 ? montoTxt(invertido * factor, moneda) : "—";
+  const nota = $m("#mc-resnota");
+  if (nota) {
+    const partes = [];
+    if (negativa) partes.push("Una cantidad es negativa: <b>las ventas se registran desde la fila del activo, con «Vendí»</b>, que es lo que deja el resultado guardado. Acá van solo las compras.");
+    if (!negativa && sinPx) partes.push(`${sinPx === 1 ? "Una compra queda" : `${sinPx} compras quedan`} sin precio: se guardan igual, pero de esa parte no vamos a poder calcular el resultado.`);
+    partes.push("El precio de hoy lo trae el sync de cotizaciones, no hace falta cargarlo: hasta que llegue, la posición queda sin precio y afuera del total.");
+    nota.innerHTML = partes.join(" ");
+    nota.classList.toggle("bad", negativa);
   }
-  if (!f.hidden && _formAbierto) {
-    try { f.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) { f.scrollIntoView(); }
-    const i = f.querySelector("#mc-ticker");
-    if (i) try { i.focus({ preventScroll: true }); } catch (e) {}
-  }
-  return _formAbierto;
+  // Guardar: hace falta símbolo y al menos una compra con cantidad, y ninguna negativa
+  const add = $m("#mc-add");
+  if (add) add.disabled = !(tk && val.length && !negativa);
+  // con un solo renglón no se puede sacar el último: siempre queda uno para escribir
+  const xs = [..._modal.el.querySelectorAll("[data-c-quitar]")];
+  xs.forEach(x => { x.disabled = xs.length < 2; });
+}
+
+function agregarCompra(v) {
+  const cont = $m("#mc-compras");
+  if (!cont) return;
+  const primera = !cont.children.length;
+  cont.insertAdjacentHTML("beforeend", filaCompraHTML(hoyAR(), v));
+  actualizarModal();
+  // la primera fila no roba el foco: recién se abrió el modal y el cursor va al símbolo
+  const i = !primera && cont.lastElementChild && cont.lastElementChild.querySelector("[data-c-cant]");
+  if (i) try { i.focus(); } catch (e) {}
+}
+
+function engancharModal() {
+  const el = _modal.el;
+  el.querySelectorAll("[data-mc-cerrar]").forEach(b => b.onclick = () => cerrarModal());
+  el.querySelectorAll(".mc-tab").forEach(t => t.onclick = () => {
+    el.querySelectorAll(".mc-tab").forEach(x => {
+      const on = x === t;
+      x.classList.toggle("on", on);
+      x.setAttribute("aria-pressed", String(on));
+    });
+    const imp = t.dataset.modo === "imp";
+    el.querySelector("#mc-modo-uno").style.display = imp ? "none" : "block";
+    el.querySelector("#mc-modo-imp").style.display = imp ? "block" : "none";
+    // "Guardar" es del alta de a una; la planilla tiene su propio "Importar"
+    const g = el.querySelector("#mc-add");
+    if (g) g.hidden = imp;
+    const f = el.querySelector(imp ? "#mc-paste" : "#mc-ticker");
+    if (f) try { f.focus(); } catch (e) {}
+  });
+  const mas = el.querySelector("#mc-mas");
+  if (mas) mas.onclick = () => agregarCompra();
+  const ib = el.querySelector("#mc-imp-btn");
+  if (ib) ib.onclick = revisarImport;
+  const add = el.querySelector("#mc-add");
+  if (add) add.onclick = guardarCompras;
+  // un solo escuchador para todo lo que se tipea: los renglones de compras
+  // van y vienen, engancharlos de a uno se olvidaría de los nuevos
+  el.addEventListener("input", ev => {
+    if (ev.target && ev.target.closest && ev.target.closest("#mc-modo-uno")) actualizarModal();
+  });
+  el.addEventListener("change", ev => {
+    if (ev.target && ev.target.closest && ev.target.closest("#mc-modo-uno")) actualizarModal();
+  });
+  el.addEventListener("click", ev => {
+    const q = ev.target.closest && ev.target.closest("[data-c-quitar]");
+    if (!q || q.disabled) return;
+    const f = q.closest("[data-cmp]");
+    if (f) { f.remove(); actualizarModal(); }
+  });
+  agregarCompra();
+}
+
+function abrirModal(prefill) {
+  if (typeof document === "undefined" || !document.body) return false;
+  asegurarEstilo();
+  if (_modal) { prellenarModal(prefill); return true; }
+  const volver = document.activeElement;
+  const el = document.createElement("div");
+  el.className = "mc-modal";
+  el.id = "mc-modal";
+  el.innerHTML = modalHTML();
+  document.body.appendChild(el);
+  const porTecla = ev => {
+    if (!_modal) return;
+    if (ev.key === "Escape") { ev.preventDefault(); cerrarModal(); return; }
+    if (ev.key === "Tab") atraparFoco(_modal.el, ev);
+  };
+  _modal = { el, volver, porTecla };
+  document.addEventListener("keydown", porTecla, true);
+  // tocar afuera cierra. Se piden las DOS mitades del clic sobre el velo: si
+  // alguien selecciona texto adentro y suelta el botón afuera, no se le cierra
+  // el modal con todo lo que escribió
+  let desdeElVelo = false;
+  el.addEventListener("mousedown", ev => { desdeElVelo = ev.target === el; });
+  el.addEventListener("click", ev => { if (ev.target === el && desdeElVelo) cerrarModal(); });
+  engancharModal();
+  prellenarModal(prefill);
+  // El Resumen abre el modal a los 50 ms de entrar a la pestaña: el panel de
+  // bonos puede no haber llegado. Con el set vacío, un AL30D se anuncia "en
+  // pesos" y después se guarda en dólares (guardarCompras espera el set de
+  // verdad). Cuando llega, se rehace la nota para que digan lo mismo.
+  if (!_bonos.size) bonosSet().then(s => {
+    if (s && s.size && !_bonos.size) _bonos = s;
+    actualizarModal();
+  }).catch(() => {});
+  return true;
+}
+
+/* el ticker que llega de la ficha de un activo (?agregar=NVDA) */
+function prellenarModal(prefill) {
+  if (!_modal) return;
+  const sel = $m("#mc-mercado"), inp = $m("#mc-ticker");
+  if (prefill && prefill.mercado && sel && MERCADOS.some(([k]) => k === prefill.mercado)) sel.value = prefill.mercado;
+  if (prefill && prefill.ticker && inp) inp.value = prefill.ticker;
+  actualizarModal();
+  const foco = (prefill && prefill.ticker) ? $m("[data-c-cant]") : inp;
+  if (foco) try { foco.focus(); } catch (e) {}
+}
+
+function cerrarModal() {
+  const m = _modal;
+  if (!m) return;
+  _modal = null;
+  _porImportar = null;
+  try { document.removeEventListener("keydown", m.porTecla, true); } catch (e) {}
+  try { m.el.remove(); } catch (e) {}
+  // el foco vuelve a donde estaba (el botón "+ Agregar posición" que lo abrió)
+  const v = m.volver;
+  if (v && v.isConnected && typeof v.focus === "function") { try { v.focus(); } catch (e) {} return; }
+  const b = document.querySelector("[data-agregar]");
+  if (b) try { b.focus(); } catch (e) {}
+}
+
+/* La abre el botón del encabezado del panel y window.__mcAbrirForm: sin
+   argumento alterna, con true abre (el Resumen), con false cierra. */
+export function abrirFormulario(abrir, prefill) {
+  const quiere = abrir == null ? !_modal : !!abrir;
+  if (!quiere) { cerrarModal(); return false; }
+  if (!_user) return false;              // la pestaña todavía no arrancó
+  return abrirModal(prefill);
 }
 
 async function revisarImport() {
-  const txt = _el.querySelector("#mc-paste").value;
-  const mercado = (_el.querySelector("#mc-imp-mercado") || {}).value || "byma";
-  const broker = ((_el.querySelector("#mc-imp-broker") || {}).value || "").trim();
+  const ta = $m("#mc-paste");
+  if (!ta) return;
+  const txt = ta.value;
+  const mercado = ($m("#mc-imp-mercado") || {}).value || "byma";
+  const broker = (($m("#mc-imp-broker") || {}).value || "").trim();
   setPref("valtia-mc-mercado", mercado); if (broker) setPref("valtia-mc-broker", broker);
   const { filas, errores } = parseImport(txt);
-  const prev = _el.querySelector("#mc-prev");
+  const prev = $m("#mc-prev");
+  if (!prev) return;
   if (!filas.length) {
     prev.innerHTML = `<div class="mc-hint mc-bad">No pude leer ninguna posición.
       ${errores.slice(0, 4).map(esc).join("<br>")}</div>`;
     return;
   }
   const bonos = await bonosSet();
+  // si cerraron el modal mientras se pedía el panel de bonos, no se revive la
+  // vista previa: cerrarModal() ya vació _porImportar y tiene que quedar vacío
+  if (!_modal || !prev.isConnected) return;
   filas.forEach(f => {
     f.ticker = normalizarTicker(f.ticker, mercado, bonos);
     f.broker = broker;
@@ -1974,8 +2303,8 @@ async function revisarImport() {
         <td>${f.precioCompra ? montoTxt(f.precioCompra, f.monedaHint) : "—"}</td><td>${esc(f.fecha || "—")}</td><td>${esc(broker || "—")}</td></tr>`).join("")}</tbody>
     </table></div>
     ${errores.length ? `<div class="mc-hint mc-bad">${errores.length} línea(s) que no pude leer:<br>${errores.slice(0, 4).map(esc).join("<br>")}</div>` : ""}
-    <button class="mc-btn" id="mc-imp-ok" style="margin-top:12px">Importar ${filas.length} ${filas.length === 1 ? "posición" : "posiciones"}</button>`;
-  const ok = _el.querySelector("#mc-imp-ok");
+    <button type="button" class="mc-btn" id="mc-imp-ok" style="margin-top:12px">Importar ${filas.length} ${filas.length === 1 ? "posición" : "posiciones"}</button>`;
+  const ok = $m("#mc-imp-ok");
   if (ok) ok.onclick = confirmarImport;
 }
 
@@ -1984,71 +2313,123 @@ async function confirmarImport() {
   const filas = _porImportar;
   _porImportar = null;
   if (!filas || !filas.length) return;
-  const btn = _el.querySelector("#mc-imp-ok");
+  // el mail se fija ACÁ y no se vuelve a mirar _user adentro del bucle: si en el
+  // medio se cambia de cuenta (reiniciarMiCartera), lo pegado por el usuario
+  // anterior no puede terminar en la cartera del nuevo
+  const email = _user && _user.email;
+  if (!email) return;
+  const btn = $m("#mc-imp-ok");
   if (btn) { btn.disabled = true; btn.textContent = "Importando…"; }
   const db = getFirestore(getApp());
   let ok = 0, fallo = 0;
   for (const f of filas) {
+    if (!_user || _user.email !== email) break;
     try {
       const id = f.ticker + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
-      await setDoc(doc(db, "inversores", _user.email, "cartera", id), {
+      await setDoc(doc(db, "inversores", email, "cartera", id), {
         ticker: f.ticker, cantidad: f.cantidad, precioCompra: f.precioCompra,
         fecha: f.fecha, broker: f.broker || "", moneda: f.moneda, factor: f.factor, creado: new Date().toISOString(),
       });
       ok++;
     } catch (e) { fallo++; }
   }
+  // si entró aunque sea una, el modal cumplió y el mensaje va abajo, como
+  // siempre; si no entró ninguna, queda abierto con el error a la vista
+  const msgModal = $m("#mc-mdl-msg");
+  if (ok) cerrarModal();
+  // si mientras se importaba se cambió de cuenta, la pestaña ya es de otro
+  // usuario (o no existe): ni se repinta ni se le escribe el mensaje encima
+  if (!_el || !_user || _user.email !== email) return;
   try { await releer(); } catch (e) {}
   pintar();
   if (ok) avisarPanel();
-  const msg2 = _el.querySelector("#mc-msg");
-  if (msg2) msg2.innerHTML = `<span style="color:var(--v3-up)">${ok} ${ok === 1 ? "posición importada" : "posiciones importadas"}.</span>` +
+  const texto = `<span style="color:var(--v3-up)">${ok} ${ok === 1 ? "posición importada" : "posiciones importadas"}.</span>` +
     (fallo ? ` <span style="color:var(--v3-dn)">${fallo} fallaron.</span>` : "") +
     ` <span style="color:var(--v3-mut)">Los precios aparecen en la próxima actualización (cada 15 min en rueda).</span>`;
+  const destino = ok ? _el.querySelector("#mc-msg") : msgModal;
+  if (destino && destino.isConnected) destino.innerHTML = texto;
 }
 
-async function agregar() {
-  const msg = _el.querySelector("#mc-msg");
-  const mercado = (_el.querySelector("#mc-mercado") || {}).value || "byma";
-  const broker = ((_el.querySelector("#mc-broker") || {}).value || "").trim();
-  const crudo = (_el.querySelector("#mc-ticker").value || "").trim().toUpperCase();
-  const cant = parseFloat(_el.querySelector("#mc-cant").value);
-  const pc = parseFloat(_el.querySelector("#mc-precio").value);
-  const fecha = _el.querySelector("#mc-fecha").value || "";
-  if (!crudo || !(cant > 0)) {
-    msg.innerHTML = `<span style="color:var(--v3-dn)">Completá al menos el ticker y la cantidad.</span>`;
+/* cómo se nombra una compra que no entró, para poder decir cuál falló */
+const compraTxt = c => cantTxt(c.cant) + (c.fecha ? " del " + fmtFecha(c.fecha) : " sin fecha");
+
+/* Guarda la lista de compras: UN DOCUMENTO POR RENGLÓN, con la misma forma de
+   siempre (ticker, cantidad, precioCompra, fecha, broker, moneda, factor).
+   El id lleva un sufijo al azar además de la hora: dos renglones guardados en
+   el mismo milisegundo compartirían id y el segundo pisaría al primero.
+   Al panel se le avisa UNA sola vez, al final, y no una por compra. */
+async function guardarCompras() {
+  if (!_modal) return;
+  const msg = $m("#mc-mdl-msg");
+  const rojo = t => `<span style="color:var(--v3-dn)">${t}</span>`;
+  const { mercado, crudo } = contextoModal();
+  const broker = (($m("#mc-broker") || {}).value || "").trim();
+  const todas = leerCompras();
+  if (todas.some(c => isFinite(c.cant) && c.cant < 0)) {
+    if (msg) msg.innerHTML = rojo("Las ventas se registran desde la fila del activo, con «Vendí»: sacá la cantidad negativa.");
     return;
   }
-  // un segundo clic mientras graba crearía otra posición igual
-  const btn = _el.querySelector("#mc-add");
-  if (btn) { if (btn.disabled) return; btn.disabled = true; }
+  const compras = todas.filter(c => isFinite(c.cant) && c.cant > 0);
+  if (!crudo || !compras.length) {
+    if (msg) msg.innerHTML = rojo("Poné el símbolo y al menos una compra con cantidad.");
+    return;
+  }
+  // el mail se fija ANTES de cualquier await y es el que se usa para escribir:
+  // si en el medio se cambia de cuenta (reiniciarMiCartera), las compras que
+  // tipeó el usuario anterior no pueden caer en la cartera del nuevo
+  const email = _user && _user.email;
+  if (!email) {
+    if (msg) msg.innerHTML = rojo("Se cerró la sesión: volvé a entrar y cargalas de nuevo.");
+    return;
+  }
+  // un segundo clic mientras graba duplicaría las compras
+  const btn = $m("#mc-add");
+  if (btn) { if (btn.disabled) return; btn.disabled = true; btn.textContent = "Guardando…"; }
   try {
     const bonos = await bonosSet();
     const tk = normalizarTicker(crudo, mercado, bonos);
     const moneda = monedaMercado(mercado, tk, bonos);
+    const factor = bonos.has(tk) ? 0.01 : 1;
     setPref("valtia-mc-mercado", mercado); if (broker) setPref("valtia-mc-broker", broker);
     const db = getFirestore(getApp());
-    const id = tk + "-" + Date.now().toString(36);
-    // moneda y factor: el formulario los sabe (mercado elegido). Sin ellos,
-    // hasta la próxima corrida del sync una compra en pesos se lee en dólares
-    await setDoc(doc(db, "inversores", _user.email, "cartera", id), {
-      ticker: tk, cantidad: cant, precioCompra: isFinite(pc) ? pc : 0, fecha,
-      broker, moneda,
-      factor: bonos.has(tk) ? 0.01 : 1,
-      creado: new Date().toISOString(),
-    });
+    let ok = 0, ultimo = null;
+    const fallaron = [];
+    for (const c of compras) {
+      if (!_user || _user.email !== email) { fallaron.push(c); continue; }
+      try {
+        const id = tk + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
+        // moneda y factor: el modal los sabe (mercado elegido). Sin ellos, hasta
+        // la próxima corrida del sync una compra en pesos se lee en dólares
+        await setDoc(doc(db, "inversores", email, "cartera", id), {
+          ticker: tk, cantidad: c.cant, precioCompra: isFinite(c.px) && c.px > 0 ? c.px : 0,
+          fecha: c.fecha || "", broker, moneda, factor, creado: new Date().toISOString(),
+        });
+        ok++;
+      } catch (e) { fallaron.push(c); ultimo = e; }
+    }
+    if (!ok) {
+      // sin `ultimo` no hubo error de Firestore: se cambió de cuenta en el medio
+      if (msg && msg.isConnected) msg.innerHTML = rojo(ultimo
+        ? `No se pudo guardar: ${esc(String(ultimo.message || ultimo).slice(0, 90))}`
+        : "Se cerró la sesión antes de guardar: volvé a entrar y cargalas de nuevo.");
+      return;
+    }
     const donde = mercado === "byma" ? `BYMA, en ${moneda === "USD" ? "dólares" : "pesos"}` : mercado === "cripto" ? "cripto, en dólares" : "exterior, en dólares";
-    await releer();
+    cerrarModal();
+    // la pestaña puede ser ya la de otra cuenta: no se repinta ni se le escribe
+    if (!_el || !_user || _user.email !== email) return;
+    try { await releer(); } catch (e) {}
     pintar();
-    // el repintado recrea el formulario: el mensaje se escribe recién ahora
-    const msg2 = _el.querySelector("#mc-msg");
-    if (msg2) msg2.innerHTML = `<span style="color:var(--v3-up)">${esc(tk)} agregado (${donde}${broker ? ", " + esc(broker) : ""}). El precio aparece en la próxima actualización — cada 15 min en rueda.</span>`;
     avisarPanel();
+    // el repintado rehace la pestaña: el mensaje se escribe recién ahora
+    const m2 = _el && _el.querySelector("#mc-msg");
+    if (m2) m2.innerHTML = `<span style="color:var(--v3-up)">${esc(tk)} agregado (${donde}${broker ? ", " + esc(broker) : ""})${ok > 1 ? `, ${ok} compras` : ""}. El precio aparece en la próxima actualización — cada 15 min en rueda.</span>`
+      + (fallaron.length ? " " + rojo(`De ${compras.length} compras entraron ${ok}: ${fallaron.length === 1 ? "quedó afuera" : "quedaron afuera"} ${esc(fallaron.map(compraTxt).join(" · "))}. ${fallaron.length === 1 ? "Cargala" : "Cargalas"} de nuevo.`) : "");
   } catch (e) {
-    msg.innerHTML = `<span style="color:var(--v3-dn)">No se pudo guardar: ${esc(String(e).slice(0, 90))}</span>`;
+    if (msg && msg.isConnected) msg.innerHTML = rojo(`No se pudo guardar: ${esc(String(e).slice(0, 90))}`);
   } finally {
-    // si salió bien, pintar() ya recreó el formulario con un botón nuevo
-    if (btn && btn.isConnected) btn.disabled = false;
+    // si salió bien, el modal ya se cerró y este botón no existe más
+    if (btn && btn.isConnected) { btn.disabled = false; btn.textContent = "Guardar"; }
   }
 }
 
@@ -2370,19 +2751,13 @@ async function recuperarAjuste(card, btn) {
 }
 
 /* llegada desde la ficha de un activo ("+ Agregar a Mi cartera"): el ticker
-   viene en la URL (?agregar=NVDA); se precarga UNA vez, con el mercado que
+   viene en la URL (?agregar=NVDA); se abre el modal UNA vez, con el mercado que
    corresponde a la ficha (dólares), y el cursor queda en la cantidad */
 function prellenarDesdeUrl() {
   let tk = "";
   try { tk = (new URLSearchParams(location.search).get("agregar") || "").trim().toUpperCase().slice(0, 12); } catch (e) {}
   if (!tk || !/^[A-Z0-9.\-]+$/.test(tk)) return;
-  abrirFormulario(true);
-  const inp = _el.querySelector("#mc-ticker"), sel = _el.querySelector("#mc-mercado");
-  if (!inp || !sel) return;
-  inp.value = tk;
-  sel.value = /^(BTC|ETH)(-USD)?$/.test(tk) ? "cripto" : "ext";
-  const cant = _el.querySelector("#mc-cant");
-  if (cant) cant.focus();
+  abrirFormulario(true, { ticker: tk, mercado: /^(BTC|ETH)(-USD)?$/.test(tk) ? "cripto" : "ext" });
   // que un F5 no vuelva a precargar
   try { history.replaceState(null, "", location.pathname + location.hash); } catch (e) {}
 }
@@ -2412,8 +2787,10 @@ async function quitar(id) {
    variables todavía tienen las posiciones, las ventas y los avisos del usuario
    anterior. Las llama el panel apenas detecta que cambió el mail. */
 export function reiniciarMiCartera() {
+  // el modal puede tener a medio cargar una compra de la cuenta anterior
+  cerrarModal();
   _el = null; _user = null; _pos = []; _precios = {}; _ventas = []; _ajustes = [];
-  _porImportar = null; _formAbierto = false; _listo = { email: null, p: null };
+  _porImportar = null; _listo = { email: null, p: null };
   // el desplegable guarda informes, noticias y eventos de la cuenta anterior
   _vista = null; _abierta = null; _ajAbierto = null; _pendiente = null; _detCache = {};
   _evCache = { email: null, t: 0, p: null };
@@ -2473,9 +2850,9 @@ export async function initMiCartera(user, el) {
         if (document.hidden || !_el || _el.offsetParent === null) return;
         const act = document.activeElement;
         if (act && _el.contains(act) && /INPUT|TEXTAREA/.test(act.tagName)) return;
-        // pestaña Importar abierta = el usuario está armando el paste: no pisar
-        const imp = _el.querySelector("#mc-modo-imp"), fm = _el.querySelector("#mc-form");
-        if (imp && imp.style.display !== "none" && fm && !fm.hidden) return;
+        // modal de alta abierto = el usuario está cargando compras o armando el
+        // paste de la planilla: no se toca nada hasta que lo cierre
+        if (_modal) return;
         // formulario de venta abierto: no pisarlo (salvo el aviso de "esperá el precio",
         // que justamente necesita el refresco para que el precio llegue)
         if (_el.querySelector(".mc-vrow:not(.mc-vrow-espera)")) return;

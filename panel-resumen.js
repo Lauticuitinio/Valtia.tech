@@ -14,7 +14,7 @@
 // No importa panel.js (sería circular): todo llega por ctx.
 import { base, mercadoDe } from './activos.js?v=7';
 import { eventos, TIPOS, TIPO_RESUMEN } from './panel-eventos.js?v=1';
-import { evolucionComparada, convertir } from './mi-cartera.js?v=40';
+import { evolucionComparada, convertir } from './mi-cartera.js?v=41';
 import { nombreBench, benchsDisponibles } from './evolucion.js?v=3';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 
@@ -135,14 +135,39 @@ const CSS = `
 .rs-vacio-p{font-size:13.5px;color:var(--v3-sub);line-height:1.65;margin:8px 0 0;max-width:640px}
 .rs-btn-oro{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#0E1830;background:var(--v3-goldL);padding:9px 16px;border-radius:7px;border:none;cursor:pointer;margin-top:14px;white-space:nowrap;transition:background .15s}
 .rs-btn-oro:hover{background:var(--v3-gold)}
-.rs-pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:12px}
-.rs-paso{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:10px;padding:16px 18px;cursor:pointer;transition:border-color .15s}
-.rs-paso:hover{border-color:var(--v3-gold)}
-.rs-paso .n{font:600 18px 'IBM Plex Mono',monospace;color:var(--v3-gold);line-height:1}
-.rs-paso.ok .n{color:var(--v3-up)}
-.rs-paso b{display:block;font:600 14px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin:8px 0 4px}
-.rs-paso p{font-size:12.5px;color:var(--v3-sub);line-height:1.6;margin:0}
 .rs-nota{font-size:12px;color:var(--v3-mut);line-height:1.65;margin:12px 0 0}
+/* la primera vez: bloque navy con la barra de avance, tres pasos y "Mientras tanto".
+   --v3-navy es oscuro en los dos temas, así que el texto de arriba va claro fijo. */
+.rs-hero{background:var(--v3-navy);border-radius:12px;padding:26px 28px;margin-bottom:16px;box-sizing:border-box}
+.rs-hero .k{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--v3-goldL)}
+.rs-hero h2{font:700 26px 'Playfair Display',serif;color:#F4F1EA;margin:10px 0 6px;line-height:1.2;overflow-wrap:anywhere}
+.rs-hero p{font-size:13.5px;line-height:1.65;color:rgba(244,241,234,.74);margin:0;max-width:62ch}
+.rs-barra{display:flex;gap:4px;margin-top:16px;max-width:360px}
+.rs-barra i{flex:1;height:5px;border-radius:3px;background:rgba(244,241,234,.18);display:block}
+.rs-barra i.ok{background:var(--v3-goldL)}
+.rs-pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:12px;margin-bottom:26px}
+.rs-paso{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.rs-paso.ok{border-color:var(--v3-up)}
+.rs-paso .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.rs-paso .n{font:600 26px 'IBM Plex Mono',monospace;color:var(--v3-serie);line-height:1;font-variant-numeric:tabular-nums}
+.rs-paso.ok .n{color:var(--v3-up)}
+.rs-paso .est{font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);background:var(--v3-neutro);padding:3px 8px;border-radius:4px;white-space:nowrap}
+.rs-paso.ok .est{color:var(--v3-up);background:var(--v3-upBg)}
+.rs-paso b{font:600 16px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);line-height:1.3}
+.rs-paso p{font-size:12.5px;color:var(--v3-sub);line-height:1.6;margin:0;flex:1}
+.rs-paso .rs-btn-oro{align-self:flex-start;margin-top:4px}
+.rs-paso.ok .rs-btn-oro{color:var(--v3-gold);background:none;border:1px solid var(--v3-line)}
+.rs-paso.ok .rs-btn-oro:hover{background:none;border-color:var(--v3-gold)}
+.rs-btn-oro[disabled]{opacity:.5;cursor:not-allowed}
+.rs-btn-oro[disabled]:hover{background:var(--v3-goldL)}
+.rs-pv-pie{margin-top:14px}
+.rs-mt-k{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);margin:26px 0 10px}
+.rs-mt{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:12px;margin-bottom:26px}
+.rs a.rs-mt-c{display:block;background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;padding:18px 20px;color:var(--v3-ink);transition:border-color .15s;min-width:0}
+.rs a.rs-mt-c:hover{border-color:var(--v3-gold);color:var(--v3-ink)}
+.rs-mt-c .k{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut)}
+.rs-mt-c .t{font:700 18px 'Playfair Display',serif;color:var(--v3-ink);margin:8px 0 4px;line-height:1.3;overflow-wrap:anywhere}
+.rs-mt-c .d{font-size:12.5px;color:var(--v3-sub);line-height:1.55;overflow-wrap:anywhere}
 .rs-alertas{margin-top:30px}
 .rs-sk{background:var(--v3-track);border-radius:6px;animation:rs-pulso 1.4s ease-in-out infinite}
 @keyframes rs-pulso{0%,100%{opacity:1}50%{opacity:.55}}
@@ -152,6 +177,10 @@ const CSS = `
   .rs-total{font-size:30px}
   .rs-col-h h3{font-size:20px}
   .rs-evo-leg .dif{margin-left:0;flex-basis:100%}
+  .rs-hero{padding:20px 16px}
+  .rs-hero h2{font-size:22px}
+  .rs-paso{padding:16px 16px}
+  .rs a.rs-mt-c{padding:16px}
 }
 @media (max-width:520px){
   .rs .rs-ev{grid-template-columns:44px minmax(0,1fr);gap:5px 12px;padding:12px 14px}
@@ -234,11 +263,6 @@ export async function renderResumen(el, ctx) {
     asegurarCss();
     if (!el.__rsClic) {
       el.addEventListener('click', clicResumen);
-      // los pasos son tarjetas con data-go (las abre panel.js): con el teclado, Enter o espacio
-      el.addEventListener('keydown', ev => {
-        const t = ev.target;
-        if ((ev.key === 'Enter' || ev.key === ' ') && t && t.matches && t.matches('.rs-paso[data-go]')) { ev.preventDefault(); t.click(); }
-      });
       el.__rsClic = true;
     }
     // si ya hay un Resumen dibujado (cambio de moneda, compra registrada) queda
@@ -255,7 +279,10 @@ export async function renderResumen(el, ctx) {
       return;
     }
     const tiene = (cc.pos || []).length > 0;
-    const nRadar = tiene ? 0 : ((await seguro(ctx.radar, [])) || []).length;
+    // la primera vez (todavía sin posiciones) necesita tres cosas más: el radar
+    // de hoy, las carteras del teaser y cuáles sigue. Se piden SOLO en ese caso,
+    // y con null por defecto para poder distinguir "no respondió" de "está vacío".
+    const prim = tiene ? null : await datosPrimeraVez(ctx);
     // lo que se movió la cartera hoy: ctx.variacionDia() (panel.js) suma el dHoy
     // que calcular() ya dejó en cada fila de cc.r, así que es la misma cifra que
     // pinta Mi cartera. Si el panel es viejo y todavía no la trae, la tarjeta
@@ -267,8 +294,8 @@ export async function renderResumen(el, ctx) {
     // una sola lectura de la agenda para las tarjetas de hoy y para la columna
     const evP = eventos(ctx, { desde: hoy, hasta: sumarDias(hoy, 30) }).catch(() => []);
     el.innerHTML = `<div class="rs">
-      ${tiene ? tarjetaPrincipal(cc, bset, vs, ctx, dia) : tarjetaVacia(cc, disc, vs, ctx, nRadar)}
-      <div class="rs-hoy" data-rs="hoy">${ESQ_HOY}</div>
+      ${tiene ? tarjetaPrincipal(cc, bset, vs, ctx, dia) : primeraVez(cc, disc, vs, ctx, prim)}
+      ${tiene ? `<div class="rs-hoy" data-rs="hoy">${ESQ_HOY}</div>` : ''}
       <div class="rs-cols">
         <section class="rs-min0"><div class="rs-col-h"><h3>${tiene ? 'Lo que viene en tus activos' : 'Lo que viene en el mercado'}</h3>
           <a class="rs-lnk" href="#panel/agenda" data-go="agenda">Agenda completa →</a></div>
@@ -281,7 +308,9 @@ export async function renderResumen(el, ctx) {
     </div>`;
     const q = s => el.querySelector(`[data-rs="${s}"]`);
     if (tiene && q('evo')) pintarEvo(q('evo'), ctx, vivo, 0);
-    pintarHoy(q('hoy'), ctx, vivo, cc, disc, bset, evP);
+    // sin posiciones no hay tira de "hoy": esas dos tarjetas (radar y Carteras
+    // Valtia) son justo lo que ahora muestra "Mientras tanto", y repetirlas sobra
+    if (tiene) pintarHoy(q('hoy'), ctx, vivo, cc, disc, bset, evP);
     pintarAgenda(q('agenda'), ctx, vivo, tiene, evP);
     pintarResearch(q('research'), ctx, vivo, cc, bset);
     if (tiene && typeof ctx.alertasMail === 'function') Promise.resolve().then(() => ctx.alertasMail()).catch(() => {});
@@ -448,26 +477,144 @@ function tarjetaPrincipal(cc, bset, vs, ctx, dia) {
   </div>`;
 }
 
-/* sin posiciones: la invitación a cargar y los tres pasos de siempre */
-function tarjetaVacia(cc, disc, vs, ctx, nRadar) {
-  const compras = ((disc && disc.log) || []).length;
-  const pasos = [
-    { ok: compras > 0, go: 'comprar', t: 'Mirá qué comprar hoy',
-      p: nRadar ? `La lectura Valtia de ${nRadar} activos, con los que están en zona de compra primero.` : 'La lectura Valtia de cada activo del radar, con los que están en zona de compra primero.' },
-    { ok: false, go: 'micartera', t: 'Cargá tu cartera', p: 'Lo que ya tenés en IOL, PPI, Balanz o Binance. Se importa pegando desde Excel.' },
-    { ok: !!(disc && disc.config), go: 'disciplina', t: 'Definí tu inversión mensual', p: 'Cuánto aportás por mes y en cuántas compras. Te marcamos el ritmo.' },
-  ];
+/* ───────────────────────── la primera vez (sin posiciones) ─────────────────────────
+   Lo que pide el SPEC (sección 8 · "Primera vez"): tres pasos con barra de avance y
+   un bloque "Mientras tanto". El estado de cada paso NO se guarda en ningún lado: se
+   deduce de datos reales (las carteras que sigue, la regla de inversión mensual), así
+   que si los cambia desde otra pestaña el avance queda bien igual.
+   "Mientras tanto" sale del teaser de carteras y del radar de hoy: si alguno de los
+   dos no contesta, esa tarjeta no se dibuja. Nada se inventa ni se rellena. */
+async function datosPrimeraVez(ctx) {
+  // null como valor por defecto a propósito: distingue "no respondió" de "está vacío"
+  const [act, ts, seg] = await Promise.all([
+    seguro(ctx.radar, null), seguro(ctx.teaser, null), seguro(ctx.seguidas, {})]);
+  return { act, ts, seg: seg || {} };
+}
+
+/* la cartera abierta: la del teaser que puede mirar cualquiera (visibilidad pública).
+   Si hubiera más de una, la de más historia; entre iguales, por nombre. */
+function tarjetaCarteraAbierta(ctx, ts) {
+  if (!Array.isArray(ts)) return '';
+  const abiertas = ts.filter(t => t && t.nombre && t.visibilidad === 'publico');
+  if (!abiertas.length) return '';
+  const t = abiertas.slice().sort((a, b) =>
+    String(a.fechaInicio || '9999').localeCompare(String(b.fechaInicio || '9999'))
+    || String(a.nombre).localeCompare(String(b.nombre)))[0];
+  // '' no es cero: Number('') da 0 y eso sería inventarle un retorno de 0,00%
+  const r = t.retorno == null || t.retorno === '' ? NaN : Number(t.retorno);
+  const ret = Number.isFinite(r) ? r : null;
+  const desde = t.fechaInicio ? `Desde el ${fechaCorta(ctx, t.fechaInicio)}` : 'Desde su lanzamiento';
+  const d = ret != null
+    ? `${desde} hizo <b class="${upCls(ret)}">${N(pctS(ret, 2))}</b>. Mirá cómo está armada.`
+    : 'Mirá cómo está armada y qué tiene adentro. Todavía no publicamos su retorno.';
+  return `<a class="rs-mt-c" href="#panel/carteras" data-go="carteras">
+    <div class="k">Cartera abierta</div><div class="t">${ctx.esc(t.nombre)}</div><div class="d">${d}</div></a>`;
+}
+
+/* la rotación reciente, que antes salía en la tira de "hoy" (tarjeta b de pintarHoy).
+   Sin posiciones esa tira ya no se dibuja, así que el aviso vive acá: si el usuario
+   sigue alguna cartera, solo de esas; si no, la más reciente de las últimas dos
+   semanas. Sin rotación reciente no se dibuja y queda la cartera abierta. */
+function tarjetaRotacion(ctx, ts, seg, hoy) {
+  if (!Array.isArray(ts)) return '';
+  const corte = sumarDias(hoy, -14), hayseg = Object.keys(seg || {}).length > 0;
+  const rot = ts.filter(t => t && t.nombre && t.ultimaRotacion
+      && String(t.ultimaRotacion.fecha || '').slice(0, 10) >= corte
+      && (!hayseg || seg[t.id]))
+    .sort((a, b) => String(b.ultimaRotacion.fecha).localeCompare(String(a.ultimaRotacion.fecha)))[0];
+  if (!rot) return '';
+  const u = rot.ultimaRotacion, abre = rot.visibilidad === 'publico' || !!ctx.S.pro;
+  const mov = [u.accion, u.ticker].filter(Boolean).map(x => ctx.esc(x)).join(' ');
+  const tit = abre && u.ticker
+    ? `${ctx.esc(rot.nombre)} rotó: ${mov}`
+    : `${ctx.esc(rot.nombre)} rotó el ${fechaCorta(ctx, u.fecha)}`;
+  // con la cartera cerrada y sin PRO no se puede ver qué cambió: no se promete
+  const d = (seg && seg[rot.id] ? 'La seguís. ' : '')
+    + (abre ? 'Mirá qué cambió y cómo queda armada.' : 'La composición y las rotaciones son de PRO.');
+  return `<a class="rs-mt-c" href="#panel/carteras" data-go="carteras">
+    <div class="k">Carteras Valtia</div><div class="t">${tit}</div><div class="d">${d}</div></a>`;
+}
+
+/* el radar de hoy: cuántos están en zona de compra y los primeros dos o tres.
+   La lista es la MISMA que arma Qué comprar (ctx.ordenComprar, que además de
+   ordenar deja afuera lo que no tiene lectura), así que el número que se
+   promete acá es el que se ve al entrar. Si esa lista queda vacía, Qué comprar
+   tampoco tiene nada para mostrar: la tarjeta no se dibuja. */
+function tarjetaRadarHoy(ctx, act) {
+  if (!Array.isArray(act) || !act.length) return '';
+  let orden = [];
+  try { if (typeof ctx.ordenComprar === 'function') orden = ctx.ordenComprar(act) || []; } catch (e) { orden = []; }
+  if (!orden.length) return '';
+  const zona = orden.filter(a => a && a.entrada && a.sym);
+  const tit = zona.length
+    ? `${N(zona.length)} ${zona.length === 1 ? 'activo' : 'activos'} en zona de compra`
+    : 'Hoy ninguno está en zona de compra';
+  let d;
+  if (zona.length) {
+    const tks = zona.slice(0, 3).map(a => `<b>${ctx.esc(a.sym)}</b>`);
+    const lista = tks.length > 1 ? tks.slice(0, -1).join(', ') + ' y ' + tks[tks.length - 1] : tks[0];
+    d = `${lista}${zona.length > 3 ? ', entre otros' : ''}. Mirá la lectura Valtia de cada uno.`;
+  } else {
+    d = `El radar sigue ${N(orden.length)} ${orden.length === 1 ? 'activo' : 'activos'} con su lectura Valtia: entrá a ${orden.length === 1 ? 'verlo' : 'verlos'} igual.`;
+  }
+  return `<a class="rs-mt-c" href="#panel/comprar" data-go="comprar">
+    <div class="k">Radar de hoy</div><div class="t">${tit}</div><div class="d">${d}</div></a>`;
+}
+
+function primeraVez(cc, disc, vs, ctx, prim) {
   const verif = !!ctx.S.verificado;
-  return `<div class="rs-card">
-    <div class="rs-k">Valor de tu cartera</div>
-    <h2 class="rs-vacio-t">Todavía no cargaste posiciones</h2>
-    <p class="rs-vacio-p">Tu panel arma un panorama completo de tus inversiones, estén en el broker que estén.</p>
-    ${verif ? '<button type="button" class="rs-btn-oro" data-rs-agregar>+ Agregar posición</button>' : ''}
-    ${lineaRealizado(cc, vs, ctx, true)}
-    <div class="rs-k sm" style="margin-top:22px">Tres pasos para empezar</div>
-    <div class="rs-pasos">${pasos.map((s, i) => `<div class="rs-paso${s.ok ? ' ok' : ''}" data-go="${s.go}" role="link" tabindex="0"><div class="n">${s.ok ? '✓' : '0' + (i + 1)}</div><b>${s.t}</b><p>${s.p}</p></div>`).join('')}</div>
-    ${!verif ? '<p class="rs-nota">Verificá tu email para activar Mi cartera y tu inversión mensual (te mandamos el link al registrarte).</p>' : ''}
-  </div>`;
+  const pv = prim || { act: null, ts: null, seg: {} };
+  const nSeg = Object.keys(pv.seg || {}).length;
+  const cfg = (disc && disc.config) || null;
+  const aporte = cfg && Number(cfg.aporte) > 0 ? Number(cfg.aporte) : null;
+  const nCompras = cfg && Number(cfg.compras) > 0 ? Math.round(Number(cfg.compras)) : null;
+  // el aviso que ya estaba: sin mail verificado, Mi cartera y la regla no se pueden tocar
+  const gate = ' disabled title="Verificá tu email para activarlo"';
+
+  const pasos = [
+    // 1 · acá siempre está pendiente: con una posición cargada esta pantalla no existe
+    { ok: false, t: 'Cargá tu primera posición',
+      p: 'Lo que ya tenés en IOL, PPI, Balanz o Binance. Con la cantidad y el precio de compra alcanza.',
+      cta: '+ Agregar posición', attr: 'data-rs-agregar', gate: !verif },
+    // 2 · el botón NO se apaga sin verificar (las carteras abiertas se pueden
+    //     mirar igual), pero ahí el texto no promete seguirlas: el botón
+    //     "Seguir" de Carteras solo aparece con el mail verificado
+    { ok: nSeg > 0, t: 'Elegí una cartera de referencia',
+      p: nSeg > 0
+        ? `Ya seguís ${N(nSeg)} ${nSeg === 1 ? 'cartera' : 'carteras'}: acá te avisamos cuando ${nSeg === 1 ? 'rota' : 'rotan'}.`
+        : verif
+          ? 'Seguí una de las Carteras Valtia para compararte y enterarte cuando rota.'
+          : 'Mirá las Carteras Valtia y quedate con la que va con vos. Para seguirla necesitás verificar tu email.',
+      cta: nSeg > 0 || !verif ? 'Ver carteras' : 'Elegir cartera', attr: 'data-go="carteras"', gate: false },
+    { ok: !!cfg, t: 'Armá tu inversión mensual',
+      p: cfg
+        ? (aporte && nCompras
+          ? `Tu regla: ${N(ctx.money(aporte, 'USD'))} por mes en ${N(nCompras)} ${nCompras === 1 ? 'compra' : 'compras'}.`
+          : 'Ya tenés tu regla armada.')
+        : 'Cuánto aportás por mes y en cuántas compras. Te marcamos el ritmo.',
+      cta: cfg ? 'Ver mi regla' : 'Armar mi regla', attr: 'data-go="disciplina"', gate: !verif },
+  ];
+  const hechos = pasos.filter(s => s.ok).length;
+
+  // primero la rotación reciente (es novedad); si no hay, la cartera abierta
+  const abierta = tarjetaRotacion(ctx, pv.ts, pv.seg, ctx.hoyAR()) || tarjetaCarteraAbierta(ctx, pv.ts);
+  const radar = tarjetaRadarHoy(ctx, pv.act);
+  const pie = lineaRealizado(cc, vs, ctx, true)
+    + (!verif ? '<p class="rs-nota">Verificá tu email para activar Mi cartera y tu inversión mensual (te mandamos el link al registrarte).</p>' : '');
+
+  return `<div class="rs-hero">
+      <div class="k">Primeros pasos · ${N(hechos)} de ${N(3)}</div>
+      <h2>Tu panel está vacío. Arranquemos por acá.</h2>
+      <p>Con tres cosas el panel empieza a trabajar solo: sabe qué tenés, qué cartera te sirve de referencia y cuánto querés poner por mes.</p>
+      <div class="rs-barra" role="img" aria-label="Avance: ${hechos} de 3 pasos hechos">${pasos.map(s => `<i class="${s.ok ? 'ok' : ''}"></i>`).join('')}</div>
+    </div>
+    <div class="rs-pasos">${pasos.map((s, i) => `<div class="rs-paso${s.ok ? ' ok' : ''}">
+      <div class="top"><span class="n">${i + 1}</span><span class="est">${s.ok ? 'Hecho' : 'Pendiente'}</span></div>
+      <b>${s.t}</b><p>${s.p}</p>
+      <button type="button" class="rs-btn-oro" ${s.attr}${s.gate ? gate : ''}>${s.cta}</button>
+    </div>`).join('')}</div>
+    ${pie ? `<div class="rs-pv-pie">${pie}</div>` : ''}
+    ${abierta || radar ? `<div class="rs-mt-k">Mientras tanto</div><div class="rs-mt">${abierta}${radar}</div>` : ''}`;
 }
 
 /* ───────────────────────── evolución comparada ───────────────────────── */
