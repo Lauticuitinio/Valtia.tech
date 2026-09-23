@@ -186,6 +186,22 @@ const STYLE = `
   border:1px solid var(--v3-line);padding:6px 12px;border-radius:5px;cursor:pointer;white-space:nowrap}
 .mc-del:hover{border-color:var(--v3-dn)}
 
+/* ── "Tus compras": un activo comprado varias veces es UNA fila (como en Senta),
+   y su desplegable lista cada compra con SUS botones, porque las ventas y los
+   ajustes siguen siendo por compra. Cada renglón es flex con salto de línea: a
+   375 px la fecha, los números y los botones se acomodan en varias líneas y no
+   aparece desplazamiento horizontal. ── */
+.mc3-cmps{padding:0 18px 20px}
+.mc3-cmp{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:10px 0;border-top:1px solid var(--v3-line2)}
+.mc3-cmp-i{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;flex:1 1 260px;min-width:0;font-size:12.5px;color:var(--v3-sub)}
+.mc3-cmp-i b{font:600 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-ink);white-space:nowrap}
+.mc3-cmp-i .n{font:500 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-ink);white-space:nowrap}
+.mc3-cmp-i .n em{font:400 11.5px 'IBM Plex Sans',sans-serif;font-style:normal;color:var(--v3-warn)}
+.mc3-cmp-i .pl{font:600 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mc3-cmp>.mc3-acc{margin-top:0;flex:none}
+.mc3-cmp>.mc3-ajp{flex-basis:100%;margin-top:0}
+.mc3-cmps-nota{font-size:11.5px;color:var(--v3-mut);line-height:1.6;margin-top:10px}
+
 /* ── venta: el formulario que abre "Vendí" ── */
 .mc-vrow{background:var(--v3-hover);border-bottom:1px solid var(--v3-line);border-left:3px solid var(--v3-serie);padding:14px 18px;cursor:default}
 .mc-vform{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;padding:4px 0}
@@ -370,7 +386,9 @@ const STYLE = `
     grid-template-areas:"act act rot" "meta meta rot" "val pl rot" "hoy hoy rot";
     gap:6px 12px;padding:12px 14px}
   .mc3-row>.c-act{grid-area:act}
-  .mc3-row>.c-meta{display:block;grid-area:meta}
+  /* la línea de resumen puede saltar: con las compras juntas el broker dice
+     "IOL + Balanz" y en un solo renglón el precio de hoy quedaba cortado ("$90.…") */
+  .mc3-row>.c-meta{display:block;grid-area:meta;white-space:normal}
   .mc3-row>.c-val{grid-area:val;text-align:left}
   .mc3-row>.c-pl{grid-area:pl}
   .mc3-row>.c-hoy{grid-area:hoy;text-align:left;font-size:12px}
@@ -381,6 +399,7 @@ const STYLE = `
   .mc3-grp{padding:9px 14px}
   .mc3-mets{padding:14px 14px 0}
   .mc3-cols{padding:14px 14px 18px}
+  .mc3-cmps{padding:0 14px 18px}
   .mc-vrow{padding:12px 14px}
 }
 /* en el celular el modal ocupa toda la pantalla, y la compra pasa a dos
@@ -455,6 +474,89 @@ export function agruparPorBroker(filas, total) {
              plPct: costo > 0 ? (valor - costo) / costo * 100 : null,
              peso: total > 0 ? valor / total * 100 : null, ...hoyDe(fs) };
   }).sort((a, b) => b.valor - a.valor || a.broker.localeCompare(b.broker));
+}
+
+/* ── UNA FILA POR ACTIVO (lo que pidió Lauti: "un precio promedio de compra,
+   no dos listas de compra, como Senta") ──
+   Por detrás NADA cambia: cada compra sigue siendo su propio documento en
+   inversores/{email}/cartera y calcular() sigue devolviendo una fila por
+   documento, que es lo que suman los totales, el Resumen y los gráficos. Esta
+   función junta esas filas SOLO para mostrarlas.
+   · Clave: ticker + factor de lámina. Dos compras de GGAL.BA son una fila; un
+     precio cada 100 VN y uno por unidad no se promedian, así que no se juntan.
+   · Promedio de compra PONDERADO por cantidad, la misma cuenta que hace el
+     modal de alta en vivo (una compra sin precio entra con precio 0: suma
+     cantidad y no suma plata; la fila lo avisa con una pastilla). Va en la
+     moneda de las compras; si quedaron en monedas distintas, se arma con el
+     dCompra que ya convirtió calcular() —la cotización que usa el resto de la
+     tabla— y la fila queda en la moneda de la vista.
+   · valor, costo, "Hoy" y resultado son las sumas de las compras, con el mismo
+     criterio que los totales de calcular() (el costo entra solo si la compra
+     tiene valor): sumar las filas de acá da lo mismo que sumar las de allá.
+   · Con UNA sola compra la fila es exactamente la de siempre: se conserva el
+     documento entero, con su id. Con varias, el id es "act:" + clave (+ sufijo,
+     para que el mismo activo repartido en dos brokers tenga dos ids).
+   · brokers: si las compras están en varios, la fila lo dice ("IOL + PPI" o
+     "3 brokers") y nunca los mezcla en silencio.
+   Devuelve filas con la misma forma que las de calcular() más compras (las
+   filas originales), brokers, sinPrecio (cuántas compras no tienen precio) y
+   promFalta (monedas distintas y sin dólar: no hay promedio posible). */
+export function agruparPorActivo(filas, total, cur = "ARS", sufijo = "") {
+  const m = new Map();
+  (filas || []).forEach(f => {
+    const px = f.px || {};
+    const fac = Number(f.factor) > 0 ? Number(f.factor) : (Number(px.factor) > 0 ? Number(px.factor) : 1);
+    const k = String(f.ticker || "").toUpperCase() + "|" + fac;
+    if (!m.has(k)) m.set(k, { k, fac, compras: [] });
+    m.get(k).compras.push(f);
+  });
+  const n = v => Number(v) || 0;
+  const unicos = arr => [...new Set(arr)];
+  return [...m.values()].map(({ k, fac, compras }) => {
+    const brokers = unicos(compras.map(c => String(c.broker || "").trim()));
+    if (compras.length === 1) return { ...compras[0], compras, brokers };
+    const c0 = compras[0];
+    const cantidad = compras.reduce((s, c) => s + n(c.cantidad), 0);
+    const mismaMon = compras.every(c => c.moneda === c0.moneda);
+    const conPrecio = compras.filter(c => n(c.precioCompra) > 0);
+    // el promedio ya convertido (la conversión es lineal: es el mismo número
+    // que convertir el promedio); null si a alguna compra le faltó el dólar
+    const dCompra = conPrecio.some(c => c.dCompra == null) ? null
+      : cantidad > 0 ? conPrecio.reduce((s, c) => s + n(c.cantidad) * c.dCompra, 0) / cantidad : 0;
+    let precioCompra = 0, promFalta = false;
+    if (mismaMon) precioCompra = cantidad > 0 ? conPrecio.reduce((s, c) => s + n(c.cantidad) * n(c.precioCompra), 0) / cantidad : 0;
+    else if (dCompra == null) promFalta = conPrecio.length > 0;
+    else precioCompra = dCompra;
+    const moneda = mismaMon ? c0.moneda : cur;
+    const conValor = compras.filter(c => c.dValor != null);
+    const dValor = conValor.length ? conValor.reduce((s, c) => s + c.dValor, 0) : null;
+    const dCosto = conValor.length ? conValor.reduce((s, c) => s + (c.dCosto ?? 0), 0)
+                 : compras.every(c => c.dCosto != null) ? compras.reduce((s, c) => s + c.dCosto, 0) : null;
+    const dPl = (dValor != null && dCosto != null) ? dValor - dCosto : null;
+    const costo = mismaMon ? compras.reduce((s, c) => s + n(c.costo), 0) : dCosto;
+    const valor = mismaMon ? (compras.every(c => c.valor != null) ? compras.reduce((s, c) => s + c.valor, 0) : null) : dValor;
+    const plPct = mismaMon ? ((valor != null && costo > 0) ? (valor - costo) / costo * 100 : null)
+                           : ((dPl != null && dCosto > 0) ? dPl / dCosto * 100 : null);
+    const conHoy = compras.filter(c => c.dHoy != null);
+    const dHoy = conHoy.length ? conHoy.reduce((s, c) => s + c.dHoy, 0) : null;
+    const conHoyOrig = compras.filter(c => c.hoy != null);
+    const hoy = conHoyOrig.length ? conHoyOrig.reduce((s, c) => s + c.hoy, 0) : null;
+    // la variación del día es del activo: es la misma en todas sus compras
+    const hoyPct = conHoy.length ? conHoy[0].hoyPct : null;
+    // la fecha de la primera compra (para "desde el …" del costo total)
+    const fechas = compras.map(c => String(c.fecha || "").slice(0, 10)).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+    const nombres = brokers.map(b => b || "sin broker");
+    return {
+      id: "act:" + k + sufijo, ticker: c0.ticker, compras, brokers,
+      broker: brokers.length === 1 ? brokers[0] : brokers.length === 2 ? nombres.join(" + ") : `${brokers.length} brokers`,
+      brokerTitulo: nombres.join(" · "),
+      cantidad, precioCompra, moneda, factor: fac, fecha: fechas[0] || "",
+      px: c0.px, actual: c0.actual, dActual: c0.dActual,
+      costo, valor, dCompra, dCosto, dValor, dPl, plPct, hoyPct, hoy, dHoy,
+      peso: total > 0 && dValor != null ? dValor / total * 100 : null,
+      sinPrecio: compras.length - conPrecio.length, promFalta,
+    };
+  });
 }
 
 /* El panel de bonos se pide UNA vez y se guarda la PROMESA, no el valor.
@@ -737,9 +839,13 @@ function barras(titulo, partes, total, nota) {
 
 const MERCADO_NOMBRE = { byma: "BYMA (pesos)", ext: "Exterior (dólares)", cripto: "Cripto", rf: "Renta fija" };
 
-function analisis(r, cur, bonos, extra) {
+function analisis(r, cur, bonos, extra, activos) {
   const con = r.filas.filter(f => f.dValor != null && f.dValor > 0);
-  if (con.length < 2) return "";
+  // la concentración y la cuenta de posiciones van por ACTIVO (dos compras de
+  // KO son una posición, como en la tabla); las barras de abajo suman las
+  // compras, que da lo mismo (y "Por broker" necesita cada compra en su broker)
+  const porActivo = (activos || con).filter(f => f.dValor != null && f.dValor > 0);
+  if (porActivo.length < 2) return "";
   const total = con.reduce((s, f) => s + f.dValor, 0);
   const suma = fn => {
     const m = new Map();
@@ -753,17 +859,17 @@ function analisis(r, cur, bonos, extra) {
   const sinSector = total - clasif;
   const porBroker = suma(f => String(f.broker || "").trim() || "Sin broker");
 
-  // concentración: cuánto pesan las posiciones más grandes
-  const pesos = con.map(f => f.dValor / total * 100).sort((a, b) => b - a);
+  // concentración: cuánto pesan los activos más grandes
+  const pesos = porActivo.map(f => f.dValor / total * 100).sort((a, b) => b - a);
   const topN = n => pesos.slice(0, n).reduce((s, x) => s + x, 0);
-  const mayor = con.slice().sort((a, b) => b.dValor - a.dValor)[0];
+  const mayor = porActivo.slice().sort((a, b) => b.dValor - a.dValor)[0];
   // el aviso de concentración vive ahora en la card "Peso de cada posición" (arriba
   // de la tabla): repetirlo acá, con otro umbral, decía lo mismo dos veces
 
   return `<div class="mc-an">
     <h4>Análisis de tu cartera</h4>
     <div class="sub">Cómo está repartido lo que tenés, sumando todos tus brokers. Calculado sobre
-      ${con.length} de ${r.filas.length} posiciones (las que ya tienen precio).</div>
+      ${porActivo.length} de ${(activos || r.filas).length} posiciones (las que ya tienen precio).</div>
     <div class="mc-angrid">
       ${barras("Por moneda", porMoneda, total,
         porMoneda.length > 1 ? "El % en pesos es tu exposición al peso, aunque lo mires en dólares." : "")}
@@ -776,7 +882,7 @@ function analisis(r, cur, bonos, extra) {
         <div class="mc-bar"><span class="n">Mayor posición</span><span class="t2"><i style="width:${Math.min(100, pesos[0]).toFixed(1)}%"></i></span><span class="p">${pesos[0].toFixed(0)}%</span></div>
         ${pesos.length >= 3 ? `<div class="mc-bar"><span class="n">Top 3</span><span class="t2"><i style="width:${Math.min(100, topN(3)).toFixed(1)}%"></i></span><span class="p">${topN(3).toFixed(0)}%</span></div>` : ""}
         ${pesos.length >= 5 ? `<div class="mc-bar"><span class="n">Top 5</span><span class="t2"><i style="width:${Math.min(100, topN(5)).toFixed(1)}%"></i></span><span class="p">${topN(5).toFixed(0)}%</span></div>` : ""}
-        <div class="nota">${con.length} posiciones con precio. La mayor es <b>${esc(base(mayor.ticker))}</b>.</div>
+        <div class="nota">${porActivo.length} posiciones con precio. La mayor es <b>${esc(base(mayor.ticker))}</b>.</div>
       </div>
       ${extra || ""}
     </div>
@@ -785,7 +891,15 @@ function analisis(r, cur, bonos, extra) {
 
 /* Renta fija: qué rinde cada especie y qué vas a cobrar en los próximos meses */
 function analisisRentaFija(r, bonos, panel, flujos, hoy) {
-  const rf = r.filas.filter(f => esRentaFija(f.ticker, bonos));
+  // una especie por renglón: las compras del mismo bono se suman (los nominales
+  // son el total, y un cupón no se lista dos veces)
+  const porEsp = new Map();
+  r.filas.filter(f => esRentaFija(f.ticker, bonos)).forEach(f => {
+    const k = String(f.ticker || "").toUpperCase();
+    if (!porEsp.has(k)) porEsp.set(k, { ticker: f.ticker, cantidad: 0 });
+    porEsp.get(k).cantidad += Number(f.cantidad) || 0;
+  });
+  const rf = [...porEsp.values()];
   if (!rf.length) return "";
   const sob = [...(panel.soberanos || []), ...(panel.bopreal || [])];
   // CER y dólar linked no están en soberanos ni en tasa_fija: su vencimiento
@@ -1135,13 +1249,15 @@ function metricas_(f, opts, cur) {
   const out = [];
   const conCosto = Number(f.precioCompra) > 0;
   const otra = f.moneda && f.moneda !== cur;
+  // con varias compras el promedio es ponderado por cantidad (agruparPorActivo)
+  const nc = (f.compras || []).length > 1 ? `${f.compras.length} compras` : "";
   if (conCosto) {
     const orig = money(Number(f.precioCompra), f.moneda);
     out.push(f.dCompra != null
-      ? ["Precio promedio", money(f.dCompra, cur), [otra ? orig : "", fac !== 1 ? "cada 100 VN" : ""].filter(Boolean).join(" · ")]
-      : ["Precio promedio", orig, "sin dólar para convertir"]);
+      ? ["Precio promedio", money(f.dCompra, cur), [otra ? orig : "", fac !== 1 ? "cada 100 VN" : "", nc].filter(Boolean).join(" · ")]
+      : ["Precio promedio", orig, ["sin dólar para convertir", nc].filter(Boolean).join(" · ")]);
     if (f.dCosto != null) out.push(["Costo total", money(f.dCosto, cur), f.fecha && fmtFecha(f.fecha) !== "—" ? "desde el " + fmtFecha(f.fecha) : ""]);
-  } else out.push(["Precio promedio", "—", "sin cargar", "var(--v3-mut)"]);
+  } else out.push(["Precio promedio", "—", f.promFalta ? "sin dólar para el promedio" : "sin cargar", "var(--v3-mut)"]);
   if (f.peso != null) out.push(["Peso en cartera", num(f.peso, 1) + "%", f.peso > 30 ? "concentrada" : "", f.peso > 30 ? "var(--v3-warn)" : ""]);
   // variación del PRECIO por período (no es lo que ganaste: eso es el Resultado)
   const dg = desglose(f.ticker, opts.desg || {}, px, f);
@@ -1244,13 +1360,75 @@ function colEvento(f, evs, bonos) {
     <div class="mc3-txt">${esc(ev.k)} ${esc(ev.txt || "")}${ev.sub ? " " + esc(cap(ev.sub)) + "." : ""}</div>`;
 }
 
+/* los botones de una compra (un documento): Vendí, y Ajustar con el broker y
+   Quitar. Son los MISMOS botones y los mismos data-* que tenía la fila cuando
+   cada compra era una fila: engancharDetalle() los encuentra igual, y cada uno
+   lleva el id del documento, así la venta, el broker y la baja siguen siendo
+   por compra. `sola`: la posición tiene una única compra y se ve como siempre. */
+function accionesHTML(id, brk, aj, sola) {
+  return `<div class="mc3-acc">
+      <button type="button" class="mc3-b vend" data-vender="${id}" title="Registrar una venta de esta ${sola ? "posición" : "compra"}">Vendí</button>
+      <button type="button" class="mc3-b aj" data-ajustar="${sola ? "" : id}" aria-expanded="${aj}">Ajustar</button>
+    </div>
+    <div class="mc3-ajp" data-ajp${aj ? "" : " hidden"}>
+      <div class="fila">Broker: <span class="mc-brk" data-brk="${id}" title="Cambiar broker">${esc(brk || "sin broker")}</span>
+        <span class="mc-mut">tocalo para cambiarlo</span></div>
+      <div class="fila"><button type="button" class="mc-del" data-del="${id}" title="Quitar (si la cargaste por error)">${sola ? "Quitar de mi cartera" : "Quitar esta compra"}</button>
+        <span class="mc-mut">si la cargaste por error. Si la vendiste, usá «Vendí» para que quede el resultado.</span></div>
+    </div>`;
+}
+
+/* "Tus compras": con varias compras del mismo activo, el desplegable las lista
+   una por una —fecha, broker, cantidad, precio y resultado propio— cada una
+   con sus botones. Cada compra es su documento: nada se junta por detrás. */
+function comprasHTML(f, cur, bonos) {
+  const compras = f.compras || [];
+  if (compras.length < 2) return "";
+  const rf = esRentaFija(f.ticker, bonos);
+  const orden = [...compras].sort((a, b) => String(a.fecha || "").localeCompare(String(b.fecha || ""))
+                                          || String(a.creado || "").localeCompare(String(b.creado || "")));
+  const uno = c => {
+    const id = esc(c.id), aj = _ajAbierto === c.id;
+    const brk = String(c.broker || "").trim();
+    const px = c.px || {};
+    const fac = Number(c.factor) > 0 ? Number(c.factor) : (Number(px.factor) > 0 ? Number(px.factor) : 1);
+    const precio = Number(c.precioCompra) > 0
+      ? (c.dCompra != null ? money(c.dCompra, cur) : money(Number(c.precioCompra), c.moneda)) : "";
+    // sin precio de compra no hay resultado propio que mostrar (sería todo el
+    // valor, como ya evita el gráfico); la fila lo avisa con su pastilla
+    const pl = (c.dPl == null || !precio) ? (c.dValor != null ? `<span class="mc-mut" title="Sin precio de compra no se puede calcular el resultado de esta compra">resultado —</span>` : "")
+      : `<span class="pl ${c.dPl >= 0 ? "mc-pos" : "mc-neg"}" title="Resultado de esta compra sola">${moneyS(c.dPl, cur)}${c.plPct != null ? ` (${pct1(c.plPct)})` : ""}</span>`;
+    return `<div class="mc3-cmp" data-compra="${id}">
+      <div class="mc3-cmp-i">
+        <b>${fmtFecha(c.fecha) !== "—" ? fmtFecha(c.fecha) : "sin fecha"}</b>
+        <span>${esc(brk || "sin broker")}</span>
+        <span class="n" data-cantde="${id}">${cantFmt(c.cantidad)}${rf ? " VN" : ""}</span>
+        <span class="n">${precio ? "a " + precio + (fac !== 1 ? " / 100 VN" : "") : "<em>sin precio de compra</em>"}</span>
+        ${c.dValor != null ? `<span class="n">= ${money(c.dValor, cur)}</span>` : ""}
+        ${pl}
+      </div>
+      ${accionesHTML(id, brk, aj, false)}
+    </div>`;
+  };
+  return `<div class="mc3-cmps"><div class="mc3-ck">Tus compras · ${compras.length}</div>
+    ${orden.map(uno).join("")}
+    <div class="mc3-cmps-nota">La fila de arriba junta estas compras: cantidad total y precio promedio ponderado.
+      Las ventas y los ajustes van por compra: «Vendí» registra la venta contra el precio de esa compra.</div>
+  </div>`;
+}
+
 function detalleHTML(f, opts, cur) {
   const ctxOk = typeof window !== "undefined" && !!window.__valtiaCtx;
   const c = ctxOk ? _detCache[f.id] : null;
   const esperando = t => `<div class="mc3-ck">${t}</div><div class="mc3-txt" style="margin-top:8px">Buscando…</div>`;
-  const id = esc(f.id), aj = _ajAbierto === f.id;
+  const id = esc(f.id);
+  // con una sola compra los botones van donde siempre (tercera columna); con
+  // varias, cada compra lleva los suyos en "Tus compras", más abajo
+  const sola = (f.compras || []).length < 2;
+  const aj = sola && _ajAbierto === f.id;
   const brk = String(f.broker || "").trim();
-  const link = linkDe(f.ticker, opts.bonos || new Set());
+  const bonos = opts.bonos || new Set();
+  const link = linkDe(f.ticker, bonos);
   return `<div class="mc3-det" data-det="${id}">
     <div class="mc3-mets" data-mets>${metricas(f, opts, cur).map(m => metHTML(m)).join("")}${c && c.pe ? c.pe : ""}</div>
     <div class="mc3-cols">
@@ -1258,18 +1436,10 @@ function detalleHTML(f, opts, cur) {
       <div class="mc3-col" data-dn>${c ? c.not : esperando("Últimas noticias")}</div>` : ""}
       <div class="mc3-col">
         ${ctxOk ? `<div data-de>${c ? c.ev : esperando("Próximo evento")}</div>` : (link ? `<a class="mc3-lk" href="${link}" style="margin-top:0">Ver la ficha →</a>` : "")}
-        <div class="mc3-acc">
-          <button type="button" class="mc3-b vend" data-vender="${id}" title="Registrar una venta de esta posición">Vendí</button>
-          <button type="button" class="mc3-b aj" data-ajustar aria-expanded="${aj}">Ajustar</button>
-        </div>
-        <div class="mc3-ajp" data-ajp${aj ? "" : " hidden"}>
-          <div class="fila">Broker: <span class="mc-brk" data-brk="${id}" title="Cambiar broker">${esc(brk || "sin broker")}</span>
-            <span class="mc-mut">tocalo para cambiarlo</span></div>
-          <div class="fila"><button type="button" class="mc-del" data-del="${id}" title="Quitar (si la cargaste por error)">Quitar de mi cartera</button>
-            <span class="mc-mut">si la cargaste por error. Si la vendiste, usá «Vendí» para que quede el resultado.</span></div>
-        </div>
+        ${sola ? accionesHTML(id, brk, aj, true) : ""}
       </div>
     </div>
+    ${sola ? "" : comprasHTML(f, cur, bonos)}
   </div>`;
 }
 
@@ -1404,11 +1574,14 @@ function instalarDelegado(el) {
     const aj = t.closest("[data-ajustar]");
     if (aj) {
       ev.preventDefault();
-      const det = aj.closest(".mc3-det"), p = det && det.querySelector("[data-ajp]");
+      // el panel que abre es el de SU compra (en "Tus compras") o, con una sola
+      // compra, el de la posición; lo que se recuerda es el id del documento
+      const det = aj.closest(".mc3-det"), caja = aj.closest("[data-compra]") || det;
+      const p = caja && caja.querySelector("[data-ajp]");
       if (!p) return;
       p.hidden = !p.hidden;
       aj.setAttribute("aria-expanded", String(!p.hidden));
-      _ajAbierto = p.hidden ? null : det.dataset.det;
+      _ajAbierto = p.hidden ? null : (caja.dataset.compra || det.dataset.det);
       return;
     }
     const oc = t.closest("[data-ocultar]");
@@ -1454,11 +1627,15 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   const r = calcular(posiciones, precios, _cur, _fx, _bonos, opts.panel || _panel);
   const cur = curLabel();
   const bonos = opts.bonos || new Set();
-  // lo último que se dibujó: lo usan el desplegable, el orden y el agrupado sin
-  // volver a pedir nada
-  _vista = { el, posiciones, precios, opts, cur, filas: r.filas,
-             porId: Object.fromEntries(r.filas.map(f => [f.id, f])) };
-  if (_abierta && !_vista.porId[_abierta]) { _abierta = null; _ajAbierto = null; }
+  // la fila que estaba abierta, ANTES de rehacer la vista: si el agrupado le
+  // cambia el id a su activo (act:CLAVE ↔ act:CLAVE@broker) o se quitó una de
+  // sus compras, se la vuelve a encontrar por sus compras y sigue abierta
+  const abiertaAntes = (_abierta && _vista && _vista.el === el && _vista.porId) ? _vista.porId[_abierta] : null;
+  // lo último que se dibujó: lo usan el desplegable, el orden, el agrupado y
+  // __mcAbrirFila sin volver a pedir nada. Las filas y porId se completan más
+  // abajo, cuando están armadas por activo; deCompra: id de documento → id de
+  // la fila (del activo) que lo muestra
+  _vista = { el, posiciones, precios, opts, cur, filas: [], porId: {}, deCompra: {} };
   // Panel v3: el título, la fecha, la frescura de los precios, el selector de
   // moneda y de dónde sale el dólar van en el encabezado único del panel
   const cabecera = "";
@@ -1500,12 +1677,38 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   }
 
   const dir = _orden.desc ? -1 : 1;
-  const filas = [...r.filas].sort((a, b) => {
+  const ordenar = arr => [...arr].sort((a, b) => {
     const A = a[_orden.col], B = b[_orden.col];
     if (A == null) return 1;
     if (B == null) return -1;
     return typeof A === "string" ? A.localeCompare(B) * dir : (A - B) * dir;
   });
+
+  // UNA FILA POR ACTIVO: las compras del mismo activo se juntan (agruparPorActivo)
+  // solo para mostrarlas. Los importes de arriba, los gráficos, la lectura y el
+  // análisis siguen saliendo de r, por compra, como siempre: no cambia ningún total.
+  const activos = agruparPorActivo(r.filas, r.total, cur);
+  // Todas | Por broker (agruparPorBroker, el criterio de siempre) | Por tipo.
+  // Por broker, los subtotales se cuentan sobre las COMPRAS y recién después
+  // cada broker junta las suyas por activo: KO en IOL y KO en PPI son dos filas,
+  // cada una con su parte (cantidad, promedio y valor de ese broker). Por tipo,
+  // el activo va entero a su grupo. El orden de columna elegido se respeta
+  // dentro de cada grupo.
+  const agr = agruparPref();
+  let grupos = null, lista = null;
+  if (agr === "broker") grupos = agruparPorBroker(r.filas, r.total).map(g => ({ ...g, nombre: g.broker,
+    filas: ordenar(agruparPorActivo(g.filas, r.total, cur, "@" + g.broker)) }));
+  else if (agr === "tipo") grupos = agruparPorTipo(ordenar(activos), r.total, bonos);
+  else lista = ordenar(activos);
+  const visibles = grupos ? grupos.flatMap(g => g.filas) : lista;
+  _vista.filas = visibles;
+  _vista.porId = Object.fromEntries(visibles.map(f => [f.id, f]));
+  visibles.forEach(f => (f.compras || [f]).forEach(c => { _vista.deCompra[c.id] = f.id; }));
+  if (_abierta && !_vista.porId[_abierta]) {
+    const ids = new Set(((abiertaAntes && abiertaAntes.compras) || [abiertaAntes]).filter(Boolean).map(c => c.id));
+    const otra = ids.size ? visibles.find(f => (f.compras || [f]).some(c => ids.has(c.id))) : null;
+    if (otra) _abierta = otra.id; else { _abierta = null; _ajAbierto = null; }
+  }
 
   // encabezado de la grilla: las columnas que se pueden ordenar llevan data-col
   const flecha = c => _orden.col === c ? (_orden.desc ? " ↓" : " ↑") : "";
@@ -1532,7 +1735,13 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
       const d = R && R.vence ? diasHasta(R.vence) : null;
       if (d != null && d >= 0 && d <= 30) pills.push(["warn", "vence " + ddmm(R.vence), d === 0 ? "Vence hoy" : `Vence en ${d} ${d === 1 ? "día" : "días"}`]);
     }
-    if (f.actual != null && !(Number(f.precioCompra) > 0)) pills.push(["warn", "sin precio de compra", "Sin precio de compra, el resultado es todo el valor: cargalo para que sea real"]);
+    if (f.actual != null && !(Number(f.precioCompra) > 0) && !f.promFalta) pills.push(["warn", "sin precio de compra", "Sin precio de compra, el resultado es todo el valor: cargalo para que sea real"]);
+    // varias compras del mismo activo: la fila las junta y lo dice; si alguna
+    // vino sin precio, el promedio la cuenta con precio 0 y también se dice
+    const nc = (f.compras || []).length;
+    if (nc > 1) pills.push(["sin", `${nc} compras`, "La fila junta tus compras de este activo: cantidad total y precio promedio ponderado. Abrila para verlas una por una"]);
+    if (nc > 1 && f.sinPrecio > 0 && Number(f.precioCompra) > 0) pills.push(["warn", `${f.sinPrecio} sin precio de compra`, "Entran al promedio con precio 0, así que el resultado de esa parte es todo su valor: quitalas desde el desplegable y cargalas de nuevo con su precio"]);
+    if (f.promFalta) pills.push(["warn", "promedio sin dólar", "Compras en dos monedas y sin cotización del dólar: no podemos armar el precio promedio"]);
     const on = _abierta === f.id;
     const cant = cantFmt(f.cantidad) + (rf ? " VN" : "");
     const pxHoy = f.dActual != null ? money(f.dActual, cur) : "—";
@@ -1543,7 +1752,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     const fac = Number(f.factor) > 0 ? Number(f.factor) : (Number(px.factor) > 0 ? Number(px.factor) : 1);
     const prom = Number(f.precioCompra) > 0
       ? (f.dCompra != null ? money(f.dCompra, cur) : money(Number(f.precioCompra), f.moneda)) : "";
-    const promTit = prom ? `Precio promedio de compra: ${money(Number(f.precioCompra), f.moneda)}${fac !== 1 ? " cada 100 VN" : ""}` : "";
+    const promTit = prom ? `Precio promedio de compra: ${money(Number(f.precioCompra), f.moneda)}${fac !== 1 ? " cada 100 VN" : ""}${nc > 1 ? ` · ponderado por cantidad, ${nc} compras` : ""}` : "";
     // lo que se movió esta posición hoy. Sin variación del día va un guion: no
     // se inventa un cero (se leería como "no se movió")
     const hoyCls = f.dHoy == null ? "mc-mut" : f.dHoy >= 0 ? "mc-pos" : "mc-neg";
@@ -1553,7 +1762,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
       <div class="mc3-row${on ? " on" : ""}" data-fila="${esc(f.id)}" role="button" tabindex="0" aria-expanded="${on}">
         <div class="c-act"><div class="mc3-tk"><b>${esc(tk)}</b>${mk === "byma" || mk === "rf" ? '<span class="mc3-mk">BYMA</span>' : ""}${nombre ? `<span class="mc3-nm">${esc(nombre)}</span>` : ""}</div>
           ${pills.length ? `<div class="mc3-pills">${pills.map(([c, t, tt]) => `<span class="mc3-pill ${c}"${tt ? ` title="${esc(tt)}"` : ""}>${esc(t)}</span>`).join("")}</div>` : ""}</div>
-        <span class="c-brk mc3-brk">${esc(brk)}</span>
+        <span class="c-brk mc3-brk"${f.brokers && f.brokers.length > 1 ? ` title="En varios brokers: ${esc(f.brokerTitulo)}"` : ""}>${esc(brk)}</span>
         <span class="c-cnt mc3-n"><span data-cantde="${esc(f.id)}">${cant}</span>${prom ? `<small class="pm" title="${esc(promTit)}">${prom}</small>` : ""}</span>
         <span class="c-px mc3-n">${pxHoy}</span>
         <span class="c-val mc3-n f">${f.dValor != null ? money(f.dValor, cur) : "—"}</span>
@@ -1565,23 +1774,22 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
       </div>${on ? detalleHTML(f, opts, cur) : ""}</div>`;
   };
 
-  // Todas | Por broker (agruparPorBroker, el criterio de siempre) | Por tipo.
-  // El orden de columna elegido se respeta dentro de cada grupo.
-  const agr = agruparPref();
-  const grupos = agr === "broker" ? agruparPorBroker(filas, r.total).map(g => ({ ...g, nombre: g.broker }))
-    : agr === "tipo" ? agruparPorTipo(filas, r.total, bonos) : null;
   // el renglón del grupo: cuánto suma, qué parte del total es, cuánto se movió
   // hoy y cuánto va ganando. El peso va pegado al monto, que es la pregunta que
   // se hace al agrupar ("¿cuánto tengo en IOL y qué parte de todo es?")
   const grpHTML = g => `<div class="mc3-grp"><b>${esc(g.nombre)}</b><span>${g.filas.length} ${g.filas.length === 1 ? "posición" : "posiciones"}${sinDolar ? "" : ` · ${money(g.valor, cur)}${g.peso != null ? ` · <em title="Lo que pesa este grupo en el total de tu cartera">${num(g.peso)}% de tu cartera</em>` : ""}${g.hoy != null ? ` · hoy <em class="${g.hoy >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(g.hoy, cur)}</em>` : ""}${g.plPct != null ? ` · <em class="${g.pl >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(g.pl, cur)} (${pct1(g.plPct)})</em>` : ""}`}</span></div>`;
-  const filasHTML = grupos ? grupos.map(g => grpHTML(g) + g.filas.map(filaHTML).join("")).join("") : filas.map(filaHTML).join("");
+  const filasHTML = grupos ? grupos.map(g => grpHTML(g) + g.filas.map(filaHTML).join("")).join("") : lista.map(filaHTML).join("");
 
-  const conPrecio = r.filas.filter(f => f.actual != null).length;
+  // las cuentas ("N de M con precio", "N sin variación del día") van por ACTIVO,
+  // como las filas: dos compras de KO comparten el precio y son una posición.
+  // Los importes (valor, hoy, resultado y su %) salen de r, sumados por compra
+  const conPrecio = activos.filter(f => f.actual != null).length;
+  const hoySin = activos.filter(f => f.dValor != null && f.dHoy == null).length;
   // el total del día: suma solo las filas que traen la variación, y si alguna
   // quedó afuera se dice al lado del número (y no en un título que nadie abre)
   const hoyOk = !sinDolar && r.hoyTot != null;
-  const hoyFuera = !sinDolar && r.hoySin > 0
-    ? `<em>· ${r.hoySin === 1 ? "1 posición sin variación del día" : `${r.hoySin} posiciones sin variación del día`}</em>` : "";
+  const hoyFuera = !sinDolar && hoySin > 0
+    ? `<em>· ${hoySin === 1 ? "1 posición sin variación del día" : `${hoySin} posiciones sin variación del día`}</em>` : "";
   const arriba = `<div class="mc3-top">
       <div class="mc3-tot">
         <span><b>${sinDolar ? "—" : money(r.total, cur)}</b> valor</span>
@@ -1589,7 +1797,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
           ? `<i class="mc3-pp ${r.hoyTotPct >= 0 ? "up" : "dn"}">${pct1(r.hoyTotPct)}</i>` : ""} hoy${hoyFuera}</span>
         <span><b class="${sinDolar ? "" : r.plTot >= 0 ? "mc-pos" : "mc-neg"}">${sinDolar ? "—" : moneyS(r.plTot, cur)}</b>${!sinDolar && r.plTotPct != null
           ? `<i class="mc3-pp ${r.plTotPct >= 0 ? "up" : "dn"}" title="sobre ${esc(money(r.costoTot, cur))} invertidos">${pct1(r.plTotPct)}</i>` : ""} resultado</span>
-        <span><b class="k">${conPrecio} de ${r.filas.length}</b> con precio</span>
+        <span><b class="k">${conPrecio} de ${activos.length}</b> con precio</span>
       </div>
       <div class="mc3-ctrl">
         ${ojo}
@@ -1607,11 +1815,13 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     <p class="mc3-pie">Tocá una fila para ver la lectura de Valtia, las noticias y el próximo evento de ese activo. Los precios se
       sincronizan en rueda; el costo y el valor se convierten con la cotización de hoy.
       «Hoy» es lo que se movió esa posición en la rueda, contra el cierre de ayer; si todavía no tenemos su variación del día
-      va un guion y esa fila no entra en el total de arriba. Debajo de la cantidad va tu precio promedio de compra.</p>
+      va un guion y esa fila no entra en el total de arriba. Debajo de la cantidad va tu precio promedio de compra.
+      Si compraste un activo varias veces, es una sola fila con la cantidad total y el promedio ponderado; al abrirla
+      ves cada compra por separado, y desde ahí vendés o ajustás cada una.</p>
     <div class="mc-subnav">Todos tus activos juntos: <a href="#panel/empresas" data-go="empresas">informes, noticias y agenda →</a>
       <span>·</span> <a href="#panel/herramientas" data-go="herramientas">ratios y datos →</a></div>
     ${lectura(r)}
-    ${analisis(r, cur, bonos, opts.rentaFija || "")}
+    ${analisis(r, cur, bonos, opts.rentaFija || "", activos)}
     ${seccionVentas(opts.ventas || [], cur)}
     <div class="mc-foot">Los precios se actualizan cada 15 minutos durante la rueda; los ratios y la lectura, una vez por día.
       El resultado es sobre el precio de compra que cargaste. Si vendiste algo, abrí su fila y tocá «Vendí»:
@@ -2437,11 +2647,16 @@ async function guardarCompras() {
 function abrirVenta(id) {
   const viejo = _el.querySelector(".mc-vrow");
   if (viejo) { const era = viejo.dataset.para; viejo.remove(); if (era === id) return; }
-  // la fila de la grilla (Panel v3): el formulario va al pie de esa posición,
-  // debajo de su desplegable si está abierto
-  const tr = [..._el.querySelectorAll(".mc3-row[data-fila]")].find(x => x.dataset.fila === id);
+  // la fila de la grilla (Panel v3): la del ACTIVO al que pertenece esta compra
+  // (con varias compras la fila las junta y el desplegable las lista); el
+  // formulario va al pie de esa posición, debajo de su desplegable si está abierto
+  const filaId = (_vista && _vista.deCompra && _vista.deCompra[id]) || id;
+  const tr = [..._el.querySelectorAll(".mc3-row[data-fila]")].find(x => x.dataset.fila === filaId);
   const p = _pos.find(x => x.id === id);
   if (!tr || !p) return;
+  // ¿la fila tiene otras compras? entonces se aclara de cuál se vende
+  const varias = filaId !== id;
+  const cual = fmtFecha(p.fecha) !== "—" ? "del " + fmtFecha(p.fecha) : "sin fecha";
   const px = _precios[String(p.ticker).toUpperCase()] || null;
   const esRF = esRentaFija(p.ticker, _bonos);
   const { moneda, factor } = monedaFactor(p, px, esRF);
@@ -2462,7 +2677,7 @@ function abrirVenta(id) {
       <div><label>Fecha de la venta</label><input id="mc-v-fecha" type="date" max="${hoy}" value="${hoy}"></div>
       <div class="prev" id="mc-v-prev"></div>
       <div><button class="mc-btn" id="mc-v-ok">Registrar venta</button> <button class="mc-undo" id="mc-v-no">Cancelar</button></div>
-      <div class="nota">Tu costo en esta posición: <b>${costo ? (moneda ? money(costo, moneda) : num(costo, 2)) + " " + unidad + aprox(costo, moneda)
+      <div class="nota">${varias ? `Es la compra ${cual}${p.broker ? ", en " + esc(p.broker) : ""}, de ${cantTxt(p.cantidad)}: si vendiste más que eso, registrá el resto desde otra de tus compras. ` : ""}Tu costo en esta ${varias ? "compra" : "posición"}: <b>${costo ? (moneda ? money(costo, moneda) : num(costo, 2)) + " " + unidad + aprox(costo, moneda)
         : "sin precio de compra cargado, así que el resultado no se va a poder calcular"}</b>.
         ${px && px.precio != null ? "El precio viene con la última cotización: poné el que te pagaron." : ""}
         ${sync ? "Esta posición la trae el sync de tu broker: en la próxima corrida la cantidad se ajusta a lo que diga el broker." : ""}
@@ -2534,8 +2749,16 @@ async function registrarVenta(p, px, esRF, { cant, precio, fecha }, fila) {
       // la fila de arriba muestra la cantidad que acaba de releerse, para que
       // el error ("no podés vender más de 60") y la tabla digan lo mismo
       const p2 = _pos.find(x => x.id === p.id);
-      const celda = [..._el.querySelectorAll("[data-cantde]")].find(x => x.dataset.cantde === p.id);
+      const celdas = [..._el.querySelectorAll("[data-cantde]")];
+      const celda = celdas.find(x => x.dataset.cantde === p.id);
       if (celda && p2) celda.textContent = cantFmt(p2.cantidad) + (esRF ? " VN" : "");
+      // si la fila junta varias compras, su cantidad total también se pone al día
+      const filaId = _vista && _vista.deCompra ? _vista.deCompra[p.id] : null;
+      if (filaId && filaId !== p.id) {
+        const tot = _pos.filter(x => _vista.deCompra[x.id] === filaId).reduce((s, x) => s + (Number(x.cantidad) || 0), 0);
+        const ct = celdas.find(x => x.dataset.cantde === filaId);
+        if (ct) ct.textContent = cantFmt(tot) + (esRF ? " VN" : "");
+      }
       btn.disabled = false;
       msg.innerHTML = `<span style="color:var(--v3-dn)">${esc(String((e && e.message) || e).slice(0, 180))}</span>`;
       return;

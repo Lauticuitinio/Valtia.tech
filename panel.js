@@ -8,7 +8,7 @@ import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, quer
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { calcular, agruparPorBroker, normalizarTicker, reiniciarMiCartera, completarPreciosDeRentaFija }
-  from './mi-cartera.js?v=41';
+  from './mi-cartera.js?v=42';
 import { fxMercado, registrarImplicito, etiquetaFx } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
