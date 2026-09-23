@@ -56,6 +56,8 @@
     '#vnav-menu a.vn-link{display:block;padding:14px 22px;color:rgba(255,255,255,.72);text-decoration:none;',
     'font-size:12.5px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.06)}',
     '#vnav-menu a.vn-link:hover{color:#fff}#vnav-menu a.vn-link.on{color:#E8CE96;font-weight:600}',
+    // con sesión (clase que pone nav-auth.js) "Inicio" no va: la home devuelve al panel
+    'body.valtia-sesion #vnav-menu a.vn-link[href="/"]{display:none}',
     '#vnav-menu a.vn-cta{margin:18px 20px 0;text-align:center;background:#E8CE96;color:#0E1830;',
     'font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:13px 10px;',
     'border-radius:8px;text-decoration:none}',

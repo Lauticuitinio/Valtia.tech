@@ -50,8 +50,17 @@ onAuthStateChanged(getAuth(app), async user => {
     const h = (a.getAttribute('href') || '').toLowerCase();
     return h.includes('#servicios') || h.includes('#contacto');
   });
+  // "Inicio" con sesión no sirve: la home detecta la sesión y devuelve al panel.
+  // Se esconde (acá y, por la clase del body, en el menú lateral de nav-menu.js);
+  // la home se sigue viendo tocando la marca, que llama a showHome() sin recargar.
+  const inicio = links.filter(a => {
+    const h = (a.getAttribute('href') || '').toLowerCase().split('#')[0].split('?')[0];
+    return h === '/' || h === 'index.html' || h === '/index.html' || h === './';
+  });
+  document.body.classList.toggle('valtia-sesion', !!user);
   let cta = document.querySelector('.nav-cta');
   if (user) {
+    inicio.forEach(a => { a.style.display = 'none'; });
     if (cta) {
       cta.textContent = 'Mi Panel';
       cta.setAttribute('href', '/#panel/inicio');
@@ -75,6 +84,7 @@ onAuthStateChanged(getAuth(app), async user => {
     const extra = document.getElementById('nav-mipanel');
     if (extra) extra.remove();
     mkt.forEach(a => { a.style.display = ''; });
+    inicio.forEach(a => { a.style.display = ''; });
     pintarCandados(false);
   }
 });
