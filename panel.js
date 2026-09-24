@@ -8,18 +8,18 @@ import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, quer
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { calcular, agruparPorBroker, normalizarTicker, reiniciarMiCartera, completarPreciosDeRentaFija }
-  from './mi-cartera.js?v=42';
+  from './mi-cartera.js?v=43';
 import { fxMercado, registrarImplicito, etiquetaFx } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
-import { renderResumen } from './panel-resumen.js?v=3';
+import { renderResumen } from './panel-resumen.js?v=4';
 import { renderComprar as renderComprarV3 } from './panel-comprar.js?v=1';
 import { renderCarteras as renderCarterasV3 } from './panel-carteras.js?v=2';
 import { renderMensual } from './panel-mensual.js?v=1';
 import { renderAlertas, contarNoLeidas } from './panel-alertas.js?v=1';
 import { renderAgenda } from './panel-agenda.js?v=1';
 import { renderCuenta } from './panel-cuenta.js?v=1';
-import { renderOperar } from './panel-operar.js?v=1';
+import { renderOperar } from './panel-operar.js?v=2';
 import { eventos } from './panel-eventos.js?v=1';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
   from './activos.js?v=7';
