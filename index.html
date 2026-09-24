@@ -544,6 +544,7 @@ a.v2plain{color:inherit;text-decoration:none}
     <div id="tab-inicio"><div class="portal-title">Tu panel</div><p style="color:var(--sub);font-size:14px">Cargando…</p></div>
     <div id="tab-micartera" style="display:none"></div>
     <div id="tab-alertas" style="display:none"></div>
+    <div id="tab-historial" style="display:none"></div>
     <!-- Fondo Valtia · posición del cliente a medida (renderClientDashboard) -->
     <div id="tab-fondocli" style="display:none">
       <div class="portal-title">Fondo Valtia · Tu posición</div>
@@ -799,7 +800,7 @@ function updateChartTheme(){
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   import { getDatabase, ref, push, onValue, serverTimestamp as dbTimestamp }
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-  import { iniciarPanel } from './panel.js?v=45';
+  import { iniciarPanel } from './panel.js?v=46';
 
   
   // ── FIREBASE CONFIG ──

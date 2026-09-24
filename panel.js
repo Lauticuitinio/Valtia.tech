@@ -21,8 +21,11 @@ import { renderAgenda } from './panel-agenda.js?v=1';
 import { renderCuenta } from './panel-cuenta.js?v=1';
 import { renderOperar } from './panel-operar.js?v=2';
 import { eventos } from './panel-eventos.js?v=1';
+import { renderMovimientos } from './panel-movimientos.js?v=1';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
   from './activos.js?v=7';
+// un solo criterio de "qué tipo de activo es" para Mi cartera, el Resumen y Movimientos
+import { tipoActivo, GRUPOS_TIPO } from './tipos-activo.js?v=1';
 
 /* ───────────────────────── estilos ───────────────────────── */
 const CSS = `
@@ -33,18 +36,26 @@ body.fl-app-on{background:var(--panel-bg)}
    ESTO y no hex sueltos, así el tema oscuro sigue funcionando.
    --v3-navy es el azul de los bloques sólidos (con texto claro encima) y no cambia;
    --v3-serie es el color de la línea de "tu cartera" (azul en claro, dorado en oscuro). */
-body.fl-app-on{--v3-bg:#fff;--v3-card:#fff;--v3-line:#E7E3DA;--v3-line2:#E7E3DA;--v3-track:#F6F3EC;--v3-track2:#F6F3EC;
+body.fl-app-on{--v3-bg:#fff;--v3-card:#fff;--v3-line:#E7E3DA;--v3-line2:#EEF0F3;--v3-track:#ECEEF1;--v3-track2:#F3F4F6;
   --v3-ink:#101010;--v3-sub:#57534A;--v3-mut:#8B8375;--v3-navy:#0E1830;--v3-serie:#0E1830;--v3-area:rgba(14,24,48,.06);
-  --v3-gold:#B08A3E;--v3-gold2:#8A6A2F;--v3-goldL:#E8CE96;--v3-goldS:#E8CE96;--v3-goldBg:rgba(176,138,62,.14);--v3-goldTint:#F6F3EC;
+  --v3-gold:#B08A3E;--v3-gold2:#8A6A2F;--v3-goldL:#E8CE96;--v3-goldS:#E8CE96;--v3-goldBg:rgba(176,138,62,.10);--v3-goldTint:rgba(176,138,62,.07);
   --v3-up:#1F7A4D;--v3-upBg:rgba(31,122,77,.12);--v3-dn:#B23A3A;--v3-dnBg:rgba(178,58,58,.1);
   --v3-warn:#9A5A12;--v3-warnBg:rgba(200,120,30,.12);--v3-bench:#8B8375;--v3-cero:#8B8375;--v3-azul:#2B5FB0;
-  --v3-hover:#F6F3EC;--v3-hl:#F6F3EC;--v3-navyBg:rgba(14,24,48,.07);--v3-neutro:rgba(139,131,117,.12)}
-[data-theme="dark"] body.fl-app-on{--v3-bg:#0B1327;--v3-card:#121E3A;--v3-line:rgba(232,206,150,.16);--v3-line2:rgba(255,255,255,.07);
+  --v3-hover:#F7F8FA;--v3-hl:#F7F8FA;--v3-navyBg:rgba(14,24,48,.07);--v3-neutro:rgba(139,131,117,.12);
+  /* botón primario (navy, como el resto de los primarios) e ícono redondo del ticker */
+  --v3-btn:#0E1830;--v3-btnTx:#fff;--v3-ico:#ECEEF1;--v3-icoTx:#0E1830;
+  /* el CSS viejo (vp-*) usa --bg3/--bg2 de la home, que son crema: SOLO en el panel pasan a gris neutro */
+  --bg3:#F3F4F6;--bg2:#F3F4F6}
+[data-theme="dark"] body.fl-app-on{--v3-bg:#0B1327;--v3-card:#121E3A;--v3-line:rgba(255,255,255,.12);--v3-line2:rgba(255,255,255,.07);
   --v3-track:rgba(255,255,255,.08);--v3-track2:rgba(255,255,255,.05);--v3-ink:#F4F1EA;--v3-sub:rgba(244,241,234,.74);--v3-mut:rgba(244,241,234,.58);
   --v3-navy:#15254A;--v3-serie:#E8CE96;--v3-area:rgba(232,206,150,.08);--v3-gold:#D9BE85;--v3-gold2:#E8CE96;--v3-goldL:#E8CE96;--v3-goldS:#B08A3E;
-  --v3-goldBg:rgba(232,206,150,.14);--v3-goldTint:rgba(232,206,150,.12);--v3-up:#5FCB8E;--v3-upBg:rgba(95,203,142,.14);--v3-dn:#F08A8A;
+  --v3-goldBg:rgba(232,206,150,.14);--v3-goldTint:rgba(232,206,150,.08);--v3-up:#5FCB8E;--v3-upBg:rgba(95,203,142,.14);--v3-dn:#F08A8A;
   --v3-dnBg:rgba(240,138,138,.14);--v3-warn:#E0A93E;--v3-warnBg:rgba(224,169,62,.14);--v3-bench:#9FB0C2;--v3-cero:rgba(244,241,234,.3);
-  --v3-hover:rgba(255,255,255,.04);--v3-hl:rgba(232,206,150,.06);--v3-navyBg:rgba(232,206,150,.1);--v3-neutro:rgba(244,241,234,.1);--v3-azul:#8FB3E8}
+  --v3-hover:rgba(255,255,255,.04);--v3-hl:rgba(255,255,255,.04);--v3-navyBg:rgba(232,206,150,.1);--v3-neutro:rgba(244,241,234,.1);--v3-azul:#8FB3E8;
+  --v3-btn:#F4F1EA;--v3-btnTx:#0E1830;--v3-ico:rgba(255,255,255,.1);--v3-icoTx:#F4F1EA;
+  /* el bloque claro de arriba aplica también en oscuro (no está acotado por tema):
+     sin pisar --bg2 acá, en oscuro quedaba el gris claro del bloque claro */
+  --bg3:rgba(255,255,255,.05);--bg2:#0B1327}
 body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 .fl-layout{display:flex;align-items:stretch;gap:0;min-height:calc(100vh - 34px);background:var(--panel-bg)}
 /* lateral (232px, navy): medidas y colores del prototipo */
@@ -93,7 +104,8 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 /* columna principal: encabezado único + contenido */
 .fl-main{flex:1;min-width:0;display:flex;flex-direction:column}
 .vp-enc{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:22px 30px 16px;
-  border-bottom:1px solid var(--border);background:var(--panel-bg);position:sticky;top:0;z-index:60}
+  border-bottom:1px solid var(--v3-line);background:var(--panel-bg);position:sticky;top:0;z-index:60}
+/* el único serif del panel: el título de la página (la marca del lateral y de la barra móvil es el logo) */
 .vp-enc h1{font:700 30px 'Playfair Display',serif;color:var(--text);line-height:1.1;margin:0;letter-spacing:.01em}
 .vp-enc .sub{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:6px;
   display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap}
@@ -113,11 +125,12 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
   background:none;border:none;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s}
 .vp-seg button:hover{color:var(--text)}
 .vp-seg button.on{color:var(--text);border-bottom-color:#B08A3E}
-.vp-agregar{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#0E1830;background:#E8CE96;
-  padding:9px 16px;border-radius:7px;white-space:nowrap;border:none;cursor:pointer;transition:background .15s}
-.vp-agregar:hover{background:#fff;box-shadow:inset 0 0 0 1px #E8CE96}
+.vp-agregar{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-btnTx);background:var(--v3-btn);
+  padding:9px 16px;border-radius:7px;white-space:nowrap;border:1px solid var(--v3-btn);cursor:pointer;transition:opacity .15s}
+.vp-agregar:hover{opacity:.9}
 .fl-layout .portal-content > [id^="tab-"]{scroll-margin-top:160px}
-.fl-layout .portal-content{flex:1;min-width:0;padding:24px 34px 60px!important;box-sizing:border-box;width:100%}
+.fl-layout .portal-content{flex:1;min-width:0;padding:24px 34px 60px!important;box-sizing:border-box;width:100%;font-family:'IBM Plex Sans',system-ui,sans-serif}
+.fl-layout .portal-content .vp-num{font-variant-numeric:tabular-nums}
 /* celular: el lateral se esconde y las secciones pasan a un selector arriba */
 .vp-mbar{display:none;position:sticky;top:0;z-index:61;height:50px;align-items:center;justify-content:space-between;gap:12px;padding:0 14px;background:#0E1830}
 .vp-mbrand{font:700 18px 'Playfair Display',serif;letter-spacing:.06em;color:#fff;white-space:nowrap}
@@ -136,32 +149,33 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 }
 /* secciones del panel */
 .vp-sub{color:var(--sub);font-size:14px;line-height:1.7;max-width:720px;margin:-14px 0 22px}
-.vp-sec{display:flex;align-items:baseline;gap:12px;font:700 19px 'Playfair Display',serif;color:var(--text);margin:32px 0 14px;line-height:1.2}
-.vp-sec::after{content:'';flex:1;height:1px;background:var(--border);align-self:center;min-width:20px}
+.vp-sec{display:flex;align-items:baseline;gap:12px;font:600 17px 'IBM Plex Sans',system-ui,sans-serif;color:var(--text);margin:32px 0 14px;line-height:1.2}
+.vp-sec::after{content:'';flex:1;height:1px;background:var(--v3-line);align-self:center;min-width:20px}
 .vp-sec small{font:400 12px 'IBM Plex Sans',system-ui,sans-serif;color:var(--muted)}
 .vp-cargando{color:var(--muted);font-size:13px}
 .vp-nota{font-size:12px;color:var(--muted);line-height:1.7;margin-top:10px;max-width:760px}
 .vp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
-.vp-card{background:var(--card);border:1px solid var(--border);padding:16px 18px;position:relative}
-.vp-card h4{font:700 17.5px 'Playfair Display',serif;color:var(--text);margin:0 0 7px;line-height:1.25}
+.vp-card{background:var(--card);border:1px solid var(--v3-line);padding:16px 18px;position:relative}
+.vp-card h4{font:600 15.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--text);margin:0 0 7px;line-height:1.25}
 .vp-card p{font-size:13px;color:var(--sub);line-height:1.65;margin:0}
 .vp-card .l{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 a.vp-ir,.vp-card a.vp-ir{display:inline-block;margin-top:10px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--link);text-decoration:none}
-.vp-fila{display:flex;gap:10px;align-items:baseline;text-decoration:none;background:var(--bg3);border:1px solid var(--border);padding:11px 14px;margin-bottom:8px;color:var(--text);font-size:13px;line-height:1.5}
+.vp-fila{display:flex;gap:10px;align-items:baseline;text-decoration:none;background:var(--v3-card);border:1px solid var(--v3-line);padding:11px 14px;margin-bottom:8px;color:var(--text);font-size:13px;line-height:1.5}
 .vp-fila b{color:var(--text)}
 .vp-chips{display:flex;gap:8px;flex-wrap:wrap;margin:-8px 0 20px}
-.vp-chip{font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--sub)}
+.vp-chip{font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid var(--v3-line);background:var(--v3-track2);color:var(--sub)}
 .vp-chip b{color:var(--text)}
 .vp-tag{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:2px;white-space:nowrap;display:inline-block}
-.vp-tag.infra{color:var(--green);background:rgba(31,122,77,.12)}.vp-tag.precio{color:var(--link);background:rgba(176,138,62,.14)}
+.vp-tag.infra{color:var(--green);background:rgba(31,122,77,.12)}.vp-tag.precio{color:var(--link);background:var(--v3-goldTint)}
 .vp-tag.cara{color:var(--red);background:rgba(178,58,58,.1)}.vp-tag.sin{color:var(--muted);background:rgba(120,130,140,.12)}
-.vp-tag.zona{color:#0E1830;background:#E8CE96}.vp-tag.tengo{color:var(--sub);background:transparent;border:1px solid var(--border)}
+/* "zona de compra": el dorado queda como borde fino, no como relleno */
+.vp-tag.zona{color:var(--v3-gold2);background:transparent;border:1px solid var(--v3-gold)}.vp-tag.tengo{color:var(--sub);background:transparent;border:1px solid var(--v3-line)}
 .vp-tag.pro{color:var(--link);border:1px solid var(--gold)}.vp-tag.gratis{color:var(--green);border:1px solid rgba(31,122,77,.5)}
-.vp-tblwrap{background:var(--card);border:1px solid var(--border);overflow-x:auto;position:relative}
+.vp-tblwrap{background:var(--card);border:1px solid var(--v3-line);overflow-x:auto;position:relative}
 .vp-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
-.vp-tbl th{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:11px 12px;border-bottom:1px solid var(--text);text-align:right;white-space:nowrap}
+.vp-tbl th{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:11px 12px;border-bottom:1px solid var(--v3-line);text-align:right;white-space:nowrap}
 .vp-tbl th.l,.vp-tbl td.l{text-align:left}
-.vp-tbl td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);text-align:right;font:500 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+.vp-tbl td{padding:10px 12px;border-bottom:1px solid var(--v3-line2);color:var(--text);text-align:right;font:500 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
 .vp-tbl td.l{font:400 13px 'IBM Plex Sans',system-ui,sans-serif}
 .vp-tbl tbody tr:hover td{background:var(--bg3)}
 .vp-tbl tr:last-child td{border-bottom:none}
@@ -169,37 +183,38 @@ a.vp-ir,.vp-card a.vp-ir{display:inline-block;margin-top:10px;font-size:11px;fon
 .vp-tbl .nm{display:block;font:400 11px 'IBM Plex Sans',system-ui,sans-serif;color:var(--muted);white-space:normal}
 .vp-tbl tr.vp-blur td{filter:blur(4px);pointer-events:none;user-select:none}
 .vp-lock{position:absolute;left:0;right:0;bottom:0;padding:22px;text-align:center;background:linear-gradient(to bottom,transparent,var(--card) 40%)}
-.vp-lock b{display:block;font:700 18px 'Playfair Display',serif;color:var(--text)}
+.vp-lock b{display:block;font:600 18px 'IBM Plex Sans',system-ui,sans-serif;color:var(--text)}
 .vp-lock p{font-size:12.5px;color:var(--sub);margin:4px 0 10px}
-.vp-btn{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--btn-tx);
-  background:var(--btn-bg);border:1px solid var(--btn-bg);padding:10px 20px;cursor:pointer;text-decoration:none;display:inline-block;transition:background .15s,color .15s,border-color .15s}
-.vp-btn:hover{background:var(--btn-hover);border-color:var(--btn-hover)}
-.vp-btn.sec{background:transparent;color:var(--text);border:1px solid var(--text)}
-.vp-btn.sec:hover{background:var(--text);color:var(--bg);border-color:var(--text)}
+/* botones: el primario es navy lleno; el secundario, transparente con borde gris (al pasar, borde tinta) */
+.vp-btn{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-btnTx);
+  background:var(--v3-btn);border:1px solid var(--v3-btn);padding:10px 20px;cursor:pointer;text-decoration:none;display:inline-block;transition:opacity .15s,border-color .15s}
+.vp-btn:hover{opacity:.9}
+.vp-btn.sec{background:transparent;color:var(--v3-ink);border:1px solid var(--v3-line)}
+.vp-btn.sec:hover{opacity:1;border-color:var(--v3-ink)}
 .vp-btn.mini{padding:6px 12px;font-size:10px}
 .vp-btn[disabled]{opacity:.45;cursor:default}
-.vp-form{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-top:8px;padding:10px;border:1px dashed var(--border);text-align:left}
+.vp-form{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-top:8px;padding:10px;border:1px dashed var(--v3-line);text-align:left}
 .vp-form label{display:block;font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
-.vp-form input,.vp-form select{padding:8px 10px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:13px;outline:none;min-width:90px}
+.vp-form input,.vp-form select{padding:8px 10px;background:var(--bg);border:1px solid var(--v3-line);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:13px;outline:none;min-width:90px}
 .vp-form input:focus,.vp-form select:focus{border-color:var(--gold)}
 .vp-msg{font-size:12.5px;margin-top:8px}
 .vp-pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:8px}
-.vp-paso{background:var(--card);border:1px solid var(--border);padding:16px 18px;cursor:pointer}
-.vp-paso .n{font:700 22px 'Playfair Display',serif;color:var(--gold);line-height:1}
+.vp-paso{background:var(--card);border:1px solid var(--v3-line);padding:16px 18px;cursor:pointer}
+.vp-paso .n{font:600 22px 'IBM Plex Mono',monospace;color:var(--gold);line-height:1}
 .vp-paso.ok .n{color:var(--green)}
 .vp-paso b{display:block;font-size:14px;color:var(--text);margin:8px 0 4px}
 .vp-paso p{font-size:12.5px;color:var(--sub);line-height:1.6;margin:0}
 .vp-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#0E1830;color:#E8CE96;border:1px solid #B08A3E;padding:11px 18px;font-size:13px;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,.35)}
 .vp-bv{position:fixed;inset:0;z-index:1000;background:rgba(6,12,22,.72);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
-.vp-bv-caja{background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:560px;width:100%;padding:26px 28px 22px;box-shadow:0 20px 60px rgba(0,0,0,.45);margin:auto}
+.vp-bv-caja{background:var(--card);border:1px solid var(--v3-line);border-radius:12px;max-width:560px;width:100%;padding:26px 28px 22px;box-shadow:0 20px 60px rgba(0,0,0,.45);margin:auto}
 .vp-bv-caja .k{font:700 10px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--link)}
-.vp-bv-caja h3{font:700 25px 'Playfair Display',serif;color:var(--text);margin:8px 0 10px;line-height:1.15}
+.vp-bv-caja h3{font:600 22px 'IBM Plex Sans',system-ui,sans-serif;color:var(--text);margin:8px 0 10px;line-height:1.15}
 .vp-bv-caja p{font-size:13.5px;color:var(--sub);line-height:1.7;margin:0 0 14px}
 .vp-bv-caja ul{list-style:none;padding:0;margin:0 0 16px}
-.vp-bv-caja li{font-size:13px;color:var(--sub);line-height:1.6;padding:9px 0;border-top:1px solid var(--border);display:flex;gap:11px;align-items:flex-start}
+.vp-bv-caja li{font-size:13px;color:var(--sub);line-height:1.6;padding:9px 0;border-top:1px solid var(--v3-line);display:flex;gap:11px;align-items:flex-start}
 .vp-bv-caja li b{color:var(--text);font-weight:600}
 .vp-bv-caja li i{flex-shrink:0;font-style:normal;color:var(--link);font-weight:700;font-size:11px;letter-spacing:.06em;min-width:18px}
-.vp-bv-legal{font-size:11.5px;color:var(--muted);line-height:1.65;border-top:1px solid var(--border);padding-top:12px;margin-bottom:16px}
+.vp-bv-legal{font-size:11.5px;color:var(--muted);line-height:1.65;border-top:1px solid var(--v3-line);padding-top:12px;margin-bottom:16px}
 .vp-bv-legal a{color:var(--link);text-decoration:none}
 .vp-bv-pie{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 @media(max-width:560px){.vp-bv-caja{padding:22px 20px 18px}.vp-bv-caja h3{font-size:22px}}
@@ -207,7 +222,7 @@ a.vp-ir,.vp-card a.vp-ir{display:inline-block;margin-top:10px;font-size:11px;fon
 .vp-pos{color:var(--green)}.vp-neg{color:var(--red)}.vp-mut{color:var(--muted)}
 .vp-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px}
 /* acá los .pkpi van sueltos (no dentro del marco de .portal-kpis): cada uno es su propia tarjeta */
-.vp-kpis .pkpi{background:var(--card);border:1px solid var(--border)}
+.vp-kpis .pkpi{background:var(--v3-card);border:1px solid var(--v3-line);box-shadow:none}
 /* Resumen: cabecera, bloque de estado, composicion y avisos */
 .vp-hero{display:grid;gap:14px;margin-bottom:8px;align-items:stretch}
 .vp-estado{display:flex;flex-direction:column;gap:15px}
@@ -216,40 +231,40 @@ a.vp-ir,.vp-card a.vp-ir{display:inline-block;margin-top:10px;font-size:11px;fon
   font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin:5px 0 8px}
 .vp-linea{font-size:13px;color:var(--sub);display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;line-height:1.5}
 .vp-linea b{font:600 18px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+/* verde y rojo SOLO para subas y bajas */
 .vp-pill{font:600 11.5px 'IBM Plex Mono',monospace;padding:2px 8px;border-radius:2px;white-space:nowrap}
-.vp-pill.pos{color:var(--green);background:rgba(31,122,77,.12)}
-.vp-pill.neg{color:var(--red);background:rgba(178,58,58,.1)}
+.vp-pill.pos{color:var(--v3-up);background:var(--v3-upBg)}
+.vp-pill.neg{color:var(--v3-dn);background:var(--v3-dnBg)}
 .vp-cob{text-align:right;flex:none;max-width:210px}
 .vp-cob .n{font:600 20px 'IBM Plex Mono',monospace;line-height:1.2;color:var(--text);font-variant-numeric:tabular-nums}
 .vp-cob .n small{font-size:12px;font-weight:500;color:var(--muted)}
 .vp-cob p{font-size:11.5px;color:var(--muted);margin:0;line-height:1.5}
 .vp-cob .vp-ir{margin-top:8px}
 @media(max-width:640px){.vp-cob{text-align:left;max-width:none}.vp-big{font-size:27px}}
-.vp-comp{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:20px;border-top:1px solid var(--border);padding-top:14px}
-.vp-bar{display:flex;height:7px;border-radius:4px;overflow:hidden;background:var(--bg3);margin:8px 0}
+.vp-comp{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:20px;border-top:1px solid var(--v3-line);padding-top:14px}
+.vp-bar{display:flex;height:7px;border-radius:4px;overflow:hidden;background:var(--v3-track);margin:8px 0}
 .vp-bar i{display:block;height:100%}
 .vp-leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11.5px;color:var(--sub)}
 .vp-leg span{display:inline-flex;align-items:center;gap:5px}
 .vp-leg i{width:7px;height:7px;border-radius:2px;display:inline-block;flex:none}
 .vp-leg b{color:var(--text)}
-.vp-avisos{border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.vp-avisos{border-top:1px solid var(--v3-line);padding-top:12px;display:flex;flex-direction:column;gap:8px}
 .vp-aviso{font-size:12.5px;color:var(--sub);display:flex;gap:10px;align-items:baseline;line-height:1.55}
 .vp-aviso .vp-tag{flex:none}
-.vp-tag.warn{color:#7A5C26;background:rgba(224,169,62,.18)}
-[data-theme="dark"] .vp-tag.warn{color:#E0A93E}
+.vp-tag.warn{color:var(--v3-warn);background:var(--v3-warnBg)}
 /* dos columnas: lo que cambio a la izquierda, lo que hay para decidir a la derecha */
 .vp-cols{display:grid;gap:8px 30px;align-items:start}
 @media(min-width:980px){.vp-cols{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}}
 .vp-evg{font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
 .vp-evg:first-child{margin-top:0}
 .vp-ev{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:12px;align-items:baseline;text-decoration:none;
-  background:var(--card);border:1px solid var(--border);padding:11px 14px;margin-bottom:7px;
+  background:var(--card);border:1px solid var(--v3-line);padding:11px 14px;margin-bottom:7px;
   color:var(--text);font-size:13px;line-height:1.5}
 .vp-ev:hover{border-color:var(--gold)}
 .vp-ev .d{font:600 10.5px 'IBM Plex Mono',monospace;color:var(--muted);white-space:nowrap}
 .vp-ev .a{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--link);white-space:nowrap}
 /* tarjetas compactas de la columna derecha */
-.vp-buy{display:block;background:var(--card);border:1px solid var(--border);padding:13px 15px;margin-bottom:9px;text-decoration:none;color:var(--text)}
+.vp-buy{display:block;background:var(--card);border:1px solid var(--v3-line);padding:13px 15px;margin-bottom:9px;text-decoration:none;color:var(--text)}
 a.vp-buy:hover{border-color:var(--gold)}
 .vp-buy .h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .vp-buy .tk{font:600 13px 'IBM Plex Mono',monospace;color:var(--link)}
@@ -259,12 +274,12 @@ a.vp-buy:hover{border-color:var(--gold)}
 .vp-buy .tg{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0 9px}
 .vp-buy .sc{font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .vp-rsi{display:flex;align-items:center;gap:9px}
-.vp-rsi .t{flex:1;height:4px;border-radius:3px;background:var(--bg3);overflow:hidden}
+.vp-rsi .t{flex:1;height:4px;border-radius:3px;background:var(--v3-track);overflow:hidden}
 .vp-rsi .t i{display:block;height:100%}
 .vp-rsi .v{font:600 10px 'IBM Plex Mono',monospace;color:var(--muted);white-space:nowrap}
 /* forma del prototipo Panel v3: cards 12px, internas 10px, métricas 8px, pills 4px, botones 5-7px. Sin sombras */
-.vp-card,.vp-tblwrap,.vp-paso,.vp-form,.vp-kpis .pkpi{border-radius:12px}
-.vp-ev,.vp-buy,.vp-fila{border-radius:10px}
+.vp-card,.vp-tblwrap,.vp-paso,.vp-form,.vp-kpis .pkpi,.vp-fila{border-radius:12px;box-shadow:none}
+.vp-ev,.vp-buy{border-radius:10px}
 .vp-tag,.vp-pill{border-radius:4px}
 .vp-btn{border-radius:6px}
 /* contadores del lateral (la pastilla del prototipo) */
@@ -528,6 +543,9 @@ async function precioHoy(sym) {
 const TABS = [
   { g: 'Tus inversiones', id: 'inicio', t: 'Resumen' },
   { g: 'Tus inversiones', id: 'micartera', t: 'Mi cartera' },
+  // tus compras y ventas en una sola lista (panel-movimientos.js). El id es
+  // 'historial' y no 'movimientos': ese ya es Posiciones, de la gestión del fondo
+  { g: 'Tus inversiones', id: 'historial', t: 'Movimientos' },
   // lo que Valtia hizo en sus carteras: compras, ventas, pesos y rotaciones
   { g: 'Tus inversiones', id: 'alertas', t: 'Alertas' },
   { g: 'Para decidir', id: 'comprar', t: 'Qué comprar', tit: 'Qué comprar hoy' },
@@ -555,7 +573,7 @@ const ES_GESTION = new Set(GESTION.map(x => x.id));
 // el selector de moneda va donde cambia las cifras. En Qué comprar, Carteras e
 // Inversión mensual todo está en dólares: un selector que no hace nada confunde
 const CON_MONEDA = new Set(['inicio', 'micartera', 'empresas', 'herramientas']);
-const NUEVOS = ['inicio', 'alertas', 'comprar', 'carteras', 'empresas', 'disciplina', 'herramientas', 'agenda', 'cuenta'];
+const NUEVOS = ['inicio', 'historial', 'alertas', 'comprar', 'carteras', 'empresas', 'disciplina', 'herramientas', 'agenda', 'cuenta'];
 // tabs que este usuario puede abrir: los divs de Gestión y Fondo viven en el
 // HTML para todos, así que sin este set cualquiera llega por #panel/admin
 let _permitidos = new Set(NUEVOS.concat(['micartera']));
@@ -565,7 +583,7 @@ let _tab = 'inicio';
 const enModulo = (f, id) => () => f($('tab-' + id), ctx).catch(() => {});
 const _render = { inicio: enModulo(renderResumen, 'inicio'), comprar: enModulo(renderComprarV3, 'comprar'),
                   carteras: enModulo(renderCarterasV3, 'carteras'), disciplina: enModulo(renderMensual, 'disciplina'),
-                  alertas: enModulo(renderAlertas, 'alertas'),
+                  alertas: enModulo(renderAlertas, 'alertas'), historial: enModulo(renderMovimientos, 'historial'),
                   agenda: enModulo(renderAgenda, 'agenda'), cuenta: enModulo(renderCuenta, 'cuenta'),
                   operar: enModulo(renderOperar, 'operar'),
                   empresas: renderEmpresas, herramientas: renderHerramientas };
@@ -658,7 +676,7 @@ function llenarSelectMovil() {
 }
 
 /* un solo encabezado para todo el panel: título, fecha y frescura, y a la
-   derecha la moneda (y "+ Agregar posición" en Mi cartera) */
+   derecha la moneda (y "+ Agregar" en Mi cartera) */
 function pintarEncabezado() {
   const h = $('vp-enc'); if (!h) return;
   const tab = _tab, ges = ES_GESTION.has(tab), sub = SUBVISTAS[tab], ficha = TABS.find(x => x.id === tab);
@@ -679,7 +697,7 @@ function pintarEncabezado() {
       ${propio ? '' : `<h1>${esc(tit)}</h1>`}<div class="sub">${mkt}<span>${partes.filter(Boolean).map(esc).join(' \u00b7 ')}</span></div></div>
     <div class="der">${conMon ? `<div class="vp-seg" role="group" aria-label="Moneda">${['ARS', 'CCL', 'MEP'].map(c =>
         `<button type="button" data-cur="${c}" class="${cur === c ? 'on' : ''}" aria-pressed="${cur === c}">${curEtq(c)}</button>`).join('')}</div>` : ''}
-      ${tab === 'micartera' && S.verificado ? '<button type="button" class="vp-agregar" data-agregar>+ Agregar posición</button>' : ''}</div>`;
+      ${tab === 'micartera' && S.verificado ? '<button type="button" class="vp-agregar" data-agregar>+ Agregar</button>' : ''}</div>`;
 }
 
 /* contadores del lateral y frescura del encabezado: no dependen de que el
@@ -914,7 +932,7 @@ async function registrarCompra(sym, form) {
   }
   toast(`${tk} agregada a Mi cartera y a tu plan del mes`);
   invalidar('cartera', 'disc');
-  refrescar('inicio', 'comprar', 'carteras', 'disciplina', 'empresas', 'herramientas', 'agenda');
+  refrescar('inicio', 'historial', 'comprar', 'carteras', 'disciplina', 'empresas', 'herramientas', 'agenda');
   if (window.__mcRecargar) window.__mcRecargar();
 }
 
@@ -1438,6 +1456,22 @@ const ctx = {
   // Ojo: no lee nada de Firestore ni cachea; todo sale del cc que le pasás, así
   // que cambia con la moneda del encabezado igual que cc.r.
   variacionDia,
+  // qué tipo de activo es cada ticker, con UN solo criterio para todo el panel
+  // (tipos-activo.js). Mi cartera, el Resumen y Movimientos usan esto y no una
+  // regla propia, así el mismo activo no es "CEDEAR" acá y "Acción" allá.
+  //   ctx.tipoActivo('NVDA.BA', { bonos: await ctx.bonosSet(), panel: await ctx.panelBonos() })
+  //     → { k:'cedear', n:'CEDEAR', grupo:'CEDEARs', mercado:'byma', sub:'CEDEAR · BYMA' }
+  //   ctx.GRUPOS_TIPO → [['cedear','CEDEARs'], ['accion','Acciones'], ...] en el orden en que se listan
+  tipoActivo, GRUPOS_TIPO,
+  // la serie histórica del dólar, [[fecha, venta], ...], la misma que lee
+  // cargarEvolucion() en mi-cartera.js (historialInformes/_ccl y _mep).
+  //   const ccl = await ctx.serieFx('ccl');   // o 'mep'
+  // Cacheada por cuenta como los demás getters; [] si el doc no existe y null si la
+  // lectura falla (cached() borra esa entrada y la próxima llamada reintenta).
+  serieFx: cual => cached('sfx-' + cual, async () => {
+    const s = await getDoc(doc(db(), 'historialInformes', cual === 'mep' ? '_mep' : '_ccl'));
+    return s.exists() ? JSON.parse(s.data().json || '[]') : [];
+  }),
   tenencias, frescura, ordenComprar, mapaCarteras, alertasMail, compararSeguidas,
   // guarda la regla de inversión mensual ({ aporte US$/mes, compras por mes }). Devuelve
   // true o el mensaje de error. Refresca el plan y el Resumen.
@@ -1459,4 +1493,4 @@ window.__valtiaCtx = ctx;
 
 /* exposición global para los onclick del HTML */
 window.portalTab = portalTab;
-window.valtiaPanel = { salir, portalTab, iniciarPanel, refrescar: () => { invalidar('cartera', 'disc', 'ventas', 'aj'); refrescar('inicio', 'comprar', 'disciplina', 'empresas', 'herramientas', 'carteras', 'agenda'); } };
+window.valtiaPanel = { salir, portalTab, iniciarPanel, refrescar: () => { invalidar('cartera', 'disc', 'ventas', 'aj'); refrescar('inicio', 'historial', 'comprar', 'disciplina', 'empresas', 'herramientas', 'carteras', 'agenda'); } };
