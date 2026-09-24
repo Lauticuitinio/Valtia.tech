@@ -139,17 +139,28 @@ service cloud.firestore {
       // "config" la escribe el dueño desde el panel (apagada por defecto);
       // "estado" (qué ya se avisó) lo escribe solo el pipeline. Los envíos
       // quedan fechados en alertasEnvios, que tampoco se escribe desde la web.
+      // El mismo doc guarda dos cosas escritas desde dos pantallas, siempre con
+      // merge: las alertas del radar (Resumen: activo, frecuencia, tipos,
+      // umbralVar) y los interruptores de Mi cuenta (avisos, frecuenciaAvisos).
+      // Por eso ningún grupo es obligatorio: cada pantalla manda lo suyo y el
+      // resto viene del doc; lo que aparezca tiene que estar bien formado.
       match /alertas/{docId} {
         allow read: if esDuenio();
         allow delete: if esDuenio() && docId == 'config';
         allow create, update: if esDuenio() && docId == 'config'
-          && request.resource.data.keys().hasOnly(['activo', 'frecuencia', 'tipos', 'umbralVar', 'actualizado'])
-          && request.resource.data.activo is bool
-          && request.resource.data.frecuencia in ['diaria', 'semanal']
-          && request.resource.data.tipos is map
-          && request.resource.data.tipos.keys().hasOnly(['zona', 'estirada', 'resultados', 'vencimientos', 'variacion'])
-          && request.resource.data.tipos.values().hasOnly([true, false])
-          && request.resource.data.umbralVar in [3, 5, 8]
+          && request.resource.data.keys().hasOnly(['activo', 'frecuencia', 'tipos', 'umbralVar', 'avisos', 'frecuenciaAvisos', 'actualizado'])
+          && (!('activo' in request.resource.data) || request.resource.data.activo is bool)
+          && (!('frecuencia' in request.resource.data) || request.resource.data.frecuencia in ['diaria', 'semanal'])
+          && (!('tipos' in request.resource.data)
+              || (request.resource.data.tipos is map
+                  && request.resource.data.tipos.keys().hasOnly(['zona', 'estirada', 'resultados', 'vencimientos', 'variacion'])
+                  && request.resource.data.tipos.values().hasOnly([true, false])))
+          && (!('umbralVar' in request.resource.data) || request.resource.data.umbralVar in [3, 5, 8])
+          && (!('avisos' in request.resource.data)
+              || (request.resource.data.avisos is map
+                  && request.resource.data.avisos.keys().hasOnly(['compraventa', 'rotacion', 'informes', 'eventos', 'newsletter', 'resumen'])
+                  && request.resource.data.avisos.values().hasOnly([true, false])))
+          && (!('frecuenciaAvisos' in request.resource.data) || request.resource.data.frecuenciaAvisos in ['momento', 'diaria'])
           && request.resource.data.actualizado == request.time;
       }
       match /alertasEnvios/{fecha} {
@@ -169,6 +180,45 @@ service cloud.firestore {
           && (!('leida' in request.resource.data) || request.resource.data.leida is bool)
           && (!('hecha' in request.resource.data) || request.resource.data.hecha is bool)
           && request.resource.data.cuando == request.time;
+      }
+
+      // ── ALERTAS DE PRECIO ("avisame si GGAL sube de $X") ──
+      // Las crea el dueño desde Mi cartera. Las evalúan el panel (en cada
+      // refresco de precios) y precios_intradia.py cada 15 min (service
+      // account: no pasa por acá). El umbral va en la moneda y la unidad en
+      // que cotiza el activo (cada 100 VN en renta fija). "avisada" y
+      // "avisoMail" los escribe SOLO el pipeline: dicen que el mail ya salió.
+      match /alertasPrecio/{aid} {
+        allow read, delete: if esDuenio();
+        allow create: if esDuenio()
+          && request.resource.data.keys().hasOnly(['ticker', 'condicion', 'umbral', 'moneda', 'creada', 'activa', 'disparada', 'precioDisparo', 'vista'])
+          && request.resource.data.keys().hasAll(['ticker', 'condicion', 'umbral', 'moneda', 'creada', 'activa', 'disparada', 'precioDisparo', 'vista'])
+          && request.resource.data.ticker is string
+          && request.resource.data.ticker.size() > 0
+          && request.resource.data.ticker.size() <= 16
+          && request.resource.data.condicion in ['sube', 'baja']
+          && request.resource.data.umbral is number
+          && request.resource.data.umbral > 0
+          && request.resource.data.moneda in ['ARS', 'USD']
+          && request.resource.data.creada == request.time
+          && request.resource.data.activa == true
+          && request.resource.data.disparada == null
+          && request.resource.data.precioDisparo == null
+          && request.resource.data.vista == false;
+        // el dueño solo pausa/reanuda, marca vista y la dispara UNA vez, con la
+        // hora del servidor y el precio que la cruzó; una disparada no se reanuda
+        allow update: if esDuenio()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['activa', 'vista', 'disparada', 'precioDisparo'])
+          && request.resource.data.activa is bool
+          && request.resource.data.vista is bool
+          && (!('disparada' in request.resource.data.diff(resource.data).affectedKeys())
+              || (resource.data.disparada == null
+                  && request.resource.data.disparada == request.time
+                  && request.resource.data.precioDisparo is number
+                  && request.resource.data.activa == false))
+          && (!('precioDisparo' in request.resource.data.diff(resource.data).affectedKeys())
+              || 'disparada' in request.resource.data.diff(resource.data).affectedKeys())
+          && (resource.data.disparada == null || request.resource.data.activa == false);
       }
     }
 
