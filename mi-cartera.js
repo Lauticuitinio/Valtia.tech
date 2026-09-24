@@ -5,7 +5,7 @@
 //
 // Diseño separado a propósito: renderMiCartera() es puro (datos -> HTML) para
 // poder verificarlo con datos de prueba sin tocar Firestore.
-import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, runTransaction, query, where }
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, runTransaction, query, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { base, canon, linkDe, esRentaFija, parBono, sectorDe, mercadoDe, desglose, monedaProbable,
@@ -18,6 +18,23 @@ import { validarVenta, armarVenta, planDeshacer, resultadoVenta, resumenVentas, 
   from './ventas.js?v=6';
 import { fxMercado, convertir } from './fx.js?v=1';
 export { convertir } from './fx.js?v=1';
+
+/* ── el catálogo grande (catalogo-activos.js: 1.469 CEDEARs, acciones, ETFs,
+   bonos, letras y cripto; solo símbolo, nombre y en qué mercado cotiza) ──
+   Pesa 93 KB, así que NO se importa arriba: se pide con import() la primera
+   vez que hace falta —al abrir el modal de alta, o cuando una fila sin precio
+   necesita saber en qué mercado cotiza su símbolo— y queda cacheado. Nunca
+   traba el primer pintado. _cat guarda el módulo ya cargado para que el
+   render, que es sincrónico, lo consulte sin esperar; hasta que llega, el
+   modal no afirma nada sobre el catálogo. */
+let _cat = null, _catProm = null, _catPedido = false;
+function catalogo() {
+  if (_cat) return Promise.resolve(_cat);
+  if (!_catProm) _catProm = import("./catalogo-activos.js?v=1")
+    .then(m => { _cat = m; return m; })
+    .catch(() => { _catProm = null; return null; });   // una falla no queda cacheada
+  return _catProm;
+}
 
 /* Panel v3 (handoff de Lauti): la ESTRUCTURA es la del prototipo —fila de totales,
    dos gráficos, tabla con desplegable por fila— y los COLORES y la TIPOGRAFÍA son
@@ -182,6 +199,13 @@ const STYLE = `
 .mc-brk:hover{border-color:var(--v3-gold);color:var(--v3-gold2)}
 .mc-brk-in{font:400 12px 'IBM Plex Sans',system-ui,sans-serif;padding:4px 8px;background:var(--v3-card);border:1px solid var(--v3-gold);
   border-radius:4px;color:var(--v3-ink);width:140px;outline:none}
+select.mc-brk-in{width:auto;max-width:200px}
+/* ── la posición guardada con el sufijo de otro mercado (NVDA-USD): el precio
+   no va a llegar nunca; el desplegable lo dice y ofrece pasarla con un clic ── */
+.mc3-fix{margin:14px 18px 0;padding:12px 14px;border:1px solid var(--v3-line);border-left:3px solid var(--v3-warn);border-radius:8px;
+  background:var(--v3-card);font-size:12.5px;color:var(--v3-sub);line-height:1.6}
+.mc3-fix b{color:var(--v3-ink)}
+.mc3-fix .mc3-acc{margin-top:8px}
 .mc-del{font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-dn);background:none;
   border:1px solid var(--v3-line);padding:6px 12px;border-radius:5px;cursor:pointer;white-space:nowrap}
 .mc-del:hover{border-color:var(--v3-dn)}
@@ -242,12 +266,19 @@ const STYLE = `
    El velo es el navy de la piel con transparencia; como el texto sobre el
    dorado claro, es de los pocos literales, porque es el mismo en los dos temas. */
 .mc-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;
-  background:rgba(14,24,48,.45);color:var(--v3-ink);font-family:'IBM Plex Sans',system-ui,sans-serif}
+  background:rgba(14,24,48,.45);color:var(--v3-ink);font-family:'IBM Plex Sans',system-ui,sans-serif;
+  /* la piel del modal: nada de crema. El acento es el navy de la piel (botón
+     sólido, foco de los campos) y las cajas fijas van en un gris neutro muy
+     tenue. En oscuro el navy no se distingue del fondo: ahí el acento es el
+     dorado claro con texto navy, y el gris es un velo blanco, como --v3-track2. */
+  --mc-soft:#F7F7F8;--mc-acc:var(--v3-navy);--mc-accTx:#fff}
+[data-theme="dark"] .mc-modal{--mc-soft:rgba(255,255,255,.05);--mc-acc:var(--v3-goldL);--mc-accTx:#0E1830}
 .mc-modal button,.mc-modal input,.mc-modal select,.mc-modal textarea{font-family:inherit}
 .mc-mdl{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:14px;width:100%;max-width:560px;min-width:0;
   max-height:calc(100vh - 40px);display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(14,24,48,.25)}
 .mc-mdl-hd{display:flex;align-items:flex-start;gap:12px;padding:22px 24px 0}
-.mc-mdl-hd h3{font:700 22px 'Playfair Display',serif;color:var(--v3-ink);margin:0;line-height:1.2;flex:1;min-width:0}
+/* dentro del modal no hay Playfair: el título va en Plex Sans 600 */
+.mc-mdl-hd h3{font:600 20px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:-.01em;color:var(--v3-ink);margin:0;line-height:1.25;flex:1;min-width:0}
 .mc-mdl-x{font-size:17px;line-height:1;color:var(--v3-mut);background:none;border:1px solid transparent;border-radius:6px;
   cursor:pointer;padding:5px 9px;flex:none}
 .mc-mdl-x:hover{color:var(--v3-ink);border-color:var(--v3-line)}
@@ -263,27 +294,58 @@ const STYLE = `
 .mc-mdl input,.mc-mdl select{width:100%;box-sizing:border-box;padding:10px 12px;background:var(--v3-card);
   border:1px solid var(--v3-line);border-radius:8px;color:var(--v3-ink);font:400 14px 'IBM Plex Sans',system-ui,sans-serif;outline:none}
 .mc-mdl select{font-size:13.5px}
-.mc-mdl input:focus,.mc-mdl select:focus{border-color:var(--v3-gold)}
+.mc-mdl input:focus,.mc-mdl select:focus{border-color:var(--mc-acc)}
 .mc-mdl input#mc-ticker{font:600 14px 'IBM Plex Mono',monospace;text-transform:uppercase}
-/* el nombre no se escribe: sale del catálogo de activos.js */
+/* el nombre no se escribe: sale del catálogo (activos.js y catalogo-activos.js) */
 .mc-mdl .fijo{box-sizing:border-box;font:500 13.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut);padding:10px 12px;
-  border:1px solid var(--v3-line);border-radius:8px;background:var(--v3-track2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  border:1px solid var(--v3-line);border-radius:8px;background:var(--mc-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mc-mdl .fijo.ok{color:var(--v3-ink)}
 .mc-sub{font-size:11.5px;color:var(--v3-mut);line-height:1.6;margin-top:8px;min-height:1px}
 .mc-sub b{color:var(--v3-sub);font:600 11.5px 'IBM Plex Mono',monospace}
+/* la sugerencia del catálogo ("IBIT es un CEDEAR en BYMA y un ETF en EE.UU.") y
+   el motivo por el que con ese mercado no se guarda */
+.mc-sub .warn{color:var(--v3-warn)}
+.mc-sub .bad{color:var(--v3-dn)}
+/* los botones de un clic del choque de mercado ("Cargarlo en BYMA (NVDA.BA)"):
+   secundarios, blancos con borde */
+.mc-sug-bs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.mc-sug-b{font:600 11px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);background:var(--v3-card);border:1px solid var(--v3-line);
+  border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s}
+.mc-sug-b:hover{border-color:var(--v3-ink)}
+/* ── las sugerencias del catálogo debajo del símbolo: lista propia (listbox),
+   posicionada absoluta para que al abrirse no empuje los campos de compras ── */
+.mc-sug{position:relative}
+.mc-sug-l{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:6;margin:0;padding:6px;list-style:none;
+  max-height:min(264px,44vh);overflow-y:auto;overscroll-behavior:contain;background:var(--v3-card);border:1px solid var(--v3-line);
+  border-radius:8px;box-shadow:0 12px 32px rgba(14,24,48,.14)}
+.mc-sug-l[hidden]{display:none}
+.mc-sug-l li{padding:7px 10px;border-radius:6px;font-size:12.5px;color:var(--v3-sub);cursor:pointer;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.mc-sug-l li b{font:600 12.5px 'IBM Plex Mono',monospace;color:var(--v3-ink)}
+.mc-sug-l li span{color:var(--v3-mut)}
+.mc-sug-l li.hl{background:var(--mc-soft)}
+/* ── el broker: un <select> con la lista entera y, con «Otro…», un campo corto al lado ── */
+.mc-bk{display:flex;gap:8px;min-width:0}
+.mc-bk select{flex:1 1 auto;min-width:0}
+.mc-bk-otro{flex:0 1 46%;min-width:0}
+.mc-bk-otro[hidden]{display:none}
 .mc-k2{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-sub);margin:20px 0 8px}
 .mc-cmps{display:flex;flex-direction:column;gap:8px}
 .mc-cmp-hd,.mc-cmp{display:grid;grid-template-columns:1.15fr .85fr .95fr 28px;gap:8px;align-items:center}
 .mc-cmp-hd{font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);padding:0 9px 2px}
 .mc-cmp{border:1px solid var(--v3-line);border-radius:9px;padding:8px}
-.mc-cmp input{padding:8px;border-radius:6px;border-color:var(--v3-line2);font:500 12.5px 'IBM Plex Mono',monospace;min-width:0}
-.mc-cmp input[type="number"]{text-align:right}
+.mc-cmp input{padding:8px;border-radius:6px;border-color:var(--v3-line2);font:500 12.5px 'IBM Plex Mono',monospace;
+  font-variant-numeric:tabular-nums;min-width:0}
+/* cantidad y precio son campos de texto (aceptan coma o punto): la alineación
+   va por el data-*, no por el type */
+.mc-cmp [data-c-cant],.mc-cmp [data-c-px]{text-align:right}
 .mc-cmp-x{background:none;border:none;color:var(--v3-mut);font-size:16px;line-height:1;cursor:pointer;padding:4px;border-radius:5px}
 .mc-cmp-x:hover{color:var(--v3-dn)}
 .mc-cmp-x[disabled]{opacity:.3;cursor:default}
-.mc-mas{font:600 12px 'IBM Plex Sans',sans-serif;color:var(--v3-gold);background:none;border:none;cursor:pointer;padding:9px 0 2px}
-.mc-mas:hover{color:var(--v3-gold2)}
-.mc-res{background:var(--v3-track2);border-radius:9px;padding:12px 14px;margin-top:16px;font-size:12.5px;color:var(--v3-sub)}
+.mc-mas{font:600 12px 'IBM Plex Sans',sans-serif;color:var(--mc-acc);background:none;border:none;cursor:pointer;padding:9px 0 2px}
+.mc-mas:hover{text-decoration:underline}
+/* el resumen: caja blanca con línea, sin fondo crema */
+.mc-res{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:9px;padding:12px 14px;margin-top:16px;font-size:12.5px;color:var(--v3-sub)}
 .mc-res .f{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
 .mc-res .f+.f{margin-top:7px}
 /* el Mono y el nowrap son para los NÚMEROS (los dos renglones de arriba). La
@@ -296,7 +358,16 @@ const STYLE = `
 .mc-res .nota.bad{color:var(--v3-dn)}
 .mc-imp textarea{width:100%;min-height:120px;padding:12px;background:var(--v3-card);border:1px solid var(--v3-line);border-radius:6px;
   color:var(--v3-ink);font:400 12.5px 'IBM Plex Mono',ui-monospace,monospace;outline:none;resize:vertical}
-.mc-imp textarea:focus{border-color:var(--v3-gold)}
+.mc-imp textarea:focus{border-color:var(--mc-acc)}
+/* los botones del modal: navy sólido con texto blanco (en oscuro, dorado claro
+   con texto navy: ver --mc-acc) y el secundario blanco con borde. Las pestañas
+   de arriba subrayan con el mismo acento: nada dorado adentro del modal. */
+.mc-modal .mc-btn{background:var(--mc-acc);border-color:var(--mc-acc);color:var(--mc-accTx)}
+.mc-modal .mc-btn:hover{background:var(--mc-acc);border-color:var(--mc-acc);color:var(--mc-accTx);opacity:.86}
+.mc-modal .mc-btn[disabled],.mc-modal .mc-btn[disabled]:hover{opacity:.4}
+.mc-modal .mc-btn.sec,.mc-modal .mc-btn.sec:hover{background:var(--v3-card);color:var(--v3-ink);border-color:var(--v3-line);opacity:1}
+.mc-modal .mc-btn.sec:hover{border-color:var(--v3-ink)}
+.mc-modal .mc-tab.on{border-bottom-color:var(--mc-acc)}
 .mc-hint{font-size:11.5px;color:var(--v3-mut);line-height:1.7;margin:8px 0 12px}
 .mc-hint b{color:var(--v3-sub)}
 .mc-prev{margin-top:12px;border:1px solid var(--v3-line);border-radius:10px;overflow-x:auto}
@@ -397,6 +468,7 @@ const STYLE = `
   .mc3-row>.c-rot{grid-area:rot;align-self:center}
   .mc3-row>.c-brk,.mc3-row>.c-cnt,.mc3-row>.c-px{display:none}
   .mc3-grp{padding:9px 14px}
+  .mc3-fix{margin:12px 14px 0}
   .mc3-mets{padding:14px 14px 0}
   .mc3-cols{padding:14px 14px 18px}
   .mc3-cmps{padding:0 14px 18px}
@@ -426,10 +498,15 @@ const STYLE = `
 
 /* ── brokers y mercados ──
    El inversor argentino tiene las tenencias repartidas (IOL, PPI, Binance…):
-   cada posición lleva su broker y la tabla se agrupa con subtotales. El
-   mercado define cómo se guarda el ticker: en BYMA "GGAL" es la acción local
-   en pesos (GGAL.BA), en el exterior es el ADR en dólares. */
-const BROKERS = ["IOL", "PPI", "Balanz", "Bull Market", "Cocos", "Binance", "Lemon", "Belo", "Otro"];
+   cada posición lleva su broker y la tabla se agrupa con subtotales. La lista
+   son los brokers, bancos y billeteras que más se usan acá, en ese orden:
+   ALyCs, bancos, exchanges y billeteras cripto, brokers del exterior. "Otro"
+   va último y en el modal deja el campo libre para escribir cualquier cuenta.
+   El mercado define cómo se guarda el ticker: en BYMA "GGAL" es la acción
+   local en pesos (GGAL.BA), en el exterior es el ADR en dólares. */
+const BROKERS = ["IOL", "PPI", "Balanz", "Bull Market", "Cocos", "Allaria", "Eco Valores", "Adcap", "SBS", "Rava", "Criteria",
+                 "Veta", "TSA Bursátil", "Santander", "Galicia", "BBVA", "Macro", "ICBC", "HSBC", "Supervielle",
+                 "Binance", "Lemon", "Belo", "Ripio", "Buenbit", "Bybit", "OKX", "Interactive Brokers", "Schwab", "Otro"];
 const MERCADOS = [["byma", "BYMA · pesos (acciones, CEDEARs, bonos)"],
                   ["ext", "Exterior · dólares (NYSE / Nasdaq)"],
                   ["cripto", "Cripto"]];
@@ -956,23 +1033,11 @@ let _orden = { col: "dValor", desc: true };
    render —incluido uno con datos de prueba— se vea igual que en producción */
 function asegurarEstilo() {
   if (typeof document === "undefined") return;
-  asegurarBrokers();
   if (document.getElementById("v3-css-micartera")) return;
   const st = document.createElement("style");
   st.id = "v3-css-micartera";
   st.textContent = STYLE;
   document.head.appendChild(st);
-}
-
-/* La lista de brokers cuelga de <body> y no de la pestaña: la usan el modal de
-   alta (que vive afuera de _el) y el chip «Broker» del desplegable de cada
-   fila. Una sola, así no hay dos elementos con el mismo id. */
-function asegurarBrokers() {
-  if (typeof document === "undefined" || !document.body || document.getElementById("mc-brokers")) return;
-  const d = document.createElement("datalist");
-  d.id = "mc-brokers";
-  d.innerHTML = BROKERS.map(b => `<option value="${esc(b)}">`).join("");
-  document.body.appendChild(d);
 }
 
 /* ── ventas y resultado realizado (el cálculo vive en ventas.js) ── */
@@ -982,6 +1047,11 @@ const fmtFecha = iso => {
   return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s.split("-").reverse().join("/") : "—";
 };
 const cantTxt = n => num(n, 4).replace(/,0+$/, "");
+/* un número para precargar en un campo de texto que después lee parseNum: con
+   coma decimal y sin puntos de miles, así "1,234" es uno coma dos tres cuatro
+   y nunca mil doscientos (parseNum toma "1.234" como miles) */
+const numIn = n => (n == null || n === "" || !isFinite(Number(n))) ? ""
+  : Number(n).toLocaleString("es-AR", { maximumFractionDigits: 8, useGrouping: false });
 
 function seccionVentas(ventas, cur) {
   if (!ventas.length) return "";
@@ -1090,9 +1160,9 @@ function bloqueAjustes(ajustes, precios, bonos) {
       <div class="t">Movimiento detectado en ${esc(a.broker)} · ${fmtFecha(a.fecha)}</div>
       <p><b>${esc(base(a.ticker))}</b> ${que}. ¿Vendiste <b>${cantTxt(n)}</b>?</p>
       <div class="mc-vform">
-        <div><label>Cantidad vendida · de ${cantTxt(n)}</label><input data-aj-cant type="number" step="any" min="0" max="${n}" value="${n}"${moneda ? "" : " disabled"}></div>
+        <div><label>Cantidad vendida · de ${cantTxt(n)}</label><input data-aj-cant type="text" inputmode="decimal" autocomplete="off" value="${numIn(n)}"${moneda ? "" : " disabled"}></div>
         <div><label>Precio de venta · ${monNombre(moneda)}, ${unidad}</label>
-          <input data-aj-px type="number" step="any" min="0" placeholder="el que te pagaron"${moneda ? "" : " disabled"}></div>
+          <input data-aj-px type="text" inputmode="decimal" autocomplete="off" placeholder="el que te pagaron"${moneda ? "" : " disabled"}></div>
         <div><label>Fecha de la venta</label><input data-aj-fecha type="date" max="${hoy}"${moneda ? "" : " disabled"}></div>
         <div class="prev" data-aj-prev></div>
         <div><button class="mc-btn" data-aj-ok${moneda ? "" : " disabled"}>Sí, registrar la venta</button>
@@ -1429,7 +1499,14 @@ function detalleHTML(f, opts, cur) {
   const brk = String(f.broker || "").trim();
   const bonos = opts.bonos || new Set();
   const link = linkDe(f.ticker, bonos);
-  return `<div class="mc3-det" data-det="${id}">
+  // el ticker lleva el sufijo de un mercado en el que el símbolo no cotiza
+  // (NVDA-USD): un botón por mercado posible pasa TODAS sus compras
+  const rota = filaRota(f, bonos);
+  const fix = rota ? `<div class="mc3-fix" data-fix="${esc(f.ticker)}">
+      <b>${esc(f.ticker)} no existe:</b> ${esc(punto(`${rota.s} es ${rota.esTxt}`))} Pasala al mercado que corresponde y el precio llega en la próxima actualización, en unos 15 minutos.
+      <div class="mc3-acc">${rota.opciones.map(o => `<button type="button" class="mc3-b aj" data-pasar="${esc(f.ticker)}" data-mercado="${o.mercado}">${esc(o.txt)}</button>`).join("")}</div>
+    </div>` : "";
+  return `<div class="mc3-det" data-det="${id}">${fix}
     <div class="mc3-mets" data-mets>${metricas(f, opts, cur).map(m => metHTML(m)).join("")}${c && c.pe ? c.pe : ""}</div>
     <div class="mc3-cols">
       ${ctxOk ? `<div class="mc3-col" data-dl>${c ? c.lect : esperando("Lectura Valtia")}</div>
@@ -1725,10 +1802,15 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     const tk = base(f.ticker), nd = nombreDe(f.ticker);
     const nombre = px.nombre && String(px.nombre).toUpperCase() !== String(f.ticker).toUpperCase() ? px.nombre : (nd !== tk ? nd : "");
     const pills = [];
-    if (px.sinDatos) pills.push(["warn", "Ticker no encontrado", "Revisá que el ticker esté bien escrito"]);
+    // guardada con el sufijo de otro mercado (NVDA-USD): el desplegable la arregla
+    const rota = filaRota(f, bonos);
+    if (rota) pills.push(["warn", "no existe", `${f.ticker} no existe: ${punto(`${rota.s} es ${rota.esTxt}`)} Abrí la fila para pasarla al mercado que corresponde`]);
+    else if (px.sinDatos) pills.push(["warn", "Ticker no encontrado", "Revisá que el ticker esté bien escrito"]);
     else if (px.veredicto && px.veredicto !== "Sin cobertura") pills.push([verCls(px.veredicto), px.veredicto, "Lectura automática de Valtia"]);
     else if (f.actual != null) pills.push(["sin", "Sin lectura", "Valtia no tiene lectura de valor de este activo"]);
-    if (!px.sinDatos && f.actual == null) pills.push(["warn", "sin precio", "Espera el precio del sync: queda fuera del total"]);
+    // sin doc de precio todavía (recién cargada): el pipeline lo crea en su
+    // próxima corrida, a cualquier hora, así que "unos 15 minutos" es cierto
+    if (!rota && !px.sinDatos && f.actual == null) pills.push(["warn", "sin precio", "El precio llega en la próxima actualización, en unos 15 minutos: hasta entonces queda fuera del total"]);
     if (px.rsi != null && px.rsi > 70) pills.push(["warn", "RSI " + num(px.rsi, 0), "Sobrecomprada: no es señal de venta, es para mirarla"]);
     if (rf) {
       const R = rfDatos(f.ticker, bonos, opts.panel);
@@ -2055,6 +2137,14 @@ function frescura() {
 let _bonos = new Set(), _panel = null, _flujos = null, _desg = null;
 
 function pintar() {
+  // una posición sin precio puede estar guardada con el sufijo de otro mercado
+  // (NVDA-USD, con el mercado "Cripto" recordado de una carga anterior). Para
+  // saberlo hace falta el catálogo, que se pide recién acá y una sola vez;
+  // cuando llega se repinta y la fila ofrece arreglarla (filaRota)
+  if (!_cat && !_catPedido && _pos.some(p => { const px = _precios[String(p.ticker || "").toUpperCase()]; return !px || px.sinDatos || px.precio == null; })) {
+    _catPedido = true;
+    catalogo().then(m => { if (m && _el && _user) pintar(); });
+  }
   const hoy = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
   const rf = _panel ? analisisRentaFija(calcular(_pos, _precios), _bonos, _panel, _flujos || {}, hoy) : "";
   renderMiCartera(_el, _pos, _precios, { frescura: frescura(), onRerender: enganchar, onDetalle: engancharDetalle,
@@ -2135,16 +2225,31 @@ function engancharDetalle(root) {
   if (!root) return;
   root.querySelectorAll("[data-del]").forEach(b => b.onclick = () => quitar(b.dataset.del));
   root.querySelectorAll("[data-vender]").forEach(b => b.onclick = () => abrirVenta(b.dataset.vender));
+  root.querySelectorAll("[data-pasar]").forEach(b => b.onclick = () => pasarMercado(b.dataset.pasar, b.dataset.mercado, b));
   root.querySelectorAll(".mc-brk[data-brk]").forEach(chip => chip.onclick = () => {
     const id = chip.dataset.brk;
-    const inp = document.createElement("input");
-    inp.className = "mc-brk-in"; inp.setAttribute("list", "mc-brokers"); inp.maxLength = 24;
-    inp.value = chip.textContent === "sin broker" ? "" : chip.textContent;
-    chip.replaceWith(inp); inp.focus();
+    const actual = chip.textContent === "sin broker" ? "" : chip.textContent;
+    // un <select> con la lista entera (antes era un campo con datalist, que con
+    // un valor puesto mostraba solo ese); «Otro…» pasa a un campo libre
+    const sel = document.createElement("select");
+    sel.className = "mc-brk-in";
+    const ops = [["", "sin broker"], ...BROKERS.map(b => [b, b === "Otro" ? "Otro…" : b])];
+    if (actual && !BROKERS.includes(actual)) ops.splice(1, 0, [actual, actual]);
+    sel.innerHTML = ops.map(([v, t]) => `<option value="${esc(v)}"${v === actual ? " selected" : ""}>${esc(t)}</option>`).join("");
+    chip.replaceWith(sel); sel.focus();
     let listo = false;
-    const cerrar = () => { if (listo) return; listo = true; guardarBroker(id, inp.value.trim()); };
-    inp.addEventListener("keydown", ev => { if (ev.key === "Enter") cerrar(); if (ev.key === "Escape") { listo = true; pintar(); } });
-    inp.addEventListener("blur", cerrar);
+    const fin = v => { if (listo) return; listo = true; guardarBroker(id, v); };
+    const libre = () => {
+      const inp = document.createElement("input");
+      inp.className = "mc-brk-in"; inp.maxLength = 24; inp.placeholder = "¿Qué cuenta?";
+      sel.replaceWith(inp); inp.focus();
+      inp.addEventListener("keydown", ev => { if (ev.key === "Enter") fin(inp.value.trim()); if (ev.key === "Escape") { listo = true; pintar(); } });
+      inp.addEventListener("blur", () => fin(inp.value.trim()));
+    };
+    sel.addEventListener("change", () => { if (sel.value === "Otro") libre(); else fin(sel.value); });
+    sel.addEventListener("keydown", ev => { if (ev.key === "Escape") { listo = true; pintar(); } });
+    // se fue sin elegir: vuelve el chip
+    sel.addEventListener("blur", () => { if (!listo && sel.isConnected) { listo = true; pintar(); } });
   });
 }
 
@@ -2210,20 +2315,56 @@ function atraparFoco(caja, ev) {
 const opcMercados = sel => MERCADOS.map(([k, n]) =>
   `<option value="${k}"${sel === k ? " selected" : ""}>${n}</option>`).join("");
 
+/* ── el broker del modal ──
+   Un <select> con la lista entera visible al tocarlo. Antes era un campo con
+   datalist, que filtra por lo escrito: con "IOL" precargado, al tocarlo
+   aparecía solo IOL y parecía que la lista era esa. Si la preferencia guardada
+   (valtia-mc-broker) no está en la lista, va como opción elegida igual; sin
+   preferencia, la primera opción pide elegir, así nadie guarda "IOL" sin
+   querer. «Otro…» destapa un campo corto al lado para escribir cualquier
+   cuenta. Lo que se guarda sigue siendo un texto (brokerDe). */
+export function brokerSelectHTML(id, valor) {
+  const v = String(valor || "").trim();
+  const ops = BROKERS.map(b => `<option value="${esc(b)}"${b === v ? " selected" : ""}>${b === "Otro" ? "Otro…" : esc(b)}</option>`);
+  if (v && !BROKERS.includes(v)) ops.unshift(`<option value="${esc(v)}" selected>${esc(v)}</option>`);
+  else if (!v) ops.unshift(`<option value="" selected>Elegí tu broker</option>`);
+  return `<div class="mc-bk"><select id="${id}">${ops.join("")}</select>
+    <input id="${id}-otro" class="mc-bk-otro" placeholder="¿Qué cuenta?" maxlength="24" autocomplete="off" aria-label="Nombre de la cuenta" hidden></div>`;
+}
+/* el broker que se guarda: la opción elegida o, con «Otro…», lo escrito al lado */
+function brokerDe(id) {
+  const s = $m("#" + id);
+  if (!s) return "";
+  if (s.value === "Otro") return String(($m("#" + id + "-otro") || {}).value || "").trim();
+  return String(s.value || "").trim();
+}
+function engancharBrokerSel(root) {
+  root.querySelectorAll(".mc-bk select").forEach(s => {
+    const otro = root.querySelector("#" + s.id + "-otro");
+    if (!otro) return;
+    const ver = () => { otro.hidden = s.value !== "Otro"; };
+    s.addEventListener("change", () => { ver(); if (s.value === "Otro") try { otro.focus(); } catch (e) {} });
+    ver();
+  });
+}
+
 /* un renglón de la lista de compras. Los valores viven en el DOM: agregar o
    sacar un renglón no repinta los demás, así que no se pierde lo escrito ni
-   el cursor. La cantidad NO lleva min="0" a propósito: si alguien escribe una
-   negativa queremos poder explicarle que las ventas van por otro lado. */
+   el cursor. La fecha arranca en hoy. Cantidad y precio son campos de TEXTO
+   (inputmode=decimal para el teclado del celular) que lee parseNum: aceptan
+   coma o punto decimal y miles con punto; un type=number leía "0,3923" como 0
+   y Guardar quedaba apagado sin decir por qué. Una cantidad negativa se puede
+   escribir, para poder explicar que las ventas van por otro lado. */
 const filaCompraHTML = (hoy, v = {}) => `<div class="mc-cmp" data-cmp>
-    <input type="date" data-c-fecha max="${hoy}" value="${esc(v.fecha || "")}" aria-label="Fecha de la compra">
-    <input type="number" step="any" inputmode="decimal" data-c-cant placeholder="Cantidad" value="${esc(v.cant ?? "")}" aria-label="Cantidad comprada">
-    <input type="number" step="any" min="0" inputmode="decimal" data-c-px placeholder="Precio" value="${esc(v.px ?? "")}" aria-label="Precio de compra">
+    <input type="date" data-c-fecha max="${hoy}" value="${esc(v.fecha || hoy)}" aria-label="Fecha de la compra">
+    <input type="text" inputmode="decimal" autocomplete="off" data-c-cant placeholder="Cantidad" value="${numIn(v.cant)}" aria-label="Cantidad comprada">
+    <input type="text" inputmode="decimal" autocomplete="off" data-c-px placeholder="Precio" value="${numIn(v.px)}" aria-label="Precio de compra">
     <button type="button" class="mc-cmp-x" data-c-quitar aria-label="Sacar esta compra" title="Sacar esta compra">×</button>
   </div>`;
 
 function modalHTML() {
   const mkt = pref("valtia-mc-mercado", "byma");
-  const brk = esc(pref("valtia-mc-broker", ""));
+  const brk = pref("valtia-mc-broker", "");
   return `<div class="mc-mdl" role="dialog" aria-modal="true" aria-labelledby="mc-mdl-t">
     <div class="mc-mdl-hd">
       <h3 id="mc-mdl-t">Agregar activo</h3>
@@ -2237,10 +2378,13 @@ function modalHTML() {
       <div id="mc-modo-uno">
         <div class="mc-gr">
           <div><label for="mc-mercado">Mercado</label><select id="mc-mercado">${opcMercados(mkt)}</select></div>
-          <div><label for="mc-broker">Broker / cuenta</label>
-            <input id="mc-broker" list="mc-brokers" placeholder="IOL, PPI, Binance…" maxlength="24" value="${brk}" autocomplete="off"></div>
+          <div><label for="mc-broker">Broker / cuenta</label>${brokerSelectHTML("mc-broker", brk)}</div>
           <div><label for="mc-ticker">Símbolo</label>
-            <input id="mc-ticker" placeholder="GGAL, AL30, NVDA…" maxlength="12" autocomplete="off" spellcheck="false"></div>
+            <div class="mc-sug">
+              <input id="mc-ticker" placeholder="GGAL, AL30, NVDA…" maxlength="12" autocomplete="off" spellcheck="false"
+                role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-controls="mc-sug-l">
+              <ul id="mc-sug-l" class="mc-sug-l" role="listbox" aria-label="Coincidencias del catálogo" hidden></ul>
+            </div></div>
           <div><div class="mc-lbl" id="mc-nombre-k">Nombre</div>
             <div class="fijo" id="mc-nombre" aria-labelledby="mc-nombre-k">—</div></div>
         </div>
@@ -2259,8 +2403,7 @@ function modalHTML() {
         <div class="mc-gr" style="margin-bottom:12px">
           <div><label for="mc-imp-mercado">¿De qué mercado es este resumen?</label>
             <select id="mc-imp-mercado">${opcMercados(mkt)}</select></div>
-          <div><label for="mc-imp-broker">Broker / cuenta</label>
-            <input id="mc-imp-broker" list="mc-brokers" placeholder="IOL, PPI, Binance…" maxlength="24" value="${brk}" autocomplete="off"></div>
+          <div><label for="mc-imp-broker">Broker / cuenta</label>${brokerSelectHTML("mc-imp-broker", brk)}</div>
         </div>
         <div class="mc-hint">Copiá las filas del resumen de tu broker y pegalas acá: una posición por línea, en el orden
           <b>ticker · cantidad · precio de compra · fecha</b>. Sirven tabulaciones, comas o punto y coma, y los números
@@ -2274,7 +2417,7 @@ function modalHTML() {
     <div class="mc-mdl-pie">
       <div class="mc-msg" id="mc-mdl-msg"></div>
       <button type="button" class="mc-btn sec" data-mc-cerrar>Cancelar</button>
-      <button type="button" class="mc-btn" id="mc-add" disabled>Guardar</button>
+      <button type="button" class="mc-btn" id="mc-add">Guardar</button>
     </div>
   </div>`;
 }
@@ -2284,47 +2427,329 @@ function modalHTML() {
    única diferencia es que acá se usa el set de bonos que ya está en memoria
    (al guardar se espera el de Firestore), así la vista previa nunca dice una
    moneda y el documento guarda otra. */
-function contextoModal() {
+function contextoModal(escritura) {
   const mercado = ($m("#mc-mercado") || {}).value || "byma";
   const crudo = (($m("#mc-ticker") || {}).value || "").trim().toUpperCase();
-  const tk = crudo ? normalizarTicker(crudo, mercado, _bonos) : "";
+  // escritura: con qué se normaliza cuando no es lo tipeado tal cual (el
+  // r.simbolo de resolverSimbolo: BRK.B → BRK-B en el exterior, NVDA-USD → NVDA en BYMA)
+  const usar = escritura || crudo;
+  const tk = usar ? normalizarTicker(usar, mercado, _bonos) : "";
   const moneda = tk ? monedaMercado(mercado, tk, _bonos) : (mercado === "byma" ? "ARS" : "USD");
   return { mercado, crudo, tk, moneda, factor: tk && _bonos.has(tk) ? 0.01 : 1 };
 }
 
-const leerCompras = () => [...(_modal ? _modal.el.querySelectorAll("[data-cmp]") : [])].map(r => ({
-  fila: r,
-  fecha: r.querySelector("[data-c-fecha]").value || "",
-  cant: parseFloat(r.querySelector("[data-c-cant]").value),
-  px: parseFloat(r.querySelector("[data-c-px]").value),
-}));
+/* lo tipeado en cada renglón, crudo y como número. parseNum entiende coma o
+   punto decimal y miles con punto ("0,3923", "1.234,5", "1900.50"); el
+   type=number de antes leía "0,3923" como 0 y la compra no se guardaba. */
+const leerCompras = () => [...(_modal ? _modal.el.querySelectorAll("[data-cmp]") : [])].map(r => {
+  const cRaw = r.querySelector("[data-c-cant]").value, pRaw = r.querySelector("[data-c-px]").value;
+  return { fila: r, fecha: r.querySelector("[data-c-fecha]").value || "",
+           cantTxt: cRaw, pxTxt: pRaw, cant: parseNum(cRaw), px: parseNum(pRaw) };
+});
 
-/* el nombre del activo sale del catálogo (activos.js): no se escribe ni se
-   inventa. Si el activo no está, se dice que no está y se carga igual. */
-function nombreCatalogo(tk) {
+/* ── qué falta para guardar, en orden: símbolo, choque de mercado, cantidad,
+   precio. Recibe lo tipeado (texto) y devuelve la primera falla con el campo
+   a marcar (campo: "simbolo" | "mercado" | "cant" | "px", i: el renglón), o las
+   compras listas para grabar. Los renglones vacíos del todo se ignoran cuando
+   hay otro con algo escrito (el "+ Agregar otra compra" que quedó sin usar).
+   Una compra sin precio se guarda con 0, como siempre. ── */
+export function validarCompras(simbolo, choque, filas) {
+  const sim = String(simbolo || "").trim();
+  if (!sim) return { error: "Falta el símbolo: escribilo como lo ves en tu broker.", campo: "simbolo" };
+  // sin una letra ni un número no hay ticker: normalizarTicker daría "" y la
+  // compra se guardaría sin símbolo (antes lo frenaba el botón apagado)
+  if (!/[A-Za-z0-9]/.test(sim)) return { error: "El símbolo no se entiende: escribilo como lo ves en tu broker (GGAL, AL30, NVDA…).", campo: "simbolo" };
+  if (choque) return { error: choque, campo: "mercado" };
+  const vacio = s => !String(s ?? "").trim();
+  const lista = (filas || []).map((f, i) => ({ f, i })).filter(x => !vacio(x.f.cantTxt) || !vacio(x.f.pxTxt));
+  if (!lista.length) return { error: "Falta la cantidad de la compra.", campo: "cant", i: 0 };
+  const compras = [];
+  for (const { f, i } of lista) {
+    const cant = parseNum(f.cantTxt), px = parseNum(f.pxTxt);
+    if (vacio(f.cantTxt) || !isFinite(cant)) return { error: "Falta la cantidad de la compra.", campo: "cant", i };
+    if (cant < 0) return { error: "La cantidad es negativa: las ventas se registran desde la fila del activo, con «Vendí».", campo: "cant", i };
+    if (cant === 0) return { error: "La cantidad es 0: poné cuántas compraste.", campo: "cant", i };
+    if (!vacio(f.pxTxt) && (!isFinite(px) || px < 0)) return { error: "El precio no se entiende: escribilo como 1.234,56 o 1234.56 (o dejalo vacío).", campo: "px", i };
+    compras.push({ fecha: f.fecha || "", cant, px: isFinite(px) && px > 0 ? px : 0, fila: f.fila });
+  }
+  return { compras };
+}
+
+/* ── el símbolo tipeado, según el catálogo (catalogo-activos.js) ──
+   Cada entrada trae en qué mercado cotiza. Un mismo símbolo puede estar en dos
+   (NVDA es CEDEAR en BYMA y acción en EE.UU.; IBIT igual) y no existir en el
+   tercero: NVDA-USD no es nada. Textos: "un CEDEAR en BYMA", "una cripto". */
+const MERCADO_NOM = { byma: "BYMA", ext: "Exterior", cripto: "Cripto" };   // como en el selector
+const MERCADO_EN = { byma: "BYMA", ext: "EE.UU.", cripto: "cripto" };     // dónde cotiza
+const TIPO_UN = { cedear: "un CEDEAR", accion_ar: "una acción", accion_us: "una acción", etf: "un ETF",
+                  bono: "un bono", letra: "una letra", on: "una ON", cripto: "una cripto" };
+const TIPO_EL = { cedear: "el CEDEAR", accion_ar: "la acción", accion_us: "la acción", etf: "el ETF",
+                  bono: "el bono", letra: "la letra", on: "la ON", cripto: "la cripto" };
+const TIPO_CORTO = { cedear: "CEDEAR", accion_ar: "acción", accion_us: "acción", etf: "ETF", bono: "bono", letra: "letra", on: "ON" };
+const queEs = e => e.t === "cripto" ? "una cripto" : `${TIPO_UN[e.t] || "un activo"} en ${MERCADO_EN[e.m] || e.m}`;
+/* cierra la frase sin duplicar el punto de "EE.UU." */
+const punto = t => /\.$/.test(t) ? t : t + ".";
+/* "CEDEAR en BYMA" / "acción en EE.UU." / "cripto": el renglón de las sugerencias */
+const tipoEn = e => e.t === "cripto" ? "cripto" : `${TIPO_CORTO[e.t] || "activo"} en ${MERCADO_EN[e.m] || e.m}`;
+const esEntradaRF = e => e.t === "bono" || e.t === "letra" || e.t === "on";
+
+/* buscarCatalogo, más la renta fija que el panel de bonos conoce y el catálogo
+   no (una letra nueva): para el modal es "un bono en BYMA" igual */
+function buscarConCatalogo(simbolo, mercado) {
+  const e = _cat ? _cat.buscarCatalogo(simbolo, mercado) : null;
+  if (e || mercado !== "byma") return e;
+  const c = canon(String(simbolo || "").trim().toUpperCase(), _bonos);
+  return esRentaFija(c, _bonos) ? { s: c, n: "Renta fija BYMA · cotiza por 100 VN", t: "bono", m: "byma" } : null;
+}
+
+/* ── resolverSimbolo: qué es lo tipeado con el mercado elegido. PURA: el
+   catálogo entra por `buscar(simbolo, mercado)` (buscarCatalogo, o una de
+   prueba); con buscar = null (todavía no cargó) no se afirma nada sobre él.
+   Devuelve:
+   - tk: cómo se guarda con ese mercado (NVDA.BA / NVDA / NVDA-USD; la renta
+     fija sin sufijo, como la lista el panel de bonos)
+   - nombre: el del catálogo en ese mercado o, si ahí no está, en el primero
+     donde esté ("" si en ninguno). activos.js tiene prioridad para los que
+     tienen ficha: eso lo aplica nombreCatalogo, no esto.
+   - enCatalogo: true/false en el mercado elegido; null sin catálogo
+   - mercadosPosibles: en cuáles lo tiene el catálogo, ["byma", "ext"]
+   - esTxt: "un CEDEAR en BYMA y una acción en EE.UU." (todas sus entradas)
+   - choque: el aviso cuando con ese mercado el ticker NO existe, y entonces
+     no se guarda: elegido Cripto y el símbolo no es una cripto (NVDA-USD), o
+     elegido BYMA/Exterior y el símbolo es solo una cripto (BTC.BA), o un bono
+     o una letra fuera de BYMA (cotizan ahí y se guardan sin sufijo: en otro
+     mercado irían en la moneda equivocada). Entre BYMA y Exterior NO hay
+     choque: KO puede ser el CEDEAR o la acción, y nuestra lista de EE.UU. es
+     S&P 500 + Nasdaq 100 + ETFs, así que un ADR que no está es una compra
+     legítima. Ahí solo se informa cuál es cuál.
+   - sugerencias: los otros mercados donde está, para los botones de un clic:
+     [{ mercado, tk, txt: "Cargarlo en BYMA (NVDA.BA)" }]
+   - aviso: lo que se informa sin bloquear (no está en el catálogo, se guarda
+     igual; o está acá y también allá)
+   - cambiarA: si está en UN solo mercado y no es el elegido, ese mercado (el
+     modal cambia el selector solo si el usuario no lo tocó a mano) ── */
+/* ── con qué escritura se guarda un símbolo en un mercado ──
+   1) Sin el sufijo de OTRO mercado: "NVDA.BA" en Cripto o Exterior es NVDA,
+      "NVDA-USD" en BYMA es NVDA (normalizarTicker le pone después el sufijo
+      que va). Antes "NVDA-USD" elegido BYMA daba NVDA-USD.BA, y el botón de
+      un clic "Cargarlo en Exterior" ofrecía NVDA.BA: otra posición rota.
+   2) La del catálogo si lo tiene con otra (las acciones por clase): BRK-B o
+      BRK.B tipeado con BYMA es BRKB, el CEDEAR; BRKB con Exterior es BRK.B.
+   3) En el exterior, las clases con guion (BRK-B): así las resuelve el sync
+      (yfinance) y así ya están guardadas; con punto, Yahoo no las encuentra.
+   Es la MISMA regla que aplica elegir una sugerencia de la lista, así lo que
+   se guarda no depende de si se tipeó entero o se tocó la sugerencia. */
+export function escrituraEn(simbolo, mercado, entrada) {
+  let e = String(simbolo || "").trim().toUpperCase();
+  e = mercado === "byma" ? e.replace(/-USD$/, "") : e.replace(/\.BA$/, "");
+  if (entrada && entrada.s && entrada.s !== e) e = String(entrada.s);
+  return mercado === "ext" ? e.replace(/\./g, "-") : e;
+}
+
+export function resolverSimbolo(crudo, mercadoElegido, buscar, bonos = new Set()) {
+  const s = String(crudo || "").trim().toUpperCase().replace(/[^A-Z0-9.\-]/g, "");
+  const mercado = MERCADOS.some(([k]) => k === mercadoElegido) ? mercadoElegido : "byma";
+  const entradas = s && typeof buscar === "function" ? MERCADOS.map(([k]) => buscar(s, k)).filter(Boolean) : [];
+  const enM = m => entradas.find(e => e.m === m) || null;
+  const tkEn = m => normalizarTicker(escrituraEn(s, m, enM(m)), m, bonos);
+  // simbolo: la escritura con la que se normaliza en el mercado elegido (lo
+  // que usan la línea "Se guarda como" y guardarCompras); con el catálogo sin
+  // cargar, lo tipeado sin el sufijo de otro mercado
+  const r = { tk: s ? tkEn(mercado) : "", simbolo: s ? escrituraEn(s, mercado, enM(mercado)) : "",
+              nombre: "", enCatalogo: null, mercadosPosibles: [], esTxt: "",
+              choque: "", sugerencias: [], aviso: "", cambiarA: null };
+  if (!s || typeof buscar !== "function") return r;
+  const aca = enM(mercado);
+  const otras = entradas.filter(e => e.m !== mercado);
+  r.mercadosPosibles = entradas.map(e => e.m);
+  r.enCatalogo = !!aca;
+  r.nombre = aca ? aca.n : (otras[0] ? otras[0].n : "");
+  r.esTxt = entradas.map(queEs).join(" y ");
+  r.sugerencias = otras.map(e => ({ mercado: e.m, tk: tkEn(e.m), txt: `Cargarlo en ${MERCADO_NOM[e.m]} (${tkEn(e.m)})` }));
+  if (!entradas.length) {
+    r.aviso = "No está en nuestro catálogo: se guarda igual, revisá que esté escrito como en tu broker.";
+    return r;
+  }
+  if (aca) {
+    // está acá y también en otro lado (KO: CEDEAR en BYMA, acción en EE.UU.): se dice cuál es cuál
+    if (otras.length) r.aviso = `En ${MERCADO_EN[mercado]} es ${TIPO_EL[aca.t] || "el activo"} (${r.tk}); `
+      + otras.map(e => `en ${MERCADO_EN[e.m]}, ${TIPO_EL[e.t] || "el activo"} (${tkEn(e.m)})`).join("; ") + ".";
+    return r;
+  }
+  if (entradas.length === 1) r.cambiarA = entradas[0].m;
+  const otrasTxt = otras.map(queEs).join(" y ");
+  if (mercado === "cripto") r.choque = punto(`${s} no es una cripto: es ${otrasTxt}`);
+  else if (otras.every(e => e.m === "cripto")) r.choque = `${s} es una cripto: en ${MERCADO_EN[mercado]} no existe.`;
+  else if (otras.every(esEntradaRF)) r.choque = `${s} es ${otrasTxt}: en ${MERCADO_EN[mercado]} no existe.`;
+  else r.aviso = `${s} es ${otrasTxt}; en ${MERCADO_EN[mercado]} no lo tenemos en la lista. Si lo compraste ahí, se guarda igual como ${r.tk}.`;
+  return r;
+}
+
+/* ── hasta `max` coincidencias del catálogo para lo tipeado: primero por el
+   principio del símbolo (el exacto adelante, después los más cortos), después
+   por el nombre (desde dos letras). Cada entrada del catálogo es una: NVDA
+   CEDEAR y NVDA acción son dos renglones. La acción por clase se encuentra
+   escrita de cualquier forma (BRK-B, BRK.B, BRKB). PURA. ── */
+export function sugerirCatalogo(texto, catalogo, max = 8) {
+  const t = String(texto || "").trim().toUpperCase();
+  if (!t || !Array.isArray(catalogo)) return [];
+  const clave = t.replace(/\.BA$/, "").replace(/-USD$/, "");
+  const compacta = clave.replace(/[.\-]/g, "");
+  if (!compacta) return [];
+  const norm = x => String(x || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const q = norm(clave);
+  const porSim = [], porNom = [];
+  for (const e of catalogo) {
+    if (e.s.startsWith(clave) || e.s.replace(/[.\-]/g, "").startsWith(compacta)) porSim.push(e);
+    else if (q.length >= 2 && norm(e.n).includes(q)) porNom.push(e);
+  }
+  const ORD = { byma: 0, ext: 1, cripto: 2 };
+  const exacto = e => (e.s === clave || e.s.replace(/[.\-]/g, "") === compacta) ? 0 : 1;
+  porSim.sort((a, b) => exacto(a) - exacto(b) || a.s.length - b.s.length || a.s.localeCompare(b.s) || (ORD[a.m] ?? 9) - (ORD[b.m] ?? 9));
+  return porSim.concat(porNom).slice(0, max);
+}
+
+/* el nombre del activo sale del catálogo: primero activos.js (los que tienen
+   ficha), después catalogo-activos.js. No se escribe ni se inventa. Si está en
+   el catálogo pero en otro mercado, el nombre se muestra igual, en gris (la
+   línea de abajo explica); si no está en ninguno, se dice y se carga igual. */
+function nombreCatalogo(tk, r) {
   if (!tk) return { txt: "—", ok: false };
   if (tickerFicha(tk)) return { txt: nombreDe(tk), ok: true };
+  if (r && r.nombre) return { txt: r.nombre, ok: !!r.enCatalogo };
   if (esRentaFija(tk, _bonos)) return { txt: "Renta fija BYMA · cotiza por 100 VN", ok: true };
+  if (r && r.enCatalogo === null) return { txt: "Buscando en el catálogo…", ok: false };
   return { txt: "No está en nuestro catálogo", ok: false };
 }
 
-/* el precio promedio y el total, en vivo. Promedio ponderado por cantidad
-   —el mismo número que después muestran la fila y el desplegable— y en la
-   moneda del mercado elegido, que es la moneda en la que se guarda el precio.
-   Va con montoTxt() y no con money(): "Ocultar $" no puede tapar un número que
-   la persona está tipeando en ese mismo momento. */
+/* ── una posición guardada con el sufijo de otro mercado (NVDA-USD, BTC.BA) ──
+   Pasa cuando el modal tenía recordado el mercado de una carga anterior. El
+   precio no va a llegar nunca: si no está (doc sinDatos, o sin doc todavía) y
+   el catálogo tiene el símbolo base en otros mercados pero no en el del
+   sufijo, la fila lo dice y el desplegable ofrece pasarla con un clic
+   (pasarMercado). null si no es el caso o si el catálogo todavía no cargó
+   (pintar() lo pide y repinta cuando llega). */
+function filaRota(f, bonos) {
+  const px = f.px || null;
+  if (!_cat || esRentaFija(f.ticker, bonos)) return null;
+  if (f.actual != null && !(px && px.sinDatos)) return null;
+  const s = _cat.claveCatalogo(f.ticker);
+  const mk = mercadoDe(f.ticker, bonos);
+  const entradas = MERCADOS.map(([k]) => _cat.buscarCatalogo(s, k)).filter(Boolean);
+  if (!s || !entradas.length || entradas.some(e => e.m === mk)) return null;
+  // la escritura de cada mercado (BRKB en BYMA, BRK-B en el exterior), como en el modal
+  return { s, esTxt: entradas.map(queEs).join(" y "),
+           opciones: entradas.map(e => { const tk = normalizarTicker(escrituraEn(s, e.m, e), e.m, bonos); return { mercado: e.m, tk, txt: `Pasar a ${MERCADO_NOM[e.m]} (${tk})` }; }) };
+}
+
+/* ── las sugerencias del catálogo debajo del símbolo ──
+   Lista propia (role=listbox): flechas, Enter, Escape y clic. Elegir una
+   completa el símbolo Y el mercado; es una elección explícita, así que el
+   catálogo deja de cambiar el selector solo. La lista se pinta cuando el
+   catálogo ya está; si todavía no, se pide y se pinta al llegar. */
+function pedirSugerencias() {
+  if (!_modal) return;
+  if (_cat) { pintarSugerencias(); return; }
+  const inp = $m("#mc-ticker");
+  catalogo().then(() => { if (_modal && inp && document.activeElement === inp) pintarSugerencias(); });
+}
+function pintarSugerencias() {
+  const inp = $m("#mc-ticker"), lst = $m("#mc-sug-l");
+  if (!inp || !lst) return;
+  const items = _cat ? sugerirCatalogo(inp.value, _cat.CATALOGO) : [];
+  _modal.sug = { items, hl: -1 };
+  lst.innerHTML = items.map((e, i) =>
+    `<li role="option" id="mc-sug-${i}" data-i="${i}" aria-selected="false"><b>${esc(e.s)}</b> · ${esc(e.n)} · <span>${esc(tipoEn(e))}</span></li>`).join("");
+  const abierta = items.length > 0 && document.activeElement === inp;
+  lst.hidden = !abierta;
+  inp.setAttribute("aria-expanded", String(abierta));
+  inp.removeAttribute("aria-activedescendant");
+}
+function marcarSugerencia(i) {
+  const s = _modal && _modal.sug, lst = $m("#mc-sug-l"), inp = $m("#mc-ticker");
+  if (!s || !lst) return;
+  s.hl = i;
+  [...lst.children].forEach((li, j) => {
+    li.classList.toggle("hl", j === i); li.setAttribute("aria-selected", String(j === i));
+    if (j === i && li.scrollIntoView) li.scrollIntoView({ block: "nearest" });
+  });
+  if (inp) { if (i >= 0) inp.setAttribute("aria-activedescendant", "mc-sug-" + i); else inp.removeAttribute("aria-activedescendant"); }
+}
+/* cierra la lista; dice si estaba abierta (Escape la cierra a ella y no al modal) */
+function cerrarSugerencias() {
+  const lst = $m("#mc-sug-l"), inp = $m("#mc-ticker");
+  if (!lst || lst.hidden) return false;
+  lst.hidden = true;
+  if (inp) { inp.setAttribute("aria-expanded", "false"); inp.removeAttribute("aria-activedescendant"); }
+  if (_modal && _modal.sug) _modal.sug.hl = -1;
+  return true;
+}
+function elegirSugerencia(i) {
+  const e = _modal && _modal.sug && _modal.sug.items[i];
+  const inp = $m("#mc-ticker"), sel = $m("#mc-mercado");
+  if (!e || !inp) return;
+  // la acción por clase va con guion en el exterior (BRK-B: así la resuelve el
+  // sync y así ya está guardada en alguna cartera); en BYMA, como la lista BYMA
+  inp.value = escrituraEn(e.s, e.m, e);
+  if (sel) { sel.value = e.m; _modal.mercadoManual = true; _modal.mercadoAuto = null; }
+  cerrarSugerencias();
+  actualizarModal();
+  const c = $m("[data-c-cant]");
+  if (c) try { c.focus(); } catch (e2) {}
+}
+
+/* la línea del símbolo, el nombre y el resumen, en vivo. El precio promedio
+   es el ponderado por cantidad —el mismo número que después muestran la fila
+   y el desplegable— y va en la moneda del mercado elegido, que es la moneda
+   en la que se guarda el precio. Con montoTxt() y no con money(): "Ocultar $"
+   no puede tapar un número que la persona está tipeando en ese momento. El
+   resumen usa lo parseado, así se ve cómo se interpretó "1.234,5". Guardar
+   nunca se apaga: al tocarlo, guardarCompras dice qué falta. */
 function actualizarModal() {
   if (!_modal) return;
-  const { tk, moneda, factor } = contextoModal();
-  const nom = nombreCatalogo(tk);
+  const sel = $m("#mc-mercado");
+  const buscar = _cat ? buscarConCatalogo : null;
+  let ctx = contextoModal();
+  let r = resolverSimbolo(ctx.crudo, ctx.mercado, buscar, _bonos);
+  const rehacer = () => { ctx = contextoModal(); r = resolverSimbolo(ctx.crudo, ctx.mercado, buscar, _bonos); };
+  // el selector arranca con la preferencia; si el símbolo existe en UN solo
+  // mercado y el usuario no tocó el selector en este modal, se cambia solo y
+  // se dice. Si después el símbolo cambia y ya no es ese caso, vuelve el
+  // mercado de antes (así "BTC" y después "NVDA" no deja Cripto puesto).
+  if (sel && !_modal.mercadoManual) {
+    const a = _modal.mercadoAuto;
+    if (a && ctx.crudo !== a.crudo) {
+      if (r.mercadosPosibles.length === 1 && r.mercadosPosibles[0] === a.a) { a.crudo = ctx.crudo; a.esTxt = r.esTxt; }
+      else { sel.value = a.de; _modal.mercadoAuto = null; rehacer(); }
+    }
+    if (r.cambiarA && r.cambiarA !== ctx.mercado) {
+      _modal.mercadoAuto = { de: _modal.mercadoAuto ? _modal.mercadoAuto.de : ctx.mercado, a: r.cambiarA, crudo: ctx.crudo, esTxt: r.esTxt };
+      sel.value = r.cambiarA;
+      rehacer();
+    }
+  }
+  // lo que se guarda puede no ser lo tipeado tal cual (BRK.B → BRK-B, NVDA-USD
+  // en BYMA → NVDA.BA): la línea, el nombre y la moneda van con esa escritura
+  if (r.simbolo && r.simbolo !== ctx.crudo) ctx = contextoModal(r.simbolo);
+  const { tk, moneda, factor } = ctx;
+  const nom = nombreCatalogo(tk, r);
   const nEl = $m("#mc-nombre");
   if (nEl) { nEl.textContent = nom.txt; nEl.classList.toggle("ok", nom.ok); }
   const unidad = factor !== 1 ? "cada 100 VN" : "por unidad";
   const enQue = moneda === "ARS" ? "en pesos" : "en dólares";
   const g = $m("#mc-guarda");
-  if (g) g.innerHTML = tk
-    ? `Se guarda como <b>${esc(tk)}</b> · el precio va ${enQue}, ${unidad}.`
-    : "Escribilo como lo ves en tu broker.";
+  if (g) {
+    const a = _modal.mercadoAuto;
+    // el aviso de que el catálogo cambió el mercado dura mientras el símbolo sea ese
+    const auto = a && a.crudo === ctx.crudo && a.a === ctx.mercado ? `${ctx.crudo} es ${a.esTxt}: pasé el mercado a ${MERCADO_NOM[a.a]}.` : "";
+    const botones = !r.enCatalogo && r.sugerencias.length
+      ? `<div class="mc-sug-bs">${r.sugerencias.map(sg => `<button type="button" class="mc-sug-b" data-mc-mercado="${sg.mercado}">${esc(sg.txt)}</button>`).join("")}</div>` : "";
+    g.innerHTML = !tk ? "Escribilo como lo ves en tu broker."
+      : r.choque ? `<span class="bad">${esc(r.choque)} Con ese mercado no se guarda.</span>${botones}`
+      : (auto ? `<span class="warn">${esc(auto)}</span> ` : "")
+        + (r.aviso ? `<span class="${r.enCatalogo ? "" : "warn"}">${esc(r.aviso)}</span> ` : "")
+        + `Se guarda como <b>${esc(tk)}</b> · el precio va ${enQue}, ${unidad}.${botones}`;
+  }
 
   const todas = leerCompras();
   const val = todas.filter(c => isFinite(c.cant) && c.cant > 0);
@@ -2343,13 +2768,10 @@ function actualizarModal() {
     const partes = [];
     if (negativa) partes.push("Una cantidad es negativa: <b>las ventas se registran desde la fila del activo, con «Vendí»</b>, que es lo que deja el resultado guardado. Acá van solo las compras.");
     if (!negativa && sinPx) partes.push(`${sinPx === 1 ? "Una compra queda" : `${sinPx} compras quedan`} sin precio: se guardan igual, pero de esa parte no vamos a poder calcular el resultado.`);
-    partes.push("El precio de hoy lo trae el sync de cotizaciones, no hace falta cargarlo: hasta que llegue, la posición queda sin precio y afuera del total.");
+    partes.push("El precio de hoy lo trae Valtia solo, no hace falta cargarlo: hasta que llegue, la posición queda sin precio y afuera del total.");
     nota.innerHTML = partes.join(" ");
     nota.classList.toggle("bad", negativa);
   }
-  // Guardar: hace falta símbolo y al menos una compra con cantidad, y ninguna negativa
-  const add = $m("#mc-add");
-  if (add) add.disabled = !(tk && val.length && !negativa);
   // con un solo renglón no se puede sacar el último: siempre queda uno para escribir
   const xs = [..._modal.el.querySelectorAll("[data-c-quitar]")];
   xs.forEach(x => { x.disabled = xs.length < 2; });
@@ -2390,13 +2812,62 @@ function engancharModal() {
   if (ib) ib.onclick = revisarImport;
   const add = el.querySelector("#mc-add");
   if (add) add.onclick = guardarCompras;
+  engancharBrokerSel(el);
+  // el mercado tocado a mano: el catálogo deja de cambiarlo solo
+  const sel = el.querySelector("#mc-mercado");
+  if (sel) sel.addEventListener("change", () => { if (_modal) { _modal.mercadoManual = true; _modal.mercadoAuto = null; } });
+  // los botones de un clic del choque ("Cargarlo en BYMA (NVDA.BA)"): cambian
+  // el selector, y eso también cuenta como tocarlo a mano
+  // lo que dijo Guardar ("falta la cantidad", el choque) se borra apenas se
+  // cambia algo: el aviso era sobre lo que había, y al tocar de nuevo se rehace
+  const limpiarMsg = () => { const m = el.querySelector("#mc-mdl-msg"); if (m) m.textContent = ""; };
+  el.addEventListener("click", ev => {
+    const b = ev.target && ev.target.closest && ev.target.closest("[data-mc-mercado]");
+    if (!b || !sel || !_modal) return;
+    sel.value = b.dataset.mcMercado; _modal.mercadoManual = true; _modal.mercadoAuto = null;
+    limpiarMsg();
+    actualizarModal();
+  });
+  // el símbolo: sugerencias del catálogo mientras se escribe (flechas, Enter,
+  // clic); Enter sin nada elegido lo da por escrito y pasa a la cantidad
+  const tkIn = el.querySelector("#mc-ticker"), lst = el.querySelector("#mc-sug-l");
+  if (tkIn) {
+    tkIn.addEventListener("input", pedirSugerencias);
+    tkIn.addEventListener("focus", pedirSugerencias);
+    tkIn.addEventListener("blur", () => cerrarSugerencias());
+    tkIn.addEventListener("keydown", ev => {
+      const s = _modal && _modal.sug;
+      const abierta = !!(s && s.items.length && lst && !lst.hidden);
+      if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+        ev.preventDefault();
+        if (!abierta) { pedirSugerencias(); if (_modal.sug.items.length) marcarSugerencia(0); return; }
+        marcarSugerencia((s.hl + (ev.key === "ArrowDown" ? 1 : -1) + s.items.length) % s.items.length);
+      } else if (ev.key === "Enter") {
+        ev.preventDefault();
+        if (abierta && s.hl >= 0) { elegirSugerencia(s.hl); return; }
+        cerrarSugerencias();
+        actualizarModal();
+        const c = el.querySelector("[data-c-cant]");
+        if (c) try { c.focus(); } catch (e) {}
+      } else if (ev.key === "Tab") cerrarSugerencias();
+    });
+  }
+  if (lst) {
+    // mousedown con preventDefault: el clic en una opción no le saca el foco al campo
+    lst.addEventListener("mousedown", ev => ev.preventDefault());
+    lst.addEventListener("click", ev => { const li = ev.target.closest("[data-i]"); if (li) elegirSugerencia(Number(li.dataset.i)); });
+    lst.addEventListener("mousemove", ev => {
+      const li = ev.target.closest("[data-i]");
+      if (li && _modal && _modal.sug && _modal.sug.hl !== Number(li.dataset.i)) marcarSugerencia(Number(li.dataset.i));
+    });
+  }
   // un solo escuchador para todo lo que se tipea: los renglones de compras
   // van y vienen, engancharlos de a uno se olvidaría de los nuevos
   el.addEventListener("input", ev => {
-    if (ev.target && ev.target.closest && ev.target.closest("#mc-modo-uno")) actualizarModal();
+    if (ev.target && ev.target.closest && ev.target.closest("#mc-modo-uno")) { limpiarMsg(); actualizarModal(); }
   });
   el.addEventListener("change", ev => {
-    if (ev.target && ev.target.closest && ev.target.closest("#mc-modo-uno")) actualizarModal();
+    if (ev.target && ev.target.closest && ev.target.closest("#mc-modo-uno")) { limpiarMsg(); actualizarModal(); }
   });
   el.addEventListener("click", ev => {
     const q = ev.target.closest && ev.target.closest("[data-c-quitar]");
@@ -2419,10 +2890,14 @@ function abrirModal(prefill) {
   document.body.appendChild(el);
   const porTecla = ev => {
     if (!_modal) return;
-    if (ev.key === "Escape") { ev.preventDefault(); cerrarModal(); return; }
+    // con la lista de sugerencias abierta, Escape cierra la lista y no el modal
+    if (ev.key === "Escape") { ev.preventDefault(); if (!cerrarSugerencias()) cerrarModal(); return; }
     if (ev.key === "Tab") atraparFoco(_modal.el, ev);
   };
-  _modal = { el, volver, porTecla };
+  // mercadoManual: el usuario tocó el selector de mercado (el catálogo ya no lo
+  // cambia solo); mercadoAuto: el cambio que hizo el catálogo, para decirlo y
+  // para deshacerlo; sug: las sugerencias que se están mostrando bajo el símbolo
+  _modal = { el, volver, porTecla, mercadoManual: false, mercadoAuto: null, sug: { items: [], hl: -1 } };
   document.addEventListener("keydown", porTecla, true);
   // tocar afuera cierra. Se piden las DOS mitades del clic sobre el velo: si
   // alguien selecciona texto adentro y suelta el botón afuera, no se le cierra
@@ -2432,6 +2907,9 @@ function abrirModal(prefill) {
   el.addEventListener("click", ev => { if (ev.target === el && desdeElVelo) cerrarModal(); });
   engancharModal();
   prellenarModal(prefill);
+  // el catálogo (93 KB) se pide recién acá, una vez; cuando llega se rehace la
+  // línea del símbolo (nombre, mercado, sugerencias)
+  catalogo().then(() => { if (_modal) { actualizarModal(); const i = $m("#mc-ticker"); if (i && document.activeElement === i) pintarSugerencias(); } });
   // El Resumen abre el modal a los 50 ms de entrar a la pestaña: el panel de
   // bonos puede no haber llegado. Con el set vacío, un AL30D se anuncia "en
   // pesos" y después se guarda en dólares (guardarCompras espera el set de
@@ -2447,11 +2925,16 @@ function abrirModal(prefill) {
 function prellenarModal(prefill) {
   if (!_modal) return;
   const sel = $m("#mc-mercado"), inp = $m("#mc-ticker");
-  if (prefill && prefill.mercado && sel && MERCADOS.some(([k]) => k === prefill.mercado)) sel.value = prefill.mercado;
+  if (prefill && prefill.mercado && sel && MERCADOS.some(([k]) => k === prefill.mercado)) {
+    sel.value = prefill.mercado;
+    // la ficha ya dijo el mercado: cuenta como elegido, el catálogo no lo cambia solo
+    if (_modal) { _modal.mercadoManual = true; _modal.mercadoAuto = null; }
+  }
   if (prefill && prefill.ticker && inp) inp.value = prefill.ticker;
-  actualizarModal();
   const foco = (prefill && prefill.ticker) ? $m("[data-c-cant]") : inp;
   if (foco) try { foco.focus(); } catch (e) {}
+  // el símbolo de la ficha viene entero: si el catálogo ya cargó, se ve enseguida
+  actualizarModal();
 }
 
 function cerrarModal() {
@@ -2482,7 +2965,7 @@ async function revisarImport() {
   if (!ta) return;
   const txt = ta.value;
   const mercado = ($m("#mc-imp-mercado") || {}).value || "byma";
-  const broker = (($m("#mc-imp-broker") || {}).value || "").trim();
+  const broker = brokerDe("mc-imp-broker");
   setPref("valtia-mc-mercado", mercado); if (broker) setPref("valtia-mc-broker", broker);
   const { filas, errores } = parseImport(txt);
   const prev = $m("#mc-prev");
@@ -2555,7 +3038,7 @@ async function confirmarImport() {
   if (ok) avisarPanel();
   const texto = `<span style="color:var(--v3-up)">${ok} ${ok === 1 ? "posición importada" : "posiciones importadas"}.</span>` +
     (fallo ? ` <span style="color:var(--v3-dn)">${fallo} fallaron.</span>` : "") +
-    ` <span style="color:var(--v3-mut)">Los precios aparecen en la próxima actualización (cada 15 min en rueda).</span>`;
+    ` <span style="color:var(--v3-mut)">Los precios llegan en la próxima actualización, en unos 15 minutos.</span>`;
   const destino = ok ? _el.querySelector("#mc-msg") : msgModal;
   if (destino && destino.isConnected) destino.innerHTML = texto;
 }
@@ -2573,15 +3056,25 @@ async function guardarCompras() {
   const msg = $m("#mc-mdl-msg");
   const rojo = t => `<span style="color:var(--v3-dn)">${t}</span>`;
   const { mercado, crudo } = contextoModal();
-  const broker = (($m("#mc-broker") || {}).value || "").trim();
-  const todas = leerCompras();
-  if (todas.some(c => isFinite(c.cant) && c.cant < 0)) {
-    if (msg) msg.innerHTML = rojo("Las ventas se registran desde la fila del activo, con «Vendí»: sacá la cantidad negativa.");
+  const broker = brokerDe("mc-broker");
+  // Guardar nunca está apagado: acá se valida en orden (símbolo, choque de
+  // mercado, cantidad, precio), se explica al lado del botón y se marca el
+  // campo con el foco. Un choque (NVDA en Cripto: NVDA-USD no existe) no se guarda.
+  const r = resolverSimbolo(crudo, mercado, _cat ? buscarConCatalogo : null, _bonos);
+  const filas = leerCompras();
+  const v = validarCompras(crudo, r.choque, filas);
+  if (v.error) {
+    if (msg) msg.innerHTML = rojo(esc(v.error));
+    const campo = v.campo === "simbolo" ? $m("#mc-ticker") : v.campo === "mercado" ? $m("#mc-mercado")
+      : (filas[v.i] && filas[v.i].fila.querySelector(v.campo === "px" ? "[data-c-px]" : "[data-c-cant]"));
+    if (campo) try { campo.focus(); if (campo.select) campo.select(); } catch (e) {}
     return;
   }
-  const compras = todas.filter(c => isFinite(c.cant) && c.cant > 0);
-  if (!crudo || !compras.length) {
-    if (msg) msg.innerHTML = rojo("Poné el símbolo y al menos una compra con cantidad.");
+  const compras = v.compras;
+  // nunca se graba un documento sin ticker (validarCompras ya lo frena; esto es el cinturón)
+  if (!normalizarTicker(r.simbolo || crudo, mercado, _bonos)) {
+    if (msg) msg.innerHTML = rojo("El símbolo no se entiende: escribilo como lo ves en tu broker (GGAL, AL30, NVDA…).");
+    const i = $m("#mc-ticker"); if (i) try { i.focus(); } catch (e) {}
     return;
   }
   // el mail se fija ANTES de cualquier await y es el que se usa para escribir:
@@ -2597,7 +3090,9 @@ async function guardarCompras() {
   if (btn) { if (btn.disabled) return; btn.disabled = true; btn.textContent = "Guardando…"; }
   try {
     const bonos = await bonosSet();
-    const tk = normalizarTicker(crudo, mercado, bonos);
+    // la misma escritura que anunció "Se guarda como" (r.simbolo): sin el
+    // sufijo de otro mercado y, en las acciones por clase, la del catálogo
+    const tk = normalizarTicker(r.simbolo || crudo, mercado, bonos);
     const moneda = monedaMercado(mercado, tk, bonos);
     const factor = bonos.has(tk) ? 0.01 : 1;
     setPref("valtia-mc-mercado", mercado); if (broker) setPref("valtia-mc-broker", broker);
@@ -2633,7 +3128,7 @@ async function guardarCompras() {
     avisarPanel();
     // el repintado rehace la pestaña: el mensaje se escribe recién ahora
     const m2 = _el && _el.querySelector("#mc-msg");
-    if (m2) m2.innerHTML = `<span style="color:var(--v3-up)">${esc(tk)} agregado (${donde}${broker ? ", " + esc(broker) : ""})${ok > 1 ? `, ${ok} compras` : ""}. El precio aparece en la próxima actualización — cada 15 min en rueda.</span>`
+    if (m2) m2.innerHTML = `<span style="color:var(--v3-up)">${esc(tk)} agregado (${donde}${broker ? ", " + esc(broker) : ""})${ok > 1 ? `, ${ok} compras` : ""}. El precio llega en la próxima actualización, en unos 15 minutos.</span>`
       + (fallaron.length ? " " + rojo(`De ${compras.length} compras entraron ${ok}: ${fallaron.length === 1 ? "quedó afuera" : "quedaron afuera"} ${esc(fallaron.map(compraTxt).join(" · "))}. ${fallaron.length === 1 ? "Cargala" : "Cargalas"} de nuevo.`) : "");
   } catch (e) {
     if (msg && msg.isConnected) msg.innerHTML = rojo(`No se pudo guardar: ${esc(String(e).slice(0, 90))}`);
@@ -2672,8 +3167,8 @@ function abrirVenta(id) {
   // un id por formulario: si se reintenta después de un error, no se duplica la venta
   fila.dataset.vid = base(p.ticker) + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
   fila.innerHTML = `<div class="mc-vform">
-      <div><label>Cantidad vendida</label><input id="mc-v-cant" type="number" step="any" min="0" value="${Number(p.cantidad) || ""}"></div>
-      <div><label>Precio de venta · ${monNombre(moneda)}, ${unidad}</label><input id="mc-v-px" type="number" step="any" min="0" value="${px && px.precio != null && isFinite(px.precio) ? +(px.precio >= 100 ? Number(px.precio).toFixed(2) : Number(px.precio).toPrecision(6)) : ""}"></div>
+      <div><label>Cantidad vendida</label><input id="mc-v-cant" type="text" inputmode="decimal" autocomplete="off" value="${numIn(Number(p.cantidad) || "")}"></div>
+      <div><label>Precio de venta · ${monNombre(moneda)}, ${unidad}</label><input id="mc-v-px" type="text" inputmode="decimal" autocomplete="off" value="${numIn(px && px.precio != null && isFinite(px.precio) ? +(px.precio >= 100 ? Number(px.precio).toFixed(2) : Number(px.precio).toPrecision(6)) : "")}"></div>
       <div><label>Fecha de la venta</label><input id="mc-v-fecha" type="date" max="${hoy}" value="${hoy}"></div>
       <div class="prev" id="mc-v-prev"></div>
       <div><button class="mc-btn" id="mc-v-ok">Registrar venta</button> <button class="mc-undo" id="mc-v-no">Cancelar</button></div>
@@ -2683,15 +3178,15 @@ function abrirVenta(id) {
         ${sync ? "Esta posición la trae el sync de tu broker: en la próxima corrida la cantidad se ajusta a lo que diga el broker." : ""}
         ${!moneda ? (px && px.sinDatos
           ? "<b>No encontramos este ticker</b>, así que no sabemos en qué moneda cotiza: revisá que esté bien escrito (quitalo desde «Ajustar» y volvé a cargarlo) para poder registrar la venta."
-          : "<b>Todavía no tenemos la cotización de este activo</b>, así que no sabemos en qué moneda está: esperá a que aparezca su precio (cada 15 min en rueda) para registrar la venta.") : ""}</div>
+          : "<b>Todavía no tenemos la cotización de este activo</b>, así que no sabemos en qué moneda está: esperá a que llegue su precio (en la próxima actualización, en unos 15 minutos) para registrar la venta.") : ""}</div>
       <div class="mc-msg" id="mc-v-msg" style="flex-basis:100%;margin:0"></div>
     </div>`;
   (tr.closest(".mc3-pos") || tr.parentElement).appendChild(fila);
   if (!moneda) fila.querySelectorAll("input, #mc-v-ok").forEach(i => { i.disabled = true; });
-  // type=number siempre entrega el valor con punto decimal: parseFloat, no parseNum
+  // campos de texto: parseNum entiende coma o punto decimal y miles con punto
   const leer = () => ({
-    cant: parseFloat(fila.querySelector("#mc-v-cant").value),
-    precio: parseFloat(fila.querySelector("#mc-v-px").value),
+    cant: parseNum(fila.querySelector("#mc-v-cant").value),
+    precio: parseNum(fila.querySelector("#mc-v-px").value),
     fecha: fila.querySelector("#mc-v-fecha").value,
   });
   const vista = () => {
@@ -2849,9 +3344,10 @@ function datosAjuste(card) {
   if (!a) return null;
   const px = _precios[String(a.ticker || "").toUpperCase()] || null;
   const esRF = esRentaFija(a.ticker, _bonos);
+  // campos de texto: parseNum entiende coma o punto decimal ("0,5" ya no vale 0)
   return { a, px, esRF, moneda: monedaFactor(a.pos || {}, px, esRF, a.ticker).moneda,
-           cant: parseFloat(card.querySelector("[data-aj-cant]").value),
-           precio: parseFloat(card.querySelector("[data-aj-px]").value),
+           cant: parseNum(card.querySelector("[data-aj-cant]").value),
+           precio: parseNum(card.querySelector("[data-aj-px]").value),
            fecha: card.querySelector("[data-aj-fecha]").value };
 }
 
@@ -3004,6 +3500,53 @@ async function quitar(id) {
     pintar();
     avisarPanel();
   } catch (e) {}
+}
+
+/* ── "Pasar a BYMA (NVDA.BA)": la posición estaba guardada con el sufijo de
+   otro mercado (filaRota). Se actualiza CADA compra de ese activo —todas las
+   que tienen ese ticker, en cualquier broker— con el ticker nuevo, la moneda
+   del mercado (pesos en BYMA salvo la renta fija en dólares; dólares en el
+   exterior y en cripto) y factor 1. El mail se fija ANTES del primer await y
+   se verifica después de cada uno, como en guardarCompras: si en el medio se
+   cambia de cuenta, no se escribe nada en la del nuevo. ── */
+async function pasarMercado(ticker, mercado, btn) {
+  if (!MERCADOS.some(([k]) => k === mercado)) return;
+  const viejo = String(ticker || "").trim().toUpperCase();
+  const compras = _pos.filter(p => String(p.ticker || "").toUpperCase() === viejo);
+  const email = _user && _user.email;
+  if (!viejo || !compras.length || !email) return;
+  const s = _cat ? _cat.claveCatalogo(viejo) : base(viejo);
+  // el mismo ticker que anunció el botón (filaRota): la escritura del catálogo en ese mercado
+  const tk = normalizarTicker(escrituraEn(s, mercado, _cat ? _cat.buscarCatalogo(s, mercado) : null), mercado, _bonos);
+  const moneda = monedaMercado(mercado, tk, _bonos);
+  const factor = _bonos.has(tk) ? 0.01 : 1;
+  if (!tk) return;
+  // el precio de compra NO se convierte: si la posición estaba en dólares y
+  // pasa a pesos (NVDA-USD → NVDA.BA), el número queda y ahora se lee en pesos.
+  // Se avisa, porque el costo y el resultado salen de ahí.
+  const nomMon = m => m === "ARS" ? "pesos" : "dólares";
+  const cambiaMoneda = compras.some(c => Number(c.precioCompra) > 0 && (c.moneda || monedaProbable(c.ticker, _bonos)) !== moneda);
+  if (btn) { btn.disabled = true; btn.textContent = "Pasando…"; }
+  const db = getFirestore(getApp());
+  let ok = 0, fallo = 0;
+  for (const c of compras) {
+    if (!_user || _user.email !== email) { fallo++; continue; }
+    try { await updateDoc(doc(db, "inversores", email, "cartera", c.id), { ticker: tk, moneda, factor }); ok++; }
+    catch (e) { fallo++; }
+  }
+  // la pestaña puede ser ya la de otra cuenta: no se repinta ni se le escribe
+  if (!_el || !_user || _user.email !== email) return;
+  try { await releer(); } catch (e) {}
+  pintar();
+  if (ok) avisarPanel();
+  // el repintado rehace la pestaña: el mensaje se escribe recién ahora
+  const m = _el.querySelector("#mc-msg");
+  if (!m) return;
+  m.innerHTML = ok
+    ? `<span style="color:var(--v3-up)">Listo: ${esc(viejo)} pasó a ${esc(tk)}${ok > 1 ? ` (${ok} compras)` : ""}. El precio llega en la próxima actualización, en unos 15 minutos.</span>`
+      + (cambiaMoneda ? ` <span style="color:var(--v3-warn)">El precio de compra quedó como lo cargaste y ahora se lee en ${nomMon(moneda)}: si lo que pagaste estaba en ${nomMon(moneda === "ARS" ? "USD" : "ARS")}, quitá la posición desde «Ajustar» y cargala de nuevo con el precio en ${nomMon(moneda)}.</span>` : "")
+      + (fallo ? ` <span style="color:var(--v3-dn)">${fallo} ${fallo === 1 ? "compra no se pudo pasar" : "compras no se pudieron pasar"}: probá de nuevo.</span>` : "")
+    : `<span style="color:var(--v3-dn)">No se pudo pasar ${esc(viejo)} a ${esc(tk)}: probá de nuevo en un momento.</span>`;
 }
 
 /* Cambio de cuenta sin recargar la página: el módulo sobrevive y estas
