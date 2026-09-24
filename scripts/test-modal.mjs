@@ -248,6 +248,56 @@ h = M.brokerSelectHTML("mc-imp-broker", "");
 ok("broker: sin preferencia pide elegir", /<option value="" selected>Elegí tu broker<\/option>/.test(h) && !/value="IOL" selected/.test(h), h);
 ok("broker: nada de datalist", !/datalist|list=/.test(h), h);
 
+// ── "Avisarme si…": lo que la fila le ofrece a la alerta de precio (datosAlerta) ──
+// el umbral va en la moneda y la unidad en que COTIZA el activo: px.precio y px.moneda tal cual
+const AVISO_CUPON = "Ojo: el día que un bono paga cupón o amortiza, el precio baja; una alerta de baja puede saltar por eso.";
+const AVISO_CRIPTO = "Las cripto cotizan todo el día, pero acá el precio se actualiza en horario de rueda: la alerta puede saltar con demora.";
+const AVISO_CEDEAR = "Es el precio en pesos: adentro está también lo que se mueva el dólar.";
+let da = M.datosAlerta({ ticker: "GGAL.BA", px: { precio: 4000, moneda: "ARS" } }, { bonos });
+ok("alerta: GGAL.BA se puede", da.puede && da.ticker === "GGAL.BA" && da.moneda === "ARS" && da.precio === 4000, da);
+ok("alerta: GGAL.BA en pesos, por unidad", da.unidad === "en pesos ($), por unidad" && da.factor === 1, da);
+ok("alerta: precarga 5 % arriba y abajo", da.precarga.sube === 4200 && da.precarga.baja === 3800, da.precarga);
+ok("alerta: una acción argentina no lleva notas", da.notas.length === 0, da.notas);
+da = M.datosAlerta({ ticker: "NVDA.BA", px: { precio: 12000, moneda: "ARS" } }, { bonos });
+ok("alerta: CEDEAR en pesos avisa del dólar", da.puede && da.notas.length === 1 && da.notas[0] === AVISO_CEDEAR, da.notas);
+da = M.datosAlerta({ ticker: "NVDA", px: { precio: 180, moneda: "USD" } }, { bonos });
+ok("alerta: NVDA en dólares, por unidad y sin notas", da.unidad === "en dólares (US$), por unidad" && da.notas.length === 0, da);
+da = M.datosAlerta({ ticker: "AL30D", px: { precio: 61.2, moneda: "USD" } }, { bonos });
+ok("alerta: bono sin factor en ningún lado cotiza cada 100 VN", da.puede && da.factor === 0.01 && da.unidad === "en dólares (US$), cada 100 VN", da);
+ok("alerta: bono avisa del cupón", da.notas.length === 1 && da.notas[0] === AVISO_CUPON, da.notas);
+ok("alerta: bono, el precio NO se multiplica por el factor", da.precio === 61.2 && cerca(da.precarga.sube, 64.26), da);
+da = M.datosAlerta({ ticker: "AL30", factor: 0.01, px: { precio: 85000, moneda: "ARS", factor: 0.01 } }, { bonos });
+ok("alerta: bono en pesos cada 100 VN", da.unidad === "en pesos ($), cada 100 VN" && da.precarga.sube === 89250, da);
+da = M.datosAlerta({ ticker: "BTC-USD", px: { precio: 60000, moneda: "USD" } }, { bonos });
+ok("alerta: cripto avisa de la demora", da.puede && da.notas[0] === AVISO_CRIPTO, da.notas);
+da = M.datosAlerta({ ticker: "ZZZZ.BA", px: { sinDatos: true, precio: 100, moneda: "ARS" } }, { bonos });
+ok("alerta: sinDatos no se puede y dice por qué", !da.puede && /Todavía no tenemos el precio/.test(da.motivo) && da.precarga.sube === null, da);
+ok("alerta: sin precio no se puede", !M.datosAlerta({ ticker: "KO", px: { moneda: "USD" } }).puede);
+ok("alerta: sin doc de precio no se puede", !M.datosAlerta({ ticker: "KO" }).puede);
+ok("alerta: precio cero no se puede", !M.datosAlerta({ ticker: "KO", px: { precio: 0, moneda: "USD" } }).puede);
+ok("alerta: otra moneda no se puede", !M.datosAlerta({ ticker: "SAN.MC", px: { precio: 5, moneda: "EUR" } }).puede);
+ok("alerta: sin moneda no se puede (no se adivina)", !M.datosAlerta({ ticker: "KO", px: { precio: 60 } }).puede);
+ok("alerta: sin ticker no se puede", !M.datosAlerta({ px: { precio: 60, moneda: "USD" } }).puede && !M.datosAlerta(null).puede);
+
+// ── los errores de crearAlerta() en palabras del usuario (motivoAlerta) ──
+// los de validarAlerta()/crearAlerta() ya vienen en voseo y pasan tal cual; nada más pasa crudo
+const A = await import("../alertas-precio.js?v=1");
+const errDe = campos => new Error(A.validarAlerta(campos).error);
+ok("alerta: el umbral inválido pasa tal cual", M.motivoAlerta(errDe({ ticker: "GGAL.BA", condicion: "sube", umbral: 0, moneda: "ARS" })) === "Poné un precio mayor a cero para el aviso.");
+ok("alerta: la moneda que no sirve pasa tal cual", /^La alerta necesita la moneda/.test(M.motivoAlerta(errDe({ ticker: "GGAL.BA", condicion: "sube", umbral: 5, moneda: "EUR" }))));
+ok("alerta: el ticker largo pasa tal cual", /^Ese ticker no sirve/.test(M.motivoAlerta(errDe({ ticker: "UNTICKERDEMASLARGO", condicion: "sube", umbral: 5, moneda: "USD" }))));
+ok("alerta: el duplicado pasa tal cual", M.motivoAlerta(new Error("Ya tenés esa misma alerta activa para GGAL.")) === "Ya tenés esa misma alerta activa para GGAL.");
+ok("alerta: sin sesión pasa tal cual", M.motivoAlerta(new Error("Entrá a tu cuenta para crear una alerta.")) === "Entrá a tu cuenta para crear una alerta.");
+const PERMISO = "No pudimos guardar la alerta: el servidor la rechazó. Recargá la página y probá de nuevo.";
+ok("alerta: el permiso que reescribe el módulo", M.motivoAlerta(new Error("Firestore no dejó guardar la alerta: las alertas necesitan el mail verificado.")) === PERMISO);
+ok("alerta: permission-denied de Firestore", M.motivoAlerta(Object.assign(new Error("Missing or insufficient permissions."), { code: "permission-denied" })) === PERMISO);
+ok("alerta: el permiso no culpa a una regla sin publicar (ya está publicada)", !/regla|publicar/i.test(PERMISO));
+const RED = "No se pudo crear la alerta: probá de nuevo en un momento.";
+ok("alerta: error de red con code", M.motivoAlerta(Object.assign(new Error("Failed to get documents from server."), { code: "unavailable" })) === RED);
+ok("alerta: un error técnico en inglés no se muestra crudo", M.motivoAlerta(new TypeError("Cannot read properties of undefined (reading 'x')")) === RED);
+ok("alerta: sin error ni mensaje", M.motivoAlerta(null) === RED && M.motivoAlerta(undefined) === RED && M.motivoAlerta(new Error("")) === RED);
+ok("alerta: con code no pasa aunque empiece en voseo", M.motivoAlerta(Object.assign(new Error("Poné un precio"), { code: "unavailable" })) === RED);
+
 // ── lo de siempre sigue exportado ──
 ok("exports: normalizarTicker", M.normalizarTicker("nvda", "byma") === "NVDA.BA" && M.normalizarTicker("btc", "cripto") === "BTC-USD");
 ok("exports: parseNum, agruparPorActivo, escrituraEn", ["parseNum", "agruparPorActivo", "escrituraEn", "sugerirCatalogo", "validarCompras", "resolverSimbolo", "brokerSelectHTML"].every(f => typeof M[f] === "function"));

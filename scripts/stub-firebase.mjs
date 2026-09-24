@@ -5,8 +5,10 @@
 // (resolverSimbolo, validarCompras, sugerirCatalogo, parseNum…) sin tocar
 // Firestore. Cualquier función del stub que se llame tira: los tests no
 // escriben ni leen nada.
+// writeBatch y serverTimestamp los pide alertas-precio.js (lo importa mi-cartera.js)
 const NOMBRES = ["getFirestore", "collection", "getDocs", "doc", "getDoc", "setDoc", "updateDoc", "deleteDoc",
-                 "runTransaction", "query", "where", "getApp", "initializeApp", "getApps", "getAuth", "onAuthStateChanged"];
+                 "runTransaction", "query", "where", "writeBatch", "serverTimestamp",
+                 "getApp", "initializeApp", "getApps", "getAuth", "onAuthStateChanged"];
 const FUENTE = NOMBRES.map(n => `export const ${n} = () => { throw new Error("Firebase no está en los tests (${n})"); };`).join("\n");
 const STUB = "data:text/javascript," + encodeURIComponent(FUENTE);
 

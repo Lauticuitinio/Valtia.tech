@@ -18,6 +18,10 @@ import { validarVenta, armarVenta, planDeshacer, resultadoVenta, resumenVentas, 
   from './ventas.js?v=6';
 import { fxMercado, convertir } from './fx.js?v=1';
 export { convertir } from './fx.js?v=1';
+// "Avisarme si…": la alerta de precio del activo, desde su desplegable. Este es
+// el ÚNICO camino a inversores/{email}/alertasPrecio: acá se crea y se lee lo que
+// ya hay; la pestaña Alertas lista, marca vistas y limpia
+import { crearAlerta, precargaUmbral, alertasDe, textoAlerta, fmtPrecio, tickerCorto } from './alertas-precio.js?v=1';
 
 /* ── el catálogo grande (catalogo-activos.js: 1.469 CEDEARs, acciones, ETFs,
    bonos, letras y cripto; solo símbolo, nombre y en qué mercado cotiza) ──
@@ -194,6 +198,40 @@ const STYLE = `
 .mc3-ajp[hidden]{display:none}
 .mc3-ajp .fila{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .mc3-ajp .fila+.fila{margin-top:10px;padding-top:10px;border-top:1px solid var(--v3-line2)}
+/* ── "Avisarme si…": la alerta de precio del activo (alertas-precio.js). Mismo
+   dibujo que el panel de Ajustar: borde punteado sobre la card, sin crema. El
+   segmento sube/baja subraya en dorado (.mc3-seg, como el agrupar de arriba);
+   "Crear alerta" es el primario navy de la piel (--v3-btn/--v3-btnTx, que en
+   oscuro se invierte solo) y Cancelar el secundario blanco con borde. El umbral
+   va en Mono tabular de 140 px; a 375 px el renglón se parte en líneas. ── */
+.mc3-b.al{color:var(--v3-sub);border:1px solid var(--v3-line)}
+.mc3-b.al:hover,.mc3-b.al[aria-expanded="true"]{color:var(--v3-ink);border-color:var(--v3-gold)}
+.mc3-b.al[disabled],.mc3-b.al[disabled]:hover{color:var(--v3-mut);border-color:var(--v3-line);opacity:.55;cursor:default}
+.mc3-b.ok{color:var(--v3-btnTx);background:var(--v3-btn);border:1px solid var(--v3-btn);transition:opacity .15s}
+.mc3-b.ok:hover{opacity:.86}
+.mc3-b.ok[disabled],.mc3-b.ok[disabled]:hover{opacity:.4;cursor:default}
+.mc3-b.sec{color:var(--v3-sub);background:var(--v3-card);border:1px solid var(--v3-line)}
+.mc3-b.sec:hover{color:var(--v3-ink);border-color:var(--v3-ink)}
+.mc3-alp{margin-top:12px;padding:12px 14px;border:1px dashed var(--v3-line);border-radius:8px;background:var(--v3-card);
+  font-size:12px;color:var(--v3-sub);line-height:1.6;min-width:0}
+.mc3-alp[hidden]{display:none}
+.mc3-alp .fila{display:flex;gap:8px 10px;align-items:center;flex-wrap:wrap}
+.mc3-alp .fila+.fila{margin-top:10px}
+.mc3-alp input{font:500 13px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;text-align:right;width:140px;max-width:100%;
+  box-sizing:border-box;padding:7px 9px;background:var(--v3-card);border:1px solid var(--v3-line);border-radius:6px;color:var(--v3-ink);outline:none}
+.mc3-alp input:focus{border-color:var(--v3-gold)}
+.mc3-alp .u{font-size:11.5px;color:var(--v3-mut)}
+.mc3-alp .u:empty{display:none}
+.mc3-alp .u b{font:600 11.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-sub)}
+.mc3-alp .msg{font-size:12px;line-height:1.5;margin-top:8px}
+.mc3-alp .msg:empty{display:none}
+.mc3-alp .nota{font-size:11.5px;color:var(--v3-mut);line-height:1.6;margin-top:8px}
+.mc3-alp .nota:empty{display:none}
+.mc3-alp .nota a{color:var(--v3-gold);text-decoration:none;font-weight:600}
+.mc3-alp .nota a:hover{color:var(--v3-gold2)}
+/* con varias compras el botón va debajo de "Tus compras": la alerta es del activo, no de una compra */
+.mc3-alw{padding:0 18px 20px}
+.mc3-alw>.mc3-acc{margin-top:0}
 .mc-brk{display:inline-block;font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--v3-ink);
   border:1px solid var(--v3-line);background:var(--v3-card);padding:4px 9px;border-radius:4px;cursor:pointer}
 .mc-brk:hover{border-color:var(--v3-gold);color:var(--v3-gold2)}
@@ -472,6 +510,7 @@ select.mc-brk-in{width:auto;max-width:200px}
   .mc3-mets{padding:14px 14px 0}
   .mc3-cols{padding:14px 14px 18px}
   .mc3-cmps{padding:0 14px 18px}
+  .mc3-alw{padding:0 14px 18px}
   .mc-vrow{padding:12px 14px}
 }
 /* en el celular el modal ocupa toda la pantalla, y la compra pasa a dos
@@ -681,6 +720,10 @@ const money = (n, cur) => _ocultar ? OCULTO : montoTxt(n, cur);
 const moneyS = (n, cur) => _ocultar ? OCULTO : (Number(n) >= 0 ? "+" : "") + montoTxt(n, cur);
 // los pocos importes que se arman a mano en dólares (cupones y vencimientos)
 const usdRedondo = n => _ocultar ? OCULTO : "US$" + Math.round(Number(n) || 0).toLocaleString("es-AR");
+// el precio de una alerta, en SU moneda (nunca convertida): money() del archivo,
+// salvo por debajo de 1 (cripto chica), donde money redondea a dos decimales y
+// "US$0,01" no dice nada; ahí va el formato de alertas-precio.js (cuatro cifras)
+const precioAlerta = (n, m) => _ocultar ? OCULTO : (Math.abs(Number(n)) < 1 ? fmtPrecio(n, m) : money(n, m));
 
 /* el panel (panel.js) cachea la cartera: cuando cambia acá, se le avisa */
 function avisarPanel() {
@@ -1184,6 +1227,14 @@ function bloqueAjustes(ajustes, precios, bonos) {
 let _vista = null;
 let _abierta = null;      // id de la posición desplegada (una sola a la vez)
 let _ajAbierto = null;    // id de la posición con "Ajustar" abierto
+// "Avisarme si…": el mini-panel de la alerta de precio. Es por ACTIVO (ticker,
+// no id de compra) y sobrevive al repintado de los dos minutos como _ajAbierto:
+// lo elegido (sube/baja) y lo escrito se vuelven a poner al redibujar
+let _alAbierta = null;    // ticker (en mayúsculas) con el panel abierto
+let _alCond = "sube";     // sube | baja elegido en ese panel
+let _alTexto = null;      // el umbral tal cual lo escribió el usuario; null = el precargado
+let _alSabidas = { email: null, por: {} };   // ticker → alertas ya leídas ("Tenés N alertas…")
+let _alCreando = null;    // ticker cuya alerta se está grabando (frena el doble clic, aun con un repintado en el medio)
 let _pendiente = null;    // ticker pedido desde otra pestaña antes de que Mi cartera dibujara
 let _detCache = {};       // id -> columnas ya armadas del desplegable (no parpadean al repintar)
 let _evCache = { email: null, t: 0, p: null };
@@ -1487,6 +1538,285 @@ function comprasHTML(f, cur, bonos) {
   </div>`;
 }
 
+/* ── "Avisarme si…": una alerta de precio por ACTIVO (alertas-precio.js), desde su
+   desplegable. El umbral va en la moneda y la unidad en que COTIZA el activo
+   —px.precio y px.moneda, nunca el valor convertido de la vista; cada 100 VN en
+   la renta fija— porque es contra eso que compara el panel en cada repintado (y
+   el pipeline, cuando exista). Sin precio, con sinDatos o en otra moneda, el
+   botón queda apagado y el title dice por qué. ── */
+const TXT_SIN_PRECIO_ALERTA = "Todavía no tenemos el precio de este activo: cuando llegue vas a poder ponerle una alerta.";
+/* lo que hace HOY la alerta, sin prometer de más: la compara el panel con los
+   precios que lee Mi cartera (al abrir el panel y cada dos minutos mientras estás
+   acá; el sync los actualiza cada 15 minutos en rueda). El pipeline que la revisa
+   con el panel cerrado y manda el mail todavía no existe */
+const NOTA_ALERTA = "Te avisamos acá, en el panel: cuando el precio cruce ese valor, la alerta salta y queda en Alertas. "
+  + "Por ahora se revisa cuando abrís el panel y mientras estás en Mi cartera (los precios se actualizan cada 15 minutos en rueda). "
+  + "El aviso por mail todavía no sale.";
+
+/* ¿es un CEDEAR? Con el panel, su criterio único (ctx.tipoActivo, tipos-activo.js);
+   sin él, lo mismo que hace ese módulo con un .BA: acción argentina por el sector
+   de la ficha, CEDEAR si tiene ficha de EE.UU. o si el catálogo lo dice */
+function esCedearAlerta(tk, bonos, panel) {
+  const cat = _cat ? s => _cat.buscarCatalogo(s, "byma") : null;
+  const ctx = typeof window !== "undefined" ? window.__valtiaCtx : null;
+  if (ctx && typeof ctx.tipoActivo === "function") {
+    try { return (ctx.tipoActivo(tk, { bonos, panel, catalogo: cat }) || {}).k === "cedear"; } catch (e) {}
+  }
+  if (sectorDe(tk, bonos) === "Argentina") return false;
+  if (tickerFicha(tk)) return true;
+  const e = cat ? cat(tk) : null;
+  return !!e && (e.t === "cedear" || e.t === "accion_us");
+}
+
+/* lo que el panel necesita saber de una fila para ofrecerle una alerta. Pura y
+   exportada para probarla: { puede, motivo, ticker, precio, moneda, factor,
+   unidad, precarga: { sube, baja }, notas } */
+export function datosAlerta(f, opts = {}) {
+  const px = (f && f.px) || {};
+  const ticker = String((f && f.ticker) || "");
+  const tk = ticker.toUpperCase();
+  const precio = Number(px.precio), moneda = px.moneda;
+  const puede = !!tk && !px.sinDatos && Number.isFinite(precio) && precio > 0 && (moneda === "ARS" || moneda === "USD");
+  if (!puede) return { puede: false, motivo: TXT_SIN_PRECIO_ALERTA, ticker, precio: null, moneda: null, factor: 1, unidad: "", precarga: { sube: null, baja: null }, notas: [] };
+  const bonos = opts.bonos || new Set();
+  const rf = esRentaFija(tk, bonos);
+  // el mismo criterio que calcular() y monedaFactor() (ventas.js): la posición,
+  // el doc de precios y, si ninguno lo dice, la renta fija cotiza cada 100 VN
+  const factor = Number(f.factor) > 0 ? Number(f.factor) : (Number(px.factor) > 0 ? Number(px.factor) : (rf ? 0.01 : 1));
+  const unidad = `${monNombre(moneda)}, ${factor !== 1 ? "cada 100 VN" : "por unidad"}`;
+  const notas = [];
+  if (rf) notas.push("Ojo: el día que un bono paga cupón o amortiza, el precio baja; una alerta de baja puede saltar por eso.");
+  else if (mercadoDe(tk, bonos) === "cripto") notas.push("Las cripto cotizan todo el día, pero acá el precio se actualiza en horario de rueda: la alerta puede saltar con demora.");
+  else if (tk.endsWith(".BA") && moneda === "ARS" && esCedearAlerta(tk, bonos, opts.panel || _panel)) notas.push("Es el precio en pesos: adentro está también lo que se mueva el dólar.");
+  return { puede: true, motivo: "", ticker, precio, moneda, factor, unidad,
+           precarga: { sube: precargaUmbral(precio, "sube"), baja: precargaUmbral(precio, "baja") }, notas };
+}
+
+/* "Tenés 2 alertas activas para este activo (Sube de $4.735 · Baja de $4.000) · Verlas":
+   solo con lo que ya se leyó (_alSabidas); pedirAlertasDe() lo completa */
+function lineaAlertasDe(tk) {
+  // lo leído es de UNA cuenta: si cambió el mail, no se muestra lo del anterior
+  if (!_user || _alSabidas.email !== _user.email) return "";
+  const l = _alSabidas.por[tk];
+  if (!Array.isArray(l) || !l.length) return "";
+  const act = l.filter(a => a.activa !== false && a.disparada == null);
+  const salt = l.filter(a => a.disparada != null);
+  const paus = l.length - act.length - salt.length;
+  const ver = `<a href="#panel/alertas" data-go="alertas">Verlas</a>`;
+  if (!act.length && paus <= 0) return `Ya ${salt.length === 1 ? "saltó una alerta" : `saltaron ${salt.length} alertas`} de este activo · ${ver}`;
+  const partes = [];
+  if (act.length) partes.push(`${act.length} ${act.length === 1 ? "alerta activa" : "alertas activas"}`);
+  if (paus > 0) partes.push(`${paus} ${paus === 1 ? "pausada" : "pausadas"}`);
+  if (salt.length) partes.push(`${salt.length} que ya ${salt.length === 1 ? "saltó" : "saltaron"}`);
+  const det = act.map(a => textoAlerta(a, precioAlerta)).join(" · ");
+  return `Tenés ${partes.join(", ")} para este activo${det ? ` (${esc(det)})` : ""} · ${ver}`;
+}
+
+/* el botón "Avisarme si…" y su mini-panel (cerrado salvo que _alAbierta sea este
+   ticker). Con una sola compra va en la columna de acciones, debajo de Vendí y
+   Ajustar; con varias, debajo de "Tus compras" (detalleHTML) */
+function alertaHTML(f, opts) {
+  const d = datosAlerta(f, opts);
+  const tk = String(f.ticker || "").toUpperCase();
+  const btn = on => `<button type="button" class="mc3-b al" data-alerta="${esc(tk)}" aria-expanded="${on}"${d.puede ? "" : ` disabled title="${esc(d.motivo)}"`}>Avisarme si…</button>`;
+  if (!d.puede) return `<div class="mc3-acc">${btn(false)}</div>`;
+  const abierto = _alAbierta === tk;
+  const cond = abierto && _alCond === "baja" ? "baja" : "sube";
+  const pre = d.precarga[cond];
+  const val = abierto && _alTexto != null ? _alTexto : numIn(pre);
+  // "(≈ US$4,13 al CCL de hoy)" de lo escrito, si la vista está en otra moneda
+  const vAprox = abierto && _alTexto != null ? parseNum(_alTexto) : pre;
+  const seg = c => `<button type="button" data-al-cond="${c}" class="${cond === c ? "on" : ""}" aria-pressed="${cond === c}">${c === "baja" ? "Baja de" : "Sube de"}</button>`;
+  return `<div class="mc3-acc">${btn(abierto)}</div>
+    <div class="mc3-alp" data-alp data-ticker="${esc(f.ticker)}" data-precio="${d.precio}" data-moneda="${d.moneda}"${d.factor !== 1 ? ' data-vn="1"' : ""}${abierto ? "" : " hidden"}>
+      <div class="fila">
+        <span class="mc3-seg" role="group" aria-label="Cuándo avisar">${seg("sube")}${seg("baja")}</span>
+        <input type="text" inputmode="decimal" autocomplete="off" data-al-umbral value="${esc(val)}" aria-label="Precio del aviso, ${esc(d.unidad)}">
+        <span class="u" data-al-aprox>${aprox(Number.isFinite(vAprox) && vAprox > 0 ? vAprox : null, d.moneda)}</span>
+        <span class="u">${esc(d.unidad)} · hoy <b>${precioAlerta(d.precio, d.moneda)}</b></span>
+      </div>
+      <div class="fila">
+        <button type="button" class="mc3-b ok" data-al-ok${_alCreando === tk ? " disabled" : ""}>${_alCreando === tk ? "Creando…" : "Crear alerta"}</button>
+        <button type="button" class="mc3-b sec" data-al-no>Cancelar</button>
+      </div>
+      <div class="msg" data-al-msg></div>
+      <div class="nota">${esc(NOTA_ALERTA)}</div>
+      ${d.notas.map(t => `<div class="nota">${esc(t)}</div>`).join("")}
+      <div class="nota" data-al-ya>${lineaAlertasDe(tk)}</div>
+    </div>`;
+}
+
+/* ── lo que hace el mini-panel (instalarDelegado lo engancha una vez por
+   contenedor, así sobrevive a los repintados, como Ajustar) ── */
+const tkAl = s => String(s || "").trim().toUpperCase();
+// el panel de ese ticker que está en pantalla AHORA (un repintado pudo rehacerlo)
+const panelAlerta = tk => (_el ? [..._el.querySelectorAll("[data-alp]")].find(x => tkAl(x.dataset.ticker) === tk) : null) || null;
+// el panel vuelve a como arranca: cerrado, "Sube de" y el precio precargado
+function olvidarAlerta() { _alAbierta = null; _alCond = "sube"; _alTexto = null; }
+
+function ponerAprox(p, v) {
+  const a = p.querySelector("[data-al-aprox]");
+  if (a) a.innerHTML = aprox(Number.isFinite(v) && v > 0 ? v : null, p.dataset.moneda);
+}
+function msgAlerta(p, html) {
+  const m = p && p.querySelector("[data-al-msg]");
+  if (m) m.innerHTML = html || "";
+}
+/* sube/baja: marca el segmento y vuelve a precargar el umbral (5 % arriba o abajo
+   del precio de hoy, en su moneda y su unidad) */
+function ponerCondicion(p, cond) {
+  p.querySelectorAll("[data-al-cond]").forEach(b => {
+    const on = b.dataset.alCond === cond;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", String(on));
+  });
+  const pre = precargaUmbral(Number(p.dataset.precio), cond);
+  const inp = p.querySelector("[data-al-umbral]");
+  if (inp) inp.value = numIn(pre);
+  ponerAprox(p, pre);
+}
+function cerrarAlerta(p, foco = false) {
+  olvidarAlerta();
+  if (!p) return;
+  p.hidden = true;
+  ponerCondicion(p, "sube");
+  msgAlerta(p, "");
+  const det = p.closest(".mc3-det");
+  const btn = det && det.querySelector("[data-alerta]");
+  if (btn) {
+    btn.setAttribute("aria-expanded", "false");
+    if (foco) try { btn.focus(); } catch (e) {}
+  }
+}
+/* "Avisarme si…": abre o cierra el panel de SU fila sin repintar la tabla */
+function alternarAlerta(btn) {
+  if (!btn || btn.disabled) return;
+  const det = btn.closest(".mc3-det");
+  const p = det && det.querySelector("[data-alp]");
+  if (!p) return;
+  if (!p.hidden) { cerrarAlerta(p); return; }
+  olvidarAlerta();
+  _alAbierta = tkAl(btn.dataset.alerta);
+  ponerCondicion(p, "sube");
+  p.hidden = false;
+  btn.setAttribute("aria-expanded", "true");
+  const inp = p.querySelector("[data-al-umbral]");
+  if (inp) try { inp.focus(); inp.select(); } catch (e) {}
+  pedirAlertasDe(_alAbierta);
+}
+
+/* las alertas que ya tiene este activo (alertasDe: la caché de 60 s de
+   alertas-precio.js), para el renglón "Tenés N alertas…". Si falla la lectura
+   no se dice nada: el renglón queda vacío y la alerta se puede crear igual */
+function pedirAlertasDe(ticker) {
+  const email = _user && _user.email, tk = tkAl(ticker);
+  if (!email || !tk) return;
+  alertasDe(email, tk).then(l => {
+    if (!_user || _user.email !== email) return;   // cambió la cuenta mientras tanto
+    if (_alSabidas.email !== email) _alSabidas = { email, por: {} };
+    _alSabidas.por[tk] = l;
+    const p = panelAlerta(tk), ya = p && p.querySelector("[data-al-ya]");
+    if (ya) ya.innerHTML = lineaAlertasDe(tk);
+  }).catch(() => {});
+}
+
+/* el error de crearAlerta() en palabras del usuario. Pura y exportada para probarla.
+   · Los de validarAlerta()/crearAlerta() ya vienen en voseo (duplicado, ticker,
+     condición, umbral, moneda, sin sesión): pasan tal cual, y SOLO esos.
+   · Permiso: alertas-precio.js lo reescribe como "Firestore no dejó…"; la regla ya
+     está publicada y pide lo mismo que la cartera (dueño con mail verificado), así
+     que no se le echa la culpa a una regla que falta: se pide recargar.
+   · Todo lo demás (red, Firestore con code, un TypeError en inglés): el genérico */
+const ALERTA_EN_VOSEO = /^(Entrá a tu cuenta|Falta el ticker|Ese ticker no sirve|Elegí si te avisamos|Poné un precio|La alerta necesita la moneda|Ya tenés esa misma alerta)/;
+export function motivoAlerta(e) {
+  const t = String((e && e.message) || e || "");
+  if ((e && e.code === "permission-denied") || /^Firestore no dejó|permission[-_ ]denied|insufficient permissions/i.test(t))
+    return "No pudimos guardar la alerta: el servidor la rechazó. Recargá la página y probá de nuevo.";
+  if (!(e && e.code) && ALERTA_EN_VOSEO.test(t)) return t;
+  return "No se pudo crear la alerta: probá de nuevo en un momento.";
+}
+
+/* "Crear alerta": valida, graba con crearAlerta() y cierra el panel. El umbral va
+   tal cual en la moneda y la unidad en que cotiza el activo (data-precio y
+   data-moneda salen de px.precio y px.moneda, nunca de la vista convertida) */
+async function crearAlertaDesde(p) {
+  if (!p) return;
+  const tk = tkAl(p.dataset.ticker);
+  const ticker = String(p.dataset.ticker || "");   // TAL CUAL está en la cartera
+  const moneda = p.dataset.moneda, precio = Number(p.dataset.precio);
+  const rojo = t => `<span style="color:var(--v3-dn)">${esc(t)}</span>`;
+  // un repintado (el refresco de precios) puede rehacer el panel mientras se graba:
+  // los mensajes van al que está en pantalla
+  const vivo = () => (p.isConnected ? p : panelAlerta(tk));
+  const decir = t => msgAlerta(vivo(), rojo(t));
+  if (!tk || _alCreando) return;   // un segundo clic mientras graba
+  const onB = p.querySelector("[data-al-cond].on");
+  const condicion = onB && onB.dataset.alCond === "baja" ? "baja" : "sube";
+  const inp = p.querySelector("[data-al-umbral]");
+  const umbral = parseNum(inp ? inp.value : "");
+  const alCampo = () => { if (inp) try { inp.focus(); inp.select(); } catch (e) {} };
+  if (!Number.isFinite(umbral) || umbral <= 0) { decir("Poné un precio mayor a cero para el aviso."); alCampo(); return; }
+  // del lado equivocado del precio de hoy la alerta saltaría en el próximo refresco
+  if (Number.isFinite(precio) && precio > 0 && (condicion === "sube" ? umbral <= precio : umbral >= precio)) {
+    decir(`Hoy está en ${precioAlerta(precio, moneda)}: con «${condicion === "sube" ? "Sube de" : "Baja de"}» ese precio la alerta saltaría enseguida. `
+      + (condicion === "sube" ? "Poné uno más alto o elegí «Baja de»." : "Poné uno más bajo o elegí «Sube de»."));
+    alCampo(); return;
+  }
+  if (moneda !== "ARS" && moneda !== "USD") { decir(TXT_SIN_PRECIO_ALERTA); return; }
+  // el mail se fija ANTES del await, como en guardarCompras: si en el medio se
+  // cambia de cuenta, la alerta queda en la cuenta de quien la pidió y la
+  // pantalla (que ya es de otro) no se toca
+  const email = _user && _user.email;
+  if (!email) { decir("Se cerró la sesión: volvé a entrar para crear la alerta."); return; }
+  _alCreando = tk;
+  const btn = p.querySelector("[data-al-ok]");
+  if (btn) { btn.disabled = true; btn.textContent = "Creando…"; }
+  msgAlerta(p, "");
+  let error = null;
+  try { await crearAlerta(email, { ticker, condicion, umbral, moneda }); }
+  catch (e) { error = e; }
+  finally {
+    // solo si sigue siendo la suya: un cambio de cuenta en el medio ya lo limpió
+    if (_alCreando === tk) _alCreando = null;
+    const b = (vivo() || p).querySelector("[data-al-ok]");
+    if (b) { b.disabled = false; b.textContent = "Crear alerta"; }
+  }
+  if (!_user || _user.email !== email) return;
+  // mientras se grababa el panel pudo cerrarse (Cancelar, Escape) o cerrarse la
+  // fila: entonces lo que haya que decir va al renglón de arriba, no a un panel
+  // escondido, y no se toca el estado de otro panel que el usuario haya abierto
+  const q = vivo(), visible = !!q && !q.hidden && _alAbierta === tk;
+  if (error) {
+    const t = motivoAlerta(error);
+    if (visible) decir(t); else avisoAlerta(t, false);
+    return;
+  }
+  if (visible) {
+    // el foco vuelve a "Avisarme si…" solo si estaba en el panel (o se perdió al
+    // apagarse "Crear alerta"): si el usuario ya escribe en otro lado, no se lo saca
+    const a = document.activeElement;
+    cerrarAlerta(q, !a || a === document.body || q.contains(a));
+  }
+  avisoAlerta(`Listo: te avisamos si ${tickerCorto(ticker)} ${condicion} de ${precioAlerta(umbral, moneda)}${p.dataset.vn ? " cada 100 VN" : ""}.`, true);
+  const ctx = typeof window !== "undefined" ? window.__valtiaCtx : null;
+  // la pestaña Alertas y la pastilla del lateral
+  if (ctx && typeof ctx.refrescar === "function") { try { ctx.refrescar("alertas"); } catch (e) {} }
+  pedirAlertasDe(tk);
+}
+
+/* el resultado de una alerta en el renglón de mensajes (#mc-msg, arriba de todo).
+   Si no se ve desde donde está el usuario, el mismo texto va también en el aviso
+   flotante del panel (ctx.toast) */
+function avisoAlerta(txt, ok) {
+  const m = _el && _el.querySelector("#mc-msg");
+  if (m) m.innerHTML = `<span style="color:var(${ok ? "--v3-up" : "--v3-dn"})">${esc(txt)}</span>`;
+  const ctx = typeof window !== "undefined" ? window.__valtiaCtx : null;
+  try {
+    const r = m && m.getBoundingClientRect();
+    if (ctx && typeof ctx.toast === "function" && (!r || r.bottom < 0 || r.top > (window.innerHeight || 0))) ctx.toast(txt);
+  } catch (e) {}
+}
+
 function detalleHTML(f, opts, cur) {
   const ctxOk = typeof window !== "undefined" && !!window.__valtiaCtx;
   const c = ctxOk ? _detCache[f.id] : null;
@@ -1513,10 +1843,10 @@ function detalleHTML(f, opts, cur) {
       <div class="mc3-col" data-dn>${c ? c.not : esperando("Últimas noticias")}</div>` : ""}
       <div class="mc3-col">
         ${ctxOk ? `<div data-de>${c ? c.ev : esperando("Próximo evento")}</div>` : (link ? `<a class="mc3-lk" href="${link}" style="margin-top:0">Ver la ficha →</a>` : "")}
-        ${sola ? accionesHTML(id, brk, aj, true) : ""}
+        ${sola ? accionesHTML(id, brk, aj, true) + alertaHTML(f, opts) : ""}
       </div>
     </div>
-    ${sola ? "" : comprasHTML(f, cur, bonos)}
+    ${sola ? "" : comprasHTML(f, cur, bonos) + `<div class="mc3-alw">${alertaHTML(f, opts)}</div>`}
   </div>`;
 }
 
@@ -1567,7 +1897,7 @@ function alternarFila(el, id, forzar) {
   const abrir = forzar != null ? !!forzar : _abierta !== id;
   el.querySelectorAll(".mc3-det").forEach(d => d.remove());
   el.querySelectorAll(".mc3-row.on").forEach(x => { x.classList.remove("on"); x.setAttribute("aria-expanded", "false"); });
-  if (_abierta !== id) _ajAbierto = null;
+  if (_abierta !== id) { _ajAbierto = null; olvidarAlerta(); }
   _abierta = abrir ? id : null;
   if (!abrir) return null;
   const row = [...el.querySelectorAll(".mc3-row[data-fila]")].find(x => x.dataset.fila === id);
@@ -1648,6 +1978,24 @@ function instalarDelegado(el) {
   el.addEventListener("click", ev => {
     const t = ev.target;
     if (!t || !t.closest) return;
+    // "Avisarme si…": abrir o cerrar su panel, sube/baja, crear y cancelar
+    const al = t.closest("[data-alerta]");
+    if (al) { ev.preventDefault(); alternarAlerta(al); return; }
+    const alCond = t.closest("[data-al-cond]");
+    if (alCond) {
+      ev.preventDefault();
+      const p = alCond.closest("[data-alp]");
+      if (!p) return;
+      _alCond = alCond.dataset.alCond === "baja" ? "baja" : "sube";
+      _alTexto = null;
+      ponerCondicion(p, _alCond);
+      msgAlerta(p, "");
+      return;
+    }
+    const alOk = t.closest("[data-al-ok]");
+    if (alOk) { ev.preventDefault(); crearAlertaDesde(alOk.closest("[data-alp]")); return; }
+    const alNo = t.closest("[data-al-no]");
+    if (alNo) { ev.preventDefault(); cerrarAlerta(alNo.closest("[data-alp]"), true); return; }
     const aj = t.closest("[data-ajustar]");
     if (aj) {
       ev.preventDefault();
@@ -1691,6 +2039,23 @@ function instalarDelegado(el) {
       const nuevo = [...el.querySelectorAll(".mc3-hd [data-col]")].find(x => x.dataset.col === c);
       if (nuevo) try { nuevo.focus(); } catch (e) {}
     }
+  });
+  // el umbral de la alerta: lo escrito se recuerda (_alTexto) para el repintado y
+  // el "≈ … al CCL de hoy" sigue al número. Enter crea; Escape cierra el panel
+  el.addEventListener("input", ev => {
+    const t = ev.target;
+    if (!t || !t.matches || !t.matches("[data-al-umbral]")) return;
+    _alTexto = t.value;
+    const p = t.closest("[data-alp]");
+    if (p) { ponerAprox(p, parseNum(t.value)); msgAlerta(p, ""); }
+  });
+  el.addEventListener("keydown", ev => {
+    const t = ev.target;
+    if (!t || !t.closest || (ev.key !== "Enter" && ev.key !== "Escape")) return;
+    const p = t.closest("[data-alp]");
+    if (!p) return;
+    if (ev.key === "Escape") { ev.preventDefault(); cerrarAlerta(p, true); }
+    else if (t.matches("[data-al-umbral]")) { ev.preventDefault(); crearAlertaDesde(p); }
   });
 }
 
@@ -3559,6 +3924,8 @@ export function reiniciarMiCartera() {
   _porImportar = null; _listo = { email: null, p: null };
   // el desplegable guarda informes, noticias y eventos de la cuenta anterior
   _vista = null; _abierta = null; _ajAbierto = null; _pendiente = null; _detCache = {};
+  // la alerta a medio escribir y las ya leídas ("Tenés N alertas…") son de la cuenta anterior
+  olvidarAlerta(); _alSabidas = { email: null, por: {} }; _alCreando = null;
   _evCache = { email: null, t: 0, p: null };
   Object.assign(_evo, { email: null, cargado: false, cargando: null, error: false,
                         intento: 0, fotos: [], series: {}, spy: [], ccl: [], mep: [], merval: [], inflacion: [] });
@@ -3573,6 +3940,7 @@ export async function initMiCartera(user, el) {
   if (_evo.email !== user.email) {
     Object.assign(_evo, { email: user.email, cargado: false, cargando: null, error: false, intento: 0, fotos: [] });
     _detCache = {}; _abierta = null; _ajAbierto = null;
+    olvidarAlerta(); _alSabidas = { email: null, por: {} }; _alCreando = null;
   }
   asegurarEstilo();
   if (!user.emailVerified) {

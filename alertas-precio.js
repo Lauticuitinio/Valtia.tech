@@ -374,6 +374,13 @@ export async function evaluarConPrecios(email, precios) {
 // cuenta abierta y, por cada disparo, ctx.toast(fraseDisparo) y ctx.refrescar('alertas').
 // Devuelve true si la instaló ahora, false si ya estaba o no hay window.
 let _instalada = false;
+// Cada lectura de precios se evalúa UNA sola vez. mi-cartera.js emite el evento
+// en cada pintar(), también en repintados sin releer (cambiar de moneda, volver
+// a la pestaña horas después, crear una alerta): con esos precios viejos una
+// alerta recién creada podía saltar contra un precio que ya no es el de hoy, y
+// una alerta disparada no se puede deshacer. leerTodo() arma un objeto _precios
+// NUEVO en cada lectura, así que alcanza con recordar los objetos ya evaluados.
+const _evaluados = new WeakSet();
 export function instalarEvaluacion(ctx) {
   if (!ctx || typeof window === 'undefined' || !window.addEventListener) return false;
   // el flag va en window por si dos importadores cargan el módulo con distinto ?v=
@@ -381,9 +388,12 @@ export function instalarEvaluacion(ctx) {
   _instalada = true; window.__valtiaAlertasPrecio = true;
   window.addEventListener(EVENTO_PRECIOS, ev => {
     const d = ev && ev.detail;
-    if (!d || !d.precios) return;
+    if (!d || !d.precios || typeof d.precios !== 'object') return;
     const S = ctx.S || {};
     if (!S.email || d.email !== S.email || S.verificado === false) return;
+    // recién acá: un evento de otra cuenta o sin verificar no gasta la lectura
+    if (_evaluados.has(d.precios)) return;
+    _evaluados.add(d.precios);
     const email = S.email;
     evaluarConPrecios(email, d.precios).then(saltaron => {
       if (!saltaron.length || (ctx.S || {}).email !== email) return;   // cambió la cuenta mientras tanto

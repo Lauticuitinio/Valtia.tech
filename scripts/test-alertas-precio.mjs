@@ -357,6 +357,15 @@ ok('el disparo avisa con ctx.toast (formato de ctx.money) y ctx.refrescar("alert
 emitir(E6, pxG); await esperar();
 ok('el repinte siguiente no vuelve a avisar', toasts.length === 1 && refrescos.length === 1);
 ok('el contador del lateral ya la cuenta', await A.contarDisparadasNoVistas(ctx) === 1);
+// un repintado SIN releer precios (mismo objeto) no evalúa: una alerta creada
+// después no puede saltar contra esos precios viejos; una lectura nueva sí evalúa
+const pxViejo = { 'GGAL.BA': { precio: 4700, moneda: 'ARS' } };
+emitir(E6, pxViejo); await esperar();
+await A.crearAlerta(E6, { ticker: 'GGAL.BA', condicion: 'baja', umbral: 4710, moneda: 'ARS' });
+emitir(E6, pxViejo); await esperar();
+ok('repintado con los mismos precios (sin releer): la alerta nueva no salta', toasts.length === 1);
+emitir(E6, { 'GGAL.BA': { precio: 4705, moneda: 'ARS' } }); await esperar();
+ok('lectura nueva de precios: sí evalúa y salta', toasts.length === 2 && /bajó de \$4\.710/.test(toasts[1]), toasts);
 
 // ── casos adversarios ──
 // 1) el umbral escrito como en el modal de compra: "0.500" es medio, no quinientos; el
@@ -412,7 +421,7 @@ ok('ticker en minúsculas en el doc: se evalúa igual y la frase sale limpia', s
 const c10 = await A.crearAlerta(E6, { ticker: 'AL30', condicion: 'baja', umbral: 65000, moneda: 'ARS' });
 emitir(E6, { AL30: { precio: 60000, moneda: 'ARS' } }); S.email = 'otro@test'; await esperar(); S.email = E6;
 ok('cambio de cuenta en el medio: el doc queda disparado pero no hay toast ni refresco para la cuenta nueva',
-   FS.docs.get(path(E6, c10.id)).disparada instanceof TS && toasts.length === 1 && refrescos.length === 1, { toasts, refrescos });
+   FS.docs.get(path(E6, c10.id)).disparada instanceof TS && toasts.length === 2 && refrescos.length === 2, { toasts, refrescos });   // 2: los del circuito de arriba, ninguno nuevo
 // 8) las reglas exigen el mail verificado para ser dueño (por eso el módulo filtra por S.verificado)
 ok('esDuenio() exige esVerificado() (email_verified == true)', /function esDuenio\(\)\s*\{[\s\S]*?esVerificado\(\)/.test(reglas) && /email_verified == true/.test(reglas));
 // 9) el pipeline (service account, sin reglas) la disparó mientras la caché de esta pestaña estaba caliente:

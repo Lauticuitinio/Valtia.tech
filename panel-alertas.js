@@ -36,9 +36,28 @@
 // de más, Firestore rechaza el listado entero, no lo recorta—, y lo que no puede leer se
 // lo cuenta el bloque de PRO (una lista desenfocada —barras vacías, no datos falsos—
 // con el acceso a /planes).
+//
+// SEGUNDO SEGMENTO (24/09/2026): "Tus alertas de precio". Arriba de los filtros hay un
+// selector con la misma pinta que ellos: "De las carteras Valtia" (todo lo de arriba, tal
+// cual) | "Tus alertas de precio" (las que el usuario se puso sobre SUS activos: "avisame
+// si GGAL sube de $4.735"). Esas viven en inversores/{email}/alertasPrecio y entran y
+// salen SOLO por alertas-precio.js: acá se listan las activas (con el precio de hoy y
+// cuánto le falta), el historial de las que saltaron (tocar una abre el activo en Mi
+// cartera) y un mini-form para crear una sobre un activo de la cartera que ya tenga
+// precio. El umbral va en la moneda y la unidad en que cotiza el activo (cada 100 VN en
+// renta fija), nunca convertido. Al dibujar ese segmento con disparadas sin ver, se
+// marcan vistas (apaga la pastilla del lateral) y se repinta UNA vez. El mail lo manda el
+// pipeline, que todavía no sale: acá no se promete.
 import { getFirestore, collection, getDocs, doc, query, where, writeBatch, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+// la única puerta a inversores/{email}/alertasPrecio (leerAlertas se renombra: acá ya hay
+// una leerAlertas, la de la colección global `alertas`)
+import { leerAlertas as leerAlertasPrecio, pausar, borrar, marcarVistas, limpiarHistorial, textoAlerta, fraseDisparo,
+         tickerCorto, crearAlerta, validarAlerta, precargaUmbral, fmtPrecio, EVENTO_PRECIOS } from './alertas-precio.js?v=1';
+// el nombre del activo con el MISMO criterio que la fila de Mi cartera (precios.nombre o la
+// ficha) y la renta fija para la unidad del umbral (cada 100 VN)
+import { nombreDe, esRentaFija } from './activos.js?v=7';
 
 const CSS_ID = 'v3-css-alertas';
 
@@ -139,6 +158,69 @@ const CSS = `
   .v3al-sk .a{display:flex;gap:8px}
   .v3al-sk .a i{width:64px;margin:0}
   .v3al-cif .v{font-size:19px}
+}
+/* ── el selector de segmento (carteras | precio): los mismos .v3al-sel de los filtros,
+   con una línea abajo que lo separa de ellos ── */
+.v3al-vistas{border-bottom:1px solid var(--v3-line2);margin:0 0 16px}
+.v3al-sel .v3al-pt{display:inline-block;vertical-align:middle;margin:0 0 2px 6px}
+/* ── "Tus alertas de precio" ── */
+.v3al-cab{display:flex;align-items:center;justify-content:space-between;gap:8px 14px;flex-wrap:wrap;min-width:0}
+.v3al-cab .v3al-eye{color:var(--v3-mut)}
+/* primario navy (--v3-btn) y secundario blanco con borde: nada crema ni dorado de relleno */
+.v3al-btn.sec{color:var(--v3-ink);background:var(--v3-card);border-color:var(--v3-line)}
+.v3al-btn.sec:hover{color:var(--v3-ink);background:var(--v3-hover);border-color:var(--v3-mut)}
+.v3al-btn.pri{color:var(--v3-btnTx);background:var(--v3-btn);border-color:var(--v3-btn);transition:opacity .15s}
+.v3al-btn.pri:hover{color:var(--v3-btnTx);background:var(--v3-btn);border-color:var(--v3-btn);opacity:.86}
+[data-theme="dark"] .v3al-btn.sec:hover{color:var(--v3-ink);background:var(--v3-hover);border-color:var(--v3-mut)}
+[data-theme="dark"] .v3al-btn.pri:hover{color:var(--v3-btnTx);background:var(--v3-btn);border-color:var(--v3-btn)}
+.v3al-btn.chico{padding:5px 9px;font-size:9.5px}
+.v3al-ch{display:flex;align-items:flex-start;justify-content:space-between;gap:6px 14px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--v3-line2)}
+.v3al-ch b{font:600 13px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink)}
+.v3al-ch .v3al-sub{margin-top:2px}
+.v3al-ch .v3al-leer{padding:0}
+.v3al-ch .pau{font-weight:500;color:var(--v3-mut)}
+.v3al-nada{font-size:12.5px;color:var(--v3-sub);line-height:1.6;padding:16px 18px;overflow-wrap:anywhere}
+/* una fila por alerta activa: ticker, nombre, pastilla con la condición, el precio de hoy */
+.v3al-ap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--v3-line2);min-width:0}
+.v3al-ap:last-child{border-bottom:none}
+.v3al-ap.off .v3al-tit2 b,.v3al-ap.off .v3al-pill.up,.v3al-ap.off .v3al-pill.dn{opacity:.55}
+.v3al-tit2{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.v3al-tit2 b{font:700 14px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink)}
+.v3al-tit2 .nom{font-size:11.5px;color:var(--v3-mut);overflow-wrap:anywhere}
+.v3al-hoy{font:500 11.5px 'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;color:var(--v3-sub);margin-top:5px;overflow-wrap:anywhere}
+.v3al-ap .acc{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.v3al-pill.up,.v3al-pill.dn{font:600 11px 'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;letter-spacing:0;text-transform:none}
+.v3al-pill.up{color:var(--v3-up);background:var(--v3-upBg)}
+.v3al-pill.dn{color:var(--v3-dn);background:var(--v3-dnBg)}
+.v3al-pill.pau{color:var(--v3-mut);background:var(--v3-neutro)}
+/* historial: cada fila es un botón (tocarla abre el activo en Mi cartera) */
+.v3al-hi{display:grid;grid-template-columns:112px minmax(0,1fr);gap:4px 14px;align-items:start;width:100%;text-align:left;padding:12px 18px;margin:0;
+  border:none;border-bottom:1px solid var(--v3-line2);border-radius:0;background:none;color:var(--v3-ink);cursor:pointer;font-family:inherit;min-width:0}
+.v3al-hi:last-child{border-bottom:none}
+.v3al-hi:hover{background:var(--v3-hover)}
+.v3al-hi .f{font:500 10.5px 'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;color:var(--v3-mut);line-height:1.6;white-space:nowrap}
+.v3al-hi .t{display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.45;min-width:0;overflow-wrap:anywhere}
+.v3al-hi .t .v3al-pt{margin-top:5px}
+/* mini-form de alta: activo, sube/baja, umbral en la moneda y unidad del activo. El
+   sube/baja son los mismos .v3al-sel (subrayado dorado, sin caja), como el "Avisarme si…"
+   de la fila de Mi cartera */
+.v3al-form{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding:14px 18px;margin:0;background:var(--v3-hl)}
+.v3al-form label,.v3al-form .lab{display:block;font:600 9.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);margin:0 0 5px}
+.v3al-form select,.v3al-form input{width:100%;font:500 13px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);background:var(--v3-card);
+  border:1px solid var(--v3-line);border-radius:7px;padding:8px 10px;min-width:0;margin:0}
+.v3al-form input{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.v3al-form select:focus,.v3al-form input:focus{outline:none;border-color:var(--v3-mut)}
+.v3al-form .u{font:500 10.5px 'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;color:var(--v3-mut);line-height:1.5;margin-top:5px;overflow-wrap:anywhere}
+.v3al-form .acc{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap}
+.v3al-form .nota{font-size:11.5px;color:var(--v3-mut);line-height:1.5;flex:1 1 200px;min-width:0}
+.v3al-form .msg{color:var(--v3-dn)}
+.v3al-nada .v3al-acc{margin-top:8px}
+.v3al-nada .v3al-reint{padding-left:0}
+@media(min-width:620px){.v3al-form{grid-template-columns:minmax(0,1.5fr) auto minmax(0,1fr)}.v3al-form .acc{grid-column:1/-1}}
+@media(max-width:560px){
+  .v3al-ap{grid-template-columns:minmax(0,1fr)}
+  .v3al-ap .acc{justify-content:flex-start}
+  .v3al-hi{grid-template-columns:minmax(0,1fr);gap:2px}
 }
 `;
 
@@ -273,8 +355,21 @@ async function marcar(ctx, ids, campos) {
 }
 
 /* ───────────────────────── estado del módulo ───────────────────────── */
-const E = { email: null, filtro: 'todas' };
+// vista: 'carteras' (el registro de las carteras Valtia) | 'precio' (tus alertas de precio);
+// form: el mini-form de alta abierto ({ ticker, cond, umbral, msg, creando }) o null; umbral
+// null = el precargado (5 % del precio de hoy). Se conservan por cuenta: otra cuenta arranca
+// en 'carteras' con el form cerrado
+const E = { email: null, filtro: 'todas', vista: 'carteras', form: null };
 let _el = null, _ctx = null, _seq = 0, _ocupado = false;
+// lo último que se dibujó ({ email, d, p }): repintar() rearma con esto sin volver a leer
+let _ultimo = null;
+// disparadas que esta pestaña ya marcó como vistas (`${email}/${id}`): nunca se marca dos
+// veces la misma, así el "marcar y repintar una vez" no puede volverse un bucle
+const _vistasMarcadas = new Set();
+let _marcando = false;
+// las que se acaban de marcar vistas siguen con el punto mientras el usuario esté en el
+// segmento: si no, el punto se apagaría en el mismo repintado que las marca
+const _recien = new Set();
 
 /* ───────────────────────── entrada ───────────────────────── */
 export async function renderAlertas(el, ctx) {
@@ -282,10 +377,14 @@ export async function renderAlertas(el, ctx) {
   try {
     ponerCss();
     _el = el; _ctx = ctx;
-    if (E.email !== ctx.S.email) { E.email = ctx.S.email; E.filtro = 'todas'; }
+    if (E.email !== ctx.S.email) {
+      E.email = ctx.S.email; E.filtro = 'todas'; E.vista = 'carteras'; E.form = null; _ultimo = null; _recien.clear();
+    }
     if (!el.__alertas) {
       el.__alertas = true;
       el.addEventListener('click', alClic);
+      // el <select> del mini-form: al cambiar de activo se vuelve a proponer el umbral
+      el.addEventListener('change', alCambio);
     }
     if (!el.querySelector('.v3al')) el.innerHTML = '<p class="v3al-cargando">Cargando tus alertas…</p>';
     await dibujar(false);
@@ -294,24 +393,61 @@ export async function renderAlertas(el, ctx) {
   }
 }
 
-const errorHtml = () => `<div class="v3al"><div class="v3al-vacio"><b>No pudimos leer las alertas</b>
-  <p>Puede ser la conexión.<button type="button" class="v3al-reint" data-al="reintentar">Reintentar</button></p></div></div>`;
+const errorCartel = () => `<div class="v3al-vacio"><b>No pudimos leer las alertas</b>
+  <p>Puede ser la conexión.<button type="button" class="v3al-reint" data-al="reintentar">Reintentar</button></p></div>`;
+const errorHtml = () => `<div class="v3al">${errorCartel()}</div>`;
 
+/* Las dos fuentes se piden juntas y cada una puede fallar sola: la vista abierta muestra
+   su cartel de error si SU lectura falló; la otra solo aporta el número del selector (si
+   no llegó, el selector va sin número). La cartera solo se pide para la vista 'precio' */
 async function dibujar(forzar) {
   const el = _el, ctx = _ctx;
   if (!el || !ctx) return;
-  const email = ctx.S.email, seq = ++_seq;
-  try {
-    const d = await cargar(ctx, forzar);
-    if (ctx.S.email !== email || seq !== _seq) return;
-    el.innerHTML = armar(d, ctx);
-  } catch (e) {
-    if (ctx.S.email !== email || seq !== _seq) return;
-    el.innerHTML = errorHtml();
-  }
+  const email = ctx.S.email, seq = ++_seq, vista = E.vista;
+  const tolerar = pr => pr.then(v => v, () => null);
+  const [d, p] = await Promise.all([tolerar(cargar(ctx, forzar)), tolerar(cargarPrecio(ctx, vista === 'precio'))]);
+  if (ctx.S.email !== email || seq !== _seq) return;
+  _ultimo = { email, d, p };
+  capturarForm();   // lo que el usuario escribió en el mini-form sobrevive al repintado
+  try { el.innerHTML = armarTodo(d, p, ctx); }
+  catch (e) { el.innerHTML = errorHtml(); return; }
+  if (vista === 'precio' && p) marcarVistasPendientes(p, ctx, email);
+}
+
+/* rearma con lo último leído (abrir o cerrar el form, un error del form): sin volver a
+   Firestore. Si no hay nada leído para esta cuenta —o la vista 'precio' no tiene la
+   cartera, porque lo último se leyó para 'carteras'—, lee. foco: selector a enfocar */
+function repintar(foco) {
+  const el = _el, ctx = _ctx;
+  if (!el || !ctx) return;
+  const u = _ultimo;
+  if (!u || u.email !== ctx.S.email || (E.vista === 'precio' && (!u.p || (!u.p.noVerif && !u.p.cart)))) { dibujar(false); return; }
+  capturarForm();
+  try { el.innerHTML = armarTodo(u.d, u.p, ctx); } catch (e) { el.innerHTML = errorHtml(); return; }
+  const x = foco ? el.querySelector(foco) : null;
+  if (x) { try { x.focus(); if (typeof x.select === 'function') x.select(); } catch (e) {} }
 }
 
 /* ───────────────────────── armado ───────────────────────── */
+function armarTodo(d, p, ctx) {
+  const cuerpo = E.vista === 'precio' ? (p ? armarPrecio(p, ctx) : errorCartel()) : (d ? armar(d, ctx) : errorCartel());
+  return `<div class="v3al">${selectorVista(d, p, ctx)}${cuerpo}</div>`;
+}
+
+/* "De las carteras Valtia N" | "Tus alertas de precio M" (M = activas sin disparar).
+   Mismos .v3al-sel que los filtros: sin caja, la elegida con el subrayado dorado. Si hay
+   alertas de precio que saltaron y no viste, "Tus alertas de precio" lleva el punto: la
+   pastilla del lateral las cuenta y, desde "De las carteras Valtia", no se verían */
+function selectorVista(d, p, ctx) {
+  const esc = ctx.esc;
+  const n = d ? String(d.alertas.length) : '';
+  const m = p && !p.noVerif ? String((p.alertas || []).filter(a => a.activa !== false && a.disparada == null).length) : '';
+  const nuevas = E.vista !== 'precio' && p && !p.noVerif ? (p.alertas || []).filter(a => a.disparada != null && !a.vista).length : 0;
+  const pt = nuevas ? `<i class="v3al-pt" aria-label="${nuevas === 1 ? 'una saltó y no la viste' : esc(nuevas + ' saltaron y no las viste')}" title="${nuevas === 1 ? 'Una alerta saltó y no la viste' : esc(nuevas + ' alertas saltaron y no las viste')}"></i>` : '';
+  const b = (k, l, c, extra) => `<button type="button" class="v3al-sel${E.vista === k ? ' on' : ''}" aria-pressed="${E.vista === k}" data-al="vista:${k}">${esc(l)}${c !== '' ? ` <span class="v3al-n">${esc(c)}</span>` : ''}${extra || ''}</button>`;
+  return `<div class="v3al-top v3al-vistas"><div class="v3al-fil" role="group" aria-label="Qué alertas ver">${b('carteras', 'De las carteras Valtia', n)}${b('precio', 'Tus alertas de precio', m, pt)}</div></div>`;
+}
+
 function armar(d, ctx) {
   const esc = ctx.esc, S = ctx.S;
   const hoy = ctx.hoyAR();
@@ -336,7 +472,7 @@ function armar(d, ctx) {
       <div class="v3al-card">${g.items.map(a => item(a, d, ctx, puedeMarcar)).join('')}</div></div>`).join('')}</div>`;
   }
 
-  return `<div class="v3al"><div class="v3al-grid">
+  return `<div class="v3al-grid">
     <div class="v3al-col">
       <div class="v3al-top">
         <div class="v3al-fil" role="group" aria-label="Tipo de alerta">${FILTROS.map(([k, l]) => {
@@ -356,7 +492,7 @@ function armar(d, ctx) {
         <p><a class="v3al-ir" href="#panel/cuenta" data-go="cuenta">Elegir qué avisos recibir →</a></p>
       </div>
     </aside>
-  </div></div>`;
+  </div>`;
 }
 
 /* lo que hay que decir cuando todavía no hay ninguna: qué va a aparecer acá, sin
@@ -457,15 +593,341 @@ function bloquePro(ctx) {
     </div></div>`;
 }
 
+/* ───────────────────────── tus alertas de precio: datos ───────────────────────── */
+// los precios más nuevos que pintó Mi cartera (se releen cada dos minutos y emite
+// EVENTO_PRECIOS con { email, precios }): el "hoy" de cada alerta usa esos si son de esta
+// cuenta y, si no, los que leyó el panel (ctx.carteraCalc, que no se relee solo)
+let _vivos = { email: null, precios: null };
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener(EVENTO_PRECIOS, ev => {
+    const d = ev && ev.detail;
+    if (d && d.email && d.precios && typeof d.precios === 'object') _vivos = { email: d.email, precios: d.precios };
+  });
+}
+
+const tkM = s => String(s == null ? '' : s).trim().toUpperCase();
+// Timestamp de Firestore, Date, número o ISO → milisegundos (0 si no hay)
+function msDe(t) {
+  if (!t) return 0;
+  if (typeof t.toMillis === 'function') return t.toMillis();
+  if (t instanceof Date) return t.getTime();
+  const n = typeof t === 'number' ? t : Date.parse(t);
+  return Number.isFinite(n) ? n : 0;
+}
+// los mismos rótulos que el "Avisarme si…" de la fila de Mi cartera
+const monNombre = m => m === 'ARS' ? 'en pesos ($)' : m === 'USD' ? 'en dólares (US$)' : 'moneda sin confirmar';
+// el número del input como lo escribe la gente: coma decimal y sin puntos de miles
+const numIn = n => (n == null || n === '' || !isFinite(Number(n))) ? ''
+  : Number(n).toLocaleString('es-AR', { maximumFractionDigits: 8, useGrouping: false });
+// el precio como lo muestra la fila de Mi cartera: money() del panel y, por debajo de 1
+// (cripto chica), fmtPrecio con sus cifras significativas. Siempre en la moneda de la alerta
+const fmtAl = ctx => (n, m) => Math.abs(Number(n)) < 1 ? fmtPrecio(n, m) : ctx.money(n, m);
+// "+4,3 %" / "−2,1 %" (con dos decimales si es menos de 0,1 %: "+0,0 %" diría que ya llegó)
+const pctSigno = x => (x < 0 ? '−' : '+') + Math.abs(x).toFixed(Math.abs(x) < 0.1 ? 2 : 1).replace('.', ',') + ' %';
+
+/* lo que necesita el segmento: las alertas de precio de la cuenta (alertas-precio.js, con
+   su caché de 60 s) y, solo si se va a dibujar, la cartera con sus precios. Sin mail
+   verificado la regla no deja leer: no se pide nada y la vista lo dice. Si fallan las
+   alertas, tira (la vista muestra el cartel con Reintentar); si falla la cartera, las
+   alertas se dibujan igual, sin el precio de hoy */
+async function cargarPrecio(ctx, conCartera) {
+  const email = ctx.S.email;
+  if (!ctx.S.verificado) return { email, noVerif: true, alertas: [], cart: null };
+  const [alertas, cart] = await Promise.all([leerAlertasPrecio(email), conCartera ? leerCartera(ctx) : null]);
+  return { email, noVerif: false, alertas: Array.isArray(alertas) ? alertas : [], cart };
+}
+
+/* la cartera por ticker (en mayúsculas, como las guarda Mi cartera), con los precios que
+   leyó el panel. Nunca tira: si no se pudo leer, { fallo: true } */
+async function leerCartera(ctx) {
+  try {
+    const [cc, bonos] = await Promise.all([ctx.carteraCalc(), Promise.resolve().then(() => ctx.bonosSet()).catch(() => null)]);
+    if (!cc || cc.fallo) return { fallo: true };
+    const porTk = new Map();
+    const filas = cc.r && Array.isArray(cc.r.filas) ? cc.r.filas : (cc.pos || []);
+    filas.forEach(f => { const tk = tkM(f && f.ticker); if (tk && !porTk.has(tk)) porTk.set(tk, f); });
+    return { fallo: false, porTk, precios: cc.precios || {}, bonos: bonos instanceof Set ? bonos : new Set() };
+  } catch (e) { return { fallo: true }; }
+}
+
+function pxDe(p, tk) {
+  if (_vivos.email && _vivos.email === p.email && _vivos.precios && _vivos.precios[tk]) return _vivos.precios[tk];
+  const c = p.cart;
+  return (c && !c.fallo && c.precios && c.precios[tk]) || null;
+}
+
+// el nombre solo si dice algo más que el ticker (nombreDe devuelve el ticker si no lo conoce)
+function nombreActivo(tk, px) {
+  const n = String((px && px.nombre) || nombreDe(tk) || '').trim();
+  return n && n.toUpperCase() !== tickerCorto(tk) && n.toUpperCase() !== tk ? n : '';
+}
+
+/* un activo de la cartera para el mini-form: el precio y la moneda en que COTIZA (el doc de
+   precios, nunca el valor convertido de la vista) y la unidad, con el mismo criterio que
+   calcular(): el factor de la posición, el del doc de precios o, si ninguno lo dice, la
+   renta fija cotiza cada 100 VN. ok: tiene precio y se le puede poner una alerta */
+function infoTicker(p, tk) {
+  const c = p.cart;
+  if (!c || c.fallo) return null;
+  const f = c.porTk.get(tk);
+  if (!f) return null;
+  const px = pxDe(p, tk);
+  const precio = px && !px.sinDatos ? Number(px.precio) : NaN;
+  const moneda = px ? px.moneda : null;
+  const ok = Number.isFinite(precio) && precio > 0 && (moneda === 'ARS' || moneda === 'USD');
+  const rf = esRentaFija(tk, c.bonos);
+  const factor = Number(f.factor) > 0 ? Number(f.factor) : (px && Number(px.factor) > 0 ? Number(px.factor) : (rf ? 0.01 : 1));
+  // orig: el ticker TAL CUAL está en la posición (como lo manda la fila de Mi cartera);
+  // crearAlerta() lo guarda en mayúsculas, así que las dos puertas escriben lo mismo
+  const orig = String((f && f.ticker) || tk).trim() || tk;
+  return { tk, orig, ok, precio: ok ? precio : null, moneda: ok ? moneda : null, factor, rf, nombre: nombreActivo(tk, px) };
+}
+
+// los activos de la cartera a los que se les puede poner una alerta, por ticker
+function opciones(p) {
+  const c = p && p.cart;
+  if (!c || c.fallo) return [];
+  return [...c.porTk.keys()].map(tk => infoTicker(p, tk)).filter(i => i && i.ok)
+    .sort((a, b) => tickerCorto(a.tk).localeCompare(tickerCorto(b.tk)));
+}
+
+// "24/09 14:35" en hora argentina (hoy / ayer con su nombre; el año solo si no es este)
+function fechaHoraAR(t, hoy) {
+  const m = msDe(t);
+  if (!m) return '—';
+  const s = new Date(m - 3 * 3600e3).toISOString();
+  const f = s.slice(0, 10), h = s.slice(11, 16);
+  const dia = f === hoy ? 'hoy' : f === addD(hoy, -1) ? 'ayer'
+    : `${f.slice(8, 10)}/${f.slice(5, 7)}${f.slice(0, 4) !== hoy.slice(0, 4) ? '/' + f.slice(2, 4) : ''}`;
+  return `${dia} ${h}`;
+}
+
+/* ───────────────────────── tus alertas de precio: armado ───────────────────────── */
+const ladoPrecio = () => `<aside class="v3al-lat"><div class="v3al-lado"><div class="v3al-eye">Cómo te llegan</div>
+    <p>Cuando un activo cruza tu umbral, la alerta salta y queda acá, en el historial, con la pastilla de Alertas encendida.</p>
+    <p>Por ahora se revisa cuando abrís el panel y mientras estás en <b>Mi cartera</b>, que relee los precios cada dos minutos (en rueda se actualizan cada 15 minutos). Con el panel cerrado no se revisa.</p>
+    <p>El aviso por mail todavía no sale.</p>
+  </div></aside>`;
+
+function armarPrecio(p, ctx) {
+  const esc = ctx.esc;
+  if (p.noVerif) {
+    return `<div class="v3al-grid"><div class="v3al-col">
+      <div class="v3al-vacio"><b>Tus alertas de precio</b><p>Verificá tu mail para crear alertas de precio.</p></div>
+    </div>${ladoPrecio()}</div>`;
+  }
+  const fmt = fmtAl(ctx), hoy = ctx.hoyAR();
+  const lista = p.alertas || [];
+  const vivas = lista.filter(a => a.disparada == null);   // ya vienen las más nuevas primero
+  const activas = vivas.filter(a => a.activa !== false).length, pausadas = vivas.length - activas;
+  const saltaron = lista.filter(a => a.disparada != null).sort((a, b) => msDe(b.disparada) - msDe(a.disparada));
+  const n = saltaron.length;
+
+  // con el form abierto no se repite: el form ya dice que no se pudo leer la cartera
+  const aviso = p.cart && p.cart.fallo && !E.form
+    ? `<div class="v3al-aviso">No pudimos leer tu cartera: tus alertas están, pero sin el precio de hoy.<button type="button" class="v3al-reint" data-al="reintentar">Reintentar</button></div>`
+    : '';
+  const cabAct = `<div class="v3al-ch"><b>Activas · <span class="v3al-n">${activas}</span>${pausadas
+    ? ` <span class="pau">· <span class="v3al-n">${pausadas}</span> pausada${pausadas === 1 ? '' : 's'}</span>` : ''}</b></div>`;
+  const filasAct = vivas.length ? vivas.map(a => filaActiva(a, p, ctx, fmt)).join('')
+    : `<div class="v3al-nada">No tenés alertas de precio. Abrí la fila de un activo en Mi cartera y tocá «Avisarme si…», o creá una acá.</div>`;
+  const cabHist = `<div class="v3al-ch"><div><b>Historial de las que saltaron</b>${n ? '<div class="v3al-sub">Tocá una para ir al activo.</div>' : ''}</div>${n
+    ? '<button type="button" class="v3al-leer" data-ap="limpiar">Limpiar historial</button>' : ''}</div>`;
+  const filasHist = n ? saltaron.map(a => filaSalto(a, ctx, fmt, hoy)).join('')
+    : `<div class="v3al-nada">Todavía no saltó ninguna alerta. Cuando un activo cruce el umbral que le pusiste, vas a verla acá.</div>`;
+
+  return `<div class="v3al-grid">
+    <div class="v3al-col">
+      <div class="v3al-cab"><div class="v3al-eye">Tus alertas de precio</div>
+        <button type="button" class="v3al-btn sec" data-ap="nueva" aria-expanded="${!!E.form}">+ Nueva alerta</button></div>
+      ${E.form ? formPrecio(p, ctx, fmt) : ''}
+      ${aviso}
+      <div class="v3al-card">${cabAct}${filasAct}</div>
+      <div class="v3al-card">${cabHist}${filasHist}</div>
+      <p class="v3al-nota">El umbral va en la moneda y la unidad en que cotiza el activo (cada 100 VN en la renta fija), sin convertir. Una alerta que ya saltó no se reanuda: si querés seguir mirando ese precio, creá otra.</p>
+    </div>
+    ${ladoPrecio()}
+  </div>`;
+}
+
+/* una activa (o pausada): ticker, nombre, la condición en su pastilla verde o roja y el
+   precio de hoy con cuánto le falta. Si el activo ya no está en la cartera, se dice */
+function filaActiva(a, p, ctx, fmt) {
+  const esc = ctx.esc;
+  const tk = tkM(a.ticker), id = String(a.id), corto = tickerCorto(tk);
+  const on = a.activa !== false, baja = a.condicion === 'baja';
+  const c = p.cart && !p.cart.fallo ? p.cart : null;
+  const px = pxDe(p, tk);
+  const nom = nombreActivo(tk, px);
+  let hoy;
+  if (c && !c.porTk.has(tk)) hoy = 'ya no está en tu cartera';
+  else {
+    const precio = px && !px.sinDatos ? Number(px.precio) : NaN, u = Number(a.umbral);
+    // sin precio, con sinDatos o sin moneda conocida: no hay "hoy" (tampoco se evalúa).
+    // El % sale SOLO de precio y umbral en la misma moneda, nativos, sin convertir: si el
+    // precio de hoy vino en otra moneda, esta alerta no se evalúa nunca (alertas-precio.js
+    // compara solo en la misma moneda) y el único arreglo es crearla de nuevo
+    if (!(Number.isFinite(precio) && precio > 0) || (px.moneda !== 'ARS' && px.moneda !== 'USD')) hoy = 'hoy —';
+    else if (px.moneda !== a.moneda) hoy = 'moneda distinta al precio de hoy: borrala y creala de nuevo';
+    else if (!(u > 0)) hoy = `hoy ${fmt(precio, a.moneda)}`;
+    else if (baja ? precio <= u : precio >= u) hoy = `hoy ${fmt(precio, a.moneda)} · ya cruzó el umbral`;
+    else hoy = `hoy ${fmt(precio, a.moneda)} · le falta ${pctSigno((u / precio - 1) * 100)}`;
+  }
+  const de = ' la alerta de ' + corto;
+  return `<div class="v3al-ap${on ? '' : ' off'}">
+    <div class="v3al-cuerpo">
+      <div class="v3al-tit2"><b>${esc(corto)}</b>${nom ? `<span class="nom">${esc(nom)}</span>` : ''}<span class="v3al-pill ${baja ? 'dn' : 'up'}">${esc(textoAlerta(a, fmt))}</span>${on ? '' : '<span class="v3al-pill pau">Pausada</span>'}</div>
+      <div class="v3al-hoy">${esc(hoy)}</div>
+    </div>
+    <div class="acc">
+      <button type="button" class="v3al-btn sec chico" data-ap="${on ? 'pausar' : 'reanudar'}:${esc(id)}" aria-label="${esc((on ? 'Pausar' : 'Reanudar') + de)}">${on ? 'Pausar' : 'Reanudar'}</button>
+      <button type="button" class="v3al-btn sec chico" data-ap="borrar:${esc(id)}" aria-label="${esc('Borrar' + de)}">Borrar</button>
+    </div></div>`;
+}
+
+/* una que saltó: cuándo (hora AR), qué pasó y el punto si es nueva. Tocarla abre el activo */
+function filaSalto(a, ctx, fmt, hoy) {
+  const esc = ctx.esc;
+  const tk = tkM(a.ticker), corto = tickerCorto(tk);
+  const nueva = !a.vista || _recien.has(String(a.id));
+  return `<button type="button" class="v3al-hi" data-ap="ver:${esc(tk)}" title="${esc('Ver ' + corto + ' en Mi cartera')}">
+    <span class="f">${esc(fechaHoraAR(a.disparada, hoy))}</span>
+    <span class="t">${nueva ? '<i class="v3al-pt" aria-label="nueva" title="nueva"></i>' : ''}<span>${esc(fraseDisparo(a, fmt))}</span></span></button>`;
+}
+
+const rotuloUmbral = (i, fmt) => `${monNombre(i.moneda)}, ${i.factor !== 1 ? 'cada 100 VN' : 'por unidad'} · hoy ${fmt(i.precio, i.moneda)}`;
+const notaUmbral = i => i.rf ? 'Ojo: el día que un bono paga cupón o amortiza, el precio baja; una alerta de baja puede saltar por eso.' : '';
+
+/* el mini-form de "+ Nueva alerta": un activo de la cartera con precio, sube/baja y el
+   umbral precargado (5 % del precio de hoy) en la moneda y la unidad en que cotiza. Sin
+   activos con precio, en su lugar explica qué falta. "Crear" es el submit del form (Enter
+   en el precio lo toca) y lo agarra el mismo listener de clic, que cancela el envío */
+function formPrecio(p, ctx, fmt) {
+  const esc = ctx.esc, F = E.form, c = p.cart;
+  const cerrar = '<button type="button" class="v3al-reint" data-ap="cancelar">Cerrar</button>';
+  if (!c || c.fallo) {
+    return `<div class="v3al-card"><div class="v3al-nada">No pudimos leer tu cartera, y la alerta se pone sobre un activo que tenés.
+      <div class="v3al-acc"><button type="button" class="v3al-reint" data-al="reintentar">Reintentar</button>${cerrar}</div></div></div>`;
+  }
+  const ops = opciones(p);
+  if (!ops.length) {
+    const txt = c.porTk.size
+      ? 'Tus activos todavía no tienen precio: cuando llegue, vas a poder ponerles una alerta.'
+      : 'Primero cargá activos en Mi cartera: la alerta se pone sobre un activo que tenés, con el precio al que cotiza.';
+    return `<div class="v3al-card"><div class="v3al-nada">${esc(txt)}
+      <div class="v3al-acc"><a class="v3al-ir" href="#panel/micartera" data-go="micartera">Ir a Mi cartera →</a>${cerrar}</div></div></div>`;
+  }
+  const i = ops.find(o => o.tk === F.ticker) || ops[0];
+  F.ticker = i.tk;
+  const cond = F.cond === 'baja' ? 'baja' : 'sube';
+  const val = F.umbral != null ? F.umbral : numIn(precargaUmbral(i.precio, cond));
+  const seg = k => `<button type="button" class="v3al-sel${cond === k ? ' on' : ''}" aria-pressed="${cond === k}" data-ap="cond:${k}">${k === 'baja' ? 'Baja de' : 'Sube de'}</button>`;
+  const nota = F.msg ? `<span class="msg" role="alert">${esc(F.msg)}</span>` : esc(notaUmbral(i));
+  return `<div class="v3al-card"><form class="v3al-form" data-apform novalidate onsubmit="return false" aria-label="Nueva alerta de precio">
+    <div><label for="v3al-f-tk">Activo</label>
+      <select id="v3al-f-tk" data-apf="ticker">${ops.map(o =>
+        `<option value="${esc(o.tk)}"${o.tk === i.tk ? ' selected' : ''}>${esc(tickerCorto(o.tk) + (o.nombre ? ' · ' + o.nombre : ''))}</option>`).join('')}</select></div>
+    <div><span class="lab" id="v3al-f-cond">Avisame si</span>
+      <div class="v3al-fil" role="group" aria-labelledby="v3al-f-cond">${seg('sube')}${seg('baja')}</div></div>
+    <div><label for="v3al-f-u">Precio</label>
+      <input id="v3al-f-u" type="text" inputmode="decimal" autocomplete="off" data-apf="umbral" value="${esc(val)}">
+      <div class="u" data-apf-u>${esc(rotuloUmbral(i, fmt))}</div></div>
+    <div class="acc">
+      <button type="submit" class="v3al-btn pri" data-ap="crear"${F.creando ? ' disabled' : ''}>${F.creando ? 'Creando…' : 'Crear'}</button>
+      <button type="button" class="v3al-btn sec" data-ap="cancelar">Cancelar</button>
+      <span class="nota" data-apf-nota>${nota}</span>
+    </div></form></div>`;
+}
+
+/* lo escrito en el mini-form pasa a E.form antes de cualquier repintado */
+function capturarForm() {
+  if (!E.form || !_el) return;
+  const f = _el.querySelector('[data-apform]');
+  if (!f) return;
+  const s = f.querySelector('[data-apf="ticker"]'), i = f.querySelector('[data-apf="umbral"]');
+  if (s && s.value) E.form.ticker = String(s.value);
+  if (i) E.form.umbral = String(i.value);
+}
+
+/* cambiar de activo o de sube/baja toca el form EN SU LUGAR (sin repintar: el foco queda
+   donde estaba, y con las flechas del <select> se puede recorrer la lista) y vuelve a
+   proponer el umbral, como el "Avisarme si…" de Mi cartera */
+function actualizarForm() {
+  const f = _el && _el.querySelector('[data-apform]');
+  const p = _ultimo && _ultimo.p;
+  if (!E.form || !f || !p) { repintar(); return; }
+  const i = opciones(p).find(o => o.tk === E.form.ticker);
+  if (!i) { repintar(); return; }
+  const cond = E.form.cond === 'baja' ? 'baja' : 'sube';
+  f.querySelectorAll('[data-ap^="cond:"]').forEach(b => {
+    const on = b.dataset.ap === 'cond:' + cond;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+  const inp = f.querySelector('[data-apf="umbral"]');
+  if (inp && E.form.umbral == null) inp.value = numIn(precargaUmbral(i.precio, cond));
+  const u = f.querySelector('[data-apf-u]');
+  if (u) u.textContent = rotuloUmbral(i, fmtAl(_ctx));
+  const n = f.querySelector('[data-apf-nota]');
+  if (n) n.textContent = notaUmbral(i);
+}
+
+/* el <select> del mini-form (el único 'change' del módulo) */
+function alCambio(ev) {
+  if (!_ctx || ev.currentTarget !== _el || !E.form) return;
+  const s = ev.target && ev.target.closest ? ev.target.closest('[data-apf="ticker"]') : null;
+  if (!s || !_el.contains(s)) return;
+  E.form.ticker = String(s.value || '');
+  E.form.umbral = null; E.form.msg = '';
+  actualizarForm();
+}
+
+/* al dibujar el segmento con disparadas sin ver: se marcan vistas (apaga la pastilla del
+   lateral) y se repinta UNA vez. Sin bucle: una id ya marcada no se vuelve a marcar, y la
+   relectura ya las trae vistas. Si falla, no se repinta y queda para el próximo dibujo */
+async function marcarVistasPendientes(p, ctx, email) {
+  if (_marcando || !p || p.noVerif) return;
+  const clave = id => email + '/' + id;
+  const ids = (p.alertas || []).filter(a => a.disparada != null && !a.vista && !_vistasMarcadas.has(clave(a.id))).map(a => String(a.id));
+  if (!ids.length) return;
+  ids.forEach(id => { _vistasMarcadas.add(clave(id)); _recien.add(id); });
+  _marcando = true;
+  let ok = false;
+  try { await marcarVistas(email, ids); ok = true; }
+  catch (e) { ids.forEach(id => { _vistasMarcadas.delete(clave(id)); _recien.delete(id); }); }
+  finally { _marcando = false; }
+  if (ok && ctx.S.email === email) { try { ctx.refrescar('alertas'); } catch (e) {} }
+}
+
+/* el error de crearAlerta() en palabras del usuario, con el criterio de motivoAlerta() de
+   mi-cartera.js: los de alertas-precio.js ya vienen en voseo y pasan tal cual */
+const ALERTA_EN_VOSEO = /^(Entrá a tu cuenta|Falta el ticker|Ese ticker no sirve|Elegí si te avisamos|Poné un precio|La alerta necesita la moneda|Ya tenés esa misma alerta)/;
+function motivoCrear(e) {
+  const t = String((e && e.message) || e || '');
+  if ((e && e.code === 'permission-denied') || /^Firestore no dejó|permission[-_ ]denied|insufficient permissions/i.test(t))
+    return 'No pudimos guardar la alerta: el servidor la rechazó. Recargá la página y probá de nuevo.';
+  if (!(e && e.code) && ALERTA_EN_VOSEO.test(t)) return t;
+  return 'No se pudo crear la alerta: probá de nuevo en un momento.';
+}
+
 /* ───────────────────────── interacción ───────────────────────── */
 async function alClic(ev) {
   if (!_ctx || ev.currentTarget !== _el) return;
-  const t = ev.target.closest('[data-al]');
+  const t = ev.target.closest('[data-al],[data-ap]');
   if (!t || !_el.contains(t)) return;
+  // data-ap: lo del segmento "Tus alertas de precio"
+  if (t.hasAttribute('data-ap')) { await alClicPrecio(ev, t, _ctx); return; }
   const s = String(t.dataset.al || ''), i = s.indexOf(':');
   const acc = i < 0 ? s : s.slice(0, i), val = i < 0 ? '' : s.slice(i + 1);
   const ctx = _ctx;
 
+  if (acc === 'vista') {
+    if (val !== 'carteras' && val !== 'precio') return;
+    ev.preventDefault();
+    if (E.vista !== val) { E.vista = val; E.form = null; _recien.clear(); }
+    dibujar(false);
+    return;
+  }
   if (acc === 'filtro') {
     if (!FILTROS.some(x => x[0] === val)) return;
     ev.preventDefault();
@@ -514,4 +976,126 @@ async function guardar(ctx, ids, campos) {
   } finally {
     _ocupado = false;
   }
+}
+
+/* "Tus alertas de precio": ver, nueva, sube/baja, cancelar, crear, pausar, reanudar,
+   borrar y limpiar. Lo que escribe pasa SOLO por alertas-precio.js y con _ocupado */
+const confirmar = txt => { try { return window.confirm(txt); } catch (e) { return false; } };
+
+async function alClicPrecio(ev, t, ctx) {
+  // lo primero, antes de cualquier await: "Crear" es el submit del mini-form y un Enter
+  // en el precio lo clickea; sin esto el form se enviaría y recargaría la página
+  ev.preventDefault();
+  if (E.vista !== 'precio') return;
+  const s = String(t.dataset.ap || ''), i = s.indexOf(':');
+  const acc = i < 0 ? s : s.slice(0, i), val = i < 0 ? '' : s.slice(i + 1);
+  const email = ctx.S.email;
+
+  if (acc === 'ver') { if (val) ctx.verPosicion(val); return; }
+  if (acc === 'nueva') {
+    if (E.form) { E.form = null; repintar('[data-ap="nueva"]'); }
+    else { E.form = { ticker: null, cond: 'sube', umbral: null, msg: '', creando: false }; repintar('[data-apf="umbral"]'); }
+    return;
+  }
+  if (acc === 'cancelar') { E.form = null; repintar('[data-ap="nueva"]'); return; }
+  if (acc === 'cond') {
+    if (!E.form || (val !== 'sube' && val !== 'baja')) return;
+    capturarForm();
+    E.form.cond = val; E.form.umbral = null; E.form.msg = '';
+    actualizarForm();
+    return;
+  }
+
+  if (!ctx.S.verificado || _ocupado) return;
+  if (acc === 'crear') { await crearDesdeForm(ctx); return; }
+
+  const p = _ultimo && _ultimo.email === email ? _ultimo.p : null;
+  if (!p || p.noVerif) return;
+  const lista = p.alertas || [];
+  const a = lista.find(x => String(x.id) === val);
+  if (acc === 'pausar' || acc === 'reanudar') {
+    if (!a) return;
+    const tk = tickerCorto(a.ticker);
+    await escribirPrecio(ctx, () => pausar(email, val, acc === 'reanudar'),
+      acc === 'pausar' ? `Alerta de ${tk} pausada.` : `Alerta de ${tk} reanudada.`);
+    return;
+  }
+  if (acc === 'borrar') {
+    if (!a) return;
+    if (!confirmar(`¿Borrar la alerta de ${tickerCorto(a.ticker)} (${textoAlerta(a, fmtAl(ctx))})?`)) return;
+    await escribirPrecio(ctx, () => borrar(email, val), 'Alerta borrada.');
+    return;
+  }
+  if (acc === 'limpiar') {
+    const ids = lista.filter(x => x.disparada != null).map(x => String(x.id));
+    const n = ids.length;
+    if (!n) return;
+    if (!confirmar(n === 1
+      ? '¿Borrar el historial? Se borra la alerta que ya saltó. Las activas quedan.'
+      : `¿Borrar el historial? Se borran las ${n} alertas que ya saltaron. Las activas quedan.`)) return;
+    await escribirPrecio(ctx, () => limpiarHistorial(email, ids), 'Listo: el historial quedó vacío.');
+  }
+}
+
+/* pausar, reanudar, borrar y limpiar: escribe, avisa y repinta la pestaña Y la pastilla
+   del lateral (ctx.refrescar), también si falló: lo que muestra tiene que ser lo que hay */
+async function escribirPrecio(ctx, fn, okTxt) {
+  const email = ctx.S.email;
+  _ocupado = true;
+  let txt = okTxt;
+  try { await fn(); }
+  catch (e) {
+    const m = String((e && e.message) || '');
+    // los de alertas-precio.js ya vienen en voseo ("Esa alerta ya saltó…", "Firestore no dejó…")
+    txt = /^(Esa alerta ya saltó|Firestore no dejó)/.test(m) ? m
+      : 'No se pudo guardar (' + String((e && (e.code || e.message)) || e).slice(0, 40) + ')';
+  } finally { _ocupado = false; }
+  if (ctx.S.email !== email) return;
+  try { ctx.toast(txt); } catch (x) {}
+  try { ctx.refrescar('alertas'); } catch (x) {}
+}
+
+/* "Crear": el activo y el umbral salen de lo que está en pantalla; la moneda, del precio
+   de ese activo (en la que cotiza, nunca convertida). crearAlerta() valida y rechaza el
+   duplicado; el error queda escrito en el form */
+async function crearDesdeForm(ctx) {
+  const email = ctx.S.email;
+  const p = _ultimo && _ultimo.email === email ? _ultimo.p : null;
+  if (!E.form || !p) return;
+  capturarForm();
+  const F = E.form;
+  const i = opciones(p).find(o => o.tk === F.ticker);
+  if (!i) { F.msg = 'Elegí un activo de tu cartera que tenga precio.'; repintar(); return; }
+  const cond = F.cond === 'baja' ? 'baja' : 'sube';
+  const umbral = F.umbral != null ? F.umbral : precargaUmbral(i.precio, cond);
+  const campos = { ticker: i.orig, condicion: cond, umbral, moneda: i.moneda };
+  // el número se lee con el MISMO criterio que crearAlerta() (validarAlerta): "4.735",
+  // "4735,5" y "1.900,50" valen lo mismo acá y en la fila de Mi cartera
+  const v = validarAlerta(campos);
+  if (!v.ok) { F.msg = v.error; repintar('[data-apf="umbral"]'); return; }
+  // del lado equivocado del precio de hoy saltaría en el próximo refresco: la fila de Mi
+  // cartera (crearAlertaDesde) la frena con el mismo texto, y acá también
+  const fmt = fmtAl(ctx), u = v.datos.umbral;
+  if (cond === 'sube' ? u <= i.precio : u >= i.precio) {
+    F.msg = `Hoy está en ${fmt(i.precio, i.moneda)}: con «${cond === 'sube' ? 'Sube de' : 'Baja de'}» ese precio la alerta saltaría enseguida. `
+      + (cond === 'sube' ? 'Poné uno más alto o elegí «Baja de».' : 'Poné uno más bajo o elegí «Sube de».');
+    repintar('[data-apf="umbral"]');
+    return;
+  }
+  _ocupado = true; F.creando = true; F.msg = '';
+  repintar();
+  let hecha = null, msg = '';
+  try { hecha = await crearAlerta(email, campos); }
+  catch (e) { msg = motivoCrear(e); }
+  finally { _ocupado = false; F.creando = false; }
+  if (ctx.S.email !== email) return;
+  if (hecha) {
+    if (E.form === F) E.form = null;
+    try { ctx.toast(`Alerta creada: ${tickerCorto(hecha.ticker)} · ${textoAlerta(hecha, fmt)}${i.factor !== 1 ? ' cada 100 VN' : ''}`); } catch (x) {}
+    ctx.refrescar('alertas');
+    return;
+  }
+  if (E.form !== F) return;   // la cerró mientras se guardaba
+  F.msg = msg;
+  repintar('[data-apf="umbral"]');
 }

@@ -7,19 +7,22 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { calcular, agruparPorBroker, normalizarTicker, reiniciarMiCartera, completarPreciosDeRentaFija }
-  from './mi-cartera.js?v=43';
+import { calcular, agruparPorBroker, agruparPorActivo, normalizarTicker, reiniciarMiCartera, completarPreciosDeRentaFija }
+  from './mi-cartera.js?v=44';
 import { fxMercado, registrarImplicito, etiquetaFx } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
-import { renderResumen } from './panel-resumen.js?v=4';
+import { renderResumen } from './panel-resumen.js?v=5';
 import { renderComprar as renderComprarV3 } from './panel-comprar.js?v=1';
 import { renderCarteras as renderCarterasV3 } from './panel-carteras.js?v=2';
 import { renderMensual } from './panel-mensual.js?v=1';
-import { renderAlertas, contarNoLeidas } from './panel-alertas.js?v=1';
+import { renderAlertas, contarNoLeidas } from './panel-alertas.js?v=2';
+// alertas de precio por activo (la única puerta a inversores/{email}/alertasPrecio): el
+// panel las evalúa con los precios que lee y cuenta las que saltaron para la pastilla
+import { instalarEvaluacion, evaluarConPrecios, contarDisparadasNoVistas, fraseDisparo, fmtPrecio } from './alertas-precio.js?v=1';
 import { renderAgenda } from './panel-agenda.js?v=1';
 import { renderCuenta } from './panel-cuenta.js?v=1';
-import { renderOperar } from './panel-operar.js?v=2';
+import { renderOperar } from './panel-operar.js?v=3';
 import { eventos } from './panel-eventos.js?v=1';
 import { renderMovimientos } from './panel-movimientos.js?v=1';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
@@ -871,6 +874,9 @@ export async function iniciarPanel({ user, isAdmin, data }) {
   S.pro = S.isAdmin || S.cliente;
   S.frescura = ''; S.fxSnap = null; S.ultimoPrecioMs = null;
   instalarShell();
+  // las alertas de precio se evalúan en cada repintado de Mi cartera (evento
+  // "valtia-precios"). Una sola vez por página: instalarEvaluacion lo controla
+  try { instalarEvaluacion(ctx); } catch (e) {}
   abrirDesdeHash();
   bienvenida();
   actualizarLateral();
@@ -1187,9 +1193,38 @@ function contadorNav(id, txt, tit) {
   s.textContent = txt;
   if (tit) a.title = tit;
 }
+// los precios que ya se evaluaron contra las alertas de precio (ver contadores). Es por
+// OBJETO: cartera() los cachea toda la sesión y devuelve el mismo objeto hasta que alguien
+// hace invalidar('cartera'); una lectura nueva es un objeto nuevo y se evalúa una vez
+const _preciosEvaluados = new WeakSet();
+// el precio del toast como lo muestra la pestaña Alertas: money() y, por debajo de 1
+// (cripto chica), fmtPrecio con sus cifras significativas ("US$0,01292", no "US$0,01")
+const fmtAlerta = (n, m) => Math.abs(Number(n)) < 1 ? fmtPrecio(n, m) : money(n, m);
 async function contadores(cc, disc, bset) {
-  const n = cc.r.filas.length;
-  contadorNav('micartera', n ? String(n) : '', n ? `${n} posici${n === 1 ? '\u00f3n' : 'ones'} cargadas` : '');
+  // alertas de precio: se evalúan también acá, con los precios que leyó el panel, para
+  // que una que saltó quede marcada aunque el usuario no abra Mi cartera (que evalúa en
+  // cada repintado, por instalarEvaluacion). Sin await: la pastilla no espera. La misma
+  // alerta no salta dos veces (alertas-precio.js lleva la cuenta y la regla lo impide).
+  // Solo la PRIMERA vez que llegan estos precios, recién leídos: contadores() corre en
+  // cada refrescar('alertas'|'inicio'|'disciplina') y cc.precios es la caché de cartera(),
+  // que no se relee sola. Evaluar de nuevo esa caché horas después haría saltar una
+  // alerta recién creada con un precio viejo (abierto a las 10 con GGAL a $5.100, a las
+  // 15 está a $4.800, el usuario crea "sube de $5.000" y saltaba "está en $5.100")
+  try {
+    const email = S.email, px = cc.precios;
+    if (email && S.verificado && px && typeof px === 'object' && !_preciosEvaluados.has(px)) {
+      _preciosEvaluados.add(px);
+      evaluarConPrecios(email, px).then(saltaron => {
+        if (!saltaron.length || S.email !== email) return;   // cambió la cuenta mientras tanto
+        saltaron.forEach(a => { try { toast(fraseDisparo(a, fmtAlerta)); } catch (e) {} });
+        refrescar('alertas');
+      }).catch(() => {});
+    }
+  } catch (e) {}
+  // una pastilla por ACTIVO, no por compra: dos compras de GGAL son un activo. La clave
+  // es la de la tabla de Mi cartera (agruparPorActivo: ticker en mayúsculas + factor)
+  const n = agruparPorActivo(cc.r.filas, cc.r.total).length;
+  contadorNav('micartera', n ? String(n) : '', n ? `${n} activo${n === 1 ? '' : 's'} en tu cartera` : '');
   if (disc && disc.config) {
     const mes = hoyAR().slice(0, 7), obj = Math.max(1, Number(disc.config.compras) || 1);
     const hechas = (disc.log || []).filter(c => String(c.fecha || '').slice(0, 7) === mes).length;
@@ -1199,11 +1234,21 @@ async function contadores(cc, disc, bset) {
     const z = (await radar()).filter(a => a.entrada).length;
     contadorNav('comprar', z ? z + ' \u25ce' : '', `${z} activos en zona de compra`);
   } catch (e) {}
-  // las alertas que todav\u00eda no ley\u00f3 (solo las que su plan le deja leer). Si la
-  // colecci\u00f3n no se puede leer, el lateral va sin pastilla y nada m\u00e1s
+  // la pastilla de Alertas suma las dos cosas nuevas de esa pestaña: las alertas de las
+  // carteras que todavía no leyó (solo las que su plan le deja leer) y sus alertas de
+  // precio que saltaron y todavía no vio. Lo que no se pueda leer cuenta 0. El title
+  // nombra solo lo que hay ("2 alertas sin leer · 1 alerta de precio que saltó")
   try {
-    const sl = await contarNoLeidas(ctx);
-    contadorNav('alertas', sl ? String(sl) : '', `${sl} alerta${sl === 1 ? '' : 's'} sin leer`);
+    const [sl, sp] = await Promise.all([
+      Promise.resolve().then(() => contarNoLeidas(ctx)).then(x => Number(x) || 0, () => 0),
+      Promise.resolve().then(() => contarDisparadasNoVistas(ctx)).then(x => Number(x) || 0, () => 0),
+    ]);
+    const tot = sl + sp;
+    const tit = [
+      sl ? `${sl} alerta${sl === 1 ? '' : 's'} sin leer` : '',
+      sp ? `${sp} alerta${sp === 1 ? '' : 's'} de precio que ${sp === 1 ? 'salt\u00f3' : 'saltaron'}` : '',
+    ].filter(Boolean).join(' \u00b7 ');
+    contadorNav('alertas', tot ? String(tot) : '', tit);
   } catch (e) {}
   try {
     const ts = (await teaser()) || [];
