@@ -249,6 +249,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── PRECIO DE REFERENCIA DEL CATÁLOGO (modal "Agregar activo") ──
+    // Un solo doc (latest) con el último precio y el cierre anterior de cada
+    // activo del catálogo, para mostrar "hoy cotiza a…" antes de cargarlo,
+    // como hace Senta. Lo escribe solo el pipeline (precios_intradia.py).
+    match /preciosCatalogo/{docId} {
+      allow get: if isAuthenticated();
+      allow list: if false;
+      allow write: if false;
+    }
+
     // ── SOLICITUDES ──
     // Clientes autenticados pueden crear solicitudes propias y leer las suyas.
     // Solo el admin puede leer todas, actualizar estado (aprobar/rechazar).
