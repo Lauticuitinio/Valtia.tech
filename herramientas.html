@@ -63,7 +63,7 @@ img{max-width:100%}
 .nota{font-size:12px;color:var(--sub);line-height:1.7;max-width:820px}
 .nota strong{color:var(--ink)}
 
-/* botón navy (deriva a Mercados, candados) */
+/* botón navy (candados) */
 .btn-navy{display:inline-block;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:#0E1830;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;transition:background .2s}
 .btn-navy:hover{background:#B08A3E;color:#fff}
 .deriva{background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px;max-width:760px}
@@ -243,7 +243,6 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
     <a href="/">Inicio</a>
     <a href="/cartera">Carteras</a>
     <a href="/inversion-mensual">Inversión mensual</a>
-    <a href="/mercados">Mercados</a>
     <a href="/noticias">Noticias</a>
     <a href="/informes">Informes</a>
     <a href="/herramientas" class="active" aria-current="page">Herramientas</a>
@@ -330,14 +329,14 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
   </div>
 </div>
 
-<!-- ACCIONES ARG/EEUU: no duplica contenido, deriva a Mercados -->
+<!-- ACCIONES ARG/EEUU: los dos listados completos con filtros (antes vivían en
+     Mercados, que se sacó el 25/09/2026). Los dibuja tv.js, con su atribución. -->
 <div class="tool-content" id="tool-acciones">
   <div class="tool-title">Acciones ARG, EEUU y ETFs <span class="badge-f">GRATIS</span></div>
-  <p class="tool-desc">Precio, variación y gráfico de cada papel, sin repetirlo acá.</p>
-  <div class="deriva">
-    <p>Las acciones argentinas, las de Estados Unidos y los ETFs viven en <strong style="color:var(--ink)">Mercados</strong>: ahí está el universo entero, con la cotización, la variación del día y el gráfico de cada papel.</p>
-    <a href="/mercados" class="btn-navy">Ir a Mercados →</a>
-  </div>
+  <p class="tool-desc">Todas las especies de BYMA y de Estados Unidos, con precio, variación del día y filtros. Tocá un papel para ver su gráfico.</p>
+  <div id="tv-acc-ar" style="margin-bottom:18px"></div>
+  <div id="tv-acc-us"></div>
+  <div id="tv-acc-nota"></div>
 </div>
 
 <!-- BONOS Y LETRAS PRO -->
@@ -606,6 +605,15 @@ widget('#tv-cedears','screener',
   { market:'argentina', defaultColumn:'overview', defaultScreen:'most_capitalized', showToolbar:true },
   { titulo:'Todos los papeles de BYMA — buscá tu CEDEAR', fuente:'TradingView · BYMA' });
 notaLegal('#tv-cedears-nota');
+
+// Acciones ARG/EEUU: los listados completos que antes estaban en Mercados
+widget('#tv-acc-ar','screener',
+  { market:'argentina', defaultColumn:'overview', defaultScreen:'most_capitalized', showToolbar:true },
+  { titulo:'Acciones argentinas · todas las especies de BYMA', fuente:'TradingView · precios en pesos, con filtros', alto:620 });
+widget('#tv-acc-us','screener',
+  { market:'america', defaultColumn:'overview', defaultScreen:'most_capitalized', showToolbar:true },
+  { titulo:'Acciones y ETFs de Estados Unidos', fuente:'TradingView · listado completo con filtros', alto:620 });
+notaLegal('#tv-acc-nota');
 </script>
 
 <!-- RADAR DE VALUACIÓN — carga desde Firestore (radar/latest + radarPro/latest) -->
@@ -1045,6 +1053,6 @@ loadRadar();
 })();
 </script>
 <script type="module" src="nav-auth.js?v=10"></script>
-<script src="nav-menu.js?v=10"></script>
+<script src="nav-menu.js?v=11"></script>
 </body>
 </html>

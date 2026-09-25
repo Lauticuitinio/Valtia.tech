@@ -27,6 +27,17 @@ DirectoryIndex index.html
   RewriteBase /
 
   # ===========================================================
+  #  0) Paginas retiradas  ->  a donde vive hoy su contenido
+  # -----------------------------------------------------------
+  #  Mercados se saco el 25/09/2026 (pedido de Lauti). Sus dos
+  #  listados completos de acciones pasaron a Herramientas, a
+  #  la pestaña "Acciones ARG/EEUU". Va antes que todo lo demas
+  #  para cubrir /mercados, /mercados.html y /mercados/ igual.
+  #  El ancla (#acciones) la conserva el navegador con NE.
+  # ===========================================================
+  RewriteRule ^mercados(?:\.html)?/?$ /herramientas#acciones [R=301,L,NE]
+
+  # ===========================================================
   #  1) /index.html  ->  /     (301, permanente)
   # -----------------------------------------------------------
   #  THE_REQUEST es la linea que mando el navegador de verdad

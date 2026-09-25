@@ -3,8 +3,10 @@
 //   como pista) abre el panel al pasar el cursor; se cierra al salir de él.
 // · Angosto (<1200px): el nav de escritorio se oculta y el botón ☰ abre el
 //   mismo panel desde la derecha. El corte está en 1200 (y no en 880) porque
-//   los ocho enlaces de la barra, con el logo y la letra del rediseño, no
-//   entran por debajo de eso. Entre 1200 y 1399 se aprietan (sitio.css).
+//   los enlaces de la barra, con el logo y la letra del rediseño, no entran
+//   por debajo de eso. Entre 1200 y 1399 se aprietan (sitio.css).
+//   Mercados se sacó el 25/09/2026 (pedido de Lauti): /mercados redirige a
+//   /herramientas#acciones desde el .htaccess.
 // Sin dependencias: se sirve como script clásico en cada página.
 // Las URLs van sin .html (el .htaccess redirige las viejas).
 (function () {
@@ -16,7 +18,6 @@
     ['/cartera', 'Carteras'],
     ['/inversion-mensual', 'Inversión mensual'],
     ['/disciplina', 'Candidatas del mes'],
-    ['/mercados', 'Mercados'],
     ['/noticias', 'Noticias'],
     ['/informes', 'Informes'],
     ['/herramientas', 'Herramientas'],
