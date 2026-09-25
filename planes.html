@@ -12,90 +12,99 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Planes — reglas globales del rediseño (sitio.css): título negro sobre
-     blanco, Plex Sans en todo, tarjetas con esquinas de 12px. La destacada
-     sigue como bloque navy hasta la etapa propia de Planes. ── */
+/* ── Planes — prototipo "Valtia Planes" del zip completo (SPEC §6): los mismos
+     tres planes y textos que la sección de planes de la Home, tarjetas blancas
+     con PRO al medio (borde dorado y sombra) y botones azules. Lo global (nav,
+     barra de cotizaciones, título de página, botón de mail, tipografía) lo pone
+     sitio.css, que va enlazado después de este bloque. Esquinas de la regla
+     del sitio (SPEC §0): tarjetas 12px, botones 8px. ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --navy:#0E1830;--navy2:#0B1327;--navy3:#14213D;
-  --gold:#B08A3E;--gold2:#8A6A2F;--gold-claro:#E8CE96;
-  --bg:#fff;--bg2:#F6F3EC;--bg3:#F6F3EC;
-  --text:#101010;--sub:#57534A;--muted:#8B8375;
-  --border:#E7E3DA;--card:#fff;
-  --ink:#101010;--mut:#8B8375;--line:#E7E3DA;--marfil:#F6F3EC;
-  --up:#1F7A4D;--dn:#B23A3A;--greenTx:#1F7A4D;--redTx:#B23A3A;
-  --green:#1F7A4D;--red:#B23A3A;
+  --gold:#B08A3E;--gold2:#8A6A2F;
+  --ink:#101010;--sub:#57534A;--mut:#8B8375;--line:#E7E3DA;
+  /* colores del aviso de la lista de espera: los usa el módulo de abajo */
+  --greenTx:#1F7A4D;--redTx:#B23A3A;
 }
 html{scroll-behavior:smooth}
-body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);min-height:100vh;--v-ancho:1080px}
+body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);min-height:100vh;--v-ancho:1000px}
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
 
-/* columna del prototipo de Planes: 1080px, alineada con el título */
-main{max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto;padding:6px var(--v-gutter) 60px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-top:22px}
+/* columna del prototipo: 1000px de contenido, alineada con el título */
+main{max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto;padding:0 var(--v-gutter) 70px}
 
-/* tarjetas de plan: borde fino y esquinas de 12px */
-.plan{background:#fff;border:1px solid var(--line);border-radius:12px;padding:26px 26px 30px;display:flex;flex-direction:column;gap:0}
-.plan .tag{font:700 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-.plan .tag .rec{font:700 10.5px 'IBM Plex Sans',sans-serif;background:var(--gold-claro);color:var(--navy);padding:4px 9px;letter-spacing:.1em;border-radius:6px}
-.plan .precio{font-family:'IBM Plex Sans',sans-serif;font-size:28px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--ink)}
-.plan .precio small{font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;font-weight:400;color:var(--sub)}
-/* "A consultar" es una frase, no un número */
-.plan .precio.txt{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:24px;line-height:1.28}
-.plan .nota{font-size:13px;color:var(--sub);margin:8px 0 18px;line-height:1.5}
-.plan .cta{display:block;text-align:center;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:13px;text-decoration:none;cursor:pointer;border:1px solid transparent;border-radius:8px}
-.cta.dorada{background:var(--gold-claro);color:var(--navy)}
-.cta.dorada:hover{background:#fff;color:var(--navy)}
-/* botones azules (SPEC §6): borde navy, al pasar se rellenan */
-.cta.suave{background:#fff;color:var(--navy);border-color:var(--navy)}
-.cta.suave:hover{background:var(--navy);color:#fff}
-.plan ul{list-style:none;margin-top:22px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:11px}
-.plan li{font-size:14px;color:var(--sub);line-height:1.55;padding-left:22px;position:relative}
-.plan li::before{content:'✓';position:absolute;left:0;color:var(--gold);font-weight:600}
+/* tres columnas con PRO al medio; donde no entran tres, una sola columna
+   (como en la Home: nunca queda un plan suelto en una segunda fila) */
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:20px}
+@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr);max-width:560px}}
 
-/* plan destacado: bloque navy con blanco y dorado claro (como .nl-box de Noticias).
-   Los --greenTx/--redTx que el JS le pone a #wl-msg se aclaran acá adentro
-   para que se lean sobre navy. */
-.plan.pro{background:var(--navy);border-color:var(--navy);color:#fff;--greenTx:#7FD8A4;--redTx:#F2A9A9}
-.plan.pro .precio{color:#fff}
-.plan.pro .precio small{color:rgba(255,255,255,.62)}
-.plan.pro .nota{color:rgba(255,255,255,.72)}
-.plan.pro ul{border-top-color:rgba(232,206,150,.22)}
-.plan.pro li{color:rgba(255,255,255,.8)}
-.plan.pro li::before{color:var(--gold-claro)}
+/* cada tarjeta tiene cuatro filas (etiqueta, precio, nota y el resto) que
+   comparten altura con las de las otras dos (subgrid): aunque el precio de
+   PRO o una nota ocupen más renglones, las notas y los botones de las tres
+   quedan a la misma altura. Sin subgrid, cada tarjeta se apila sola. */
+.plan{background:#fff;border:1px solid var(--line);border-radius:12px;padding:26px 26px 28px;min-width:0;display:grid;grid-row:span 4;grid-template-rows:subgrid;row-gap:0}
+.plan.pro{border-color:var(--gold);box-shadow:0 12px 32px rgba(14,24,48,.08)}
+.plan .tag{align-self:start;font:600 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.plan .rec{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;background:var(--navy);color:#fff;border-radius:99px;padding:3px 9px}
+/* la cifra (USD 0) y las frases (precio de PRO, "A consultar") apoyan abajo */
+.plan .precio{display:flex;align-items:flex-end;min-height:40px;font:600 40px/1 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.plan .precio.txt{font:400 24px/1.25 'IBM Plex Sans',sans-serif}
+.plan .precio .nw{white-space:nowrap}
+/* entre 861 y 1080 px las tres columnas son angostas: menos relleno y la
+   frase del precio un poco más chica, así "Precio de lanzamiento" entra en
+   un renglón y la tarjeta no crece de más */
+@media(min-width:861px) and (max-width:1080px){.plan{padding:24px 20px 26px}.plan .precio.txt{font-size:20px}}
+/* 14px y no los 13,5 del prototipo: es texto corrido y el mínimo del sitio
+   para el cuerpo es 14 (SPEC §0) */
+.plan .nota{font-size:14px;color:var(--mut);margin:6px 0 18px;line-height:1.5}
 
-.wl{display:flex;gap:8px}
-.wl input{flex:1;min-width:0;padding:12px 13px;background:#fff;border:1px solid var(--line);border-radius:8px;color:var(--ink);font:400 14px 'IBM Plex Sans',sans-serif;outline:none}
+/* botones azules (SPEC §6): borde navy y, al pasar, relleno navy */
+.cta{display:block;text-align:center;font:600 13.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:13px;border-radius:8px;background:#fff;border:1px solid var(--navy);color:var(--navy);cursor:pointer;transition:background .15s,color .15s}
+.cta:hover{background:var(--navy);color:#fff}
+.cta:focus-visible,.wl button:focus-visible,.faq summary:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* lista de espera de PRO: el mail arriba y el botón navy abajo */
+.wl{display:flex;flex-direction:column;gap:8px}
+.wl input{width:100%;min-width:0;padding:12px 13px;background:#fff;border:1px solid var(--line);border-radius:8px;font:400 15.5px 'IBM Plex Sans',sans-serif;color:var(--ink);outline:none}
 .wl input:focus{border-color:var(--gold)}
-.plan.pro .wl input{background:rgba(255,255,255,.07);border-color:rgba(232,206,150,.35);color:#fff}
-.plan.pro .wl input::placeholder{color:rgba(255,255,255,.45)}
-.plan.pro .wl input:focus{border-color:var(--gold-claro)}
-.wl button{white-space:nowrap;padding:12px 16px}
+.wl button{white-space:nowrap;text-align:center;padding:12px 16px;border:0;border-radius:8px;background:var(--navy);color:#fff;font:600 13.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .15s}
+.wl button:hover{background:var(--navy3)}
 .wl button:disabled{opacity:.6;cursor:wait}
-#wl-msg{font-size:12.5px;margin-top:9px;line-height:1.5}
+#wl-msg{font-size:14px;margin-top:9px;line-height:1.5;min-height:18px}
 
-/* título de sección: texto + hairline que se estira */
-.sec{display:flex;align-items:center;gap:14px;margin:48px 0 8px;font:700 17px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+/* qué incluye cada plan: tilde navy y texto gris */
+.plan ul{list-style:none;margin-top:20px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:11px}
+.plan li{display:flex;gap:10px;font-size:15px;color:var(--sub);line-height:1.55}
+.plan li::before{content:'✓';content:'✓' / '';flex:none;color:var(--navy);font-weight:600}
+
+/* título de sección del prototipo: rayita dorada + texto + hairline */
+.sec{display:flex;align-items:center;gap:12px;margin:48px 0 16px;font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--gold2)}
+.sec::before{content:'';flex:none;width:32px;height:1px;background:var(--gold);opacity:.6}
 .sec::after{content:'';flex:1;height:1px;background:var(--line)}
 
-/* preguntas frecuentes: filas con hairline */
-details{border-bottom:1px solid var(--line);padding:18px 0}
-summary{cursor:pointer;font:600 17px 'IBM Plex Sans',sans-serif;color:var(--ink);line-height:1.3;list-style:none;display:flex;justify-content:space-between;align-items:baseline;gap:16px}
-summary::-webkit-details-marker{display:none}
-summary::after{content:'+';font:500 18px 'IBM Plex Sans',sans-serif;color:var(--gold2);flex-shrink:0}
-details[open] summary::after{content:'–'}
-summary:hover{color:var(--gold2)}
-details p{font-size:14px;color:var(--sub);line-height:1.7;margin-top:10px;max-width:70ch;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+/* preguntas frecuentes: tarjetas que se abren (details/summary, sin JS) */
+.faq{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin-bottom:10px}
+.faq summary{display:flex;justify-content:space-between;align-items:center;gap:16px;font:500 16px/1.4 'IBM Plex Sans',sans-serif;color:var(--ink);cursor:pointer;list-style:none}
+.faq summary::-webkit-details-marker{display:none}
+.faq .sign{flex:none;color:var(--gold)}
+.faq .sign::before{content:'+'}
+.faq[open] .sign::before{content:'−'}
+.faq p{font-size:15px;color:var(--sub);line-height:1.7;margin-top:10px;max-width:70ch;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
 
-/* footer (el de Noticias) */
-footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px 32px;margin-top:40px}
-.footer-copy{flex:1 1 480px;font:400 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.5);line-height:1.8}
+/* aviso legal al pie del contenido, como en el prototipo */
+.aviso{margin-top:44px;border-top:1px solid var(--line);padding-top:18px;font-size:12.5px;color:var(--mut);line-height:1.9;max-width:900px}
+.aviso a{color:inherit;text-decoration:underline}
+
+/* pie navy: © a la izquierda, enlaces a la derecha */
+footer{background:var(--navy2);padding:26px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px 32px}
+.footer-copy{font:400 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.5)}
 .footer-links{display:flex;gap:20px;flex-wrap:wrap}
 .footer-links a{font:500 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase}
 .footer-links a:hover{color:#E8CE96}
-
-@media(max-width:880px){footer{padding-left:20px;padding-right:20px}}
+/* en el celular los enlaces del pie bajan a la izquierda, justo donde flota el
+   botón de mail (fijo abajo a la izquierda): el pie deja ese lugar libre */
+@media(max-width:880px){footer{padding-bottom:92px}}
 </style>
 <link rel="stylesheet" href="sitio.css?v=1">
 </head>
@@ -109,7 +118,6 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
     <a href="/">Inicio</a>
     <a href="/cartera">Carteras</a>
     <a href="/inversion-mensual">Inversión mensual</a>
-    <a href="/mercados">Mercados</a>
     <a href="/noticias">Noticias</a>
     <a href="/informes">Informes</a>
     <a href="/herramientas">Herramientas</a>
@@ -127,83 +135,88 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 <header class="v-tit"><div class="v-tit-in">
   <button class="volver" onclick="volver()">← Volver</button>
   <h1>Planes y precios</h1>
-  <p class="v-baj">Empezá gratis y pasá a PRO cuando necesites el análisis completo. Sin permanencia:
-  todo lo que ves —carteras, radar, informes— se construye con precios reales desde el día del lanzamiento.</p>
+  <p class="v-baj">Una cartera y las herramientas están abiertas. Con PRO accedés a todas las carteras,
+  a las alertas de compra y venta y al research completo.</p>
 </div></header>
 
 <main>
+  <!-- Los tres planes con los mismos textos que la sección de planes de la
+       Home (index.html, #planes). Si cambia uno, cambian los dos. -->
   <div class="grid">
     <div class="plan">
-      <div class="tag" style="color:var(--greenTx)">Gratis</div>
-      <div class="precio">USD 0 <small>/ mes</small></div>
+      <div class="tag" style="color:#1F7A4D">Cuenta gratuita</div>
+      <div class="precio"><span>USD 0</span></div>
       <div class="nota">Una cartera completa y las herramientas</div>
-      <a class="cta suave" href="/?login=crear">Crear mi cuenta gratis</a>
-      <ul>
-        <li>Cartera Top 10 S&amp;P 500 completa, con tesis y rotaciones</li>
-        <li>Mi Cartera: seguimiento de tus posiciones con la lectura Valtia</li>
-        <li>Plan de Disciplina mensual guiado por el radar</li>
-        <li>Noticias, fichas de activo y newsletter diario</li>
-        <li>Cotizaciones en vivo y calculadoras base</li>
-      </ul>
+      <div class="cuerpo">
+        <a class="cta" href="/?login=crear">Crear cuenta</a>
+        <ul>
+          <li>Cartera Top 10 S&amp;P 500 completa</li>
+          <li>Tus posiciones en el panel</li>
+          <li>Newsletter semanal</li>
+          <li>Noticias y cotizaciones en vivo</li>
+          <li>Calculadoras y mapa de calor</li>
+        </ul>
+      </div>
     </div>
     <div class="plan pro">
-      <div class="tag" style="color:var(--gold-claro)">Valtia PRO <span class="rec">Recomendado</span></div>
-      <!-- El precio de PRO va sin número hasta que abra el cobro (SPEC, sección 0):
+      <div class="tag" style="color:#8A6A2F">Valtia PRO <span class="rec">Recomendado</span></div>
+      <!-- El precio de PRO va sin número hasta que abra el cobro (SPEC §0):
            es una frase, así que usa .precio.txt (más chica que la cifra). -->
-      <div class="precio txt">Precio de lanzamiento — escribinos</div>
-      <div class="nota">Dejanos tu mail y te escribimos con el precio de lanzamiento</div>
-      <div class="wl">
-        <input type="email" id="wl-email" placeholder="tu@email.com" autocomplete="email" inputmode="email">
-        <!-- El botón arranca apagado y lo enciende el módulo de abajo cuando
-             Firebase terminó de bajar: con onclick="waitlistPro(…)" un clic
-             apurado tiraba "waitlistPro is not defined" y no pasaba nada. -->
-        <button class="cta dorada" id="wl-btn" type="button" disabled>Escribinos</button>
+      <div class="precio txt"><span>Precio de lanzamiento <span class="nw">— escribinos</span></span></div>
+      <div class="nota">Dejanos tu mail y te lo pasamos.</div>
+      <div class="cuerpo">
+        <div class="wl">
+          <input type="email" id="wl-email" placeholder="tu@email.com" autocomplete="email" inputmode="email" aria-label="Tu email para Valtia PRO">
+          <!-- El botón arranca apagado y lo enciende el módulo de abajo cuando
+               Firebase terminó de bajar: con onclick="waitlistPro(…)" un clic
+               apurado tiraba "waitlistPro is not defined" y no pasaba nada. -->
+          <button id="wl-btn" type="button" disabled>Escribinos</button>
+        </div>
+        <div id="wl-msg" role="status"></div>
+        <ul>
+          <li>Todas las carteras, con posiciones y precio de entrada</li>
+          <li>Alertas de compra y venta el mismo día</li>
+          <li>Aviso de cada rotación, con la razón</li>
+          <li>Informes mensuales completos</li>
+          <li>Radar de valuación completo</li>
+          <li>Agenda de balances, dividendos y vencimientos</li>
+          <li>Bonos, CEDEARs y herramientas PRO</li>
+        </ul>
       </div>
-      <div id="wl-msg"></div>
-      <ul>
-        <li>Todas las carteras, con cada rotación fechada y justificada</li>
-        <li>Avisos de rotación por mail, el día que pasan</li>
-        <!-- El número sale del radar (radar/latest). Esta página no lo lee, así
-             que va escrito: al sumar activos al radar hay que actualizarlo acá.
-             Al 22/09/2026 el radar sigue 47. -->
-        <li>Radar de valuación completo: 47 activos con puntaje y veredicto diario</li>
-        <li>Informes de research completos</li>
-        <li>Panel de bonos completo: curva soberana con TIR, paridad y duration</li>
-        <li>Fichas de activo destapadas, con informe y radar</li>
-        <li>Historial completo de decisiones</li>
-      </ul>
     </div>
     <div class="plan">
-      <div class="tag" style="color:var(--gold2)">Cartera a medida</div>
-      <div class="precio txt">A consultar</div>
-      <div class="nota">Cupos limitados: atención directa del gestor</div>
-      <a class="cta suave" href="mailto:soporte@valtia.tech?subject=Cartera%20a%20medida">Escribinos</a>
-      <ul>
-        <li>Todo lo de Valtia PRO incluido</li>
-        <li>Cartera armada según tu perfil y broker</li>
-        <li>Revisión periódica de la cartera</li>
-        <li>Línea directa con el equipo</li>
-        <li>Reunión 1 a 1 mensual</li>
-      </ul>
+      <div class="tag" style="color:#8A6A2F">Cartera a medida</div>
+      <div class="precio txt"><span>A consultar</span></div>
+      <div class="nota">Pocos lugares por trimestre</div>
+      <div class="cuerpo">
+        <a class="cta" href="mailto:soporte@valtia.tech?subject=Cartera%20a%20medida">Escribinos</a>
+        <ul>
+          <li>Todo lo de Valtia PRO</li>
+          <li>Cartera armada según tu perfil y tu broker</li>
+          <li>Revisión periódica de la cartera</li>
+          <li>Contacto directo por mail</li>
+        </ul>
+      </div>
     </div>
   </div>
 
-  <div class="sec">Preguntas frecuentes</div>
-  <details open><summary>¿Cómo pago Valtia PRO hoy?</summary>
-    <p>Estamos terminando la pasarela de cobro online. Mientras tanto, anotándote en la lista te reservamos el
-    precio de lanzamiento y te escribimos apenas abra — el alta inicial se gestiona directo con nosotros.</p></details>
-  <details><summary>¿Cómo cancelo?</summary>
+  <h2 class="sec">Preguntas frecuentes</h2>
+  <details class="faq" open><summary><span>¿Cómo pago Valtia PRO hoy?</span><span class="sign" aria-hidden="true"></span></summary>
+    <p>Estamos terminando la pasarela de cobro online. Mientras tanto, anotándote en la lista te pasamos el precio
+    de lanzamiento y te habilitamos el acceso a mano. Cuando abra el cobro online, se hace desde tu cuenta.</p></details>
+  <details class="faq"><summary><span>¿Cómo cancelo?</span><span class="sign" aria-hidden="true"></span></summary>
     <p>Sin permanencia y sin dar explicaciones: hoy con un mail alcanza. Cuando lancemos las suscripciones online
     vas a poder cancelar desde tu cuenta, manteniendo el acceso hasta el final del período pagado.</p></details>
-  <details><summary>¿Garantizan resultados?</summary>
+  <details class="faq"><summary><span>¿Garantizan resultados?</span><span class="sign" aria-hidden="true"></span></summary>
     <p>No. Los mercados implican riesgo y los rendimientos pasados no garantizan resultados futuros. Lo que ofrecemos
     es el análisis y el registro de cada decisión, con su fecha.</p></details>
 
+  <p class="aviso">Valtia Analytics — Análisis de carácter general y educativo. No constituye asesoramiento financiero
+  personalizado ni oferta pública de valores. Invertir implica riesgo de pérdida del capital. · <a href="/terminos">Términos</a> · <a href="/privacidad">Privacidad</a></p>
 </main>
 
 <footer>
-  <div class="footer-copy">Valtia Analytics — Análisis de carácter general y educativo. No constituye asesoramiento financiero
-  personalizado ni oferta pública de valores. Invertir implica riesgo de pérdida del capital. · <a href="/terminos" style="color:inherit;text-decoration:underline">Términos</a> · <a href="/privacidad" style="color:inherit;text-decoration:underline">Privacidad</a></div>
+  <div class="footer-copy">© 2026 Valtia Analytics</div>
   <div class="footer-links">
     <a href="/">Inicio</a><a href="/cartera">Carteras</a><a href="/informes">Informes</a><a href="/herramientas">Herramientas</a>
   </div>
@@ -247,7 +260,7 @@ async function waitlistPro(e) {
       email, fecha: new Date().toISOString().slice(0, 10), origen: 'planes',
     });
     msg.style.color = 'var(--greenTx)';
-    msg.textContent = 'Listo, sos parte de la lista ✓ Te escribimos apenas abra el cobro, con el precio congelado.';
+    msg.textContent = 'Listo. Te escribimos con el precio y cómo darte el alta.';
     inp.value = '';
   } catch (err) {
     msg.style.color = 'var(--redTx)';
@@ -265,6 +278,6 @@ if (inpWl) inpWl.addEventListener('keydown', ev => { if (ev.key === 'Enter') wai
 </script>
 <script type="module" src="nav-auth.js?v=10"></script>
 <script type="module" src="cotizaciones.js?v=3"></script>
-<script src="nav-menu.js?v=10"></script>
+<script src="nav-menu.js?v=11"></script>
 </body>
 </html>
