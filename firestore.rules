@@ -2,9 +2,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Admin email helper
+    // Admin email helper. Exige el email VERIFICADO: sin eso, el día que
+    // Firebase Auth permita dos cuentas con el mismo email (o que alguien
+    // cambie el mail de su cuenta a este sin confirmarlo), un desconocido
+    // entraría como admin con solo tipear la dirección.
     function isAdmin() {
-      return request.auth != null && request.auth.token.email == 'valtyaanalytics@gmail.com';
+      return request.auth != null
+        && request.auth.token.email == 'valtyaanalytics@gmail.com'
+        && request.auth.token.email_verified == true;
     }
 
     function isAuthenticated() {
@@ -57,9 +62,34 @@ service cloud.firestore {
 
       // ── DISCIPLINA (plan mensual de compras: config + registro) ──
       // Mismo dueño que Mi Cartera: solo el propio usuario (y el admin).
+      // Dos formas de doc: "config" (la regla del mes) y "c-*" (cada compra
+      // marcada con "La compré"). Los campos son los que escriben
+      // disciplina.html, inversion-mensual.html y panel.js; nada más entra.
       match /disciplina/{docId} {
         allow read, delete: if esDuenio();
-        allow create, update: if esDuenio();
+        allow create, update: if esDuenio() && (
+          (docId == 'config'
+            && request.resource.data.keys().hasOnly(['aporte', 'compras', 'creado', 'actualizado'])
+            && request.resource.data.aporte is number
+            && request.resource.data.aporte > 0
+            && request.resource.data.compras is number
+            && request.resource.data.compras >= 1
+            && request.resource.data.compras <= 12)
+          || (docId.matches('^c-[a-z0-9]{1,16}$')
+            && request.resource.data.keys().hasOnly(['tipo', 'ticker', 'cantidad', 'precio', 'fecha', 'mes', 'broker', 'creado'])
+            && request.resource.data.tipo == 'compra'
+            && request.resource.data.ticker is string
+            && request.resource.data.ticker.size() > 0
+            && request.resource.data.ticker.size() <= 16
+            && request.resource.data.cantidad is number
+            && request.resource.data.cantidad > 0
+            // null: candidata sin precio del día (disciplina.html no lo exige)
+            && (request.resource.data.precio == null
+                || (request.resource.data.precio is number && request.resource.data.precio >= 0))
+            && request.resource.data.fecha is string
+            && request.resource.data.fecha.size() == 10
+            && request.resource.data.mes is string
+            && request.resource.data.mes.size() == 7));
       }
 
       // ── CARTERAS QUE EL USUARIO SIGUE ──

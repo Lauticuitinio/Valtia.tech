@@ -97,6 +97,27 @@ DirectoryIndex index.html
 # navegador no lo toma para "agregar a la pantalla de inicio".
 <IfModule mod_mime.c>
   AddType application/manifest+json .webmanifest
+  # El tipo estandar de JavaScript. Hostinger mandaba el viejo
+  # application/x-javascript; con "nosniff" (abajo) conviene el oficial.
+  AddType text/javascript .js .mjs
+</IfModule>
+
+# --- Cabeceras de seguridad ----------------------------------
+# HSTS: el navegador que ya entro por HTTPS no vuelve a intentar
+#   HTTP durante un año (sin includeSubDomains: no sabemos si todos
+#   los subdominios tienen certificado).
+# X-Frame-Options + frame-ancestors: ningun otro sitio puede meter
+#   valtia.tech en un iframe para hacer clic por el usuario.
+# nosniff: el navegador respeta el tipo declarado de cada archivo.
+# Referrer-Policy: a otros sitios solo les llega "valtia.tech", no
+#   la URL completa (que puede traer ?t=, ?n=, etc.).
+<IfModule mod_headers.c>
+  Header always set Strict-Transport-Security "max-age=31536000"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  # upgrade-insecure-requests ya lo mandaba Hostinger: se conserva
+  Header always set Content-Security-Policy "upgrade-insecure-requests; frame-ancestors 'self'"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
 # --- Archivos que no son para el visitante -------------------
@@ -105,9 +126,19 @@ DirectoryIndex index.html
 # -las reglas se aplican del lado del servidor- pero le muestran
 # a cualquiera como esta armada la base. Mejor que no se bajen.
 <IfModule mod_authz_core.c>
-  <FilesMatch "\.(rules|md)$">
+  <FilesMatch "\.(rules|md|py|mjs)$">
     Require all denied
   </FilesMatch>
+  # package.json y cualquier archivo que empiece con punto
+  # (.gitignore, .env si alguna vez se colara, etc.)
+  <FilesMatch "^(\.|package(-lock)?\.json$)">
+    Require all denied
+  </FilesMatch>
+</IfModule>
+
+# La carpeta scripts/ son herramientas y tests del repo, no paginas.
+<IfModule mod_rewrite.c>
+  RewriteRule ^scripts(/|$) - [F,L]
 </IfModule>
 
 # --- Pagina de error -----------------------------------------
