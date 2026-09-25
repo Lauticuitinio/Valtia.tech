@@ -158,7 +158,7 @@ service cloud.firestore {
           && (!('umbralVar' in request.resource.data) || request.resource.data.umbralVar in [3, 5, 8])
           && (!('avisos' in request.resource.data)
               || (request.resource.data.avisos is map
-                  && request.resource.data.avisos.keys().hasOnly(['compraventa', 'rotacion', 'informes', 'eventos', 'newsletter', 'resumen'])
+                  && request.resource.data.avisos.keys().hasOnly(['cierre', 'compraventa', 'rotacion', 'informes', 'eventos', 'newsletter', 'resumen'])
                   && request.resource.data.avisos.values().hasOnly([true, false])))
           && (!('frecuenciaAvisos' in request.resource.data) || request.resource.data.frecuenciaAvisos in ['momento', 'diaria'])
           && request.resource.data.actualizado == request.time;
