@@ -53,7 +53,11 @@ onAuthStateChanged(getAuth(app), async user => {
   // "Inicio" con sesión no sirve: la home detecta la sesión y devuelve al panel.
   // Se esconde (acá y, por la clase del body, en el menú lateral de nav-menu.js);
   // la home se sigue viendo tocando la marca, que llama a showHome() sin recargar.
+  // La marca (href="/") y el botón (href="/?login=1") comparten la dirección de
+  // "Inicio" pero NO se esconden: sin ellos, con sesión el nav se quedaba sin
+  // logo y sin el botón "Mi Panel".
   const inicio = links.filter(a => {
+    if (a.closest('.nav-brand') || a.classList.contains('nav-cta') || a.id === 'nav-mipanel') return false;
     const h = (a.getAttribute('href') || '').toLowerCase().split('#')[0].split('?')[0];
     return h === '/' || h === 'index.html' || h === '/index.html' || h === './';
   });

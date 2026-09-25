@@ -1,10 +1,10 @@
 // nav-menu.js — navegación lateral compartida por todas las páginas.
 // · Desktop: una franja invisible en el borde izquierdo (con un hilo dorado
 //   como pista) abre el panel al pasar el cursor; se cierra al salir de él.
-// · Angosto (<1100px): el nav de escritorio se oculta y el botón ☰ abre el
-//   mismo panel desde la derecha. El corte está en 1100 (y no en 880) porque
-//   los ocho enlaces de la barra no entran por debajo de eso: antes se
-//   recortaban al medio contra el borde del contenedor.
+// · Angosto (<1200px): el nav de escritorio se oculta y el botón ☰ abre el
+//   mismo panel desde la derecha. El corte está en 1200 (y no en 880) porque
+//   los ocho enlaces de la barra, con el logo y la letra del rediseño, no
+//   entran por debajo de eso. Entre 1200 y 1399 se aprietan (sitio.css).
 // Sin dependencias: se sirve como script clásico en cada página.
 // Las URLs van sin .html (el .htaccess redirige las viejas).
 (function () {
@@ -34,11 +34,9 @@
     'border:1px solid rgba(232,206,150,.45);border-radius:8px;background:transparent;cursor:pointer;',
     'flex-shrink:0;padding:0;margin-left:10px}',
     '#vnav-burger svg{display:block}',
-    '@media(max-width:1100px){#vnav-burger{display:flex}nav .nav-links{display:none!important}nav .nav-cta{display:none!important}}',
-    // entre 1101 y 1320 los enlaces entran, pero justos: se achican el gap y la
-    // tipografía en lugar de esconderlos
-    '@media(min-width:1101px) and (max-width:1320px){nav .nav-links{gap:12px!important}',
-    'nav .nav-links a{font-size:10px!important;letter-spacing:.05em!important}}',
+    '@media(max-width:1199px){#vnav-burger{display:flex}nav .nav-links{display:none!important}nav .nav-cta{display:none!important}}',
+    // entre 1200 y 1399 los enlaces entran justos: los aprieta sitio.css (gap y
+    // letra de 12px), nunca por debajo del mínimo de 10,5px para etiquetas
     '#vnav-back{position:fixed;inset:0;background:rgba(6,12,22,.55);z-index:998;opacity:0;',
     'pointer-events:none;transition:opacity .2s}',
     '#vnav-menu{position:fixed;top:0;right:0;height:100%;width:min(78vw,300px);z-index:999;',
@@ -61,7 +59,7 @@
     '#vnav-menu a.vn-cta{margin:18px 20px 0;text-align:center;background:#E8CE96;color:#0E1830;',
     'font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:13px 10px;',
     'border-radius:8px;text-decoration:none}',
-    '@media(max-width:1100px){body.vnav-open{overflow:hidden}}',
+    '@media(max-width:1199px){body.vnav-open{overflow:hidden}}',
     'body.vnav-open #vnav-back{opacity:1;pointer-events:auto}',
     'body.vnav-open #vnav-menu{transform:translateX(0);visibility:visible}',
     // desktop: barra lateral oculta que aparece al pasar el cursor por el borde
@@ -71,7 +69,7 @@
     '#vnav-hot::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:72px;',
     'border-radius:0 3px 3px 0;background:#B08A3E;opacity:.4;transition:opacity .2s,height .2s}',
     '#vnav-hot:hover::before{opacity:.95;height:110px}',
-    '@media(min-width:1101px){#vnav-hot{display:block}#vnav-back{display:none}',
+    '@media(min-width:1200px){#vnav-hot{display:block}#vnav-back{display:none}',
     '#vnav-menu{left:0;right:auto;width:250px;transform:translateX(-105%);box-shadow:12px 0 40px rgba(0,0,0,.35)}',
     'body.vnav-open #vnav-menu{transform:translateX(0)}}',
   ].join('');
@@ -96,7 +94,7 @@
   var menu = document.createElement('div');
   menu.id = 'vnav-menu';
   menu.innerHTML =
-    '<div class="vn-top"><span class="vn-brand">VAL<em style="color:#E8CE96">T</em>IA</span>' +
+    '<div class="vn-top"><span class="vn-brand">VAL<span style="color:#E8CE96">T</span>IA</span>' +
     '<button class="vn-x" aria-label="Cerrar menú">✕</button></div>' +
     LINKS.map(function (l) {
       var on = aca === l[0].replace(/^\//, '');
@@ -149,7 +147,7 @@
     document.body.classList.add('vnav-open');
   }
   function cerrar() { document.body.classList.remove('vnav-open'); }
-  var esDesktop = function () { return window.matchMedia('(min-width:1101px)').matches; };
+  var esDesktop = function () { return window.matchMedia('(min-width:1200px)').matches; };
   btn.addEventListener('click', abrir);
   back.addEventListener('click', cerrar);
   menu.querySelector('.vn-x').addEventListener('click', cerrar);

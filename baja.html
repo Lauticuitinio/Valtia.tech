@@ -9,28 +9,78 @@
 <link rel="apple-touch-icon" href="/favicon-180.png">
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#0E1830">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0E1830;font-family:'IBM Plex Sans',system-ui,sans-serif;padding:20px}
-.card{background:#fff;max-width:440px;width:100%;padding:44px 40px;text-align:center}
-h1{font:700 30px 'Playfair Display',serif;color:#0E1830;margin-bottom:6px}
-h1 em{color:#B08A3E;font-style:italic}
-p{font-size:14px;color:#57534A;line-height:1.7;margin:14px 0 22px}
-button{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;background:#0E1830;color:#E8CE96;border:none;padding:14px 30px;cursor:pointer}
-button:hover{background:#B23A3A;color:#fff}
-.msg{font-size:14px;font-weight:600;margin-top:18px;display:none}
-a{color:#B08A3E;font-size:12px;text-decoration:none}
+/* ── Baja del newsletter — página del sitio con las reglas globales del
+     rediseño (sitio.css): nav, barra de cotizaciones, título negro sobre
+     blanco, Plex Sans y el botón de mail. Se llega desde el pie del mail. ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:flex;flex-direction:column;background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#101010;--v-ancho:560px}
+main{flex:1 0 auto;width:100%;max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto;padding:18px var(--v-gutter) 60px}
+.card{background:#fff;border:1px solid #E7E3DA;border-radius:12px;padding:28px 30px}
+.card p{font-size:15px;color:#57534A;line-height:1.7;margin:0 0 20px}
+.card button{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;background:#0E1830;color:#fff;border:none;border-radius:8px;padding:13px 26px;cursor:pointer}
+.card button:hover{background:#B23A3A;color:#fff}
+.card button:disabled{opacity:.6;cursor:default}
+.msg{font-size:14px;font-weight:600;margin-top:18px;display:none;line-height:1.6}
+.card .volver-a{display:inline-block;margin-top:22px;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8A6A2F;text-decoration:none}
+.card .volver-a:hover{color:#101010}
+footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.footer-copy{font:400 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
+.footer-links{display:flex;gap:20px;flex-wrap:wrap}
+.footer-links a{font:500 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase;text-decoration:none}
+.footer-links a:hover{color:#E8CE96}
 </style>
+<link rel="stylesheet" href="sitio.css?v=1">
 </head>
 <body>
-<div class="card">
-  <h1>Valtia <em>Analytics</em></h1>
-  <p id="texto">¿Querés dejar de recibir el briefing diario en tu casilla?</p>
-  <button id="btn" onclick="darBaja()">Confirmar baja</button>
-  <div class="msg" id="msg"></div>
-  <p style="margin-top:26px;margin-bottom:0"><a href="/noticias">← Volver a las noticias</a></p>
-</div>
+<nav class="vnav">
+  <a href="/" class="nav-brand" aria-label="Valtia Analytics — inicio">
+    <svg class="nav-logo" width="40" height="40" viewBox="0 0 34 34" fill="none" aria-hidden="true"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <div><div class="nav-name">VAL<span>T</span>IA</div><div class="nav-sub">Analytics</div></div>
+  </a>
+  <div class="nav-links">
+    <a href="/">Inicio</a>
+    <a href="/cartera">Carteras</a>
+    <a href="/inversion-mensual">Inversión mensual</a>
+    <a href="/mercados">Mercados</a>
+    <a href="/noticias">Noticias</a>
+    <a href="/informes">Informes</a>
+    <a href="/herramientas">Herramientas</a>
+    <a href="/planes">Planes</a>
+  </div>
+  <div class="nav-right">
+    <a href="/?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
+  </div>
+</nav>
+
+<!-- cotizaciones en vivo, debajo del nav (módulo único del sitio: cotizaciones.js) -->
+<div id="valtia-cot"></div>
+
+<!-- título de la página: negro sobre blanco -->
+<header class="v-tit"><div class="v-tit-in">
+  <h1>Baja del newsletter</h1>
+  <p class="v-baj">El briefing de mercados que llega a tu casilla</p>
+</div></header>
+
+<main>
+  <div class="card">
+    <p id="texto">¿Querés dejar de recibir el briefing diario en tu casilla?</p>
+    <button id="btn" onclick="darBaja()">Confirmar baja</button>
+    <div class="msg" id="msg"></div>
+    <a class="volver-a" href="/noticias">← Volver a las noticias</a>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-copy">Valtia Analytics · Córdoba, Argentina · <a href="/privacidad" style="color:inherit;text-decoration:underline">Política de Privacidad</a></div>
+  <div class="footer-links">
+    <a href="/">Inicio</a><a href="/noticias">Noticias</a><a href="/informes">Informes</a><a href="/herramientas">Herramientas</a>
+  </div>
+</footer>
+
+<a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
 <script type="module">
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -65,5 +115,8 @@ window.darBaja = async () => {
   }
 };
 </script>
+<script type="module" src="nav-auth.js?v=10"></script>
+<script type="module" src="cotizaciones.js?v=3"></script>
+<script src="nav-menu.js?v=10"></script>
 </body>
 </html>

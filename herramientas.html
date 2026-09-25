@@ -10,10 +10,12 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#0E1830">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Herramientas — mismo lenguaje editorial que Noticias e Informes
-     (navy + dorado, página blanca, Playfair + Plex, esquinas rectas). ── */
+/* ── Herramientas — reglas globales del rediseño (sitio.css): título negro
+     sobre blanco, Plex Sans en todo, esquinas redondeadas (tarjetas 10–12,
+     botones 8, etiquetas 6), selectores con borde dorado sutil y contenido de
+     1340px alineado con el título. El lateral de herramientas es su etapa. ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --navy:#0E1830;--navy2:#0B1327;--navy3:#14213D;
@@ -31,144 +33,137 @@ a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
 img{max-width:100%}
 
-/* nav global (navy, igual a Noticias) */
-nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;background:rgba(14,24,48,.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(232,206,150,.14)}
-.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.nav-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;letter-spacing:.06em;color:#fff}
-.nav-name em{color:#E8CE96;font-style:italic}
-.nav-sub{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4)}
-.nav-links{display:flex;align-items:center;gap:26px}
-.nav-links a{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6)}
-.nav-links a:hover,.nav-links a.active{color:#E8CE96}
-.nav-cta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0E1830;background:#E8CE96;padding:9px 22px;border-radius:8px;text-decoration:none}
-.nav-cta:hover{background:#fff;color:#0E1830}
-@media(max-width:1100px){.nav-links{display:none}}
 
-/* masthead centrado sobre la franja navy, con el título de la página */
-.masthead{background:#0E1830;padding:26px 52px 20px;text-align:center}
-.masthead .t{font:700 clamp(30px,3.6vw,44px) 'Playfair Display',serif;color:#fff;letter-spacing:.01em;line-height:1.1;text-wrap:balance}
-.masthead .t em{color:#E8CE96;font-style:italic}
-.masthead .d{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(232,206,150,.75);margin-top:12px}
 
 /* sube / baja */
 .up{color:var(--up)}.down{color:var(--dn)}.neutral{color:var(--muted)}
 
-/* TABS — selectores de texto, sin pastilla ni borde: gris apagado y la
-   pestaña abierta en negro con subrayado dorado de 2px. En pantalla grande
-   las que no entran pasan al renglón de abajo; en teléfono la fila se
-   desplaza de costado (ver la media query del final). */
-.tools-nav{display:flex;align-items:flex-end;gap:12px 22px;flex-wrap:wrap;padding:26px 52px 0;max-width:1280px;margin:0 auto;background:#fff}
-.tool-tab{font:500 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;cursor:pointer;padding:8px 1px;border:none;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--mut);white-space:nowrap;transition:color .15s,border-color .15s;display:flex;align-items:center;gap:7px}
-.tool-tab:hover{color:var(--ink)}
-.tool-tab.active{color:var(--ink);font-weight:600;border-bottom-color:var(--gold)}
-.badge-f{font:700 8.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;padding:2px 5px;background:rgba(31,122,77,.1);color:var(--up)}
-.badge-p{font:700 8.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;padding:2px 5px;background:rgba(176,138,62,.12);color:var(--gold2)}
+/* TABS — la regla de botones y selectores del sitio: borde dorado sutil,
+   radio 8 y texto gris; la abierta con borde dorado, relleno crema y texto
+   negro. En pantalla grande las que no entran pasan al renglón de abajo; en
+   teléfono la fila se desplaza de costado (ver la media query del final). */
+.tools-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:18px var(--v-gutter) 16px;max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto;background:#fff;border-bottom:1px solid var(--line)}
+.tool-tab{font:500 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.04em;cursor:pointer;padding:8px 12px;border:1px solid rgba(176,138,62,.4);border-radius:8px;background:#fff;color:#57534A;white-space:nowrap;transition:color .15s,border-color .15s,background .15s;display:flex;align-items:center;gap:7px}
+.tool-tab:hover{color:#101010}
+.tool-tab.active{color:#101010;font-weight:600;border-color:#B08A3E;background:#FBF5E8}
+.badge-f{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;padding:2px 5px;border-radius:6px;background:rgba(31,122,77,.1);color:var(--up);white-space:nowrap}
+.badge-p{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;padding:2px 5px;border-radius:6px;background:rgba(176,138,62,.12);color:var(--gold2);white-space:nowrap}
 
-.tool-content{padding:30px 52px 20px;display:none;max-width:1280px;margin:0 auto}
+.tool-content{padding:30px var(--v-gutter) 20px;display:none;max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto}
 .tool-content.active{display:block}
-/* título de herramienta: Playfair + hairline que se estira (patrón .sec-h) */
-.tool-title{display:flex;align-items:center;gap:14px;font:700 26px/1.2 'Playfair Display',serif;color:var(--ink);margin-bottom:8px;text-wrap:pretty}
+/* título de herramienta: texto + etiqueta + hairline que se estira */
+.tool-title{display:flex;align-items:center;gap:14px;font:700 26px/1.2 'IBM Plex Sans',sans-serif;color:var(--ink);margin-bottom:8px;text-wrap:pretty}
+.tool-title .badge-f,.tool-title .badge-p{position:relative;top:1px}
 .tool-title::after{content:"";flex:1;min-width:20px;height:1px;background:var(--line)}
-.tool-desc{font-size:13.5px;font-weight:400;color:var(--sub);line-height:1.65;margin-bottom:24px;max-width:820px}
-.widget-box{background:#fff;border:1px solid var(--line);overflow:hidden;margin-bottom:24px}
+.tool-desc{font-size:14px;font-weight:400;color:var(--sub);line-height:1.65;margin-bottom:24px;max-width:820px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+.widget-box{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:24px}
 .widget-header{padding:13px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:6px 14px;flex-wrap:wrap}
 .widget-title{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
 .widget-source{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+.nota{font-size:12px;color:var(--sub);line-height:1.7;max-width:820px}
+.nota strong{color:var(--ink)}
 
-/* MAPA DE CALOR — sector tabs (mismos selectores de texto, un escalón más chicos) */
-.sector-tabs{display:flex;align-items:flex-end;gap:10px 20px;margin-bottom:16px;flex-wrap:wrap;max-width:100%}
-.sector-tab{font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;padding:6px 1px;border:none;border-bottom:2px solid transparent;border-radius:0;cursor:pointer;background:none;color:var(--mut);white-space:nowrap;transition:color .15s,border-color .15s}
-.sector-tab:hover{color:var(--ink)}
-.sector-tab.active{color:var(--ink);font-weight:600;border-bottom-color:var(--gold)}
+/* botón navy (deriva a Mercados, candados) */
+.btn-navy{display:inline-block;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:#0E1830;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;transition:background .2s}
+.btn-navy:hover{background:#B08A3E;color:#fff}
+.deriva{background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px;max-width:760px}
+.deriva p{font-size:14px;line-height:1.7;color:var(--sub);margin-bottom:16px}
 
-/* DÓLAR HISTÓRICO */
-.dolar-chart-wrap{background:#fff;border:1px solid var(--line);padding:24px;margin-bottom:20px}
-.dolar-legend{display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap}
-.dolar-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--sub);cursor:pointer;transition:opacity .2s}
-.dolar-legend-item:hover{opacity:.75}
-.dolar-dot{width:10px;height:10px;border-radius:50%}
-.dolar-canvas-box{position:relative;height:340px}
+/* MAPA DE CALOR — los cinco mapas uno debajo del otro (tv.js arma cada tarjeta) */
+.hm-stack{display:flex;flex-direction:column}
+
+/* DÓLAR HISTÓRICO — gráfico SVG propio */
+.dolar-chart-wrap{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px 24px 16px;margin-bottom:16px}
+.dolar-top{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap;margin-bottom:14px}
+.dolar-legend{display:flex;gap:16px;flex-wrap:wrap}
+.dolar-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--sub)}
+.dolar-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dolar-readout{font:500 11.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--sub);min-height:18px}
+.dolar-grid{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px}
+.dolar-y{display:flex;flex-direction:column;justify-content:space-between;font:500 10.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--mut);text-align:right;min-width:48px}
+.dolar-svg{width:100%;height:300px;display:block;touch-action:pan-y}
+.dolar-x{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;margin-top:8px}
+.dolar-x .lbl{display:flex;justify-content:space-between;font:500 10.5px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+.dolar-vacio{display:flex;align-items:center;justify-content:center;min-height:200px;font-size:13px;color:var(--sub);text-align:center;padding:20px}
 .dolar-current{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:16px}
-.dolar-card{background:var(--marfil);border:1px solid var(--line);padding:14px;text-align:center}
-.dolar-card-name{font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:8px}
-.dolar-card-price{font:600 17px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1}
-.dolar-card-sub{font-size:10px;color:var(--mut);margin-top:6px}
-
-/* BONOS */
-.bonos-table{width:100%;border-collapse:collapse;font-size:13px}
-.bonos-table th{font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:10px 12px;border-bottom:1px solid var(--ink);text-align:left;white-space:nowrap}
-.bonos-table td{padding:10px 12px;border-bottom:1px solid var(--line);color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
-.bonos-table tr:last-child td{border:none}
-.bonos-table tbody tr:hover td{background:var(--marfil)}
-.bonos-section-header{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);padding:14px 12px 6px;background:var(--marfil)}
-.tag-buy{color:var(--up);font-size:11px;font-weight:600}.tag-hold{color:var(--gold2);font-size:11px;font-weight:600}.tag-watch{color:var(--dn);font-size:11px;font-weight:600}
+.dolar-card{background:#fff;border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:10px;padding:14px;text-align:center}
+.dolar-card-name{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:8px}
+.dolar-card-price{font:600 17px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1}
+.dolar-card-sub{font-size:10.5px;color:var(--mut);margin-top:6px}
 
 /* PRO LOCK OVERLAY */
 .pro-section{position:relative}
-.pro-overlay{position:absolute;inset:0;background:rgba(246,243,236,.9);backdrop-filter:blur(3px);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;text-align:center}
+.pro-overlay{position:absolute;inset:0;border-radius:12px;background:rgba(246,243,236,.9);backdrop-filter:blur(3px);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;text-align:center}
 .pro-lock-icon{font-size:30px;opacity:.75}
-.pro-overlay h4{font:700 21px/1.2 'Playfair Display',serif;color:var(--ink)}
-.pro-overlay p{font-size:13px;color:var(--sub);text-align:center;max-width:300px;line-height:1.6}
-.pro-overlay .btn{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:#0E1830;color:#fff;padding:12px 26px;text-decoration:none;transition:background .2s;margin-top:4px}
+.pro-overlay h4{font:700 21px/1.2 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.pro-overlay p{font-size:13px;color:var(--sub);text-align:center;max-width:320px;line-height:1.6}
+.pro-overlay .btn{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:#0E1830;color:#fff;padding:12px 26px;border-radius:8px;text-decoration:none;transition:background .2s;margin-top:4px}
 .pro-overlay .btn:hover{background:#B08A3E;color:#fff}
 .preview-blur{filter:blur(4px);pointer-events:none;user-select:none}
 
-/* CALC */
-.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
+/* CALC — recalcula al escribir, sin botón */
+.calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:32px;align-items:start;max-width:960px}
+.calc-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px}
 .form-group{margin-bottom:14px}
-.form-group label{display:block;font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin-bottom:7px}
-.form-group input,.form-group select{width:100%;padding:11px 12px;background:#fff;border:1px solid var(--line);border-radius:0;color:var(--ink);font:500 14px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;outline:none;transition:border-color .2s}
+.form-group:last-of-type{margin-bottom:0}
+.form-group label{display:block;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin-bottom:7px}
+.form-group input{width:100%;padding:11px 12px;background:#fff;border:1px solid var(--line);border-radius:8px;color:var(--ink);font:500 14px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;outline:none;transition:border-color .2s;-moz-appearance:textfield}
+.form-group input::-webkit-outer-spin-button,.form-group input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .form-group input::placeholder{color:var(--mut);font-weight:400}
-.form-group input:focus,.form-group select:focus{border-color:var(--gold)}
-.btn-calc{width:100%;padding:13px;background:#0E1830;border:none;border-radius:0;font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#fff;cursor:pointer;transition:background .2s;margin-top:6px}
-.btn-calc:hover{background:#B08A3E}
-.result-box{background:var(--marfil);border:1px solid var(--line);border-top:3px solid var(--gold);padding:18px 20px;display:none}
-.result-box.visible{display:block}
+.form-group input:focus{border-color:var(--gold)}
+.result-box{background:#fff;border:1px solid var(--line);border-top:3px solid #0E1830;border-radius:12px;padding:18px 20px}
 .result-row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:9px 0;border-bottom:1px solid var(--line)}
-.result-row:last-child{border:none}
+.result-row:last-of-type{border:none;padding-top:12px}
 .result-label{font-size:13px;color:var(--sub)}
-.result-value{font:500 14px 'IBM Plex Mono',monospace;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right}
-.result-value.highlight{font:600 18px 'IBM Plex Mono',monospace;color:var(--gold2)}
+.result-value{font:500 14px 'IBM Plex Sans',sans-serif;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right}
+.result-value.interes{color:var(--up)}
+.result-value.highlight{font:600 20px 'IBM Plex Sans',sans-serif;color:var(--gold2)}
+.calc-nota{font-size:12px;color:var(--mut);margin-top:14px;line-height:1.6}
 
 /* ATRIBUCIÓN DE TRADINGVIEW. Los embebidos son gratis y están permitidos en
    sitios comerciales justamente porque queda este link: no se saca, no se
-   esconde con display:none y no se le cambia el destino. (Los widgets que
-   dibuja tv.js traen la suya, con estilo propio y más específico.) */
+   esconde con display:none y no se le cambia el destino. Acá todos los
+   widgets los dibuja tv.js, que trae la atribución con su propio estilo. */
 .tradingview-widget-copyright{padding:8px 14px;font:400 10.5px 'IBM Plex Sans',sans-serif;line-height:1.5;color:var(--mut);border-top:1px solid var(--line)}
 .tradingview-widget-copyright a{color:var(--gold);text-decoration:none}
 .tradingview-widget-copyright a:hover{color:var(--gold2);text-decoration:underline}
 .tradingview-widget-copyright .blue-text{color:inherit}
 
 /* RADAR DE VALUACIÓN */
-.radar-strip{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
-.radar-stat{background:#fff;border:1px solid var(--line);padding:14px 18px;flex:1;min-width:130px;position:relative}
-.radar-stat::before{content:"";position:absolute;top:-1px;left:-1px;width:22px;height:2px;background:var(--gold)}
-.radar-stat .n{font:600 22px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;line-height:1;color:var(--ink)}
-.radar-stat .l{font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-top:8px}
-.radar-stat.infra .n{color:var(--up)}.radar-stat.cara .n{color:var(--dn)}
+.radar-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.radar-stat{background:#fff;border:1px solid var(--line);border-top:2px solid #0E1830;border-radius:10px;padding:14px 18px}
+.radar-stat .n{font:600 22px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;line-height:1;color:var(--ink)}
+.radar-stat .l{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-top:8px}
+.radar-stat.infra .n{color:var(--up)}.radar-stat.precio .n{color:var(--gold2)}.radar-stat.cara .n{color:var(--dn)}
 .radar-note{font-size:12px;color:var(--sub);line-height:1.7;margin:2px 0 18px;max-width:820px}
 .radar-note strong{color:var(--ink)}
-.radar-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px;margin-bottom:8px}
-.radar-card{background:#fff;border:1px solid var(--line);border-left:3px solid var(--up);padding:15px 16px}
+.radar-kicker{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--up);margin-bottom:6px}
+.radar-regla{font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:12px}
+.radar-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px;margin-bottom:22px}
+.radar-card{background:#fff;border:1px solid var(--line);border-left:3px solid var(--up);border-radius:10px;padding:15px 16px}
 .radar-card .rc-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:3px}
-.radar-card .rc-sym{font:600 14px 'IBM Plex Mono',monospace;color:var(--ink)}
-.radar-card .rc-px{font:500 13px 'IBM Plex Mono',monospace;color:var(--ink);font-variant-numeric:tabular-nums}
+.radar-card .rc-sym{font:600 14px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.radar-card .rc-px{font:500 13px 'IBM Plex Sans',sans-serif;color:var(--ink);font-variant-numeric:tabular-nums}
 .radar-card .rc-name{font-size:11px;color:var(--sub);margin-bottom:10px}
-.radar-card .rc-ver{font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;color:var(--up);text-transform:uppercase}
-.radar-card .rc-entry{font-size:10px;font-weight:600;color:var(--gold2);margin-top:5px}
+.radar-card .rc-ver{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;color:var(--up);text-transform:uppercase}
+.radar-card .rc-ver.precio{color:var(--gold2)}.radar-card .rc-ver.cara{color:var(--dn)}
+.radar-card .rc-meta{display:flex;gap:12px;font:500 11.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--sub);margin-top:8px}
+.radar-card .rc-meta b{font-weight:600;color:var(--ink)}
+.radar-card .rc-entry{font-size:10.5px;font-weight:600;color:var(--gold2);margin-top:6px}
+.radar-card .rc-entry.no{color:var(--mut);font-weight:500}
 .radar-table{width:100%;border-collapse:collapse;font-size:13px}
-.radar-table th{font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:10px 10px;border-bottom:1px solid var(--ink);text-align:right;white-space:nowrap}
+.radar-table th{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:10px 10px;border-bottom:1px solid var(--ink);text-align:right;white-space:nowrap}
 .radar-table th:first-child,.radar-table th.l{text-align:left}
-.radar-table td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--ink);font:500 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.radar-table td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--ink);font:500 12.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
 .radar-table td.l{text-align:left;font-family:'IBM Plex Sans',sans-serif}
 .radar-table tr:last-child td{border:none}
 .radar-table tbody tr:hover td{background:var(--marfil)}
-.rsym{font:600 13px 'IBM Plex Mono',monospace;color:var(--ink)}
+.rsym{font:600 13px 'IBM Plex Sans',sans-serif;color:var(--ink)}
 .rname{font:400 11px 'IBM Plex Sans',sans-serif;color:var(--mut);display:block}
 .rbar{display:inline-flex;align-items:center;gap:7px;justify-content:flex-end}
 .rbar-track{width:52px;height:5px;background:var(--line)}
 .rbar-fill{height:100%}
-.rver{font:700 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px}
+.rver{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:6px}
 .rver.infra{color:var(--up);background:rgba(31,122,77,.1)}
 .rver.precio{color:var(--gold2);background:rgba(176,138,62,.12)}
 .rver.cara{color:var(--dn);background:rgba(178,58,58,.1)}
@@ -179,38 +174,37 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 
 /* RATIOS */
 .ratios-table{width:100%;border-collapse:collapse;font-size:13px}
-.ratios-table th{font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:10px 12px;border-bottom:1px solid var(--ink);text-align:left;white-space:nowrap}
+.ratios-table th{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:10px 12px;border-bottom:1px solid var(--ink);text-align:left;white-space:nowrap}
 .ratios-table td{padding:10px 12px;border-bottom:1px solid var(--line);color:var(--ink)}
-.ratios-table td:nth-child(3){font:500 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+.ratios-table td:nth-child(3){font:500 12.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums}
+.ratios-table td:nth-child(4),.ratios-table td:nth-child(5){color:var(--sub)}
 .ratios-table tr:last-child td{border:none}
 .ratios-table tbody tr:hover td{background:var(--marfil)}
-.ticker-badge{font:600 12.5px 'IBM Plex Mono',monospace;color:var(--ink)}
+.ticker-badge{font:600 12.5px 'IBM Plex Sans',sans-serif;color:var(--ink)}
 
-/* footer + mail */
-.wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;transition:transform .2s;text-decoration:none}
-.wa-float:hover{transform:scale(1.1)}
-footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px 32px;margin-top:40px}
-.footer-copy{font:400 11px 'IBM Plex Sans',sans-serif;line-height:1.7;color:rgba(255,255,255,.55);flex:1 1 420px;max-width:780px}
+/* footer (el mail flotante es el de sitio.css) */
+footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px 32px;margin-top:40px}
+.footer-copy{font:400 12.5px 'IBM Plex Sans',sans-serif;line-height:1.7;color:rgba(255,255,255,.55);flex:1 1 420px;max-width:780px}
 .footer-links{display:flex;gap:20px;flex-wrap:wrap}
-.footer-links a{font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase}
+.footer-links a{font:500 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase}
 .footer-links a:hover{color:#E8CE96}
 
 /* ── Panel de bonos (estilo mesa) ── */
-.bp-vars{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px;margin-bottom:16px}
-.bp-var{background:#fff;border:1px solid var(--line);border-radius:0;padding:12px 14px;position:relative}
-.bp-var::before{content:"";position:absolute;top:-1px;left:-1px;width:22px;height:2px;background:var(--gold)}
-.bp-var .l{font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--sub)}
-.bp-var .v{font:600 16px 'IBM Plex Mono',monospace;color:var(--ink);margin-top:6px;font-variant-numeric:tabular-nums}
+.bp-vars{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px;margin-bottom:10px}
+.bp-var{background:#fff;border:1px solid var(--line);border-top:2px solid #0E1830;border-radius:10px;padding:12px 14px}
+.bp-var .l{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--sub)}
+.bp-var .v{font:600 16px 'IBM Plex Sans',sans-serif;color:var(--ink);margin-top:6px;font-variant-numeric:tabular-nums}
 .bp-var .s{font-size:11px;margin-top:3px;color:var(--sub);font-variant-numeric:tabular-nums}
+.bp-nota{margin-bottom:16px}
 .bp-table-wrap{overflow-x:auto}
 .bp-table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.bp-table th{font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);text-align:right;padding:10px 10px;border-bottom:1px solid var(--ink)}
+.bp-table th{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);text-align:right;padding:10px 10px;border-bottom:1px solid var(--ink)}
 .bp-table th:first-child,.bp-table td:first-child{text-align:left}
-.bp-table td{padding:8px 10px;border-bottom:1px solid var(--line);color:var(--ink);text-align:right;font:500 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+.bp-table td{padding:8px 10px;border-bottom:1px solid var(--line);color:var(--ink);text-align:right;font:500 12.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums}
 .bp-table tr:last-child td{border-bottom:none}
 .bp-table tbody tr:hover td{background:var(--marfil)}
 .bp-sym{font-weight:600;letter-spacing:.02em;color:var(--ink)}
-.bp-ley{display:inline-block;font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;padding:1px 6px;border-radius:0;margin-left:7px;vertical-align:1px;border:1px solid var(--line);color:var(--sub)}
+.bp-ley{display:inline-block;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;padding:1px 6px;border-radius:6px;margin-left:7px;vertical-align:1px;border:1px solid var(--line);color:var(--sub)}
 .bp-ley.ny{color:var(--gold2);border-color:var(--gold)}
 .bp-up{color:var(--up)}.bp-dn{color:var(--dn)}.bp-nt{color:var(--sub)}
 .bp-tir{font-weight:600;color:var(--gold2)}
@@ -218,30 +212,32 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 .bp-asof{font-size:11px;color:var(--sub);text-align:right;margin-top:10px;line-height:1.6}
 @media(max-width:760px){.bp-2col{grid-template-columns:1fr!important}}
 
-/* responsive: 52px en desktop, 20px por debajo de 880 (igual que Noticias) */
+/* responsive: el margen lateral (52px / 20px debajo de 880) es --v-gutter de sitio.css */
 @media(max-width:880px){
-  .masthead,.tools-nav,.tool-content,footer{padding-left:20px;padding-right:20px}
   /* en teléfono los selectores no bajan de renglón: la fila se desplaza de
      costado y la página se queda quieta */
-  .tools-nav,.sector-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-  .tools-nav::-webkit-scrollbar,.sector-tabs::-webkit-scrollbar{display:none}
+  .tools-nav{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tools-nav::-webkit-scrollbar{display:none}
 }
 @media(max-width:760px){
-  .calc-grid{grid-template-columns:1fr;gap:20px}
+  .calc-grid{gap:20px}
   .tool-title{font-size:22px}
-  .dolar-chart-wrap{padding:16px}
+  .dolar-chart-wrap{padding:16px 14px 12px}
+  .deriva{padding:22px 18px}
 }
-/* la tabla de ratios va adentro de .bp-table-wrap (overflow-x:auto): en teléfono
-   scrollea el contenedor, no la página */
-@media(max-width:600px){.ratios-table{white-space:nowrap}}
+@media(max-width:600px){
+  .dolar-svg{height:220px}
+  .ratios-table{white-space:nowrap}
+}
 </style>
+<link rel="stylesheet" href="sitio.css?v=1">
 </head>
 <body>
 
-<nav>
-  <a href="/" class="nav-brand">
-    <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
-    <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
+<nav class="vnav">
+  <a href="/" class="nav-brand" aria-label="Valtia Analytics — inicio">
+    <svg class="nav-logo" width="40" height="40" viewBox="0 0 34 34" fill="none" aria-hidden="true"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <div><div class="nav-name">VAL<span>T</span>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
     <a href="/">Inicio</a>
@@ -250,7 +246,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
     <a href="/mercados">Mercados</a>
     <a href="/noticias">Noticias</a>
     <a href="/informes">Informes</a>
-    <a href="/herramientas" class="active">Herramientas</a>
+    <a href="/herramientas" class="active" aria-current="page">Herramientas</a>
     <a href="/planes">Planes</a>
   </div>
   <div class="nav-right">
@@ -258,20 +254,20 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   </div>
 </nav>
 
-<!-- masthead: el título de la página sobre la franja navy -->
-<div class="masthead">
-  <h1 class="t">Herramientas <em>Valtia</em></h1>
-  <div class="d">Mapa de calor · Radar · Bonos · CEDEARs · Dólar · Cauciones</div>
-</div>
-
-<!-- COTIZACIONES EN VIVO (módulo único del sitio: cotizaciones.js) -->
+<!-- COTIZACIONES EN VIVO, debajo del nav (módulo único del sitio: cotizaciones.js) -->
 <div id="valtia-cot"></div>
+
+<!-- título de la página: negro sobre blanco -->
+<header class="v-tit"><div class="v-tit-in">
+  <h1>Herramientas</h1>
+  <p class="v-baj">Mapa de calor · Radar · Bonos · CEDEARs · Dólar · Cauciones</p>
+</div></header>
 
 <!-- TOOL TABS -->
 <div class="tools-nav">
   <button class="tool-tab active" onclick="switchTool('heatmap',this)">Mapa de calor <span class="badge-f">GRATIS</span></button>
   <button class="tool-tab" onclick="switchTool('radar',this)">Radar de valuación <span class="badge-p">PRO</span></button>
-  <button class="tool-tab" onclick="switchTool('acciones',this)">Acciones ARG/EEUU <span class="badge-p">PRO</span></button>
+  <button class="tool-tab" onclick="switchTool('acciones',this)">Acciones ARG/EEUU <span class="badge-f">GRATIS</span></button>
   <button class="tool-tab" onclick="switchTool('bonos',this)">Bonos soberanos <span class="badge-p">PRO</span></button>
   <button class="tool-tab" onclick="switchTool('ratios',this)">Ratios CEDEARs <span class="badge-p">PRO</span></button>
   <button class="tool-tab" onclick="switchTool('calendario',this)">Calendario económico <span class="badge-f">GRATIS</span></button>
@@ -279,46 +275,40 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   <button class="tool-tab" onclick="switchTool('cauciones',this)">Calc. cauciones <span class="badge-f">GRATIS</span></button>
 </div>
 
-<!-- MAPA DE CALOR -->
+<!-- MAPA DE CALOR: los cinco mapas uno debajo del otro. Cada tarjeta la arma
+     tv.js (cabezal, hueco, atribución de TradingView) y se dibuja recién
+     cuando entra en pantalla. -->
 <div class="tool-content active" id="tool-heatmap">
-  <div class="tool-title">Mapa de calor del mercado</div>
-  <p class="tool-desc">Visualizá en tiempo real qué sectores y activos están subiendo o bajando. Verde = sube, rojo = baja.</p>
-  <div class="sector-tabs">
-    <button class="sector-tab active" onclick="switchSector('sp500',this)">S&P 500 — Sectores</button>
-    <button class="sector-tab" onclick="switchSector('nasdaq',this)">Nasdaq 100</button>
-    <button class="sector-tab" onclick="switchSector('arg',this)">Mercado argentino</button>
-    <button class="sector-tab" onclick="switchSector('cripto',this)">Cripto</button>
-    <button class="sector-tab" onclick="switchSector('etf',this)">ETFs</button>
+  <div class="tool-title">Mapa de calor del mercado <span class="badge-f">GRATIS</span></div>
+  <p class="tool-desc">Qué sectores y activos están subiendo o bajando ahora mismo. El tamaño del bloque es la capitalización; el color, la variación del día.</p>
+  <div class="hm-stack">
+    <div id="hm-sp500"></div>
+    <div id="hm-nasdaq"></div>
+    <div id="hm-byma"></div>
+    <div id="hm-cripto"></div>
+    <div id="hm-etf"></div>
   </div>
-  <!-- Los widgets se inyectan recién cuando el panel se abre (lazy): TradingView
-       no renderiza dentro de contenedores ocultos con ancho 0. -->
-  <div id="heatmap-sp500" class="widget-box"><div class="hm-slot" style="height:600px"></div></div>
-  <div id="heatmap-nasdaq" class="widget-box" style="display:none"><div class="hm-slot" style="height:600px"></div></div>
-  <div id="heatmap-arg" class="widget-box" style="display:none">
-    <div class="widget-header"><span class="widget-title">Acciones del panel BYMA</span><span class="widget-source">TradingView · Screener completo del mercado argentino</span></div>
-    <div class="hm-slot" style="height:600px"></div>
-  </div>
-  <div id="heatmap-cripto" class="widget-box" style="display:none"><div class="hm-slot" style="height:600px"></div></div>
-  <div id="heatmap-etf" class="widget-box" style="display:none"><div class="hm-slot" style="height:600px"></div></div>
+  <div id="hm-nota"></div>
 </div>
 
 <!-- RADAR DE VALUACIÓN PRO -->
 <div class="tool-content" id="tool-radar">
-  <div class="tool-title">Radar de valuación Valtia</div>
+  <div class="tool-title">Radar de valuación Valtia <span class="badge-p">PRO</span></div>
   <p class="tool-desc">Nuestra lectura sistemática de las acciones que seguimos: qué tan barata cotiza cada una frente a sus fundamentos, con puntaje de calidad y momento técnico.</p>
 
   <div class="radar-strip" id="radar-strip"></div>
 
   <p class="radar-note" id="radar-note"></p>
 
-  <!-- Free: infravaloradas del radar -->
-  <div style="font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--up);margin-bottom:12px">Lo más barato del radar hoy · acceso libre</div>
+  <!-- Libre: las cuatro más baratas del radar -->
+  <div class="radar-kicker">Lo más barato del radar hoy · acceso libre</div>
+  <p class="radar-regla">Las cuatro infravaloradas con mejor puntaje de valor. <strong>Zona de entrada</strong>: puntaje ≥ 60 y RSI &lt; 45 (barata y, además, con el precio flojo).</p>
   <div class="radar-cards" id="radar-free"></div>
 
   <!-- PRO: tabla completa -->
-  <div style="position:relative;margin-top:22px">
+  <div class="pro-section">
     <div class="preview-blur">
-      <div class="widget-box">
+      <div class="widget-box" style="margin-bottom:0">
         <div class="widget-header"><span class="widget-title" id="radar-title">Radar completo</span><span class="widget-source" id="radar-asof">Lectura Valtia</span></div>
         <div style="overflow-x:auto">
           <table class="radar-table">
@@ -334,67 +324,32 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
     <div class="pro-overlay">
       <div class="pro-lock-icon">🔒</div>
       <h4>Radar completo PRO</h4>
-      <p>El radar completo — <span id="radar-lock-n">todos los activos que seguimos</span> con puntaje de valor y calidad por familia sectorial, EV/EBITDA, FCF yield, RSI y veredicto Valtia. Se actualiza todos los días.</p>
+      <p><span id="radar-lock-n">Todos los activos que seguimos</span> con puntaje de valor y calidad por familia sectorial, EV/EBITDA, FCF yield, RSI y veredicto Valtia. Se actualiza todos los días.</p>
       <a href="/planes" class="btn">Ver planes →</a>
     </div>
   </div>
 </div>
 
-<!-- CALC CAUCIONES -->
-<div class="tool-content" id="tool-cauciones">
-  <div class="tool-title">Calculadora de cauciones</div>
-  <p class="tool-desc">Estimá el rendimiento neto de una caución bursátil según monto, plazo y tasa nominal anual.</p>
-  <div class="calc-grid">
-    <div>
-      <div class="form-group"><label>Monto a invertir (ARS)</label><input type="number" id="c-monto" placeholder="Ej: 500000"></div>
-      <div class="form-group"><label>Plazo (días)</label><input type="number" id="c-plazo" placeholder="Ej: 30" min="1" max="365"></div>
-      <div class="form-group"><label>Tasa nominal anual (%)</label><input type="number" id="c-tasa" placeholder="Ej: 38" step="0.1"></div>
-      <button class="btn-calc" onclick="calcCaucion()">Calcular rendimiento</button>
-    </div>
-    <div>
-      <div class="result-box" id="caucion-result">
-        <div class="result-row"><span class="result-label">Capital invertido</span><span class="result-value" id="r-capital">—</span></div>
-        <div class="result-row"><span class="result-label">Tasa efectiva del período</span><span class="result-value" id="r-tasa-ef">—</span></div>
-        <div class="result-row"><span class="result-label">Interés bruto generado</span><span class="result-value" id="r-interes">—</span></div>
-        <div class="result-row"><span class="result-label">Total al vencimiento</span><span class="result-value highlight" id="r-total">—</span></div>
-      </div>
-      <p style="font-size:12px;color:var(--sub);margin-top:14px;line-height:1.6">* Cálculo orientativo. No incluye comisiones del broker.</p>
-    </div>
-  </div>
-</div>
-
-<!-- DÓLAR HISTÓRICO -->
-<div class="tool-content" id="tool-dolar">
-  <div class="tool-title">Cotización histórica del dólar</div>
-  <p class="tool-desc">Evolución de todos los tipos de dólar en Argentina. Datos actualizados diariamente.</p>
-  <div class="dolar-chart-wrap">
-    <div class="dolar-legend">
-      <div class="dolar-legend-item" onclick="toggleLine('blue')"><div class="dolar-dot" style="background:#2B5FB0"></div><span>Blue</span></div>
-      <div class="dolar-legend-item" onclick="toggleLine('mep')"><div class="dolar-dot" style="background:#B08A3E"></div><span>MEP</span></div>
-      <div class="dolar-legend-item" onclick="toggleLine('ccl')"><div class="dolar-dot" style="background:#1F7A4D"></div><span>CCL</span></div>
-      <div class="dolar-legend-item" onclick="toggleLine('oficial')"><div class="dolar-dot" style="background:#B23A3A"></div><span>Oficial</span></div>
-      <div class="dolar-legend-item" onclick="toggleLine('cripto')"><div class="dolar-dot" style="background:#0E1830"></div><span>Cripto</span></div>
-    </div>
-    <div class="dolar-canvas-box"><canvas id="dolarChart"></canvas></div>
-  </div>
-  <div class="dolar-current">
-    <div class="dolar-card"><div class="dolar-card-name">Blue</div><div class="dolar-card-price" id="dc-blue">$--</div><div class="dolar-card-sub">Informal</div></div>
-    <div class="dolar-card"><div class="dolar-card-name">MEP</div><div class="dolar-card-price" id="dc-mep">$--</div><div class="dolar-card-sub">Bursátil AL30</div></div>
-    <div class="dolar-card"><div class="dolar-card-name">CCL</div><div class="dolar-card-price" id="dc-ccl">$--</div><div class="dolar-card-sub">Contado c/Liq.</div></div>
-    <div class="dolar-card"><div class="dolar-card-name">Oficial</div><div class="dolar-card-price" id="dc-oficial">$--</div><div class="dolar-card-sub">Minorista</div></div>
-    <div class="dolar-card"><div class="dolar-card-name">Cripto</div><div class="dolar-card-price" id="dc-cripto">$--</div><div class="dolar-card-sub">USDT/ARS</div></div>
+<!-- ACCIONES ARG/EEUU: no duplica contenido, deriva a Mercados -->
+<div class="tool-content" id="tool-acciones">
+  <div class="tool-title">Acciones ARG, EEUU y ETFs <span class="badge-f">GRATIS</span></div>
+  <p class="tool-desc">Precio, variación y gráfico de cada papel, sin repetirlo acá.</p>
+  <div class="deriva">
+    <p>Las acciones argentinas, las de Estados Unidos y los ETFs viven en <strong style="color:var(--ink)">Mercados</strong>: ahí está el universo entero, con la cotización, la variación del día y el gráfico de cada papel.</p>
+    <a href="/mercados" class="btn-navy">Ir a Mercados →</a>
   </div>
 </div>
 
 <!-- BONOS Y LETRAS PRO -->
 <div class="tool-content" id="tool-bonos">
-  <div class="tool-title">Análisis de bonos</div>
+  <div class="tool-title">Análisis de bonos <span class="badge-p">PRO</span></div>
   <p class="tool-desc">Precio, TIR, paridad y duration de la curva soberana en dólares, Bopreal, tasa fija, CER y dólar linked — calculados por Valtia sobre los flujos oficiales de cada bono.</p>
 
-  <!-- Variables del mercado (visible) -->
+  <!-- Variables de mesa (visible) -->
   <div class="bp-vars" id="bp-vars"></div>
+  <p class="nota bp-nota" id="bp-vars-nota"></p>
 
-  <!-- Referencias de la curva (visible: 3 bonos con métricas reales) -->
+  <!-- Referencias de la curva (visible: pocos bonos con métricas reales) -->
   <div class="widget-box">
     <div class="widget-header"><span class="widget-title">Referencias de la curva — soberanos USD</span><span class="widget-source">BYMA · TIR y duration calculadas por Valtia</span></div>
     <div class="bp-table-wrap"><table class="bp-table" id="bp-mini"><thead><tr>
@@ -403,25 +358,25 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   </div>
 
   <!-- PRO: panel completo -->
-  <div style="position:relative;margin-top:16px">
+  <div class="pro-section">
     <div class="preview-blur">
-      <div class="widget-box" style="margin-top:0">
+      <div class="widget-box" style="margin-bottom:0">
         <div class="widget-header"><span class="widget-title">Curva soberana completa — ley local vs ley Nueva York</span><span class="widget-source">TIR efectiva anual vs duration modificada</span></div>
         <div class="bp-table-wrap"><table class="bp-table" id="bp-soberanos"><thead><tr>
           <th>Especie</th><th>Venc.</th><th>Último USD</th><th>% Día</th><th>TIR</th><th>Paridad</th><th>MD</th><th>Duration</th><th>CY</th>
         </tr></thead><tbody></tbody></table></div>
       </div>
-      <div class="widget-box" style="margin-top:16px">
+      <div class="widget-box" style="margin:16px 0 0">
         <div class="widget-header"><span class="widget-title">Curva de rendimientos</span><span class="widget-source">Dorado: ley local · Celeste: ley NY</span></div>
         <div class="bp-curva-box"><canvas id="bp-curva"></canvas></div>
       </div>
-      <div class="widget-box" style="margin-top:16px">
+      <div class="widget-box" style="margin:16px 0 0">
         <div class="widget-header"><span class="widget-title">Bopreal (BCRA, Serie 1)</span><span class="widget-source">USD · vencen 31/10/2027</span></div>
         <div class="bp-table-wrap"><table class="bp-table" id="bp-bopreal"><thead><tr>
           <th>Especie</th><th>Venc.</th><th>Último USD</th><th>% Día</th><th>TIR</th><th>MD</th>
         </tr></thead><tbody></tbody></table></div>
       </div>
-      <div class="widget-box" style="margin-top:16px">
+      <div class="widget-box" style="margin:16px 0 0">
         <div class="widget-header"><span class="widget-title">Tasa fija (Lecap / Boncap) — la curva en pesos</span><span class="widget-source">$ · por 100 VN · tasas de mercado sobre el pago final oficial</span></div>
         <div class="bp-table-wrap"><table class="bp-table" id="bp-tasafija"><thead><tr>
           <th>Especie</th><th>Venc.</th><th>Días</th><th>Último</th><th>% Día</th><th>TEM</th><th>TNA</th><th>TIREA</th>
@@ -429,20 +384,20 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
         <div class="bp-curva-box" style="height:260px;padding:10px 14px 6px"><canvas id="bp-curva-tem"></canvas></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px" class="bp-2col">
-        <div class="widget-box" style="margin-top:0">
+        <div class="widget-box" style="margin:0">
           <div class="widget-header"><span class="widget-title">Bonos CER</span><span class="widget-source">$ · ajustan por inflación</span></div>
           <div class="bp-table-wrap"><table class="bp-table" id="bp-cer"><thead><tr>
             <th>Especie</th><th>Último</th><th>% Día</th>
           </tr></thead><tbody></tbody></table></div>
         </div>
-        <div class="widget-box" style="margin-top:0">
+        <div class="widget-box" style="margin:0">
           <div class="widget-header"><span class="widget-title">Dólar linked</span><span class="widget-source">$ · ajustan por A3500</span></div>
           <div class="bp-table-wrap"><table class="bp-table" id="bp-dl"><thead><tr>
             <th>Especie</th><th>Último</th><th>% Día</th>
           </tr></thead><tbody></tbody></table></div>
         </div>
       </div>
-      <div class="widget-box" style="margin-top:16px">
+      <div class="widget-box" style="margin:16px 0 0">
         <div class="widget-header"><span class="widget-title">Cómo leer la curva — guía Valtia</span></div>
         <div style="padding:18px 20px;font-size:13px;line-height:1.8;color:var(--sub)">
           <p style="margin-bottom:10px"><strong style="color:var(--text)">El eje no es solo la duración: es el calendario electoral.</strong> Los bonos que amortizan antes o durante 2027 (AL29, AL30, GD29, GD30, AO27) cobran la mayor parte de su flujo antes del evento político. Los largos (AL35, AE38, GD35 en adelante) concentran el flujo después — más torque si el riesgo país comprime, más golpe si no.</p>
@@ -454,136 +409,123 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
     <div class="pro-overlay">
       <div class="pro-lock-icon">🔒</div>
       <h4>Contenido PRO</h4>
-      <p>La curva soberana completa con TIR, paridad y duration, Bopreal, tasa fija, CER y la guía Valtia para leerla.</p>
+      <p>La curva soberana completa con TIR, paridad y duration, Bopreal, tasa fija, CER, dólar linked y la guía Valtia para leerla.</p>
       <a href="/planes" class="btn">Ver planes →</a>
     </div>
   </div>
   <div class="bp-asof" id="bp-asof"></div>
 </div>
 
-<!-- ACCIONES ARG/EEUU PRO -->
-<div class="tool-content" id="tool-acciones">
-  <div class="tool-title">Acciones ARG, EEUU y ETFs</div>
-  <p class="tool-desc">Seguimiento de las principales acciones y ETFs con precio, variación y análisis técnico.</p>
-  <div style="position:relative">
-    <!-- Free preview: 5 acciones ARG -->
-    <div class="widget-box">
-      <div class="widget-header"><span class="widget-title">Acciones argentinas — Top 5</span><span class="widget-source">TradingView · Tiempo real</span></div>
-      <div style="height:300px">
-        <div class="tradingview-widget-container" style="height:100%">
-          <div class="tradingview-widget-container__widget" style="height:100%"></div>
-          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js" async>{"width":"100%","height":"300","defaultColumn":"overview","defaultScreen":"most_capitalized","market":"argentina","showToolbar":true,"colorTheme":"light","locale":"es"}</script>
-        </div>
-      </div>
-      <!-- Atribución obligatoria: va afuera del hueco de alto fijo para que el
-           iframe no la tape nunca. No se saca ni se esconde. -->
-      <div class="tradingview-widget-copyright"><a href="https://es.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Seguí los mercados en TradingView</span></a></div>
-    </div>
-    <!-- PRO: EEUU + ETFs.
-         El candado (blur + overlay opaco) tapa SOLO el hueco del widget: la
-         atribución de TradingView queda abajo, fuera del blur y fuera del
-         inset:0 del overlay. Una atribución borroneada es una atribución
-         escondida, y con eso el embebido queda fuera de los términos. -->
-    <div class="widget-box" style="margin-top:16px">
-      <div class="widget-header"><span class="widget-title">Acciones EEUU — S&amp;P 500</span></div>
-      <div style="position:relative">
-        <div class="preview-blur">
-          <div style="height:300px">
-            <div class="tradingview-widget-container" style="height:100%">
-              <div class="tradingview-widget-container__widget" style="height:100%"></div>
-              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-screener.js" async>{"width":"100%","height":"300","defaultColumn":"overview","defaultScreen":"most_capitalized","market":"america","showToolbar":true,"colorTheme":"light","locale":"es"}</script>
-            </div>
-          </div>
-        </div>
-        <div class="pro-overlay">
-          <div class="pro-lock-icon">🔒</div>
-          <h4>Acciones EEUU + ETFs</h4>
-          <p>Accedé al screener completo de acciones americanas, ETFs sectoriales y análisis técnico integrado.</p>
-          <a href="/planes" class="btn">Ver planes →</a>
-        </div>
-      </div>
-      <div class="tradingview-widget-copyright"><a href="https://es.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Seguí los mercados en TradingView</span></a></div>
-    </div>
-  </div>
-</div>
-
-<!-- CALENDARIO ECONÓMICO -->
-<div class="tool-content" id="tool-calendario">
-  <div class="tool-title">Calendario económico</div>
-  <p class="tool-desc">Próximos eventos macroeconómicos globales. Fed, INDEC, BCE, NFP y todas las fechas clave.</p>
-  <div class="widget-box">
-    <div class="widget-header"><span class="widget-title">Calendario global</span><span class="widget-source">TradingView · Tiempo real</span></div>
-    <div class="tradingview-widget-container" style="height:600px">
-      <div class="tradingview-widget-container__widget" style="height:100%"></div>
-      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>{"colorTheme":"light","isTransparent":false,"width":"100%","height":"600","locale":"es","importanceFilter":"-1,0,1","countryFilter":"ar,us,eu,gb,cn,jp,br"}</script>
-    </div>
-    <!-- Atribución obligatoria: afuera del contenedor de alto fijo. -->
-    <div class="tradingview-widget-copyright"><a href="https://es.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Seguí los mercados en TradingView</span></a></div>
-  </div>
-</div>
-
 <!-- RATIOS CEDEARs -->
 <div class="tool-content" id="tool-ratios">
-  <div class="tool-title">Ratios de conversión CEDEARs</div>
-  <p class="tool-desc">Cuántas acciones equivale cada CEDEAR. Indispensable para comparar precios con el mercado exterior.
-  Abajo tenés nueve de referencia escritos a mano y, más abajo, el listado completo de BYMA para buscar cualquier otro.</p>
-  <div style="position:relative">
-    <div class="widget-box">
-      <div class="widget-header"><span class="widget-title">CEDEARs de acciones — Ratios</span><span class="widget-source">5 de referencia · confirmá el ratio vigente con tu broker</span></div>
-      <div class="bp-table-wrap"><table class="ratios-table">
-        <thead><tr><th>CEDEAR</th><th>Empresa</th><th>Ratio</th><th>Equivalencia</th><th>Sector</th></tr></thead>
-        <tbody>
-          <tr><td><span class="ticker-badge">AAPL</span></td><td>Apple Inc.</td><td>20:1</td><td>20 CEDEAR = 1 acción</td><td>Tecnología</td></tr>
-          <tr><td><span class="ticker-badge">MSFT</span></td><td>Microsoft</td><td>30:1</td><td>30 CEDEAR = 1 acción</td><td>Tecnología</td></tr>
-          <tr><td><span class="ticker-badge">GOOGL</span></td><td>Alphabet</td><td>58:1</td><td>58 CEDEAR = 1 acción</td><td>Tecnología</td></tr>
-          <tr><td><span class="ticker-badge">NVDA</span></td><td>NVIDIA</td><td>24:1</td><td>24 CEDEAR = 1 acción</td><td>Semiconductores</td></tr>
-          <tr><td><span class="ticker-badge">KO</span></td><td>Coca-Cola</td><td>5:1</td><td>5 CEDEAR = 1 acción</td><td>Consumo</td></tr>
-        </tbody>
-      </table></div>
-    </div>
-    <div style="position:relative;margin-top:16px">
-      <div class="preview-blur">
-        <div class="widget-box">
-          <div class="widget-header"><span class="widget-title">CEDEARs de ETFs + Acciones adicionales</span><span class="widget-source">4 de referencia</span></div>
-          <div class="bp-table-wrap"><table class="ratios-table">
-            <thead><tr><th>CEDEAR</th><th>Empresa</th><th>Ratio</th><th>Equivalencia</th><th>Sector</th></tr></thead>
-            <tbody>
-              <tr><td><span class="ticker-badge">TSLA</span></td><td>Tesla</td><td>15:1</td><td>15 CEDEAR = 1 acción</td><td>Automotriz/EV</td></tr>
-              <tr><td><span class="ticker-badge">MELI</span></td><td>MercadoLibre</td><td>120:1</td><td>120 CEDEAR = 1 acción</td><td>eCommerce LatAm</td></tr>
-              <tr><td><span class="ticker-badge">META</span></td><td>Meta Platforms</td><td>24:1</td><td>24 CEDEAR = 1 acción</td><td>Tecnología</td></tr>
-              <tr><td><span class="ticker-badge">SPY</span></td><td>SPDR S&P 500 ETF</td><td>20:1</td><td>20 CEDEAR = 1 unidad</td><td>ETF Índice</td></tr>
-            </tbody>
-          </table></div>
-        </div>
-      </div>
-      <!-- Acá decía "+60 CEDEARs … precio ARS y comparativa vs precio exterior"
-           y atrás del candado hay CUATRO filas escritas a mano, sin precio ni
-           comparativa. Prometer sesenta y mostrar cuatro es mentir: el texto
-           ahora dice lo que realmente se destapa, y los demás CEDEARs están
-           abajo, en el listado de BYMA. -->
-      <div class="pro-overlay">
-        <div class="pro-lock-icon">🔒</div>
-        <h4>El resto de la tabla</h4>
-        <p>Cuatro CEDEARs más de referencia —ETFs y acciones— con su ratio de conversión. Es una tabla corta y la estamos ampliando: el ratio de cualquier otro CEDEAR lo tenés gratis acá abajo, en el listado de BYMA.</p>
-        <a href="/planes" class="btn">Ver planes →</a>
+  <div class="tool-title">Ratios de conversión CEDEARs <span class="badge-p">PRO</span></div>
+  <p class="tool-desc">Cuántos CEDEARs equivalen a una acción del exterior. Indispensable para comparar precios con el mercado de origen.</p>
+  <div class="widget-box">
+    <div class="widget-header"><span class="widget-title">CEDEARs de acciones — ratios</span><span class="widget-source">5 de referencia · confirmá el ratio vigente con tu broker</span></div>
+    <div class="bp-table-wrap"><table class="ratios-table">
+      <thead><tr><th>CEDEAR</th><th>Empresa</th><th>Ratio</th><th>Equivalencia</th><th>Sector</th></tr></thead>
+      <tbody>
+        <tr><td><span class="ticker-badge">AAPL</span></td><td>Apple Inc.</td><td>20:1</td><td>20 CEDEAR = 1 acción</td><td>Tecnología</td></tr>
+        <tr><td><span class="ticker-badge">MSFT</span></td><td>Microsoft</td><td>30:1</td><td>30 CEDEAR = 1 acción</td><td>Tecnología</td></tr>
+        <tr><td><span class="ticker-badge">GOOGL</span></td><td>Alphabet</td><td>58:1</td><td>58 CEDEAR = 1 acción</td><td>Tecnología</td></tr>
+        <tr><td><span class="ticker-badge">NVDA</span></td><td>NVIDIA</td><td>24:1</td><td>24 CEDEAR = 1 acción</td><td>Semiconductores</td></tr>
+        <tr><td><span class="ticker-badge">KO</span></td><td>Coca-Cola</td><td>5:1</td><td>5 CEDEAR = 1 acción</td><td>Consumo</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="pro-section" style="margin-bottom:22px">
+    <div class="preview-blur">
+      <div class="widget-box" style="margin-bottom:0">
+        <div class="widget-header"><span class="widget-title">CEDEARs de ETFs + acciones adicionales</span><span class="widget-source">4 de referencia</span></div>
+        <div class="bp-table-wrap"><table class="ratios-table">
+          <thead><tr><th>CEDEAR</th><th>Empresa</th><th>Ratio</th><th>Equivalencia</th><th>Sector</th></tr></thead>
+          <tbody>
+            <tr><td><span class="ticker-badge">TSLA</span></td><td>Tesla</td><td>15:1</td><td>15 CEDEAR = 1 acción</td><td>Automotriz</td></tr>
+            <tr><td><span class="ticker-badge">MELI</span></td><td>MercadoLibre</td><td>120:1</td><td>120 CEDEAR = 1 acción</td><td>Comercio electrónico</td></tr>
+            <tr><td><span class="ticker-badge">META</span></td><td>Meta Platforms</td><td>24:1</td><td>24 CEDEAR = 1 acción</td><td>Tecnología</td></tr>
+            <tr><td><span class="ticker-badge">SPY</span></td><td>SPDR S&amp;P 500 ETF</td><td>20:1</td><td>20 CEDEAR = 1 unidad</td><td>ETF índice</td></tr>
+          </tbody>
+        </table></div>
       </div>
     </div>
+    <!-- Atrás del candado hay CUATRO filas escritas a mano, sin precio ni
+         comparativa. El texto dice lo que realmente se destapa; el ratio de
+         cualquier otro CEDEAR está gratis abajo, en el listado de BYMA. -->
+    <div class="pro-overlay">
+      <div class="pro-lock-icon">🔒</div>
+      <h4>El resto de la tabla</h4>
+      <p>Cuatro CEDEARs más de referencia —ETFs y acciones— con su ratio de conversión. Es una tabla corta y la estamos ampliando: el ratio de cualquier otro CEDEAR lo tenés gratis acá abajo, en el listado de BYMA.</p>
+      <a href="/planes" class="btn">Ver planes →</a>
+    </div>
+  </div>
 
-    <!-- Todos los CEDEARs de BYMA, de TradingView: el nombre de cada papel trae
-         su ratio de conversión. Es un embebido: se MUESTRA, no se leen datos de
-         adentro (otro dominio, y los términos de TradingView lo prohíben). -->
-    <div style="margin-top:22px">
-      <div id="tv-cedears"></div>
-      <p style="font-size:12px;color:var(--sub);line-height:1.7;margin:0 0 8px;max-width:820px">
-        Buscá el CEDEAR por su ticker (AAPL, NVDA, TSLA…): el ratio de conversión viene en el nombre del papel.
-        Los ratios los fija cada emisor y se pueden ajustar — antes de operar, confirmalo con tu broker.
-      </p>
-      <div id="tv-cedears-nota"></div>
+  <!-- Todos los CEDEARs de BYMA, de TradingView: el nombre de cada papel trae
+       su ratio de conversión. Es un embebido: se MUESTRA, no se leen datos de
+       adentro (otro dominio, y los términos de TradingView lo prohíben). -->
+  <div id="tv-cedears"></div>
+  <p class="nota" style="margin-bottom:8px">
+    Buscá el CEDEAR por su ticker (AAPL, NVDA, TSLA…): el ratio de conversión viene en el nombre del papel.
+    Los ratios los fija cada emisor y se pueden ajustar — antes de operar, confirmalo con tu broker.
+  </p>
+  <div id="tv-cedears-nota"></div>
+</div>
+
+<!-- CALENDARIO ECONÓMICO: se queda con el widget de eventos de TradingView -->
+<div class="tool-content" id="tool-calendario">
+  <div class="tool-title">Calendario económico <span class="badge-f">GRATIS</span></div>
+  <p class="tool-desc">Fed, INDEC, BCE, empleo de Estados Unidos y todas las fechas clave de la semana.</p>
+  <div id="tv-calendario"></div>
+  <div id="tv-calendario-nota"></div>
+</div>
+
+<!-- DÓLAR HISTÓRICO -->
+<div class="tool-content" id="tool-dolar">
+  <div class="tool-title">Cotización histórica del dólar <span class="badge-f">GRATIS</span></div>
+  <p class="tool-desc">CCL y MEP de los últimos 90 días, con las series diarias de Valtia. Abajo, el valor de hoy de cada dólar según la barra de cotizaciones.</p>
+  <div class="dolar-chart-wrap">
+    <div class="dolar-top">
+      <div class="dolar-legend">
+        <div class="dolar-legend-item"><div class="dolar-dot" style="background:#1F7A4D"></div><span>CCL</span></div>
+        <div class="dolar-legend-item"><div class="dolar-dot" style="background:#B08A3E"></div><span>MEP</span></div>
+      </div>
+      <div class="dolar-readout" id="dolar-readout"></div>
+    </div>
+    <div id="dolar-chart"><div class="dolar-vacio">Cargando las series…</div></div>
+  </div>
+  <div class="dolar-current">
+    <div class="dolar-card" style="border-top-color:#2B5FB0"><div class="dolar-card-name">Blue</div><div class="dolar-card-price" id="dc-blue">—</div><div class="dolar-card-sub" id="ds-blue">Informal</div></div>
+    <div class="dolar-card" style="border-top-color:#B08A3E"><div class="dolar-card-name">MEP</div><div class="dolar-card-price" id="dc-mep">—</div><div class="dolar-card-sub" id="ds-mep">Bursátil</div></div>
+    <div class="dolar-card" style="border-top-color:#1F7A4D"><div class="dolar-card-name">CCL</div><div class="dolar-card-price" id="dc-ccl">—</div><div class="dolar-card-sub" id="ds-ccl">Contado con liquidación</div></div>
+    <div class="dolar-card" style="border-top-color:#B23A3A"><div class="dolar-card-name">Oficial</div><div class="dolar-card-price" id="dc-oficial">—</div><div class="dolar-card-sub" id="ds-oficial">Minorista</div></div>
+    <div class="dolar-card" style="border-top-color:#0E1830"><div class="dolar-card-name">Cripto</div><div class="dolar-card-price" id="dc-cripto">—</div><div class="dolar-card-sub" id="ds-cripto">USDT/ARS</div></div>
+  </div>
+  <p class="nota" style="margin-top:14px">Las series de CCL y MEP son las que Valtia guarda a diario para los informes. Blue, oficial y cripto todavía no tienen serie histórica: de esos mostramos solo el valor de hoy. Si una fuente no responde, la tarjeta queda con guion.</p>
+</div>
+
+<!-- CALC CAUCIONES -->
+<div class="tool-content" id="tool-cauciones">
+  <div class="tool-title">Calculadora de cauciones <span class="badge-f">GRATIS</span></div>
+  <p class="tool-desc">Estimá el rendimiento bruto de una caución bursátil colocadora según monto, plazo y tasa nominal anual.</p>
+  <div class="calc-grid">
+    <div class="calc-card">
+      <div class="form-group"><label for="c-monto">Monto a invertir (ARS)</label><input type="number" id="c-monto" placeholder="Ej: 500000" min="0" inputmode="decimal" oninput="calcCaucion()"></div>
+      <div class="form-group"><label for="c-plazo">Plazo (días)</label><input type="number" id="c-plazo" placeholder="Ej: 30" min="1" max="365" inputmode="numeric" oninput="calcCaucion()"></div>
+      <div class="form-group"><label for="c-tasa">Tasa nominal anual (%)</label><input type="number" id="c-tasa" placeholder="Ej: 38" step="0.1" min="0" inputmode="decimal" oninput="calcCaucion()"></div>
+      <p class="calc-nota">Se recalcula solo, a medida que escribís. La tasa es la que te muestre tu broker para el plazo elegido.</p>
+    </div>
+    <div>
+      <div class="result-box" id="caucion-result">
+        <div class="result-row"><span class="result-label">Capital invertido</span><span class="result-value" id="r-capital">—</span></div>
+        <div class="result-row"><span class="result-label">Tasa efectiva del período</span><span class="result-value" id="r-tasa-ef">—</span></div>
+        <div class="result-row"><span class="result-label">Interés bruto generado</span><span class="result-value interes" id="r-interes">—</span></div>
+        <div class="result-row"><span class="result-label">Total al vencimiento</span><span class="result-value highlight" id="r-total">—</span></div>
+      </div>
+      <p class="calc-nota">Cálculo orientativo con interés simple (TNA × días / 365). No incluye comisiones del broker ni derechos de mercado.</p>
     </div>
   </div>
 </div>
 
-<a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail" style="background:#B08A3E;box-shadow:0 4px 16px rgba(176,138,62,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
+<a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
 <footer>
   <div class="footer-copy">© 2026 Valtia Analytics · valtia.tech · <a href="/terminos" style="color:inherit;text-decoration:underline">Términos</a> · <a href="/privacidad" style="color:inherit;text-decoration:underline">Privacidad</a><br>Los datos son referenciales y no constituyen asesoramiento financiero.</div>
@@ -594,16 +536,12 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
 
 <script src="chart.umd.min.js?v=1"></script>
 <script>
-function openLogin(e){e.preventDefault();window.location.href='/?login=1'}
-
 // TOOL TABS
 function switchTool(name,btn){
   document.querySelectorAll('.tool-content').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.tool-tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('tool-'+name).classList.add('active');
   btn.classList.add('active');
-  // El chart se crea con el tab oculto (canvas 0x0): reconstruir al mostrarlo
-  if(name==='dolar'&&dolarData.blue)buildDolarChart();
 }
 // herramientas.html#radar / #bonos / ... abre esa pestaña (links del panel)
 window.addEventListener('DOMContentLoaded',()=>{
@@ -613,137 +551,64 @@ window.addEventListener('DOMContentLoaded',()=>{
   if(b)switchTool(h,b);
 });
 
-// SECTOR HEATMAP TABS — lazy: cada widget se inyecta al abrir su panel
-const HEATMAPS={
-  sp500:{src:'embed-widget-stock-heatmap.js',cfg:{exchanges:[],dataSource:'SPX500',grouping:'sector',blockSize:'market_cap_basic',blockColor:'change',locale:'es',colorTheme:'light',hasTopBar:true,isDataSetEnabled:true,isZoomEnabled:true,hasSymbolTooltip:true,isMonoSize:false,width:'100%',height:'600'}},
-  nasdaq:{src:'embed-widget-stock-heatmap.js',cfg:{exchanges:[],dataSource:'NASDAQ100',grouping:'sector',blockSize:'market_cap_basic',blockColor:'change',locale:'es',colorTheme:'light',hasTopBar:true,isDataSetEnabled:true,isZoomEnabled:true,hasSymbolTooltip:true,isMonoSize:false,width:'100%',height:'600'}},
-  arg:{src:'embed-widget-screener.js',cfg:{width:'100%',height:'600',defaultColumn:'overview',defaultScreen:'most_capitalized',market:'argentina',showToolbar:true,colorTheme:'light',locale:'es',isTransparent:false}},
-  cripto:{src:'embed-widget-crypto-coins-heatmap.js',cfg:{dataSource:'Crypto',blockSize:'market_cap_calc',blockColor:'24h_close_change|5',locale:'es',colorTheme:'light',hasTopBar:true,isDataSetEnabled:false,isZoomEnabled:true,hasSymbolTooltip:true,isMonoSize:false,width:'100%',height:'600'}},
-  etf:{src:'embed-widget-etf-heatmap.js',cfg:{dataSource:'AllUSEtf',grouping:'asset_class',blockSize:'aum',blockColor:'change',locale:'es',colorTheme:'light',hasTopBar:true,isDataSetEnabled:false,isZoomEnabled:true,hasSymbolTooltip:true,isMonoSize:false,width:'100%',height:'600'}}
-};
-const hmLoaded={};
-function initHeatmap(name){
-  if(hmLoaded[name]||!HEATMAPS[name])return;
-  hmLoaded[name]=true;
-  const slot=document.querySelector('#heatmap-'+name+' .hm-slot');
-  const wrap=document.createElement('div');
-  wrap.className='tradingview-widget-container';wrap.style.height='100%';
-  wrap.innerHTML='<div class="tradingview-widget-container__widget" style="height:100%"></div>';
-  const s=document.createElement('script');
-  s.type='text/javascript';s.async=true;
-  s.src='https://s3.tradingview.com/external-embedding/'+HEATMAPS[name].src;
-  s.text=JSON.stringify(HEATMAPS[name].cfg);
-  wrap.appendChild(s);
-  slot.appendChild(wrap);
-  // Estos cinco widgets se venían inyectando SIN la atribución de TradingView,
-  // que es la condición para usarlos gratis en un sitio comercial. Va afuera
-  // del hueco (que tiene alto fijo) para que el iframe no la tape nunca.
-  const cr=document.createElement('div');
-  cr.className='tradingview-widget-copyright';
-  const a=document.createElement('a');
-  a.href='https://es.tradingview.com/';a.rel='noopener nofollow';a.target='_blank';
-  a.innerHTML='<span class="blue-text">Seguí los mercados en TradingView</span>';
-  cr.appendChild(a);
-  slot.parentElement.appendChild(cr);
-}
-function switchSector(name,btn){
-  document.querySelectorAll('[id^="heatmap-"]').forEach(el=>el.style.display='none');
-  document.querySelectorAll('.sector-tab').forEach(b=>b.classList.remove('active'));
-  document.getElementById('heatmap-'+name).style.display='block';
-  btn.classList.add('active');
-  initHeatmap(name);
-}
-
-// CALC CAUCIONES
+// CALC CAUCIONES — recalcula al escribir; interés simple: TNA × días / 365
 function calcCaucion(){
   const monto=parseFloat(document.getElementById('c-monto').value)||0;
-  const plazo=parseInt(document.getElementById('c-plazo').value)||0;
+  const plazo=parseInt(document.getElementById('c-plazo').value,10)||0;
   const tna=parseFloat(document.getElementById('c-tasa').value)||0;
-  if(!monto||!plazo||!tna){alert('Completá todos los campos');return}
+  const ok=monto>0&&plazo>0&&tna>0;
+  const fmt=n=>'$'+Math.round(n).toLocaleString('es-AR');
   const tasaPeriodo=(tna/100)*(plazo/365);
   const interes=monto*tasaPeriodo;
-  const total=monto+interes;
-  const fmt=n=>'$'+Math.round(n).toLocaleString('es-AR');
-  document.getElementById('r-capital').textContent=fmt(monto);
-  document.getElementById('r-tasa-ef').textContent=(tasaPeriodo*100).toFixed(3)+'%';
-  document.getElementById('r-interes').textContent=fmt(interes);
-  document.getElementById('r-total').textContent=fmt(total);
-  document.getElementById('caucion-result').classList.add('visible');
+  document.getElementById('r-capital').textContent=ok?fmt(monto):'—';
+  document.getElementById('r-tasa-ef').textContent=ok?(tasaPeriodo*100).toLocaleString('es-AR',{minimumFractionDigits:3,maximumFractionDigits:3})+'%':'—';
+  document.getElementById('r-interes').textContent=ok?fmt(interes):'—';
+  document.getElementById('r-total').textContent=ok?fmt(monto+interes):'—';
 }
 
-// DÓLAR CHART
-let dolarChart=null;
-let dolarData={};
-let lineVisibility={blue:true,mep:true,ccl:true,oficial:true,cripto:true};
-
-async function loadDolarHistorico(){
-  // ArgentinaDatos: histórico real por casa. casa API -> serie del chart
-  const casas={blue:'blue',bolsa:'mep',contadoconliqui:'ccl',oficial:'oficial',cripto:'cripto'};
-  try{
-    const res=await Promise.all(Object.keys(casas).map(c=>
-      fetch('https://api.argentinadatos.com/v1/cotizaciones/dolares/'+c).then(r=>{
-        if(!r.ok)throw new Error(c);return r.json();
-      })
-    ));
-    // Alinear por fecha (el blue cotiza fines de semana, el MEP no):
-    // eje = últimas 90 fechas del MEP; cada serie se mapea por fecha.
-    const porCasa={};
-    Object.keys(casas).forEach((c,i)=>{
-      porCasa[casas[c]]=new Map(res[i].map(d=>[d.fecha,d.venta]));
-    });
-    const fechas=res[Object.keys(casas).indexOf('bolsa')].slice(-90).map(d=>d.fecha);
-    const labels=fechas.map(f=>new Date(f+'T12:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}));
-    Object.values(casas).forEach(t=>{
-      dolarData[t]={labels,values:fechas.map(f=>porCasa[t].get(f)??null)};
-    });
-    if(document.getElementById('tool-dolar').classList.contains('active'))buildDolarChart();
-  }catch(e){
-    const wrap=document.querySelector('.dolar-canvas-box');
-    if(wrap)wrap.innerHTML='<p style="font-size:13px;color:var(--sub);padding:40px 0;text-align:center">No pudimos cargar el histórico en este momento. Las cotizaciones de hoy siguen abajo. Reintentá en unos minutos.</p>';
-  }
-}
-
-function buildDolarChart(){
-  const ctx=document.getElementById('dolarChart');
-  if(!ctx)return;
-  // la página es solo clara: grilla y texto de ejes fijos (tokens --line / --sub)
-  const gridColor='#E7E3DA';
-  const textColor='#57534A';
-  const labels=dolarData.blue.labels.length?dolarData.blue.labels:dolarData.mep.labels;
-  if(dolarChart)dolarChart.destroy();
-  dolarChart=new Chart(ctx,{type:'line',data:{labels,datasets:[
-    {label:'Blue',data:dolarData.blue.values,borderColor:'#2B5FB0',backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:.4,hidden:!lineVisibility.blue},
-    {label:'MEP',data:dolarData.mep.values,borderColor:'#B08A3E',backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:.4,hidden:!lineVisibility.mep},
-    {label:'CCL',data:dolarData.ccl.values,borderColor:'#1F7A4D',backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:.4,hidden:!lineVisibility.ccl},
-    {label:'Oficial',data:dolarData.oficial.values,borderColor:'#B23A3A',backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:.4,hidden:!lineVisibility.oficial},
-    {label:'Cripto',data:dolarData.cripto.values,borderColor:'#0E1830',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:.4,hidden:!lineVisibility.cripto},
-  ]},options:{responsive:true,maintainAspectRatio:false,spanGaps:true,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(14,24,48,.95)',borderColor:'rgba(232,206,150,.35)',borderWidth:1,titleColor:'#fff',bodyColor:'rgba(255,255,255,.8)',titleFont:{family:"'IBM Plex Sans',sans-serif"},bodyFont:{family:"'IBM Plex Sans',sans-serif"},cornerRadius:0,padding:12}},scales:{x:{grid:{color:gridColor},ticks:{color:textColor,font:{family:"'IBM Plex Sans',sans-serif",size:10},maxTicksLimit:12}},y:{grid:{color:gridColor},ticks:{color:textColor,font:{family:"'IBM Plex Sans',sans-serif",size:10},callback:v=>'$'+v.toLocaleString('es-AR')}}}}});
-}
-
-function toggleLine(type){
-  lineVisibility[type]=!lineVisibility[type];
-  if(dolarChart){const idx={blue:0,mep:1,ccl:2,oficial:3,cripto:4}[type];dolarChart.data.datasets[idx].hidden=!lineVisibility[type];dolarChart.update()}
-}
-
-// Las tarjetas de dólar se alimentan del módulo de cotizaciones (un solo
+// TARJETAS DEL DÓLAR — se alimentan del módulo de cotizaciones (un solo
 // fetch para toda la página: la barra y las tarjetas comparten el dato).
+// Las que la barra no trae quedan con guion (o con el último cierre de la
+// serie, si es CCL o MEP: lo pone el módulo del gráfico).
+window.__dolarHoy={};
 document.addEventListener('valtia:cotizaciones', e=>{
-  const M={'d-bolsa':'dc-mep','d-blue':'dc-blue','d-contadoconliqui':'dc-ccl',
-           'd-oficial':'dc-oficial','d-cripto':'dc-cripto'};
+  const M={'d-bolsa':'mep','d-blue':'blue','d-contadoconliqui':'ccl','d-oficial':'oficial','d-cripto':'cripto'};
+  const SUB={blue:'Informal · hoy',mep:'Bursátil · hoy',ccl:'Contado con liquidación · hoy',oficial:'Minorista · hoy',cripto:'USDT/ARS · hoy'};
   Object.keys(M).forEach(k=>{
-    const it=e.detail[k], el=document.getElementById(M[k]);
-    if(it&&el)el.textContent=it.v;
+    const it=e.detail[k], el=document.getElementById('dc-'+M[k]), s=document.getElementById('ds-'+M[k]);
+    if(it&&el){el.textContent=it.v;window.__dolarHoy[M[k]]=true;if(s)s.textContent=SUB[M[k]];}
   });
-});
-
-// INIT
-document.addEventListener('DOMContentLoaded',()=>{
-  initHeatmap('sp500');
-  loadDolarHistorico();
 });
 </script>
 <script type="module" src="cotizaciones.js?v=3"></script>
-<!-- RADAR DE VALUACIÓN — carga desde Firestore (radar/latest) -->
+
+<!-- MAPAS DE CALOR + CALENDARIO + LISTADO DE CEDEARs: todos con tv.js, que
+     pone la piel del sitio, la carga diferida y la atribución obligatoria. -->
+<script type="module">
+import { widget, notaLegal } from './tv.js?v=1';
+const FUENTE='TradingView · verde sube, rojo baja · tamaño según capitalización';
+const comun={grouping:'sector',blockSize:'market_cap_basic',blockColor:'change',hasTopBar:true,isDataSetEnabled:false,isZoomEnabled:true,hasSymbolTooltip:true,isMonoSize:false};
+widget('#hm-sp500','stock-heatmap',{...comun,exchanges:[],dataSource:'SPX500'},{titulo:'S&P 500 · por sector',fuente:FUENTE,alto:560});
+widget('#hm-nasdaq','stock-heatmap',{...comun,exchanges:[],dataSource:'NASDAQ100'},{titulo:'Nasdaq 100 · por sector',fuente:FUENTE,alto:560});
+// BYMA: el universo "todas las empresas argentinas" de TradingView, filtrado
+// por la bolsa de Buenos Aires (probado el 23/09/2026: dibuja GGAL, YPFD, PAMP…)
+widget('#hm-byma','stock-heatmap',{...comun,exchanges:['BCBA'],dataSource:'AllAR'},{titulo:'Acciones del panel BYMA · por sector',fuente:FUENTE,alto:560});
+widget('#hm-cripto','crypto-coins-heatmap',{dataSource:'Crypto',blockSize:'market_cap_calc',blockColor:'24h_close_change|5',hasTopBar:true,isDataSetEnabled:false,isZoomEnabled:true,hasSymbolTooltip:true,isMonoSize:false},{titulo:'Cripto · por capitalización',fuente:'TradingView · variación de 24 horas',alto:560});
+widget('#hm-etf','etf-heatmap',{dataSource:'AllUSEtf',grouping:'asset_class',blockSize:'aum',blockColor:'change',hasTopBar:true,isDataSetEnabled:false,isZoomEnabled:true,hasSymbolTooltip:true,isMonoSize:false},{titulo:'ETFs de Estados Unidos · por clase de activo',fuente:'TradingView · tamaño según activos administrados',alto:560});
+notaLegal('#hm-nota');
+
+widget('#tv-calendario','events',{importanceFilter:'-1,0,1',countryFilter:'ar,us,eu,gb,cn,jp,br',isTransparent:false},{titulo:'Calendario global',fuente:'TradingView · tiempo real',alto:600});
+notaLegal('#tv-calendario-nota');
+
+// La tabla de ratios de arriba son nueve papeles escritos a mano. Esto es el
+// listado real de BYMA: el nombre de cada CEDEAR trae su ratio de conversión.
+widget('#tv-cedears','screener',
+  { market:'argentina', defaultColumn:'overview', defaultScreen:'most_capitalized', showToolbar:true },
+  { titulo:'Todos los papeles de BYMA — buscá tu CEDEAR', fuente:'TradingView · BYMA' });
+notaLegal('#tv-cedears-nota');
+</script>
+
+<!-- RADAR DE VALUACIÓN — carga desde Firestore (radar/latest + radarPro/latest) -->
 <script type="module">
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -753,12 +618,17 @@ const app = getApps().length ? getApp() : initializeApp({
   authDomain: 'valtia-analytics.firebaseapp.com', projectId: 'valtia-analytics' });
 const db = getFirestore(app);
 
-const money = p => p == null ? '—' : '$' + Number(p).toLocaleString('es-AR',
-  { minimumFractionDigits: p < 10 ? 2 : 0, maximumFractionDigits: p >= 1000 ? 0 : 2 });
-const num1 = v => v == null ? '—' : Number(v).toFixed(1);
+// el radar valúa en dólares (las argentinas, por su ADR)
+const money = p => p == null ? '—' : 'US$' + Number(p).toLocaleString('es-AR',
+  { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const num1 = v => v == null ? '—' : Number(v).toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const verClass = v => v === 'Infravalorada' ? 'infra' : v === 'Estirada' ? 'cara' : v === 'En precio' ? 'precio' : 'sin';
 const zonaMap = { 'Sobrevendido': 'sv', 'Debil': 'db', 'Firme': 'fi', 'Sobrecomprado': 'sc' };
 const barColor = v => v === 'Infravalorada' ? '#1F7A4D' : v === 'Estirada' ? '#B23A3A' : '#B08A3E';
+// zona de entrada: la marca el pipeline (a.entrada); si no vino, la regla es
+// puntaje ≥ 60 y RSI < 45
+const enZona = a => typeof a.entrada === 'boolean' ? a.entrada
+  : (a.score != null && a.rsi != null && a.score >= 60 && a.rsi < 45);
 
 function fecha(iso) {
   try { return new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' }); }
@@ -769,7 +639,7 @@ async function loadRadar() {
   let data;
   try {
     // el doc público trae la lectura; el PRO, los múltiplos. El segundo da
-    // permission-denied si no sos cliente: ahí la tabla muestra el aviso.
+    // permission-denied si no sos cliente: ahí la tabla muestra el candado.
     const [snap, snapPro] = await Promise.all([
       getDoc(doc(db, 'radar', 'latest')),
       getDoc(doc(db, 'radarPro', 'latest')).catch(() => null),
@@ -789,32 +659,35 @@ async function loadRadar() {
   const cnt = v => activos.filter(a => a.veredicto === v).length;
 
   document.getElementById('radar-strip').innerHTML = `
+    <div class="radar-stat"><div class="n">${activos.length}</div><div class="l">Activos</div></div>
     <div class="radar-stat infra"><div class="n">${cnt('Infravalorada')}</div><div class="l">Infravaloradas</div></div>
-    <div class="radar-stat"><div class="n">${cnt('En precio')}</div><div class="l">En precio</div></div>
-    <div class="radar-stat cara"><div class="n">${cnt('Estirada')}</div><div class="l">Estiradas</div></div>
-    <div class="radar-stat"><div class="n">${activos.length}</div><div class="l">Activos seguidos</div></div>`;
+    <div class="radar-stat precio"><div class="n">${cnt('En precio')}</div><div class="l">En precio</div></div>
+    <div class="radar-stat cara"><div class="n">${cnt('Estirada')}</div><div class="l">Estiradas</div></div>`;
 
   document.getElementById('radar-note').innerHTML =
     `<strong>Metodología:</strong> ${data.metodologia || ''} &nbsp;·&nbsp; Datos al ${fecha(data.actualizado)}.`;
   const asof = document.getElementById('radar-asof');
   if (asof) asof.textContent = 'Lectura Valtia · ' + fecha(data.actualizado);
 
-  // Free: infravaloradas (o las 4 más baratas si no hubiera ninguna)
-  let baratas = activos.filter(a => a.veredicto === 'Infravalorada');
-  if (!baratas.length) baratas = activos.filter(a => a.score != null).sort((a, b) => b.score - a.score).slice(0, 4);
+  // Libre: las cuatro infravaloradas con mejor puntaje (o las cuatro con más
+  // puntaje del radar si hoy no hubiera ninguna infravalorada)
+  const porScore = (a, b) => (b.score || 0) - (a.score || 0);
+  let baratas = activos.filter(a => a.veredicto === 'Infravalorada').sort(porScore);
+  if (!baratas.length) baratas = activos.filter(a => a.score != null).sort(porScore);
+  baratas = baratas.slice(0, 4);
   document.getElementById('radar-free').innerHTML = baratas.map(a => `
     <div class="radar-card">
       <div class="rc-top"><span class="rc-sym">${a.sym}</span><span class="rc-px">${money(a.precio)}</span></div>
-      <div class="rc-name">${a.nombre} · ${a.sector || ''}</div>
-      <div class="rc-ver">${a.veredicto}</div>
-      ${a.entrada ? '<div class="rc-entry">◆ Zona de compra (barata + RSI flojo)</div>' : ''}
+      <div class="rc-name">${a.nombre}${a.sector ? ' · ' + a.sector : ''}</div>
+      <div class="rc-ver ${verClass(a.veredicto)}">${a.veredicto}</div>
+      <div class="rc-meta"><span>Puntaje <b>${a.score == null ? '—' : a.score}</b></span><span>RSI <b>${num1(a.rsi)}</b></span></div>
+      ${enZona(a) ? '<div class="rc-entry">◆ En zona de entrada</div>' : '<div class="rc-entry no">Fuera de zona de entrada</div>'}
     </div>`).join('');
 
   // PRO: tabla completa, ordenada por valor (más barato primero, sin cobertura al final)
   const orden = [...activos].sort((a, b) =>
     (a.score == null) - (b.score == null) || (b.score || 0) - (a.score || 0));
   // el número de activos sale SIEMPRE del radar: escrito a mano quedaba viejo
-  // (decía 34 cuando el radar ya seguía 47)
   const rt = document.getElementById('radar-title');
   if (rt) rt.textContent = 'Radar completo — ' + activos.length + ' activos';
   const rn = document.getElementById('radar-lock-n');
@@ -823,24 +696,126 @@ async function loadRadar() {
     const z = zonaMap[a.rsiZona] || 'db';
     const w = a.score == null ? 0 : a.score;
     return `<tr>
-      <td class="l"><span class="rsym">${a.sym}</span> ${a.entrada ? '<span class="rentry">◆</span>' : ''}<span class="rname">${a.nombre}</span></td>
+      <td class="l"><span class="rsym">${a.sym}</span> ${enZona(a) ? '<span class="rentry">◆</span>' : ''}<span class="rname">${a.nombre}</span></td>
       <td>${money(a.precio)}</td>
       <td>${a.per == null ? '—' : num1(a.per)}</td>
       <td>${a.pb == null ? '—' : num1(a.pb)}</td>
       <td>${a.ps == null ? '—' : num1(a.ps)}</td>
       <td>${a.evebitda == null ? '—' : num1(a.evebitda)}</td>
       <td>${a.fcfy == null ? '—' : num1(a.fcfy) + '%'}</td>
-      <td><span class="rbar"><span>${a.valorScore == null ? '—' : a.valorScore}</span><span class="rbar-track"><span class="rbar-fill" style="width:${w}%;background:${barColor(a.veredicto)}"></span></span></span></td>
+      <td><span class="rbar"><span>${a.valorScore == null ? (a.score == null ? '—' : a.score) : a.valorScore}</span><span class="rbar-track"><span class="rbar-fill" style="width:${w}%;background:${barColor(a.veredicto)}"></span></span></span></td>
       <td>${a.calidadScore == null ? '—' : a.calidadScore}</td>
-      <td><span class="rzona ${z}">${a.rsi == null ? '—' : num1(a.rsi)}</span></td>
+      <td><span class="rzona ${z}">${num1(a.rsi)}</span></td>
       <td class="l"><span class="rver ${verClass(a.veredicto)}">${a.veredicto}</span></td>
     </tr>`;
   }).join('');
 }
 loadRadar();
 </script>
+
+<!-- DÓLAR HISTÓRICO — gráfico SVG propio con las series diarias de Valtia
+     (historialInformes/_ccl y _mep, públicas). Blue, oficial y cripto no
+     tienen serie: van solo en las tarjetas, con el dato de la barra. -->
 <script type="module">
-// ── PANEL DE BONOS: lee bonosPanel/latest (público) y arma tablas + curva ──
+(async () => {
+  const FS = "https://firestore.googleapis.com/v1/projects/valtia-analytics/databases/(default)/documents/historialInformes/";
+  const KEY = "AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw";
+  const host = document.getElementById("dolar-chart");
+  const readout = document.getElementById("dolar-readout");
+  const ars = n => "$" + Math.round(n).toLocaleString("es-AR");
+  const ddmm = f => f.slice(8, 10) + "/" + f.slice(5, 7);
+  const serie = async id => {
+    const r = await fetch(FS + id + "?key=" + KEY, { cache: "no-store" });
+    if (!r.ok) throw new Error(id);
+    const d = await r.json();
+    const arr = JSON.parse(d.fields.json.stringValue || "[]");
+    return arr.filter(p => Array.isArray(p) && p[0] && Number(p[1]) > 0).map(p => [String(p[0]).slice(0, 10), Number(p[1])]);
+  };
+  let ccl = [], mep = [];
+  // cada serie falla por su cuenta: con una sola también se dibuja
+  const [rc, rm] = await Promise.allSettled([serie("_ccl"), serie("_mep")]);
+  if (rc.status === "fulfilled") ccl = rc.value;
+  if (rm.status === "fulfilled") mep = rm.value;
+  const SERIES = [
+    { k: "ccl", n: "CCL", color: "#1F7A4D", datos: ccl },
+    { k: "mep", n: "MEP", color: "#B08A3E", datos: mep },
+  ].filter(s => s.datos.length);
+  if (!SERIES.length) {
+    host.innerHTML = '<div class="dolar-vacio">No pudimos cargar las series del dólar en este momento. Las cotizaciones de hoy siguen abajo. Reintentá en unos minutos.</div>';
+    return;
+  }
+
+  // las tarjetas de CCL y MEP arrancan con el último cierre de la serie; si la
+  // barra ya trajo (o trae después) el dato de hoy, ese manda
+  SERIES.forEach(s => {
+    const u = s.datos[s.datos.length - 1];
+    const el = document.getElementById("dc-" + s.k), sub = document.getElementById("ds-" + s.k);
+    if (el && u && !(window.__dolarHoy || {})[s.k]) {
+      el.textContent = ars(u[1]);
+      if (sub) sub.textContent = "cierre " + ddmm(u[0]);
+    }
+  });
+
+  // eje: todas las fechas de los últimos 90 días (unión de las series)
+  const fechas = [...new Set(SERIES.flatMap(s => s.datos.map(p => p[0])))].sort();
+  const ultima = fechas[fechas.length - 1];
+  const desdeT = Date.parse(ultima + "T12:00:00Z") - 90 * 864e5;
+  const sel = fechas.filter(f => Date.parse(f + "T12:00:00Z") >= desdeT);
+  if (sel.length < 2) { host.innerHTML = '<div class="dolar-vacio">Todavía no hay suficientes días de historia para dibujar el gráfico.</div>'; return; }
+  const porFecha = SERIES.map(s => new Map(s.datos));
+  const vals = SERIES.flatMap((s, i) => sel.map(f => porFecha[i].get(f)).filter(v => v != null));
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  const pad = Math.max((hi - lo) * 0.06, 5); lo -= pad; hi += pad;
+
+  const W = 1000, H = 300, n = sel.length;
+  const X = i => (i / (n - 1)) * W;
+  const Y = v => H - ((v - lo) / (hi - lo)) * H;
+  const paths = SERIES.map((s, i) => {
+    let d = "", abierto = false;
+    sel.forEach((f, j) => {
+      const v = porFecha[i].get(f);
+      if (v == null) { abierto = false; return; }
+      d += (abierto ? "L" : "M") + X(j).toFixed(1) + "," + Y(v).toFixed(1);
+      abierto = true;
+    });
+    return `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
+  }).join("");
+  const grid = [0, 75, 150, 225].map(y => `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="#E7E3DA" vector-effect="non-scaling-stroke"/>`).join("")
+    + `<line x1="0" y1="${H - 0.5}" x2="${W}" y2="${H - 0.5}" stroke="#CFCABF" vector-effect="non-scaling-stroke"/>`;
+  const yLabels = [0, 1, 2, 3, 4].map(k => `<span>${ars(hi - (hi - lo) * k / 4)}</span>`).join("");
+  const xi = [0, Math.round((n - 1) / 4), Math.round((n - 1) / 2), Math.round(3 * (n - 1) / 4), n - 1];
+  const xLabels = [...new Set(xi)].map(i => `<span>${ddmm(sel[i])}</span>`).join("");
+  host.innerHTML = `
+    <div class="dolar-grid">
+      <div class="dolar-y">${yLabels}</div>
+      <svg class="dolar-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Dólar CCL y MEP, últimos 90 días">
+        ${grid}${paths}
+        <line id="dolar-cursor" x1="0" y1="0" x2="0" y2="${H}" stroke="#0E1830" stroke-dasharray="4 4" vector-effect="non-scaling-stroke" style="display:none"/>
+      </svg>
+    </div>
+    <div class="dolar-x"><span style="min-width:48px"></span><div class="lbl">${xLabels}</div></div>`;
+
+  // lectura al pasar el cursor (o el dedo): fecha y valor de cada serie
+  const svg = host.querySelector("svg"), cursor = host.querySelector("#dolar-cursor");
+  const ultimo = () => SERIES.map(s => { const u = s.datos[s.datos.length - 1]; return `${s.n} ${ars(u[1])}`; }).join(" · ");
+  const reposo = () => { cursor.style.display = "none"; readout.textContent = "último cierre " + ddmm(ultima) + " · " + ultimo(); };
+  reposo();
+  const mover = ev => {
+    const r = svg.getBoundingClientRect();
+    const p = ev.touches ? ev.touches[0] : ev;
+    const i = Math.max(0, Math.min(n - 1, Math.round((p.clientX - r.left) / r.width * (n - 1))));
+    cursor.setAttribute("x1", X(i)); cursor.setAttribute("x2", X(i)); cursor.style.display = "";
+    readout.textContent = ddmm(sel[i]) + " · " + SERIES.map((s, k) => { const v = porFecha[k].get(sel[i]); return `${s.n} ${v == null ? "—" : ars(v)}`; }).join(" · ");
+  };
+  svg.addEventListener("mousemove", mover);
+  svg.addEventListener("touchmove", mover, { passive: true });
+  svg.addEventListener("mouseleave", reposo);
+  svg.addEventListener("touchend", reposo);
+})();
+</script>
+
+<script type="module">
+// ── PANEL DE BONOS: lee bonosPanel/latest (público) y arma variables, tablas y curvas ──
 (async () => {
   const URL = "https://firestore.googleapis.com/v1/projects/valtia-analytics/databases/(default)/documents/bonosPanel/latest?key=AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw";
   let data, asof;
@@ -863,18 +838,23 @@ loadRadar();
   const num = (v, f = nf) => v == null ? "—" : f.format(v);
   const venc = v => v ? `${v.slice(8, 10)}/${v.slice(5, 7)}/${v.slice(2, 4)}` : "—";
 
-  // variables
+  // variables de mesa. La brecha se calcula acá: MEP contra el mayorista
+  // (A3500) del mismo documento. El Treasury a 10 años no tiene fuente
+  // (TVC:US10Y viene vacío en TradingView): va con guion, no con un número.
   const V = data.variables || {};
+  const brecha = (V.mep > 0 && V.mayorista > 0) ? (V.mep / V.mayorista - 1) * 100 : null;
   const vars = [
-    ["Riesgo país", V.riesgo_pais != null ? n0.format(V.riesgo_pais) : "—", V.riesgo_pais_var || ""],
-    ["Dólar MEP", num(V.mep, n0), V.brecha_mep != null ? `brecha ${n1.format(V.brecha_mep)}%` : ""],
-    ["Dólar CCL", num(V.ccl, n0), V.brecha_ccl != null ? `brecha ${n1.format(V.brecha_ccl)}%` : ""],
-    ["Mayorista", num(V.mayorista, n0), "A3500"],
-    ["Blue", num(V.blue, n0), "informal"],
+    ["Riesgo país", V.riesgo_pais != null ? n0.format(V.riesgo_pais) + " pb" : "—", V.riesgo_pais_var ? "variación " + V.riesgo_pais_var : ""],
+    ["Dólar MEP", V.mep != null ? "$" + n0.format(V.mep) : "—", "implícito en AL30/AL30D"],
+    ["Dólar CCL", V.ccl != null ? "$" + n0.format(V.ccl) : "—", "implícito en GD30/GD30C"],
+    ["Brecha MEP/oficial", brecha != null ? n1.format(brecha) + "%" : "—", V.mayorista != null ? "vs. mayorista A3500 $" + n0.format(V.mayorista) : ""],
+    ["Treasury 10 años", "—", "sin fuente por ahora"],
   ];
   const elVars = document.getElementById("bp-vars");
   if (elVars) elVars.innerHTML = vars.map(([l, v, s]) =>
     `<div class="bp-var"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+  const nota = document.getElementById("bp-vars-nota");
+  if (nota) nota.textContent = "La brecha es MEP contra el dólar mayorista (A3500). El Treasury a 10 años todavía no tiene una fuente que podamos mostrar: queda con guion hasta que la tengamos.";
 
   const fila = tds => `<tr>${tds.join("")}</tr>`;
   const c = h => `<td>${h}</td>`;
@@ -888,8 +868,9 @@ loadRadar();
     c(b.paridad != null ? n1.format(b.paridad) + "%" : "—"), c(num(b.md)),
     ...(full ? [c(num(b.dur)), c(b.cy != null ? n1.format(b.cy) + "%" : "—")] : [])]);
 
+  // referencias: tramo corto y medio, en las dos leyes
   const mini = document.querySelector("#bp-mini tbody");
-  if (mini) mini.innerHTML = ["AL30D", "GD30D", "AE38D"].map(s => sob.find(b => b.s === s))
+  if (mini) mini.innerHTML = ["AL30D", "GD30D", "AL35D", "GD35D", "AE38D"].map(s => sob.find(b => b.s === s))
     .filter(Boolean).map(b => filaSob(b, false)).join("");
   const tSob = document.querySelector("#bp-soberanos tbody");
   if (tSob) tSob.innerHTML = sob.map(b => filaSob(b, true)).join("");
@@ -1050,7 +1031,7 @@ loadRadar();
     });
   };
   // dibujo perezoso: el canvas nace oculto (pestaña display:none) y Chart.js
-  // no puede medirlo — mismo motivo por el que los heatmaps se inician lazy.
+  // no puede medirlo — mismo motivo por el que los widgets de tv.js son lazy.
   let dibujado = false;
   const intentar = () => { if (!dibujado && canvas.offsetParent) { dibujado = true; dibujar(); dibujarTem(); } };
   intentar();
@@ -1063,20 +1044,7 @@ loadRadar();
   new MutationObserver(() => { if (dibujado) { dibujar(); dibujarTem(); } }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 })();
 </script>
-<!-- LISTADO DE BYMA para la pestaña de CEDEARs (TradingView, vía tv.js) -->
-<script type="module">
-// La tabla de ratios de arriba son nueve papeles escritos a mano. Esto es el
-// listado real de BYMA: el nombre de cada CEDEAR trae su ratio de conversión.
-// Va con tv.js, que se ocupa del tema, de la carga diferida (la pestaña arranca
-// oculta, así que el widget recién se dibuja cuando alguien la abre) y de la
-// atribución obligatoria de TradingView.
-import { widget, notaLegal } from './tv.js?v=1';
-widget('#tv-cedears', 'screener',
-  { market: 'argentina', defaultColumn: 'overview', defaultScreen: 'most_capitalized', showToolbar: true },
-  { titulo: 'Todos los papeles de BYMA — buscá tu CEDEAR', fuente: 'TradingView · BYMA' });
-notaLegal('#tv-cedears-nota');
-</script>
-<script type="module" src="nav-auth.js?v=9"></script>
-<script src="nav-menu.js?v=9"></script>
+<script type="module" src="nav-auth.js?v=10"></script>
+<script src="nav-menu.js?v=10"></script>
 </body>
 </html>

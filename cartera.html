@@ -10,11 +10,14 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#0E1830">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="chart.umd.min.js?v=1"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Carteras — mismo lenguaje editorial que Noticias (navy + dorado):
-     página blanca, Playfair + IBM Plex, hairlines, esquinas rectas. Solo claro. ── */
+/* ── Carteras — reglas globales del rediseño (sitio.css): título negro sobre
+     blanco, Plex Sans en todo, esquinas redondeadas (tarjetas 10–12, botones
+     8, etiquetas 6), filtros con borde dorado sutil y columna de 1340px
+     alineada con el título. Solo claro.
+     Una sola página: arriba la cartera destacada (dos columnas), abajo la grilla
+     para explorar. Los gráficos son SVG inline, sin librería. ── */
 :root{
   --navy:#0E1830;--navy2:#0B1327;
   --gold:#B08A3E;--gold2:#8A6A2F;--gold-claro:#E8CE96;
@@ -23,153 +26,192 @@
   --border:#E7E3DA;--card:#fff;
   --ink:#101010;--mut:#8B8375;--line:#E7E3DA;--marfil:#F6F3EC;
   --up:#1F7A4D;--dn:#B23A3A;--greenTx:#1F7A4D;--redTx:#B23A3A;
+  --r-bajo:#1F7A4D;--r-moderado:#B7791F;--r-alto:#B23A3A;
+  --indice:#B9BEC8;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
 
-/* nav global (navy, igual a Noticias) */
-nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;background:rgba(14,24,48,.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(232,206,150,.14)}
-.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.nav-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;letter-spacing:.06em;color:#fff}
-.nav-name em{color:#E8CE96;font-style:italic}
-.nav-sub{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4)}
-.nav-links{display:flex;align-items:center;gap:26px}
-.nav-links a{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6)}
-.nav-links a:hover,.nav-links a.active{color:#E8CE96}
-.nav-cta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0E1830;background:#E8CE96;padding:9px 22px;border-radius:8px;text-decoration:none}
-.nav-cta:hover{background:#fff;color:#0E1830}
-@media(max-width:1100px){.nav-links{display:none}}
 
-/* masthead centrado sobre la franja navy, con el título de la página */
-.masthead{background:#0E1830;padding:26px 52px 20px;text-align:center}
-.masthead .t{font:700 clamp(30px,3.6vw,44px) 'Playfair Display',serif;color:#fff;letter-spacing:.01em;line-height:1.1;text-wrap:balance}
-.masthead .t em{color:#E8CE96;font-style:italic}
-.masthead .d{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(232,206,150,.75);margin-top:12px}
 
-/* columna de contenido de 1136px. El <footer> lo pinta el JS DENTRO de <main>: la grilla
-   de tres pistas lo deja ir a sangre. Ojo: entre ítems de grilla los márgenes verticales
-   no colapsan (se suman), por eso los ajustes con "+" más abajo. */
-main{display:grid;grid-template-columns:minmax(52px,1fr) minmax(0,1136px) minmax(52px,1fr);padding-top:30px}
+/* columna de contenido de 1340px (--v-ancho de sitio.css), con los bordes del
+   título; los costados miden al menos el margen lateral del sitio */
+main{display:grid;grid-template-columns:minmax(var(--v-gutter),1fr) minmax(0,var(--v-ancho)) minmax(var(--v-gutter),1fr);padding:18px 0 56px}
 main>*{grid-column:2;min-width:0}
 
-/* rótulo (eyebrow) */
-.eye{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;font:700 10.5px/1.5 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:12px}
-/* nombre de la cartera en el detalle (como .head h1 de la ficha de activo) */
-main h1,main .dnom{font:700 clamp(26px,3.4vw,38px) 'Playfair Display',serif;font-variant-numeric:lining-nums;line-height:1.1;letter-spacing:.01em;color:var(--ink);text-wrap:balance}
-.sub{color:var(--sub);font-size:15px;line-height:1.75;max-width:720px;margin-bottom:8px}
-.honest{display:inline-flex;justify-self:start;align-items:center;gap:8px;margin:14px 0 0;border:1px solid var(--line);border-left:3px solid var(--gold);background:var(--marfil);padding:10px 14px;font-size:12.5px;color:var(--sub);line-height:1.5}
-.honest b{color:var(--ink);font-weight:600}
-
-/* catálogo: tarjetas rectas con hairline y filete dorado arriba (como .fsr-card de Informes) */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));gap:18px;margin-top:32px}
-.ccard{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--gold);padding:22px;display:flex;flex-direction:column;gap:12px;transition:border-color .2s;position:relative;min-width:0}
-.ccard:hover{border-color:var(--gold)}
-.ccard .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.badge{font:700 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;background:var(--gold);color:#0E1830;padding:4px 9px}
-.tagx{font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line);padding:3px 8px;color:var(--sub)}
-.ccard h3{font:700 20px 'Playfair Display',serif;font-variant-numeric:lining-nums;line-height:1.2;color:var(--ink);text-wrap:pretty}
-.ccard p{font-size:13px;color:var(--sub);line-height:1.65;flex:1}
-.mini{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.mini .mi{border:1px solid var(--line);padding:10px 12px;min-width:0}
-.mini .l{font:600 9px/1.45 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
-.mini .v{font:600 15px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;line-height:1.1;color:var(--ink)}
-.spark{height:56px;position:relative}
-.cta{display:flex;align-items:center;justify-content:space-between;gap:10px;font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase}
-.cta .go{color:var(--gold2);white-space:nowrap}
-.cta .go:hover{color:var(--ink)}
-.cta .meta{color:var(--sub);font-weight:500;font-size:10px;letter-spacing:.08em;line-height:1.5}
 .pos{color:var(--up)!important}.neg{color:var(--dn)!important}.mut{color:var(--mut)!important}
 
-/* detalle */
-.crumb{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin-bottom:22px}
-.crumb a{color:var(--sub);text-decoration:none}
-.crumb a:hover{color:var(--gold)}
-.dhead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.dmeta{font:500 10.5px/2 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);margin:10px 0 0;max-width:900px}
-.dmeta+.kpis{margin-top:26px}
+/* aviso corto (cartera no encontrada, etc.) */
+.honest{display:inline-flex;justify-self:start;align-items:center;gap:8px;margin:0 0 16px;border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:10px;background:var(--marfil);padding:10px 14px;font-size:12.5px;color:var(--sub);line-height:1.5}
+.honest b{color:var(--ink);font-weight:600}
 
-/* tiles de métricas: tarjeta recta con hairline y acento dorado arriba */
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:12px;margin:0 0 24px}
-.kpi{background:#fff;border:1px solid var(--line);padding:15px 16px 14px;position:relative;min-width:0}
-.kpi::before{content:'';position:absolute;top:-1px;left:16px;width:22px;height:2px;background:var(--gold)}
-.kpi .l{font:600 9px/1.45 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:8px}
-.kpi .v{font:600 clamp(16px,1.5vw,20px) 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;line-height:1.1;color:var(--ink)}
-.kpi .s{font-size:10.5px;color:var(--sub);margin-top:7px;line-height:1.45}
+/* ── encabezado de la cartera seleccionada ── */
+.selh{display:flex;justify-content:space-between;align-items:baseline;gap:8px 18px;flex-wrap:wrap;margin-bottom:14px}
+.selh .n{font:600 17px 'IBM Plex Sans',sans-serif;font-variant-numeric:lining-nums;color:var(--ink);min-width:0}
+.selh .n span{font:400 13px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+.selh .m{display:flex;gap:6px 18px;flex-wrap:wrap;font-size:11.5px;color:var(--mut)}
+.selh .m b{color:var(--ink);font:600 11.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums}
 
-/* título de sección: patrón .sec-h de Informes (Playfair + hairline que se estira) */
-.sec{display:flex;align-items:center;gap:14px;margin:34px 0 16px;font:700 17px 'Playfair Display',serif;font-variant-numeric:lining-nums;line-height:1.25;color:var(--ink)}
-.sec::after{content:'';flex:1;min-width:24px;height:1px;background:var(--line)}
-.kpis+.sec{margin-top:10px}
-.sub+.sec{margin-top:26px}
+/* ── destacada: dos columnas 1.15fr / 0.85fr ── */
+.feat{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:14px;margin-bottom:40px}
+.box{background:#fff;border:1px solid var(--line);border-radius:12px;padding:24px 26px;min-width:0;position:relative}
+.box::before{content:'';position:absolute;top:-1px;left:26px;width:26px;height:2px;background:var(--gold)}
+.box.posbox{display:flex;flex-direction:column;padding:22px 22px 16px}
+.box.posbox::before{left:22px}
 
-/* gráfico de evolución */
-.chart-box{background:#fff;border:1px solid var(--line);padding:18px 20px;height:340px;position:relative}
-.chart-box .inner{position:absolute;inset:56px 18px 16px}
-.chart-box .leg{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:11.5px;line-height:1.5;color:var(--sub)}
-.leg b{font:600 11.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
-.dotl{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:baseline}
+.tags{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;background:var(--gold);color:var(--navy);padding:4px 10px;border-radius:6px;white-space:nowrap}
+.tag{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border:1px solid currentColor;border-radius:6px;white-space:nowrap}
+.tag.r-bajo{color:var(--r-bajo)}.tag.r-moderado{color:var(--r-moderado)}.tag.r-alto{color:var(--r-alto)}
+.tag.a-libre{color:var(--up);background:rgba(31,122,77,.08)}
+.tag.a-pro{color:#fff;background:var(--navy);border-color:var(--navy)}
+.tag.a-prox{color:var(--sub);border-color:var(--line);background:var(--marfil)}
+.tag.a-borr{color:#B45309;border-color:rgba(180,83,9,.45)}
 
-/* tablas: encabezado con filete de tinta, filas con hairline, números en Plex Mono */
-.panel{background:#fff;border:1px solid var(--line);overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}
-th{text-align:left;font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:12px 16px;border-bottom:1px solid var(--ink);white-space:nowrap}
-td{padding:11px 16px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;vertical-align:top;color:var(--ink)}
-tr:last-child td{border-bottom:none}
-tbody tr:hover td{background:var(--marfil)}
-.num{text-align:right}
-td.num{font:500 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
-td.num div{font-family:'IBM Plex Sans',sans-serif;font-weight:400}
-td:not(.razon):not(.tesis-row)>b{font:600 12.5px 'IBM Plex Mono',monospace;letter-spacing:.02em}
-.pill{display:inline-flex;align-items:center;gap:4px;font:700 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;white-space:nowrap}
-td.num .pill{font:600 11.5px 'IBM Plex Mono',monospace;letter-spacing:0;text-transform:none;padding:2px 7px}
-.pill.p{color:var(--up);background:rgba(31,122,77,.1)}
-.pill.n{color:var(--dn);background:rgba(178,58,58,.1)}
-.pill.m{color:var(--sub);background:var(--marfil)}
-.chips{display:flex;gap:8px;flex-wrap:wrap}
-.chip{border:1px solid var(--line);background:#fff;padding:6px 12px;font:500 12px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;display:inline-flex;gap:8px;align-items:center}
-.chip b{font-weight:600;letter-spacing:.02em;color:var(--ink)}
-/* las columnas de texto no se aplastan cuando la tabla scrollea de costado en el celular */
-.razon{color:var(--sub);font-size:12px;line-height:1.6;max-width:520px;min-width:280px}
-.razon b{color:var(--ink);display:block;font-size:12.5px;margin-bottom:2px}
-.tesis-row{color:var(--sub);font-size:12px;line-height:1.55;max-width:340px;min-width:260px}
-td:not(.num)>b+div{min-width:120px}
+.fhead{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:end;margin-top:16px}
+.fhead h2{font:700 clamp(24px,2.6vw,30px) 'IBM Plex Sans',sans-serif;font-variant-numeric:lining-nums;line-height:1.1;color:var(--ink);margin-bottom:10px;text-wrap:balance}
+.fhead p{font-size:14px;line-height:1.6;color:var(--sub)}
 
-/* footer de Noticias (navy2). Lo pinta el JS dentro de <main>: va a sangre, con el texto
-   alineado a la columna de contenido y un ancho de lectura de ~900px */
-footer{margin-top:48px;background:#0B1327;padding:28px max(52px,calc(50% - 332px)) 28px max(52px,calc(50% - 568px));font:400 11px/1.9 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.55)}
-main>footer{grid-column:1/-1}
+/* gráfico cartera vs índice: línea dorada con área suave, índice en gris */
+.chart svg{width:100%;height:120px;display:block}
+.chart .leg{display:flex;gap:4px 14px;flex-wrap:wrap;font-size:11px;color:var(--mut);margin-top:6px;line-height:1.5}
+.leg i{display:inline-block;width:12px;height:2px;vertical-align:middle;margin-right:5px}
+.leg b{font:600 11px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)}
+.leg .hov{margin-left:auto;font-family:'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
+.nohist{height:120px;border:1px dashed var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;color:var(--mut);padding:0 16px;line-height:1.5}
+
+/* tres cifras */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(140px,100%),1fr));gap:10px;margin-top:18px}
+.kpi{border:1px solid var(--line);border-radius:10px;padding:11px 14px;min-width:0}
+.kpi .l{font-size:11px;color:var(--sub);line-height:1.35}
+.kpi .v{font:600 18px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);margin-top:6px;white-space:nowrap}
+
+/* cómo se arma */
+.como{font:600 15px 'IBM Plex Sans',sans-serif;color:var(--ink);margin:22px 0 6px}
+.como-p{font-size:13px;line-height:1.65;color:var(--sub);margin-bottom:14px}
+.ficha{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(140px,100%),1fr));gap:10px}
+.ficha .it{border:1px solid var(--line);border-radius:10px;padding:11px 14px;min-width:0}
+.ficha .it.w{grid-column:1/-1}
+.ficha .l{font-size:11px;color:var(--mut)}
+.ficha .v{font:600 13.5px 'IBM Plex Sans',sans-serif;color:var(--ink);margin-top:6px;line-height:1.45}
+.ficha .s{font-size:11px;color:var(--sub);margin-top:3px;font-variant-numeric:tabular-nums}
+
+/* ── posiciones actuales ── */
+.ptit{font:600 16px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.psub{font-size:12.5px;color:var(--sub);margin-top:4px;line-height:1.5}
+.pwrap{position:relative;margin-top:14px;flex:1}
+.ptable{display:grid;grid-template-columns:minmax(0,1.6fr) 54px 88px 74px;gap:0 10px;align-items:center}
+.ptable.blur{filter:blur(5px);pointer-events:none;user-select:none}
+.ptable>*{display:contents}
+.phead>span{padding:9px 6px;border-bottom:1px solid var(--ink);font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
+.prow>*{padding:10px 6px;border-bottom:1px solid var(--line);align-self:stretch;display:flex;align-items:center;min-width:0}
+.prow .pa{display:block}
+.prow .tk{font:600 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.02em;color:var(--ink)}
+.prow .tk a{color:inherit;border-bottom:1px dotted var(--gold)}
+.prow .tk a:hover{color:var(--gold2)}
+.prow .em{font-size:10.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ptable .n{justify-content:flex-end;text-align:right;font:500 12.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--ink)}
+.prow .n.var{font-weight:600}
+.lock{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;background:rgba(255,255,255,.72);padding:20px}
+.lock h4{font:700 19px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.lock p{font-size:12.5px;color:var(--sub);line-height:1.6;max-width:280px}
+.btn-navy{display:inline-block;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--navy);padding:11px 22px;border-radius:8px;margin-top:4px}
+.btn-navy:hover{background:var(--gold2);color:#fff}
+.pvacio{border:1px dashed var(--line);border-radius:10px;padding:28px 16px;text-align:center;font-size:12.5px;color:var(--mut);line-height:1.6}
+
+/* rotaciones (solo con acceso): compactas, la lista completa plegada */
+.rot{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+.rot .rt{font:600 12px 'IBM Plex Sans',sans-serif;color:var(--ink);margin-bottom:8px}
+.rot .rt span{color:var(--mut);font-weight:400}
+.rot ul{list-style:none}
+.rot li{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px;line-height:1.5;color:var(--sub)}
+.rot li:last-child{border-bottom:none}
+.rot li .f{font:500 11px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--mut);white-space:nowrap;padding-top:2px}
+.rot li b{color:var(--ink);font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.02em}
+.rot li b a{color:inherit;border-bottom:1px dotted var(--gold)}
+.rot .acc{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;border-radius:6px;margin-left:6px;vertical-align:1px}
+.rot .acc.p{color:var(--up);background:rgba(31,122,77,.1)}
+.rot .acc.n{color:var(--dn);background:rgba(178,58,58,.1)}
+.rot details summary{cursor:pointer;font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--gold2);padding:8px 0 2px;list-style:none}
+.rot details summary::-webkit-details-marker{display:none}
+.rot details summary:hover{color:var(--ink)}
+.rot details[open] summary{display:none}
+
+/* ── explorar las carteras ── */
+.exh{display:flex;justify-content:space-between;align-items:center;gap:10px 14px;flex-wrap:wrap;margin-bottom:14px}
+.exh h3{font:700 22px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+/* filtros por riesgo: la regla de botones del sitio (borde dorado sutil,
+   radio 8; el encendido con borde dorado y relleno crema) */
+.filtros{display:inline-flex;gap:8px;flex-wrap:wrap}
+.filtros button{background:#fff;border:1px solid rgba(176,138,62,.4);border-radius:8px;font:500 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.04em;padding:7px 12px;cursor:pointer;color:#57534A;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}
+.filtros button:hover{color:#101010}
+.filtros button.on{color:#101010;border-color:#B08A3E;background:#FBF5E8}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(360px,100%),1fr));gap:14px}
+.ccard{display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;cursor:pointer;color:inherit;min-width:0;transition:border-color .15s}
+.ccard:hover{border-color:var(--gold);color:inherit}
+.ccard.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+.ccard .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ccard .top .l{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.rk{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.rk.r-bajo{color:var(--r-bajo)}.rk.r-moderado{color:var(--r-moderado)}.rk.r-alto{color:var(--r-alto)}
+.ccard .ver{font:600 11.5px 'IBM Plex Sans',sans-serif;color:var(--navy);white-space:nowrap}
+.ccard h4{font:700 19px 'IBM Plex Sans',sans-serif;font-variant-numeric:lining-nums;line-height:1.2;color:var(--ink);margin:12px 0 6px;text-wrap:pretty}
+.ccard p{font-size:12.5px;line-height:1.55;color:var(--sub);margin-bottom:12px;flex:1}
+.ccard .meta{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:end}
+.ccard .when{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--sub);white-space:nowrap}
+.ccard svg{width:100%;height:48px;display:block}
+.ccard .nh{height:48px;border-top:1px dashed var(--line);display:flex;align-items:center;justify-content:flex-end;font-size:11px;color:var(--mut)}
+.ccard .two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.ccard .two div{border:1px solid var(--line);border-radius:8px;padding:9px 12px;min-width:0}
+.ccard .two .l{font-size:10.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ccard .two .v{font:600 14px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);margin-top:4px;white-space:nowrap}
+.nota{font-size:11.5px;color:var(--mut);line-height:1.7;margin-top:22px;max-width:820px}
+
+/* ── estados: esqueleto, vacío, error ── */
+.state{border:1px dashed var(--line);border-radius:12px;text-align:center;padding:60px 20px;color:var(--sub);font-size:14px;line-height:1.9}
+.grid>.state{grid-column:1/-1;padding:36px 20px}
+.state a{text-decoration:underline;text-underline-offset:3px}
+.state button{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--navy);border:0;border-radius:8px;padding:11px 22px;cursor:pointer;margin-top:12px}
+.state button:hover{background:var(--gold2)}
+.sk{background:linear-gradient(90deg,#F1EEE6 25%,#F8F6F1 50%,#F1EEE6 75%);background-size:200% 100%;animation:sk 1.3s linear infinite}
+@keyframes sk{from{background-position:200% 0}to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.sk{animation:none}}
+
+/* footer de Noticias (navy2), a sangre, con el texto alineado a la columna
+   (borde izquierdo = el de la columna de 1340; el texto, de hasta 900px) */
+footer{background:#0B1327;padding:28px max(var(--v-gutter),calc(50% - var(--v-ancho) / 2 + var(--v-ancho) - 900px)) 28px max(var(--v-gutter),calc(50% - var(--v-ancho) / 2));font:400 12.5px/1.9 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.55)}
 footer b{color:rgba(255,255,255,.85);font-weight:600}
 footer a{color:inherit;text-decoration:underline}
 footer a:hover{color:#E8CE96}
 
-.state{border:1px dashed var(--line);text-align:center;padding:60px 20px;color:var(--sub);font-size:14px;line-height:1.9;margin-top:30px}
-main>.state{margin:10px 0 70px}
-.grid>.state{grid-column:1/-1;margin-top:0}
-.state a{text-decoration:underline;text-underline-offset:3px}
 
-/* botón de mail flotante abajo a la izquierda (el mismo de activo.html / noticias.html) */
-.wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;transition:transform .2s;text-decoration:none}
-.wa-float:hover{transform:scale(1.1)}
-
-@media(max-width:880px){
-  .masthead{padding-left:20px;padding-right:20px}
-  main{grid-template-columns:minmax(20px,1fr) minmax(0,1136px) minmax(20px,1fr)}
-  footer{padding-left:20px;padding-right:20px}
+@media(max-width:1080px){.feat{grid-template-columns:1fr}}
+@media(max-width:880px){footer{padding-left:var(--v-gutter);padding-right:var(--v-gutter)}}
+@media(max-width:640px){
+  .fhead{grid-template-columns:1fr;align-items:start}
+  .box{padding:18px 16px}
+  .box::before{left:16px}
+  .box.posbox{padding:18px 14px 12px}
+  .box.posbox::before{left:14px}
+  .ptable{grid-template-columns:minmax(0,1.4fr) 44px 74px 58px;gap:0 6px}
+  .phead>span,.prow>*{padding-left:2px;padding-right:2px}
+  .ccard{padding:16px}
+  .leg .hov{margin-left:0;width:100%}
 }
-@media(max-width:760px){.chart-box{height:300px}.chart-box .inner{top:74px}}
 </style>
+<link rel="stylesheet" href="sitio.css?v=1">
 </head>
 <body>
-<nav>
-  <a href="/" class="nav-brand">
-    <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
-    <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
+<nav class="vnav">
+  <a href="/" class="nav-brand" aria-label="Valtia Analytics — inicio">
+    <svg class="nav-logo" width="40" height="40" viewBox="0 0 34 34" fill="none" aria-hidden="true"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <div><div class="nav-name">VAL<span>T</span>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
     <a href="/">Inicio</a>
-    <a href="/cartera" class="active">Carteras</a>
+    <a href="/cartera" class="active" aria-current="page">Carteras</a>
     <a href="/inversion-mensual">Inversión mensual</a>
     <a href="/mercados">Mercados</a>
     <a href="/noticias">Noticias</a>
@@ -182,27 +224,27 @@ main>.state{margin:10px 0 70px}
   </div>
 </nav>
 
-<!-- masthead: el título de la página sobre la franja navy (antes lo pintaba el JS en el catálogo) -->
-<div class="masthead">
-  <h1 class="t">Carteras <em>Valtia</em></h1>
-  <div class="d">Gestionadas y con seguimiento verificable</div>
-</div>
-
-<!-- cotizaciones en vivo (módulo único del sitio: cotizaciones.js) -->
+<!-- cotizaciones en vivo, debajo del nav (módulo único del sitio: cotizaciones.js) -->
 <div id="valtia-cot"></div>
-<main id="main">
-  <div class="state">Cargando carteras…</div>
-</main>
 
-<a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail" style="background:#B08A3E;box-shadow:0 4px 16px rgba(176,138,62,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
+<!-- título de la página: negro sobre blanco -->
+<header class="v-tit"><div class="v-tit-in">
+  <h1>Carteras</h1>
+  <p class="v-baj">Posiciones · Precio de entrada · Rendimiento contra su índice</p>
+</div></header>
+
+<main id="main"></main>
+
+<footer><b>Metodología:</b> el índice de cada cartera arranca en base 100 el día del lanzamiento y se actualiza a diario con precios de mercado. Todo el historial es posterior al lanzamiento; cada rotación queda registrada con fecha, precio y razonamiento.<br><br>Valtia Analytics no brinda asesoramiento financiero personalizado a través de estas carteras. La información es de carácter general y educativo; los rendimientos pasados no garantizan resultados futuros. Invertir en renta variable implica riesgo de pérdida del capital.</footer>
+
+<a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { tickerFicha, linkDe } from './activos.js?v=7';
-import { EMPRESAS } from './empresas.js?v=3';
+import { linkDe } from './activos.js?v=7';
 
 const app = initializeApp({
   apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
@@ -210,29 +252,44 @@ const app = initializeApp({
   projectId: 'valtia-analytics',
 });
 const db = getFirestore(app);
+const ADMIN = 'valtyaanalytics@gmail.com';
 
 const $ = s => document.querySelector(s);
-// las lecaps valuadas en dolares son centavos por 100 VN: mas decimales
+const esc = s => String(s ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+const num = (n, d = 2) => Number(n).toLocaleString("es-AR", { minimumFractionDigits: d, maximumFractionDigits: d });
+// las lecaps valuadas en dólares son centavos por 100 VN: más decimales
 const fmtUSD = n => n == null || !isFinite(Number(n)) ? "—" : "US$" + Number(n).toLocaleString("es-AR",
   { maximumFractionDigits: Math.abs(Number(n)) > 0 && Math.abs(Number(n)) < 1 ? 4 : 2 });
-const fmtPct = n => n == null || !isFinite(n) ? "—" : (n >= 0 ? "+" : "") + n.toFixed(2) + "%";
-const cls = n => n > 0.004 ? "pos" : n < -0.004 ? "neg" : "mut";
-const pill = (n, t) => `<span class="pill ${n>0.004?"p":n<-0.004?"n":"m"}">${n>0.004?"▲":n<-0.004?"▼":"—"} ${t}</span>`;
-const tok = name => getComputedStyle(document.body).getPropertyValue(name).trim();
-const RIESGO = { conservador: "Riesgo bajo", moderado: "Riesgo medio", agresivo: "Riesgo alto" };
-const PERFIL = { "renta-fija": "Renta fija", "renta-mixta": "Renta mixta", "renta-variable": "Renta variable" };
-// fechas: acepta string ISO o Timestamp de Firestore
-const fdate = v => !v ? "—" : (v.toDate ? v.toDate().toISOString().slice(0,10) : String(v).slice(0,10));
+const fmtPct = n => n == null || !isFinite(n) ? "—" : (n > 0.004 ? "+" : n < -0.004 ? "−" : "") + num(Math.abs(n)) + "%";
+const cls = n => n == null || !isFinite(n) ? "mut" : n > 0.004 ? "pos" : n < -0.004 ? "neg" : "mut";
+const pesoTxt = p => { const v = (Number(p) || 0) * 100; return (Math.abs(v - Math.round(v)) < 0.05 ? String(Math.round(v)) : num(v, 1)) + "%"; };
 
-let charts = [];
-// tipografía de los gráficos (ejes y tooltip): la del sitio
-if (window.Chart) Chart.defaults.font.family = "'IBM Plex Sans',system-ui,sans-serif";
+// fechas: acepta string ISO o Timestamp de Firestore
+const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const iso = v => !v ? "" : (v.toDate ? v.toDate().toISOString().slice(0, 10) : String(v).slice(0, 10));
+const fLarga = v => { const s = iso(v); if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return s || "—"; const [y, m, d] = s.split("-"); return `${+d} ${MESES[+m - 1]} ${y}`; };
+const fMes = v => { const s = iso(v); if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return s || "—"; const [y, m] = s.split("-"); return `${MESES[+m - 1]} ${y}`; };
+
+// nivelRiesgo en Firestore: conservador / moderado / agresivo → bajo / moderado / alto
+const NIVEL = { conservador: "bajo", bajo: "bajo", moderado: "moderado", medio: "moderado", agresivo: "alto", alto: "alto" };
+const RIESGO_L = { bajo: "Riesgo bajo", moderado: "Riesgo moderado", alto: "Riesgo alto" };
+const nivelDe = x => NIVEL[String(x || "").toLowerCase()] || null;
+const riesgoTxt = it => it.nivel ? RIESGO_L[it.nivel] : (it.nivelRaw ? String(it.nivelRaw) : "");
+const acceso = it => it.vis === "borrador" ? ["a-prox", "Próximamente"] : it.vis === "publico" ? ["a-libre", "Acceso libre"] : ["a-pro", "PRO"];
+
+// acciones a su ficha, bonos y letras a bono.html (activos.js decide).
+// activos.js todavía devuelve la ruta con .html ('activo.html?t=NVDA'): acá se
+// sirve sin extensión, como el resto de los links internos del sitio.
+const sinHtml = h => h.replace(/\.html(?=\?|#|$)/, '');
+const linkFicha = tk => { const h = linkDe(tk); return h ? `<a href="/${sinHtml(h)}">${esc(tk)}</a>` : esc(tk); };
+
+/* ── datos ── */
 let cache = null, cacheAuth = null;
 
 // acceso PRO: admin, alta manual (usuariosPro) o cliente del fondo (inversores)
 async function esPro(user) {
   if (!user || !user.email) return false;
-  if (user.email === 'valtyaanalytics@gmail.com') return true;
+  if (user.email === ADMIN) return true;
   for (const col of ['usuariosPro', 'inversores']) {
     try { if ((await getDoc(doc(db, col, user.email))).exists()) return true; } catch (e) {}
   }
@@ -241,12 +298,10 @@ async function esPro(user) {
 
 async function loadAll(user) {
   if (cache && cacheAuth === !!user) return cache;
-  // sin acceso PRO solo se listan las públicas (la regla exige el filtro);
-  // con acceso se ven todas, incluidas las de suscriptores
   const pro = await esPro(user);
-  const admin = !!user && user.email === "valtyaanalytics@gmail.com";
-  // el admin ve tambien los borradores (propuestas sin aprobar); PRO ve
-  // publicas + de suscriptores (la regla exige el filtro); anonimo solo publicas
+  const admin = !!user && user.email === ADMIN;
+  // el admin ve también los borradores (propuestas sin aprobar); PRO ve
+  // públicas + de suscriptores (la regla exige el filtro); anónimo solo públicas
   const cartSnap = await getDocs(admin
     ? collection(db, "carterasModelo")
     : pro ? query(collection(db, "carterasModelo"), where("visibilidad", "in", ["publico", "clientes"]))
@@ -260,8 +315,9 @@ async function loadAll(user) {
       getDocs(query(collection(db, "carterasModelo", d.id, "valores"), orderBy("fecha"))),
       getDocs(query(collection(db, "carterasModelo", d.id, "historial"), orderBy("fecha", "desc"))),
     ]);
+    // las cerradas no se listan; primero las de más peso, después las más grandes
     c.posiciones = posSnap.docs.map(p => p.data()).filter(p => p.estado === "activa")
-      .sort((a, b) => (b.mcapEntrada || 0) - (a.mcapEntrada || 0));
+      .sort((a, b) => ((b.pesoObjetivo || 0) - (a.pesoObjetivo || 0)) || ((b.mcapEntrada || 0) - (a.mcapEntrada || 0)));
     c.valores = valSnap.docs.map(v => v.data());
     c.historial = histSnap.docs.map(h => h.data());
     carteras.push(c);
@@ -270,296 +326,316 @@ async function loadAll(user) {
   return carteras;
 }
 
-function retorno(c) {
-  const last = c.valores[c.valores.length - 1];
-  return last ? last.indice - 100 : null;
-}
-function retornoBench(c) {
-  const last = c.valores[c.valores.length - 1];
-  return last && last.benchmark != null ? last.benchmark - 100 : null;
-}
-
-/* métricas sobre la serie diaria (base 100) */
-function diasCalendario(c) {
-  const v = c.valores;
-  if (v.length < 2) return 0;
-  return Math.max(1, Math.round((new Date(v[v.length - 1].fecha) - new Date(v[0].fecha)) / 86400000));
-}
-function anualizada(c) {
-  const last = c.valores[c.valores.length - 1];
-  const dias = diasCalendario(c);
-  // menos de un año no se anualiza: elevar 61 días a la 365/61 convierte un
-  // +12% en "+101% anual", que es una extrapolación, no una medición
-  if (!last || dias < 365) return null;
-  return (Math.pow(last.indice / 100, 365 / dias) - 1) * 100;
-}
-function volatilidad(c) {
-  const v = c.valores;
-  if (v.length < 15) return null;
-  const rets = [];
-  for (let i = 1; i < v.length; i++) rets.push(v[i].indice / v[i - 1].indice - 1);
-  const m = rets.reduce((a, x) => a + x, 0) / rets.length;
-  const varza = rets.reduce((a, x) => a + (x - m) * (x - m), 0) / (rets.length - 1);
-  return Math.sqrt(varza) * Math.sqrt(252) * 100;   // anualizada, en %
-}
-function calRiesgo(vol) {
-  return vol == null ? null : vol < 15 ? "Baja" : vol < 25 ? "Media" : "Alta";
-}
-
-/* radar: P/E y veredicto por ticker (doc público) */
-let _radar = null;
-async function radarMapa() {
-  if (_radar) return _radar;
-  _radar = {};
-  try {
-    const snap = await getDoc(doc(db, "radar", "latest"));
-    if (snap.exists()) {
-      const alias = sym => tickerFicha(sym) || sym;   // símbolo local → ADR (activos.js)
-      (JSON.parse(snap.data().json || "{}").activos || []).forEach(a => {
-        _radar[alias(a.sym)] = a;
-      });
-    }
-  } catch (e) {}
-  return _radar;
-}
-// acciones a su ficha, bonos y letras a bono.html (activos.js decide).
-// activos.js todavía devuelve la ruta con .html ('activo.html?t=NVDA'): acá se
-// sirve sin extensión, como el resto de los links internos del sitio.
-const sinHtml = h => h.replace(/\.html(?=\?|#|$)/, '');
-const linkFicha = tk => { const h = linkDe(tk); return h
-  ? `<a href="/${sinHtml(h)}" style="color:inherit;text-decoration:none;border-bottom:1px dotted var(--gold)">${tk}</a>` : tk; };
-
-/* vidriera: las carteras PRO no se pueden LEER sin acceso (regla de
-   Firestore), pero sus agregados —retorno real, curva, última rotación—
-   son públicos vía carterasTeaser (fondo_sync). El retorno a la vista es
-   el argumento de venta; lo que se paga es composición, tesis e historial. */
+/* vidriera: las carteras PRO no se pueden LEER sin acceso (regla de Firestore),
+   pero sus agregados —retorno, curva, última rotación— son públicos vía
+   carterasTeaser (fondo_sync). El retorno es público; lo que se paga es la
+   composición, la tesis y el historial. */
 let _teaserCache = null;
-// TIR publicada por el sync para la parte en bonos de cada cartera
-let _teaserTir = {}, _teaserPorId = {};
-const tirDe = id => (_teaserTir[id] || {}).tir ?? null;
-const tirPesoDe = id => (_teaserTir[id] || {}).tirPeso ?? null;
-/* métricas que el sync ya calculó para esta cartera (vol, drawdown, composición) */
-const tsr = id => _teaserPorId[id] || null;
-
 async function teaserMapa() {
   if (_teaserCache) return _teaserCache;
-  _teaserCache = [];
+  let out = [];
   try {
     const snap = await getDoc(doc(db, "carterasTeaser", "latest"));
-    if (snap.exists()) _teaserCache = JSON.parse(snap.data().json || "{}").carteras || [];
-    _teaserCache.forEach(t => {
-      _teaserTir[t.id] = { tir: t.tir ?? null, tirPeso: t.tirPeso ?? null };
-      _teaserPorId[t.id] = t;
-    });
+    if (snap.exists()) out = JSON.parse(snap.data().json || "{}").carteras || [];
   } catch (e) {}
-  return _teaserCache;
+  _teaserCache = out;
+  return out;
 }
 
-function lockedCard(t) {
-  const r = t.retorno, rb = t.retornoBench;
-  return `
-    <div class="ccard">
-      <div class="top"><span class="badge">${t.codigo || t.id}</span>
-        <span class="tagx">${RIESGO[t.nivelRiesgo] || t.nivelRiesgo || ""}</span>
-        <span class="tagx" style="color:var(--gold2);border-color:var(--gold)">🔒 PRO</span></div>
-      <h3>${t.nombre}</h3>
-      <p>El retorno real, a la vista. La composición, la tesis por posición y cada rotación con su razonamiento se destapan con Valtia PRO.</p>
-      <div class="mini">
-        <div class="mi"><div class="l">Desde inicio (${t.fechaInicio || "—"})</div><div class="v ${r != null ? cls(r) : "mut"}">${r != null ? fmtPct(r) : "—"}</div></div>
-        <div class="mi"><div class="l">${rb != null ? "Benchmark " + (t.benchmark || "SPY") : "Posiciones"}</div><div class="v">${rb != null ? `<span class="${cls(rb)}">${fmtPct(rb)}</span>` : t.posiciones}</div></div>
-      </div>
-      <div class="spark"><canvas id="sp-t-${t.id}"></canvas></div>
-      <div class="cta"><span class="meta">${t.posiciones} posiciones${t.ultimaRotacion ? " · última rotación " + t.ultimaRotacion.fecha : ""}</span>
-        <a class="go" href="/planes">Ver planes →</a></div>
-    </div>`;
-}
-
-/* ── catálogo ── */
-function renderCatalogo(carteras, user, teaser) {
-  const bloqueadas = (teaser || []).filter(t => !carteras.some(c => c.id === t.id));
-  const cards = carteras.map(c => {
-    const r = retorno(c), rb = retornoBench(c);
-    const priv = c.visibilidad && c.visibilidad !== "publico";
-    return `
-    <div class="ccard">
-      <div class="top"><span class="badge">${c.codigo || c.slug}</span>
-        <span class="tagx">${RIESGO[c.nivelRiesgo] || c.nivelRiesgo || ""}</span>
-        ${PERFIL[c.perfil] ? `<span class="tagx">${PERFIL[c.perfil]}</span>` : ""}
-        ${c.rebalanceo ? `<span class="tagx">Rebalanceo ${c.rebalanceo}</span>` : ""}
-        ${c.visibilidad === "borrador" ? '<span class="tagx" style="color:#B45309;border-color:rgba(180,83,9,.45)">Borrador · sin publicar</span>'
-          : priv ? '<span class="tagx" style="color:var(--gold2);border-color:var(--gold)">Suscriptores</span>' : ''}</div>
-      <h3>${c.nombre}</h3>
-      <p>${c.descripcionCorta || ((c.tesis || "").slice(0, 150) + ((c.tesis||"").length > 150 ? "…" : ""))}</p>
-      <div class="mini">
-        <div class="mi"><div class="l">Desde inicio (${fdate(c.fechaInicio)})</div><div class="v ${r!=null?cls(r):"mut"}">${r!=null?fmtPct(r):"—"}</div></div>
-        ${tirDe(c.id) != null
-          ? `<div class="mi"><div class="l">TIR a hoy${tirPesoDe(c.id) != null && tirPesoDe(c.id) < 99 ? ` (${tirPesoDe(c.id)}% en bonos)` : ""}</div><div class="v">${tirDe(c.id).toFixed(1).replace(".", ",")}%</div></div>`
-          : `<div class="mi"><div class="l">${rb != null ? "Benchmark " + c.benchmark : "Posiciones"}</div><div class="v">${rb != null ? `<span class="${cls(rb)}">${fmtPct(rb)}</span>` : c.posiciones.length}</div></div>`}
-      </div>
-      <div class="spark"><canvas id="sp-${c.id}"></canvas></div>
-      <div class="cta"><span class="meta">${c.posiciones.length} posiciones · historial real desde el lanzamiento</span>
-        <a class="go" href="/cartera?c=${c.id}">Ver cartera →</a></div>
-    </div>`;
-  }).join("");
-  // el rótulo y el <h1> del catálogo viven ahora en el .masthead estático de la página
-  $("#main").innerHTML = `
-    <p class="sub">Cada cartera se actualiza a diario: posiciones con tesis, precio de entrada registrado el día que entra, y cada rotación fechada con su razonamiento. El rendimiento se mide desde el lanzamiento.</p>
-    <div class="honest">🔎 <span><b>Transparencia primero:</b> el historial se construye día a día con precios reales. Lo que ves es lo que fue.</span></div>
-    <div class="grid">${cards || '<div class="state">Sin carteras activas todavía.</div>'}${bloqueadas.map(lockedCard).join("")}</div>
-    <footer>Valtia Analytics no brinda asesoramiento financiero personalizado a través de estas carteras. La información es de carácter general y educativo; los rendimientos pasados no garantizan resultados futuros. Invertir en renta variable implica riesgo de pérdida del capital.</footer>`;
-  charts.forEach(ch => ch.destroy()); charts = [];
-  const spark = (el, labels, data) => charts.push(new Chart(el, { type: "line",
-    data: { labels, datasets: [{ data, borderColor: "#B08A3E",
-      backgroundColor: "rgba(176,138,62,.12)", fill: true, borderWidth: 2, pointRadius: 0, tension: .3 }] },
-    options: { responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { enabled: false } },
-      scales: { x: { display: false }, y: { display: false } } } }));
-  carteras.forEach(c => {
-    const el = document.getElementById("sp-" + c.id);
-    if (el && c.valores.length >= 2) spark(el, c.valores.map(v => v.fecha), c.valores.map(v => v.indice));
+/* una lista única: las que el usuario puede leer (con todo) + las de la
+   vidriera que no puede leer (solo agregados) */
+function armarItems(carteras, teaser) {
+  const porId = {}; teaser.forEach(t => { porId[t.id] = t; });
+  const items = carteras.map(c => {
+    const t = porId[c.id] || null;
+    const propia = c.valores.map(x => [iso(x.fecha), x.indice, x.benchmark ?? null]).filter(p => p[1] != null);
+    const serie = propia.length ? propia : (t && Array.isArray(t.serie) ? t.serie.filter(Array.isArray) : []);
+    const last = propia[propia.length - 1];
+    return {
+      id: c.id, c, t, abierta: true,
+      codigo: c.codigo || c.slug || c.id, nombre: c.nombre || c.id,
+      nivel: nivelDe(c.nivelRiesgo), nivelRaw: c.nivelRiesgo, vis: c.visibilidad || "publico",
+      desc: c.descripcionCorta || "", benchmark: c.benchmark || (t && t.benchmark) || "",
+      fechaInicio: c.fechaInicio, rebalanceo: c.rebalanceo || "", serie,
+      retorno: last ? last[1] - 100 : (t && t.retorno != null ? t.retorno : null),
+      retornoBench: last && last[2] != null ? last[2] - 100 : (t && t.retornoBench != null ? t.retornoBench : null),
+      nPos: c.posiciones.length, ultRot: c.historial[0] || (t && t.ultimaRotacion) || null,
+    };
   });
-  bloqueadas.forEach(t => {
-    const el = document.getElementById("sp-t-" + t.id);
-    if (el && (t.serie || []).length >= 2) spark(el, t.serie.map(p => p[0]), t.serie.map(p => p[1]));
+  teaser.filter(t => t && t.id && !carteras.some(c => c.id === t.id)).forEach(t => {
+    items.push({
+      id: t.id, c: null, t, abierta: false,
+      codigo: t.codigo || t.id, nombre: t.nombre || t.id,
+      nivel: nivelDe(t.nivelRiesgo), nivelRaw: t.nivelRiesgo, vis: t.visibilidad || "clientes",
+      desc: "", benchmark: t.benchmark || "", fechaInicio: t.fechaInicio, rebalanceo: "",
+      serie: Array.isArray(t.serie) ? t.serie.filter(Array.isArray) : [],
+      retorno: t.retorno ?? null, retornoBench: t.retornoBench ?? null,
+      nPos: t.posiciones ?? null, ultRot: t.ultimaRotacion || null,
+    });
   });
+  // primero las de acceso libre, después las PRO, al final los borradores (solo admin)
+  const rank = { publico: 0, clientes: 1, borrador: 2 };
+  return items.map((it, i) => [it, i]).sort((a, b) => ((rank[a[0].vis] ?? 3) - (rank[b[0].vis] ?? 3)) || (a[1] - b[1])).map(x => x[0]);
 }
 
-/* ── detalle ── */
-async function renderDetalle(c) {
-  document.title = c.nombre + " — Valtia Analytics";
-  const radar = await radarMapa();
-  const r = retorno(c), rb = retornoBench(c);
-  const dif = rb != null && r != null ? r - rb : null;
-  const anual = anualizada(c), vol = volatilidad(c), riesgo = calRiesgo(vol);
-  const inicio = fdate(c.fechaInicio);
-  const posRows = c.posiciones.map(p => {
-    const ret = p.precioEntrada ? (p.precioActual / p.precioEntrada - 1) * 100 : 0;
-    const ra = radar[p.ticker];
-    return `<tr><td><b>${linkFicha(p.ticker)}</b><div style="font-size:11px;color:var(--sub)">${p.empresa || ""}</div></td>
-      <td class="num">${((p.pesoObjetivo || 0) * 100).toFixed(0)}%</td>
-      <td class="num">${fmtUSD(p.precioEntrada)}<div style="font-size:10px;color:var(--muted)">${fdate(p.fechaIncorporacion)}</div></td>
-      <td class="num">${fmtUSD(p.precioActual)}</td>
-      <td class="num">${ra && ra.per != null ? ra.per.toFixed(1) + "x" : "—"}${ra && ra.veredicto && ra.veredicto !== "Sin cobertura" ? `<div style="font-size:10px;color:var(--muted)">${ra.veredicto}</div>` : ""}</td>
-      <td class="num">${pill(ret, fmtPct(ret))}</td>
-      <td class="tesis-row">${p.tesisPosicion || ""}</td></tr>`;
-  }).join("");
-  const destacadas = c.posiciones.map(p => ({ t: p.ticker, r: p.precioEntrada ? (p.precioActual / p.precioEntrada - 1) * 100 : 0 }))
-    .sort((a, b) => b.r - a.r).slice(0, 6)
-    .map(x => `<span class="chip"><b>${x.t}</b> <span class="${cls(x.r)}">${fmtPct(x.r)}</span></span>`).join("");
-  const histRows = c.historial.map(h => {
-    const added = String(h.accion || "").includes("añad");
-    return `<tr><td style="white-space:nowrap">${h.fecha}</td>
-      <td><b>${linkFicha(h.ticker)}</b><div style="font-size:11px;color:var(--sub)">${h.empresa || ""}</div></td>
-      <td>${added ? '<span class="pill p">Añadido</span>' : '<span class="pill n">Eliminado</span>'}</td>
-      <td class="num">${h.precio != null ? fmtUSD(h.precio) : "—"}</td>
-      <td class="num">${h.retornoSalida != null ? `<span class="${cls(h.retornoSalida)}">${fmtPct(h.retornoSalida)}</span>` : "—"}</td>
-      <td class="razon">${h.razonamiento || ""}</td></tr>`;
-  }).join("");
+/* ── gráficos SVG (cartera en dorado, índice en gris) ── */
+function paths(a, b, W, H) {
+  const all = [...a, ...b].filter(x => x != null);
+  const mn = Math.min(...all), mx = Math.max(...all);
+  const y = v => (H - 6 - (v - mn) / (mx - mn || 1) * (H - 12)).toFixed(1);
+  const x = i => (i / (a.length - 1 || 1) * W).toFixed(1);
+  const p = arr => arr.map((v, i) => v == null ? null : x(i) + "," + y(v)).filter(Boolean).map((s, i) => (i ? "L" : "M") + s).join("");
+  return { path: p(a), spy: p(b), area: p(a) + `L${W},${H}L0,${H}Z` };
+}
+function svgChart(it, W, H, grande) {
+  const s = it.serie; if (s.length < 2) return "";
+  const a = s.map(p => p[1]), b = s.map(p => p[2] ?? null);
+  const hayB = b.some(x => x != null);
+  const { path, spy, area } = paths(a, hayB ? b : [], W, H);
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${esc(it.nombre)} contra ${esc(it.benchmark || "su índice")} desde el lanzamiento, base 100">
+    ${grande ? `<path d="${area}" fill="rgba(176,138,62,.12)"></path>` : ""}
+    ${hayB ? `<path d="${spy}" fill="none" stroke="var(--indice)" stroke-width="${grande ? 1.5 : 1.3}" vector-effect="non-scaling-stroke"></path>` : ""}
+    <path d="${path}" fill="none" stroke="#B08A3E" stroke-width="${grande ? 2.5 : 2}" vector-effect="non-scaling-stroke"></path></svg>`;
+}
 
-  $("#main").innerHTML = `
-    <div class="crumb"><a href="/cartera">← Todas las carteras</a></div>
-    <div class="dhead">
-      <div><div class="eye" style="margin-bottom:10px"><span class="badge">${c.codigo || c.slug}</span> ${RIESGO[c.nivelRiesgo] || ""}${PERFIL[c.perfil] ? " · " + PERFIL[c.perfil] : ""}${c.visibilidad === "borrador" ? ' · <span style="color:#B45309">Borrador · sin publicar</span>' : ""}</div>
-        <h2 class="dnom" style="margin-bottom:6px">${c.nombre}</h2></div>
-    </div>
-    <div class="dmeta">Lanzada ${inicio} · Rebalanceo ${c.rebalanceo || "mensual"} · ${c.modo === "automatico" ? "Reglas automáticas" : "Curada por el equipo"} · Benchmark ${c.benchmark || "—"}<br>${c.criterio || ""}</div>
-    ${(() => {
-      // la composición vive en el doc de la cartera (hereda su visibilidad),
-      // ya no en el teaser público
-      let k = null;
-      try { k = c.composicion ? JSON.parse(c.composicion) : null; } catch (e) {}
-      if (!k || (k.per == null && k.roe == null)) return "";
-      const it = (l, v, cob, suf) => v == null ? "" :
-        `<div class="kpi"><div class="l">${l}</div><div class="v">${typeof v === "number" ? v.toFixed(v >= 100 ? 0 : 1).replace(".", ",") : v}${suf || ""}</div>` +
-        `<div class="s">${cob != null && cob < 100 ? "sobre el " + cob + "% de la cartera" : "de las posiciones de hoy"}</div></div>`;
-      return `<div class="eye" style="margin:26px 0 10px">Composición · cómo se ven sus posiciones hoy</div>
-        <div class="kpis">
-          ${it("P/E ponderado", k.per, k.perCobertura, "x")}
-          ${it("ROE", k.roe, k.roeCobertura, "%")}
-          ${it("ROA", k.roa, k.roaCobertura, "%")}
-          ${it("Beta vs S&P", k.beta, k.betaCobertura, "")}
-        </div>
-        <p style="font-size:12px;color:var(--sub);line-height:1.7;margin:-14px 0 22px">Promedio ponderado por peso objetivo de los activos que la cartera tiene hoy (el P/E es media armónica). No depende del historial: es la foto de la composición actual.</p>`;
-    })()}
-    <div class="kpis">
-      <div class="kpi"><div class="l">Retorno desde inicio</div><div class="v ${r!=null?cls(r):"mut"}">${r!=null?fmtPct(r):"—"}</div><div class="s">desde ${inicio}</div></div>
-      ${rb != null ? `<div class="kpi"><div class="l">${c.benchmark} en igual período</div><div class="v ${cls(rb)}">${fmtPct(rb)}</div><div class="s">misma ventana temporal</div></div>` : ""}
-      ${dif != null ? `<div class="kpi"><div class="l">Diferencia vs benchmark</div><div class="v ${cls(dif)}">${fmtPct(dif)}</div><div class="s">acumulada desde el lanzamiento</div></div>` : ""}
-      ${anual != null ? `<div class="kpi"><div class="l">Rentabilidad anualizada</div><div class="v ${cls(anual)}">${fmtPct(anual)}</div><div class="s">extrapolada · cartera de ${diasCalendario(c)} días</div></div>` : ""}
-      ${riesgo != null ? `<div class="kpi"><div class="l">Calificación de riesgo</div><div class="v">${riesgo}</div><div class="s">volatilidad anualizada ${vol.toFixed(0)}%</div></div>` : ""}
-      ${tsr(c.id) && tsr(c.id).maxDD != null ? `<div class="kpi"><div class="l">Peor caída</div><div class="v neg">${fmtPct(tsr(c.id).maxDD)}</div><div class="s">desde su máximo · ${tsr(c.id).nPuntos} ruedas</div></div>` : ""}
-      <div class="kpi"><div class="l">Posiciones</div><div class="v">${c.posiciones.length}</div><div class="s">${c.rebalanceo || "mensual"} · pesos equitativos</div></div>
-    </div>
-    <div class="sec">Evolución · base 100 al lanzamiento</div>
-    <div class="chart-box">
-      <div class="leg"><span><span class="dotl" style="background:#B08A3E"></span>${c.nombre} <b class="${cls(r)}">${fmtPct(r)}</b></span>
-      ${rb != null ? `<span><span class="dotl" style="background:#0E1830"></span>${c.benchmark} <b class="${cls(rb)}">${fmtPct(rb)}</b></span>` : ""}</div>
-      <div class="inner"><canvas id="chEvo"></canvas></div>
-    </div>
-    <div class="sec">Tesis</div>
-    <p class="sub" style="max-width:860px">${c.tesis || ""}</p>
-    <div class="sec">Acciones destacadas · retorno desde entrada</div>
-    <div class="chips">${destacadas}</div>
-    <div class="sec">Composición actual</div>
-    <div class="panel"><table>
-      <thead><tr><th>Activo</th><th class="num">Peso</th><th class="num">Entrada</th><th class="num">Último</th><th class="num">P/E · Radar</th><th class="num">Retorno</th><th>Tesis</th></tr></thead>
-      <tbody>${posRows}</tbody></table></div>
-    <div class="sec">Historial de selecciones · cada decisión, fechada</div>
-    <div class="panel"><table>
-      <thead><tr><th>Fecha</th><th>Activo</th><th>Acción</th><th class="num">Precio</th><th class="num">Ret. a la salida</th><th>Razonamiento</th></tr></thead>
-      <tbody>${histRows || '<tr><td colspan="6" class="mut" style="text-align:center">Sin rotaciones todavía</td></tr>'}</tbody></table></div>
-    <footer><b>Metodología:</b> el índice de la cartera arranca en base 100 el día del lanzamiento (${inicio}) y se actualiza a diario con precios de mercado. No usamos backtests: todo el historial es posterior al lanzamiento y cada rotación queda registrada con fecha, precio y razonamiento. Esta información es de carácter general y no constituye asesoramiento financiero personalizado. Los rendimientos pasados no garantizan resultados futuros.</footer>`;
+/* ── cartera destacada ── */
+const MUESTRA = Array.from({ length: 8 }, (_, i) =>
+  `<div class="prow"><div class="pa"><div class="tk">····</div><div class="em">Posición de muestra ${i + 1}</div></div><span class="n">··%</span><span class="n">US$ ···</span><span class="n var">··%</span></div>`).join("");
+const tablaPos = (rows, blur) => `<div class="ptable${blur ? " blur" : ""}"${blur ? ' aria-hidden="true"' : ""}>
+  <div class="phead"><span>Activo</span><span class="n">Peso</span><span class="n">Entrada</span><span class="n" title="Variación desde la entrada">Desde</span></div>${rows}</div>`;
 
-  charts.forEach(ch => ch.destroy()); charts = [];
-  const subC = tok("--sub"), borderC = tok("--border");
-  const dsets = [{ label: c.nombre, data: c.valores.map(v => v.indice), borderColor: "#B08A3E",
-    backgroundColor: "rgba(176,138,62,.10)", fill: true, borderWidth: 2.2, pointRadius: c.valores.length < 25 ? 3.5 : 0,
-    pointBackgroundColor: "#B08A3E", tension: .3 }];
-  if (c.valores.some(v => v.benchmark != null)) {
-    dsets.push({ label: c.benchmark, data: c.valores.map(v => v.benchmark ?? null), borderColor: "#0E1830",
-      borderWidth: 1.8, pointRadius: 0, tension: .3, fill: false });
+function htmlIzquierda(it, admin) {
+  const [ac, at] = acceso(it);
+  const conHist = it.serie.length >= 2;
+  const c = it.c, t = it.t;
+  const tags = `<div class="tags"><span class="badge">${esc(it.codigo)}</span>
+    ${it.nivel ? `<span class="tag r-${it.nivel}">${RIESGO_L[it.nivel]}</span>` : (it.nivelRaw ? `<span class="tag">${esc(it.nivelRaw)}</span>` : "")}
+    <span class="tag ${ac}">${at}</span>
+    ${admin && it.vis === "borrador" ? '<span class="tag a-borr">Borrador · sin publicar</span>' : ""}</div>`;
+  const desc = it.abierta
+    ? esc(it.desc || (c.tesis || "").slice(0, 180) + ((c.tesis || "").length > 180 ? "…" : ""))
+    : "Cartera para suscriptores. El rendimiento es público; la composición y la tesis se ven con Valtia PRO.";
+  const grafico = conHist
+    ? `<div class="chart" id="fchart">${svgChart(it, 300, 120, true)}
+        <div class="leg"><span><i style="background:#B08A3E"></i>${esc(it.codigo)} <b class="${cls(it.retorno)}">${fmtPct(it.retorno)}</b></span>
+        ${it.retornoBench != null ? `<span><i style="background:var(--indice)"></i>${esc(it.benchmark || "Índice")} <b>${fmtPct(it.retornoBench)}</b></span>` : ""}
+        <span class="hov" id="fhov">base 100 · ${it.serie.length} ruedas</span></div></div>`
+    : `<div class="nohist">Sin historial todavía${it.fechaInicio ? "" : " · se publica el día del lanzamiento"}</div>`;
+  const kpis = conHist || it.retorno != null
+    ? `<div class="kpi"><div class="l">Rendimiento desde el lanzamiento</div><div class="v ${cls(it.retorno)}">${fmtPct(it.retorno)}</div></div>
+       <div class="kpi"><div class="l">${esc(it.benchmark || "Índice")} mismo lapso</div><div class="v">${fmtPct(it.retornoBench)}</div></div>
+       <div class="kpi"><div class="l">Posiciones</div><div class="v">${it.nPos != null ? it.nPos : "—"}</div></div>`
+    : `<div class="kpi"><div class="l">Rendimiento</div><div class="v mut">—</div></div>
+       <div class="kpi"><div class="l">Índice de referencia</div><div class="v">${esc(it.benchmark || "—")}</div></div>
+       <div class="kpi"><div class="l">Posiciones</div><div class="v">${it.nPos != null ? it.nPos : "—"}</div></div>`;
+  // ficha: solo lo que existe en el doc (rebalanceo, publicada, índice, modo, riesgo)
+  const fi = (l, v, s, w) => v ? `<div class="it${w ? " w" : ""}"><div class="l">${l}</div><div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ""}</div>` : "";
+  const riesgoSub = t && (t.volAnual != null || t.maxDD != null)
+    ? [t.volAnual != null ? `vol. anual ${num(t.volAnual, 1)}%` : "", t.maxDD != null ? `peor caída ${fmtPct(t.maxDD)}` : ""].filter(Boolean).join(" · ") : "";
+  const ficha = it.abierta
+    ? fi("Criterio de selección", esc(c.criterio), "", true)
+      + fi("Rebalanceo", esc(c.rebalanceo))
+      + fi("Publicada", it.fechaInicio ? fLarga(it.fechaInicio) : "")
+      + fi("Índice de referencia", esc(it.benchmark))
+      + fi("Modo", c.modo ? (c.modo === "automatico" ? "Reglas automáticas" : "Curada por el equipo") : "")
+      + fi("Riesgo", riesgoTxt(it).replace(/^Riesgo /, "").replace(/^./, m => m.toUpperCase()), riesgoSub)
+    : fi("Publicada", it.fechaInicio ? fLarga(it.fechaInicio) : "")
+      + fi("Índice de referencia", esc(it.benchmark))
+      + fi("Riesgo", riesgoTxt(it).replace(/^Riesgo /, "").replace(/^./, m => m.toUpperCase()), riesgoSub);
+  const como = it.abierta
+    ? `<p class="como-p">${esc(c.tesis || "")}</p>`
+    : `<p class="como-p">La tesis y el criterio de selección se ven con Valtia PRO.</p>`;
+  return `<div class="box">${tags}
+    <div class="fhead"><div><h2>${esc(it.nombre)}</h2><p>${desc}</p></div>${grafico}</div>
+    <div class="kpis">${kpis}</div>
+    <div class="como">Cómo se arma</div>${como}
+    ${ficha ? `<div class="ficha">${ficha}</div>` : ""}
+  </div>`;
+}
+
+function htmlDerecha(it) {
+  const c = it.c;
+  let sub, cuerpo;
+  if (it.abierta && c.posiciones.length) {
+    sub = "Peso objetivo, precio al que entró cada una y variación desde la entrada.";
+    const rows = c.posiciones.map(p => {
+      const v = p.precioEntrada && p.precioActual != null ? (p.precioActual / p.precioEntrada - 1) * 100 : null;
+      return `<div class="prow"><div class="pa"><div class="tk">${linkFicha(p.ticker)}</div><div class="em" title="${esc(p.empresa || "")}">${esc(p.empresa || "")}</div></div>
+        <span class="n">${pesoTxt(p.pesoObjetivo)}</span>
+        <span class="n" title="${esc(p.fechaIncorporacion ? "entró el " + fLarga(p.fechaIncorporacion) : "")}">${fmtUSD(p.precioEntrada)}</span>
+        <span class="n var ${cls(v)}">${fmtPct(v)}</span></div>`;
+    }).join("");
+    cuerpo = `<div class="pwrap">${tablaPos(rows, false)}</div>`;
+  } else if (it.abierta) {
+    sub = it.vis === "borrador" ? "Las posiciones se publican el día del lanzamiento." : "Todavía no hay posiciones cargadas.";
+    cuerpo = `<div class="pwrap"><div class="pvacio">Sin posiciones por ahora.</div></div>`;
+  } else if (it.vis === "borrador") {
+    sub = "Las posiciones se publican el día del lanzamiento.";
+    cuerpo = `<div class="pwrap">${tablaPos(MUESTRA, true)}
+      <div class="lock"><h4>Próximamente</h4><p>Las posiciones se publican el día del lanzamiento.</p></div></div>`;
+  } else {
+    sub = "Visibles con Valtia PRO. Abajo, una muestra sin datos.";
+    cuerpo = `<div class="pwrap">${tablaPos(MUESTRA, true)}
+      <div class="lock"><h4>Posiciones con Valtia PRO</h4>
+        <p>El rendimiento es público. Qué tiene, cuánto pesa y a qué precio entró, con la suscripción.</p>
+        <a class="btn-navy" href="/planes">Ver planes</a></div></div>`;
   }
-  charts.push(new Chart(document.getElementById("chEvo"), { type: "line",
-    data: { labels: c.valores.map(v => v.fecha), datasets: dsets },
-    options: { responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
-      plugins: { legend: { display: false } },
-      scales: { y: { grid: { color: borderC }, ticks: { color: subC, font: { size: 11 }, callback: v => Number(v).toFixed(1) } },
-                x: { grid: { display: false }, ticks: { color: subC, font: { size: 10.5 }, maxTicksLimit: 10 } } } } }));
+  // rotaciones: cada decisión fechada con su razonamiento (solo con acceso)
+  let rot = "";
+  if (it.abierta && c.historial.length) {
+    const li = h => {
+      const add = String(h.accion || "").includes("añad");
+      return `<li><span class="f">${esc(iso(h.fecha) || h.fecha)}</span><div><b>${linkFicha(h.ticker)}</b>${h.empresa ? ` <span style="color:var(--mut)">${esc(h.empresa)}</span>` : ""}<span class="acc ${add ? "p" : "n"}">${add ? "Añadido" : "Eliminado"}</span>${h.razonamiento ? `<div>${esc(h.razonamiento)}</div>` : ""}</div></li>`;
+    };
+    const vis = c.historial.slice(0, 3), resto = c.historial.slice(3);
+    rot = `<div class="rot"><div class="rt">Rotaciones <span>· ${c.historial.length}</span></div><ul>${vis.map(li).join("")}</ul>
+      ${resto.length ? `<details><summary>Ver las ${c.historial.length} rotaciones</summary><ul>${resto.map(li).join("")}</ul></details>` : ""}</div>`;
+  }
+  return `<div class="box posbox"><div class="ptit">Posiciones actuales</div><div class="psub">${sub}</div>${cuerpo}${rot}</div>`;
 }
 
-let _user = null;
+function pintarDestacada(it, admin) {
+  const ultimo = it.serie.length ? it.serie[it.serie.length - 1][0] : null;
+  $("#selh").innerHTML = `<div class="n">${esc(it.nombre)} <span>· cartera seleccionada</span></div>
+    <div class="m">${ultimo ? `<span>Datos al <b>${fLarga(ultimo)}</b></span>` : ""}
+    ${it.ultRot && it.ultRot.fecha ? `<span>Última rotación <b>${fLarga(it.ultRot.fecha)}</b>${it.ultRot.ticker ? ` · ${esc(it.ultRot.ticker)}` : ""}</span>` : ""}</div>`;
+  $("#feat").innerHTML = htmlIzquierda(it, admin) + htmlDerecha(it);
+  document.title = it.nombre + " — Carteras Valtia";
+  // lectura al pasar el mouse por el gráfico grande: fecha y ambos índices
+  const svg = document.querySelector("#fchart svg"), hov = $("#fhov");
+  if (svg && hov) {
+    const base = hov.textContent, s = it.serie;
+    svg.addEventListener("mousemove", e => {
+      const r = svg.getBoundingClientRect();
+      const i = Math.max(0, Math.min(s.length - 1, Math.round((e.clientX - r.left) / r.width * (s.length - 1))));
+      const p = s[i];
+      hov.textContent = `${fLarga(p[0])} · ${it.codigo} ${num(p[1], 1)}${p[2] != null ? ` · ${it.benchmark || "índice"} ${num(p[2], 1)}` : ""}`;
+    });
+    svg.addEventListener("mouseleave", () => { hov.textContent = base; });
+  }
+}
+
+/* ── explorar ── */
+let items = [], selId = null, filtro = "todas", _user = null;
+
+function htmlCard(it) {
+  const on = it.id === selId;
+  const conHist = it.serie.length >= 2;
+  const desc = it.abierta ? esc(it.desc || (it.c.tesis || "").slice(0, 140) + ((it.c.tesis || "").length > 140 ? "…" : ""))
+    : "Para suscriptores. El rendimiento es público; las posiciones y la tesis, con Valtia PRO.";
+  const t = it.t;
+  const conTir = t && t.tir != null;
+  return `<a class="ccard${on ? " on" : ""}" href="/cartera?c=${encodeURIComponent(it.id)}" data-id="${esc(it.id)}">
+    <div class="top"><div class="l"><span class="badge">${esc(it.codigo)}</span>${it.nivel ? `<span class="rk r-${it.nivel}">${RIESGO_L[it.nivel]}</span>` : ""}${it.vis !== "publico" ? `<span class="rk" style="color:var(--gold2)">${it.vis === "borrador" ? "Próximamente" : "PRO"}</span>` : ""}</div>
+      <span class="ver">${on ? "● Viendo" : "Ver cartera →"}</span></div>
+    <h4>${esc(it.nombre)}</h4>
+    <p>${desc}</p>
+    <div class="meta"><div class="when"><span>◷ ${it.fechaInicio ? "Desde " + fMes(it.fechaInicio) : "Sin fecha de lanzamiento"}</span>${it.rebalanceo ? `<span>↻ ${esc(it.rebalanceo)}</span>` : ""}</div>
+      ${conHist ? svgChart(it, 300, 60, false) : '<div class="nh">Sin historial todavía</div>'}</div>
+    <div class="two">
+      <div><div class="l">Rendimiento</div><div class="v ${cls(it.retorno)}">${fmtPct(it.retorno)}</div></div>
+      ${conTir
+        ? `<div><div class="l">TIR a hoy${t.tirPeso != null && t.tirPeso < 99 ? ` (${num(t.tirPeso, 0)}% en bonos)` : ""}</div><div class="v">${num(t.tir, 1)}%</div></div>`
+        : `<div><div class="l">${esc(it.benchmark || "Índice")} mismo lapso</div><div class="v">${fmtPct(it.retornoBench)}</div></div>`}
+    </div></a>`;
+}
+
+function pintarGrilla() {
+  const lista = items.filter(it => filtro === "todas" || it.nivel === filtro);
+  $("#grid").innerHTML = lista.map(htmlCard).join("")
+    || `<div class="state">No hay carteras de ${RIESGO_L[filtro] ? RIESGO_L[filtro].toLowerCase() : "ese tipo"} por ahora.</div>`;
+  document.querySelectorAll(".filtros button").forEach(b => {
+    const on = b.dataset.f === filtro;
+    b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+}
+
+function seleccionar(id) {
+  const it = items.find(x => x.id === id);
+  if (!it) return;
+  selId = id;
+  pintarDestacada(it, esAdmin());
+  document.querySelectorAll(".ccard").forEach(el => {
+    const on = el.dataset.id === id;
+    el.classList.toggle("on", on);
+    const v = el.querySelector(".ver"); if (v) v.textContent = on ? "● Viendo" : "Ver cartera →";
+  });
+  try { history.replaceState(null, "", "/cartera?c=" + encodeURIComponent(id)); } catch (e) {}
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+const esAdmin = () => !!_user && _user.email === ADMIN;
+
+/* ── armado de la página ── */
+function shell(aviso) {
+  $("#main").innerHTML = `
+    ${aviso ? `<div class="honest">${aviso}</div>` : ""}
+    <div class="selh" id="selh"></div>
+    <div class="feat" id="feat"></div>
+    <div class="exh"><h3>Explorar las carteras</h3>
+      <div class="filtros" role="group" aria-label="Filtrar por riesgo">
+        <button type="button" data-f="todas">Todas</button>
+        <button type="button" data-f="bajo">Riesgo bajo</button>
+        <button type="button" data-f="moderado">Moderado</button>
+        <button type="button" data-f="alto">Riesgo alto</button>
+      </div></div>
+    <div class="grid" id="grid"></div>
+    <p class="nota">Rendimientos con precios reales desde el día que se publicó cada cartera, sin simulaciones hacia atrás. Rendimientos pasados no garantizan resultados futuros.</p>`;
+  document.querySelectorAll(".filtros button").forEach(b => b.addEventListener("click", () => { filtro = b.dataset.f; pintarGrilla(); }));
+  $("#grid").addEventListener("click", e => {
+    const a = e.target.closest("a.ccard");
+    if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+    e.preventDefault(); seleccionar(a.dataset.id);
+  });
+}
+
+function esqueleto() {
+  const sk = (w, h, m) => `<div class="sk" style="width:${w};height:${h}px;margin-top:${m || 0}px"></div>`;
+  const card = `<div class="ccard" style="cursor:default">${sk("55%", 20)}${sk("70%", 22, 14)}${sk("100%", 14, 10)}${sk("80%", 14, 6)}${sk("100%", 48, 14)}<div class="two"><div>${sk("60%", 11)}${sk("50%", 16, 6)}</div><div>${sk("60%", 11)}${sk("50%", 16, 6)}</div></div></div>`;
+  $("#main").innerHTML = `
+    <div class="selh">${sk("260px", 20)}${sk("200px", 14)}</div>
+    <div class="feat">
+      <div class="box">${sk("220px", 22)}<div class="fhead"><div>${sk("70%", 30)}${sk("100%", 14, 12)}${sk("90%", 14, 6)}</div>${sk("100%", 120)}</div>
+        <div class="kpis"><div class="kpi">${sk("80%", 11)}${sk("50%", 18, 6)}</div><div class="kpi">${sk("80%", 11)}${sk("50%", 18, 6)}</div><div class="kpi">${sk("80%", 11)}${sk("50%", 18, 6)}</div></div>
+        ${sk("120px", 15, 22)}${sk("100%", 14, 10)}${sk("95%", 14, 6)}${sk("60%", 14, 6)}</div>
+      <div class="box posbox">${sk("180px", 18)}${sk("80%", 12, 6)}${Array.from({ length: 8 }, () => sk("100%", 34, 10)).join("")}</div>
+    </div>
+    <div class="exh">${sk("240px", 24)}${sk("280px", 16)}</div>
+    <div class="grid">${card}${card}${card}</div>`;
+}
+
 async function render() {
+  esqueleto();
   try {
     const [carteras, teaser] = await Promise.all([loadAll(_user), teaserMapa()]);
-    const slug = new URLSearchParams(location.search).get("c");
-    if (slug) {
-      const c = carteras.find(x => x.id === slug || x.slug === slug);
-      if (c) return renderDetalle(c);
-      // no la puede leer: si está en la vidriera es PRO — se vende con el
-      // retorno real a la vista; si no está, no existe
-      const t = teaser.find(x => x.id === slug);
-      if (t) {
-        $("#main").innerHTML = `<div class="state">
-          <div style="font-family:'Playfair Display',serif;font-weight:700;font-variant-numeric:lining-nums;font-size:22px;line-height:1.2;color:var(--ink);margin-bottom:8px">${t.nombre}</div>
-          ${t.retorno != null ? `<div style="margin-bottom:14px">Retorno real desde ${t.fechaInicio}: <b class="${cls(t.retorno)}" style="font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px">${fmtPct(t.retorno)}</b>${t.retornoBench != null ? ` · ${t.benchmark || "SPY"} <span style="font-family:'IBM Plex Mono',monospace;font-weight:500;font-variant-numeric:tabular-nums">${fmtPct(t.retornoBench)}</span>` : ""}</div>` : ""}
-          La composición, la tesis y cada rotación con su razonamiento son de Valtia PRO.<br><br>
-          <a class="go" href="/planes" style="color:var(--gold);font-weight:600">Conocé Valtia PRO →</a>
-          &nbsp;·&nbsp; <a href="/cartera" style="color:var(--sub)">mirá las abiertas</a></div>`;
-        return;
-      }
-      $("#main").innerHTML = `<div class="state">No encontramos esa cartera. <a href="/cartera" style="color:var(--gold)">Ver todas →</a></div>`;
+    items = armarItems(carteras, teaser);
+    if (!items.length) {
+      $("#main").innerHTML = `<div class="state">Todavía no hay carteras publicadas.<br><a href="/planes">Conocé los planes</a> o <a href="mailto:soporte@valtia.tech">escribinos</a>.</div>`;
       return;
     }
-    renderCatalogo(carteras, _user, teaser);
+    // ?c=id manda: esa cartera va arriba (aunque no se pueda leer, con lo público
+    // del teaser). Sin ?c=, la destacada es la primera de acceso libre.
+    const q = new URLSearchParams(location.search).get("c");
+    let aviso = "";
+    let it = q ? items.find(x => x.id === q || (x.c && x.c.slug === q)) : null;
+    if (q && !it) aviso = `No encontramos la cartera <b>${esc(q)}</b>. Te mostramos la primera de acceso libre.`;
+    if (!it) it = items.find(x => x.vis === "publico") || items[0];
+    selId = it.id;
+    shell(aviso);
+    pintarDestacada(it, esAdmin());
+    pintarGrilla();
   } catch (e) {
-    $("#main").innerHTML = `<div class="state">No se pudieron cargar las carteras (${String(e).slice(0, 140)})</div>`;
+    $("#main").innerHTML = `<div class="state">No se pudieron cargar las carteras.<br><span style="font-size:12px;color:var(--mut)">${esc(String(e && e.message || e).slice(0, 140))}</span><br><button type="button" id="retry">Reintentar</button></div>`;
+    $("#retry").addEventListener("click", () => { cache = null; _teaserCache = null; render(); });
   }
 }
-// el catálogo cambia según haya sesión: se re-renderiza al resolver el auth
+// esqueleto desde el primer instante; la lista cambia según haya sesión, así que
+// se renderiza recién al resolver el auth (y de nuevo si cambia)
+esqueleto();
 onAuthStateChanged(getAuth(app), u => { _user = u; render(); });
 </script>
-<script type="module" src="nav-auth.js?v=9"></script>
+<script type="module" src="nav-auth.js?v=10"></script>
 <script type="module" src="cotizaciones.js?v=3"></script>
-<script src="nav-menu.js?v=9"></script>
+<script src="nav-menu.js?v=10"></script>
 </body>
 </html>

@@ -10,11 +10,11 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#0E1830">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Candidatas del mes — mismo lenguaje editorial que Noticias / Informes:
-     página blanca, nav y masthead navy, acentos dorados, hairlines y
-     esquinas rectas. Solo claro. ── */
+/* ── Candidatas del mes — reglas globales del rediseño (sitio.css): título
+     negro sobre blanco, Plex Sans en todo, esquinas redondeadas, botones con
+     borde dorado sutil y columna de 1080px alineada con el título. Solo claro. ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --navy:#0E1830;--navy2:#0B1327;
@@ -26,52 +26,35 @@
   --up:#1F7A4D;--dn:#B23A3A;--greenTx:#1F7A4D;--redTx:#B23A3A;
   --green:#1F7A4D;--red:#B23A3A;
 }
-body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);min-height:100vh;overflow-x:hidden}
+body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);min-height:100vh;overflow-x:hidden;--v-ancho:1080px}
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
 
-/* nav global (navy, igual a Noticias) */
-nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;background:rgba(14,24,48,.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(232,206,150,.14)}
-.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.nav-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;letter-spacing:.06em;color:#fff}
-.nav-name em{color:#E8CE96;font-style:italic}
-.nav-sub{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4)}
-.nav-links{display:flex;align-items:center;gap:26px}
-.nav-links a{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6)}
-.nav-links a:hover,.nav-links a.active{color:#E8CE96}
-.nav-cta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0E1830;background:#E8CE96;padding:9px 22px;border-radius:8px;text-decoration:none}
-.nav-cta:hover{background:#fff;color:#0E1830}
-@media(max-width:1100px){.nav-links{display:none}}
-
-/* masthead centrado sobre la franja navy */
-.masthead{background:#0E1830;padding:26px 52px 20px;text-align:center}
-.masthead .t{font:700 clamp(30px,3.6vw,44px) 'Playfair Display',serif;color:#fff;letter-spacing:.01em;line-height:1}
-.masthead .t em{color:#E8CE96;font-style:italic}
-.masthead .d{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(232,206,150,.75);margin-top:12px}
-
-main{max-width:1160px;margin:0 auto;padding:22px 52px 60px;min-height:52vh}
-.sub{color:var(--sub);font-size:15px;line-height:1.75;max-width:720px;margin-bottom:8px}
-/* título de sección: patrón .sec-h de Informes (Playfair + hairline que se
+/* columna del prototipo de Candidatas: 1080px, con los bordes del título */
+main{max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto;padding:18px var(--v-gutter) 60px;min-height:52vh}
+.sub{color:var(--sub);font-size:15px;line-height:1.75;max-width:720px;margin-bottom:8px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+/* título de sección: patrón .sec-h de Informes (texto + hairline que se
    estira). El JS pinta solo texto adentro, así que la hairline es un ::after
    en línea; queda en bloque para que ::first-letter capitalice el mes. */
-.sec{margin:38px 0 16px;font:700 17px 'Playfair Display',serif;line-height:1.3;color:var(--ink);overflow:hidden}
+.sec{margin:38px 0 16px;font:700 17px 'IBM Plex Sans',sans-serif;line-height:1.3;color:var(--ink);overflow:hidden}
 .sec::first-letter{text-transform:uppercase}
 .sec::after{content:'';display:inline-block;vertical-align:middle;width:100%;height:1px;background:var(--line);margin-left:14px;margin-right:-100%}
-.card{background:#fff;border:1px solid var(--line);padding:22px 24px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px 24px}
 .pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:26px}
-.paso{background:#fff;border:1px solid var(--line);border-top:3px solid var(--gold);padding:18px 20px}
-.paso .n{font:600 20px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--gold2);line-height:1;margin-bottom:10px}
+.paso{background:#fff;border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:12px;padding:18px 20px}
+.paso .n{font:600 20px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--gold2);line-height:1;margin-bottom:10px}
 .paso b{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px}
 .paso p{font-size:12.5px;color:var(--sub);line-height:1.6}
 .regla{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
-.regla .campo label{display:block;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin-bottom:6px}
-.regla input{width:130px;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:0;color:var(--ink);font:500 14px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;outline:none}
+.regla .campo label{display:block;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin-bottom:6px}
+.regla input{width:130px;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:8px;color:var(--ink);font:500 14px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;outline:none}
 .regla input:focus{border-color:var(--gold)}
-/* botones: primario navy, secundario con borde de tinta e inversión al pasar */
-.btn{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--navy);border:1px solid var(--navy);border-radius:0;padding:10px 19px;cursor:pointer}
+/* botones: primario navy; el secundario, con la regla del sitio (borde dorado
+   sutil y texto gris; al pasar, borde dorado y relleno crema). Radio 8. */
+.btn{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--navy);border:1px solid var(--navy);border-radius:8px;padding:10px 19px;cursor:pointer}
 .btn:hover{background:var(--gold);border-color:var(--gold);color:#fff}
-.btn.sec2{background:transparent;color:var(--ink);border:1px solid var(--ink)}
-.btn.sec2:hover{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.sec2{background:#fff;color:#57534A;border:1px solid rgba(176,138,62,.4)}
+.btn.sec2:hover{background:#FBF5E8;border-color:#B08A3E;color:#101010}
 .btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
 .regla-txt{font-size:14px;color:var(--sub);line-height:1.6;font-variant-numeric:tabular-nums}
 .regla-txt b{color:var(--ink);font-weight:600}
@@ -84,70 +67,64 @@ main{max-width:1160px;margin:0 auto;padding:22px 52px 60px;min-height:52vh}
 .racha{display:inline-flex;align-items:center;gap:10px;font-size:13px;color:var(--sub);margin-top:14px;flex-wrap:wrap}
 .racha b{color:var(--ink)}
 .racha .fuego{font-size:16px}
-.mchip{font-size:10.5px;font-weight:600;font-variant-numeric:tabular-nums;border:1px solid var(--line);border-radius:0;padding:3px 9px;letter-spacing:.04em}
+.mchip{font-size:10.5px;font-weight:600;font-variant-numeric:tabular-nums;border:1px solid var(--line);border-radius:6px;padding:3px 9px;letter-spacing:.04em}
 .mchip.ok{color:var(--up);border-color:rgba(31,122,77,.35)}
 .mchip.no{color:var(--sub)}
-/* tablas: encabezado con línea de tinta, números en Plex Mono */
-.panel{background:#fff;border:1px solid var(--line);overflow-x:auto}
+/* tablas: encabezado con línea de tinta, números tabulares (Plex Sans) */
+.panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
-th{text-align:left;font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:12px 16px;border-bottom:1px solid var(--ink);white-space:nowrap}
+th{text-align:left;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:12px 16px;border-bottom:1px solid var(--ink);white-space:nowrap}
 td{padding:11px 16px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;vertical-align:middle}
-td.num{font:500 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+td.num{font:500 12.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums}
 tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:var(--marfil)}
 .num{text-align:right}
 .pos{color:var(--up)!important}.neg{color:var(--dn)!important}.mut{color:var(--mut)!important}
-.tk a{font:600 13px 'IBM Plex Mono',monospace;color:var(--gold2);text-decoration:none;border-bottom:1px dotted var(--gold)}
+.tk a{font:600 13px 'IBM Plex Sans',sans-serif;color:var(--gold2);text-decoration:none;border-bottom:1px dotted var(--gold)}
 .tk a:hover{color:var(--ink)}
-.tk b{font:600 13px 'IBM Plex Mono',monospace;color:var(--ink)}
+.tk b{font:600 13px 'IBM Plex Sans',sans-serif;color:var(--ink)}
 .nom{font:400 11px 'IBM Plex Sans',sans-serif;color:var(--sub)}
 /* enlaces dentro de notas chicas: el dorado oscuro, que sí llega a AA (el inline trae --gold) */
 .nom a{color:var(--gold2)!important;text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:2px}
-.ver{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:2px;white-space:nowrap}
+.ver{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:6px;white-space:nowrap}
 .ver.infra{color:var(--up);background:rgba(31,122,77,.12)}
 .ver.precio{color:var(--gold2);background:rgba(176,138,62,.14)}
 .ver.cara{color:var(--dn);background:rgba(178,58,58,.1)}
-.zona{font-size:9.5px;font-weight:700;color:var(--gold2);border:1px solid var(--gold);border-radius:2px;padding:2.5px 7px;letter-spacing:.05em;white-space:nowrap}
+.zona{font-size:10.5px;font-weight:700;color:var(--gold2);border:1px solid var(--gold);border-radius:6px;padding:2.5px 7px;letter-spacing:.05em;white-space:nowrap}
 .compra-form{display:flex;align-items:center;gap:8px;justify-content:flex-end;flex-wrap:wrap}
-.compra-form input{width:92px;padding:7px 10px;background:#fff;border:1px solid var(--line);border-radius:0;color:var(--ink);font:500 13px 'IBM Plex Mono',monospace;outline:none}
+.compra-form input{width:92px;padding:7px 10px;background:#fff;border:1px solid var(--line);border-radius:8px;color:var(--ink);font:500 13px 'IBM Plex Sans',sans-serif;outline:none}
 .compra-form input[list]{font-family:'IBM Plex Sans',system-ui,sans-serif}
 .compra-form input:focus{border-color:var(--gold)}
-.btn.mini{padding:8px 13px;font-size:10px}
+.btn.mini{padding:8px 13px;font-size:10.5px}
 .msg{font-size:12px;margin-top:10px}
 .otra{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;align-items:end;margin-top:12px}
-.otra label{display:block;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin-bottom:6px}
-.otra input{width:100%;padding:9px 11px;background:#fff;border:1px solid var(--line);border-radius:0;color:var(--ink);font:400 14px 'IBM Plex Sans',system-ui,sans-serif;outline:none}
-.otra input[type="number"]{font:500 14px 'IBM Plex Mono',monospace}
+.otra label{display:block;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin-bottom:6px}
+.otra input{width:100%;padding:9px 11px;background:#fff;border:1px solid var(--line);border-radius:8px;color:var(--ink);font:400 14px 'IBM Plex Sans',system-ui,sans-serif;outline:none}
+.otra input[type="number"]{font:500 14px 'IBM Plex Sans',sans-serif}
 .otra input:focus{border-color:var(--gold)}
-.state{border:1px dashed var(--line);text-align:center;padding:60px 20px;color:var(--sub);font-size:14px;margin-top:30px}
-/* el único "← Volver" de la página: el de arriba, antes del contenido */
-.top-volver{max-width:1160px;margin:0 auto;padding:20px 52px 0}
-.top-volver .volver{display:inline-block;font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);background:none;border:none;padding:0;margin:0;cursor:pointer}
-.top-volver .volver:hover{color:var(--gold)}
-.gate{background:var(--marfil);border:1px solid var(--line);border-left:3px solid var(--gold);padding:22px 24px;margin-top:26px}
-.gate>b{font:600 17px 'Playfair Display',serif;color:var(--ink)}
+.state{border:1px dashed var(--line);border-radius:12px;text-align:center;padding:60px 20px;color:var(--sub);font-size:14px;margin-top:30px}
+/* el único "← Volver" de la página va en el título (sitio.css .v-tit .volver) */
+.gate{background:var(--marfil);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:12px;padding:22px 24px;margin-top:26px}
+.gate>b{font:600 17px 'IBM Plex Sans',sans-serif;color:var(--ink)}
 .gate p b{color:var(--ink);font-weight:600}
 .gate p{font-size:13px;color:var(--sub);line-height:1.7;margin:8px 0 14px}
 /* footer de Noticias (navy2), a sangre: el JS lo pinta adentro de <main> */
-footer{margin:48px calc(50% - 50vw) -60px;background:#0B1327;padding:28px calc(50vw - 50%);font:400 11px 'IBM Plex Sans',sans-serif;line-height:1.9;color:rgba(255,255,255,.55)}
+footer{margin:48px calc(50% - 50vw) -60px;background:#0B1327;padding:28px calc(50vw - 50%);font:400 12.5px 'IBM Plex Sans',sans-serif;line-height:1.9;color:rgba(255,255,255,.55)}
 footer a:hover{color:#E8CE96}
-/* botón de mail flotante (el mismo de activo.html / noticias.html) */
-.wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;transition:transform .2s;text-decoration:none}
-.wa-float:hover{transform:scale(1.1)}
-@media(max-width:880px){.masthead,main,.top-volver{padding-left:20px;padding-right:20px}}
 @media(max-width:600px){.regla input{width:100%}.regla .campo{flex:1}}
 </style>
+<link rel="stylesheet" href="sitio.css?v=1">
 </head>
 <body>
-<nav>
-  <a href="/" class="nav-brand">
-    <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
-    <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
+<nav class="vnav">
+  <a href="/" class="nav-brand" aria-label="Valtia Analytics — inicio">
+    <svg class="nav-logo" width="40" height="40" viewBox="0 0 34 34" fill="none" aria-hidden="true"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <div><div class="nav-name">VAL<span>T</span>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
     <a href="/">Inicio</a>
     <a href="/cartera">Carteras</a>
-    <a href="/inversion-mensual" class="active">Inversión mensual</a>
+    <a href="/inversion-mensual" class="active" aria-current="page">Inversión mensual</a>
     <a href="/mercados">Mercados</a>
     <a href="/noticias">Noticias</a>
     <a href="/informes">Informes</a>
@@ -159,20 +136,21 @@ footer a:hover{color:#E8CE96}
   </div>
 </nav>
 
-<!-- el título de la página va acá y en ningún otro lado: abajo arranca el contenido -->
-<div class="masthead">
-  <h1 class="t">Candidatas <em>del mes</em></h1>
-  <div class="d">Tu plan de compras, mes a mes</div>
-</div>
-
-<!-- cotizaciones en vivo (módulo único del sitio: cotizaciones.js) -->
+<!-- cotizaciones en vivo, debajo del nav (módulo único del sitio: cotizaciones.js) -->
 <div id="valtia-cot"></div>
-<div class="top-volver"><button class="volver" onclick="volver()">← Volver</button></div>
+
+<!-- el título de la página va acá y en ningún otro lado: abajo arranca el contenido -->
+<header class="v-tit"><div class="v-tit-in">
+  <button class="volver" onclick="volver()">← Volver</button>
+  <h1>Candidatas del mes</h1>
+  <p class="v-baj">El método del inversor constante · Radar · Compras</p>
+</div></header>
+
 <main id="main">
   <div class="state">Cargando tu plan…</div>
 </main>
 
-<a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail" style="background:#B08A3E;box-shadow:0 4px 16px rgba(176,138,62,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
+<a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -506,8 +484,8 @@ async function render() {
 }
 onAuthStateChanged(getAuth(app), u => { _user = u; render(); });
 </script>
-<script type="module" src="nav-auth.js?v=9"></script>
+<script type="module" src="nav-auth.js?v=10"></script>
 <script type="module" src="cotizaciones.js?v=3"></script>
-<script src="nav-menu.js?v=9"></script>
+<script src="nav-menu.js?v=10"></script>
 </body>
 </html>

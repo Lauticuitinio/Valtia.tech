@@ -10,11 +10,12 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#0E1830">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Noticias — layout tipo portal (ref: Bloomberg Línea): masthead
-     centrado sobre franja oscura, secciones en pills, ticker con
-     variaciones, nota principal grande + grilla de tarjetas. ── */
+/* ── Noticias — portal estilo Bloomberg Línea (prototipo "Noticias v2"):
+     nav y barra de cotizaciones (sitio.css) → categorías en pastillas sobre
+     azul → barra AHORA con los últimos titulares → tapa (nota principal
+     1.45fr + 2×2) → "Más noticias" con el lateral. ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--ink:#101010;--sub:#57534A;--mut:#8B8375;--navy:#0E1830;--gold:#B08A3E;--gold2:#8A6A2F;--line:#E7E3DA;--up:#1F7A4D;--dn:#B23A3A}
 html{scroll-behavior:smooth}
@@ -22,119 +23,104 @@ body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
 img{max-width:100%}
+/* título solo para lectores de pantalla: la tapa no lleva título visible (prototipo) */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 
-/* nav global (navy, igual al resto del sitio) */
-nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;background:rgba(14,24,48,.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(232,206,150,.14)}
-.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.nav-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;letter-spacing:.06em;color:#fff}
-.nav-name em{color:#E8CE96;font-style:italic}
-.nav-sub{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4)}
-.nav-links{display:flex;align-items:center;gap:26px}
-.nav-links a{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6)}
-.nav-links a:hover,.nav-links a.active{color:#E8CE96}
-.nav-cta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0E1830;background:#E8CE96;padding:9px 22px;border-radius:8px;text-decoration:none}
-.nav-cta:hover{background:#fff;color:#0E1830}
-@media(max-width:880px){.nav-links{display:none}}
-
-/* masthead centrado sobre la franja oscura (estilo Bloomberg Línea) */
-.masthead{background:#0E1830;padding:26px 52px 20px;text-align:center}
-.masthead .t{font:700 clamp(30px,3.6vw,44px) 'Playfair Display',serif;color:#fff;letter-spacing:.01em;line-height:1}
-.masthead .t em{color:#E8CE96;font-style:italic}
-.masthead .d{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(232,206,150,.75);margin-top:12px}
-
-/* categorías sobre la franja oscura: texto apagado, sin pastilla ni borde, y
-   la sección abierta con subrayado dorado de 2px. Si no entran, la fila se
-   desplaza de costado y la página no se mueve. */
-.cat-nav{display:flex;padding:5px 52px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:#0B1327;position:sticky;top:64px;z-index:150;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06)}
+/* categorías en pastillas sobre azul, pegadas debajo de la barra de
+   cotizaciones. Si no entran, la fila se desplaza de costado y la página no
+   se mueve (margin:auto centra cuando entra y no corta la primera). */
+.cat-nav{display:flex;padding:10px var(--v-gutter);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:#0E1830;position:sticky;top:var(--v-top);z-index:130;border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08)}
 .cat-nav::-webkit-scrollbar{display:none}
-/* margin:auto en vez de justify-content:center — centra cuando entra y no
-   corta la primera categoría cuando hay desplazamiento de costado */
-.cat-in{display:flex;align-items:flex-end;gap:22px;min-width:max-content;margin:0 auto}
-.cat-nav div.pill{font:500 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;cursor:pointer;padding:9px 1px;border:none;border-bottom:2px solid transparent;background:none;color:rgba(255,255,255,.58);white-space:nowrap;transition:color .15s,border-color .15s}
-.cat-nav div.pill:hover{color:#fff}
-.cat-nav div.pill.on{color:#E8CE96;font-weight:600;border-bottom-color:#E8CE96}
+.cat-in{display:flex;align-items:center;gap:10px;min-width:max-content;margin:0 auto}
+.cat-nav div.pill{font:500 13.5px 'IBM Plex Sans',sans-serif;cursor:pointer;padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;white-space:nowrap;transition:border-color .15s,background .15s,color .15s}
+.cat-nav div.pill:hover{border-color:#E8CE96}
+.cat-nav div.pill.on{background:#E8CE96;border-color:#E8CE96;color:#0E1830;font-weight:600}
 
-/* grilla principal */
-.wrap{padding:26px 52px 60px}
-.hero{display:grid;grid-template-columns:1.15fr .62fr .62fr;gap:26px;padding-bottom:26px;border-bottom:1px solid var(--line)}
+/* barra AHORA: etiqueta dorada y los últimos titulares (sale de las mismas
+   noticias de Firestore que la tapa; si no hay, no se muestra) */
+.ahora{background:#14213D;display:flex;align-items:center;overflow:hidden;white-space:nowrap;border-bottom:2px solid #B08A3E}
+.ahora[hidden]{display:none}
+.ahora .et{flex:none;font:700 13px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;color:#0E1830;background:#E8CE96;padding:10px 16px 10px var(--v-gutter)}
+.ahora .tits{display:flex;align-items:center;overflow:hidden;min-width:0}
+.ahora .tits a{font:500 13.5px 'IBM Plex Sans',sans-serif;color:#fff;padding:10px 18px;border-right:1px solid rgba(255,255,255,.18);white-space:nowrap;text-decoration:none}
+.ahora .tits a:hover{color:#E8CE96}
+
+/* tapa: nota principal (1.45fr, foto alta) + dos columnas de dos notas */
+.wrap{padding:26px var(--v-gutter) 60px}
+.hero{display:grid;grid-template-columns:1.45fr 1fr 1fr;gap:18px;padding-bottom:30px;border-bottom:1px solid var(--line);max-width:var(--v-ancho);margin:0 auto}
 .card{cursor:pointer;display:block}
 .card:hover h2,.card:hover h3,.card:hover h4{text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
-.cimg{aspect-ratio:16/9;background:linear-gradient(135deg,#14213D,#B08A3E);background-size:cover;background-position:center;margin-bottom:12px}
-.lead .cimg{aspect-ratio:16/10}
-.ccat{font:700 10px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:8px}
-.lead h2{font:700 clamp(26px,2.6vw,36px) 'Playfair Display',serif;color:var(--ink);line-height:1.14;margin-bottom:12px;text-wrap:pretty}
-.hero .side h3{font:600 19px 'Playfair Display',serif;color:var(--ink);line-height:1.22;margin-bottom:8px;text-wrap:pretty}
+.cimg{aspect-ratio:16/9;background:linear-gradient(135deg,#14213D,#B08A3E);background-size:cover;background-position:center;margin-bottom:12px;border-radius:10px;overflow:hidden}
+.lead .cimg{aspect-ratio:10/9;border-radius:12px;margin-bottom:14px}
+.ccat{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:8px}
+.lead h2{font:700 clamp(28px,2.8vw,40px) 'IBM Plex Sans',sans-serif;color:var(--ink);line-height:1.12;letter-spacing:-.01em;margin-bottom:12px;text-wrap:pretty}
+.lead .cexc{font-size:15.5px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+.hero .side h3{font:700 19.5px 'IBM Plex Sans',sans-serif;color:var(--ink);line-height:1.25;margin-bottom:8px;text-wrap:pretty}
 .cexc{font:400 14px 'IBM Plex Sans',sans-serif;color:var(--sub);line-height:1.62;margin-bottom:10px}
-.side .cexc{font-size:12.5px;margin-bottom:8px}
-.cdate{font:500 10px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
-.side{display:flex;flex-direction:column;gap:24px}
-.side .card{padding-bottom:24px;border-bottom:1px solid var(--line)}
-.side .card:last-child{border-bottom:none;padding-bottom:0}
+.side .cexc{margin-bottom:8px}
+.cdate{font:500 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.side{display:flex;flex-direction:column;gap:26px}
 
-/* más noticias: columna principal en filas + rail derecho (ref Bloomberg) */
+/* más noticias: columna principal en filas + lateral de 360px */
 .more-h{display:flex;align-items:center;gap:14px;margin:0 0 6px}
-.more-h span{font:700 17px 'Playfair Display',serif;color:var(--ink)}
+.more-h span{font:700 17px 'IBM Plex Sans',sans-serif;color:var(--ink);white-space:nowrap}
 .more-h i{flex:1;height:1px;background:var(--line)}
-.lower{display:grid;grid-template-columns:1fr 330px;gap:46px;margin-top:26px}
-.nrow{display:grid;grid-template-columns:180px 1fr;gap:18px;padding:18px 0;border-bottom:1px solid var(--line);cursor:pointer;align-items:start}
+.lower{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:46px;margin:30px auto 0;max-width:var(--v-ancho)}
+.nrow{display:grid;grid-template-columns:minmax(200px,.8fr) minmax(0,1.2fr);gap:20px;padding:20px 0;border-bottom:1px solid var(--line);cursor:pointer;align-items:start}
 .nrow .cimg{aspect-ratio:16/10;margin:0}
-.nrow h4{font:600 17.5px 'Playfair Display',serif;color:var(--ink);line-height:1.25;margin-bottom:6px;text-wrap:pretty}
+.nrow h4{font:600 17.5px 'IBM Plex Sans',sans-serif;color:var(--ink);line-height:1.25;margin-bottom:6px;text-wrap:pretty}
 .nrow:hover h4{text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
-.nrow .cexc{font-size:12.5px;margin-bottom:7px}
+.nrow .cexc{margin-bottom:7px}
 .more-btn-wrap{text-align:center;margin-top:30px}
-.more-btn{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);padding:12px 32px;cursor:pointer}
-.more-btn:hover{background:var(--ink);color:#fff}
-.empty-state{padding:80px 52px;text-align:center;font:400 15px 'IBM Plex Sans',sans-serif;color:var(--sub)}
+.more-btn{font:600 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#57534A;background:#fff;border:1px solid rgba(176,138,62,.4);border-radius:8px;padding:12px 32px;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
+.more-btn:hover{border-color:#B08A3E;background:#FBF5E8;color:#101010}
+.empty-state{padding:80px 0;text-align:center;font:400 15px 'IBM Plex Sans',sans-serif;color:var(--sub)}
 
-/* rail derecho: más leídas + newsletter */
+/* lateral: más leídas + newsletter */
 .rail{display:flex;flex-direction:column;gap:30px}
-.rail-h{align-self:flex-start;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;background:#0E1830;color:#fff;padding:7px 13px}
-.ml-item{display:grid;grid-template-columns:1fr 82px;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);cursor:pointer;align-items:start}
+.rail-h{align-self:flex-start;font:700 12px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;background:#0E1830;color:#fff;padding:7px 13px;border-radius:8px;white-space:nowrap}
+.ml-item{display:grid;grid-template-columns:minmax(0,1fr) 82px;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);cursor:pointer;align-items:start}
 .ml-item:last-child{border-bottom:none}
 .ml-item .cimg{aspect-ratio:4/3;margin:0}
-.ml-item .t{font:600 13.5px 'IBM Plex Sans',sans-serif;color:var(--ink);line-height:1.4}
+.ml-item .t{font:600 15px 'IBM Plex Sans',sans-serif;color:var(--ink);line-height:1.4}
 .ml-item:hover .t{text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
 .ml-item .ccat{margin-bottom:5px}
-.nl-box{background:#0E1830;padding:28px 26px}
-.nl-box h3{font:700 23px 'Playfair Display',serif;color:#fff;line-height:1.2;margin-bottom:8px}
+.nl-box{background:#0E1830;padding:28px 26px;border-radius:12px}
+.nl-box h3{font:700 23px 'IBM Plex Sans',sans-serif;color:#fff;line-height:1.2;margin-bottom:8px}
 .nl-box h3 em{color:#E8CE96;font-style:italic}
-.nl-box p{font:400 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.72);line-height:1.6;margin-bottom:16px}
-.nl-box input{width:100%;padding:12px 13px;border:1px solid rgba(232,206,150,.35);background:rgba(255,255,255,.07);color:#fff;font:400 13px 'IBM Plex Sans',sans-serif;outline:none}
+.nl-box p{font:400 14px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.72);line-height:1.6;margin-bottom:16px}
+.nl-box input{width:100%;padding:12px 13px;border:1px solid rgba(232,206,150,.35);border-radius:8px;background:rgba(255,255,255,.07);color:#fff;font:400 14.5px 'IBM Plex Sans',sans-serif;outline:none}
 .nl-box input::placeholder{color:rgba(255,255,255,.4)}
 .nl-box input:focus{border-color:#E8CE96}
-.nl-box button{width:100%;margin-top:10px;font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#0E1830;background:#E8CE96;border:none;padding:12px;cursor:pointer}
+.nl-box button{width:100%;margin-top:10px;font:600 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#0E1830;background:#E8CE96;border:none;border-radius:8px;padding:12px;cursor:pointer}
 .nl-box button:hover{background:#fff}
-.nl-msg{font:500 12px 'IBM Plex Sans',sans-serif;margin-top:10px;color:#7FD8A4;display:none}
+.nl-msg{font:500 13px 'IBM Plex Sans',sans-serif;margin-top:10px;color:#7FD8A4;display:none}
 
-/* footer + mail */
-footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:40px}
-.footer-copy{font:400 11px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
+/* footer */
+footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:40px}
+.footer-copy{font:400 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
 .footer-links{display:flex;gap:20px}
-.footer-links a{font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase}
-.wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;transition:transform .2s;text-decoration:none}
-.wa-float:hover{transform:scale(1.1)}
+.footer-links a{font:500 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase}
 
-@media(max-width:1080px){.hero{grid-template-columns:1fr 1fr}.lead{grid-column:1/-1}.lower{grid-template-columns:1fr}}
-@media(max-width:880px){
-  .masthead,.cat-nav,.wrap,footer{padding-left:20px;padding-right:20px}
-  .cat-nav{top:64px}
-}
-@media(max-width:600px){.hero{grid-template-columns:1fr}.nrow{grid-template-columns:120px 1fr}.nrow .cexc{display:none}}
+/* en pantallas medianas la principal ocupa el ancho con foto 16:9 */
+@media(max-width:1080px){.hero{grid-template-columns:1fr 1fr}.lead{grid-column:1/-1}.lead .cimg{aspect-ratio:16/9}.lower{grid-template-columns:1fr}}
+@media(max-width:600px){.hero{grid-template-columns:1fr}.nrow{grid-template-columns:120px minmax(0,1fr);gap:14px}.nrow .cexc{display:none}}
 </style>
+<link rel="stylesheet" href="sitio.css?v=1">
 </head>
 <body>
 
-<nav>
-  <a href="/" class="nav-brand">
-    <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
-    <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
+<nav class="vnav">
+  <a href="/" class="nav-brand" aria-label="Valtia Analytics — inicio">
+    <svg class="nav-logo" width="40" height="40" viewBox="0 0 34 34" fill="none" aria-hidden="true"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <div><div class="nav-name">VAL<span>T</span>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
     <a href="/">Inicio</a>
     <a href="/cartera">Carteras</a>
     <a href="/inversion-mensual">Inversión mensual</a>
     <a href="/mercados">Mercados</a>
-    <a href="/noticias" class="active">Noticias</a>
+    <a href="/noticias" class="active" aria-current="page">Noticias</a>
     <a href="/informes">Informes</a>
     <a href="/herramientas">Herramientas</a>
     <a href="/planes">Planes</a>
@@ -144,13 +130,12 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   </div>
 </nav>
 
-<!-- masthead centrado (estilo Bloomberg) -->
-<div class="masthead">
-  <div class="t">Valtia <em>Analytics</em></div>
-  <div class="d" id="mh-fecha">—</div>
-</div>
+<!-- cotizaciones en vivo, debajo del nav (módulo único del sitio: cotizaciones.js) -->
+<div id="valtia-cot"></div>
 
-<!-- secciones estilo Bloomberg (arriba del ticker) -->
+<h1 class="sr">Noticias</h1>
+
+<!-- secciones estilo Bloomberg: pastillas sobre azul -->
 <div class="cat-nav"><div class="cat-in" id="cat-nav">
   <div class="pill on" data-cat="todos" onclick="filterCat('todos',this)">Todas</div>
   <div class="pill" data-cat="local" onclick="filterCat('local',this)">Mercado local</div>
@@ -159,8 +144,8 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   <div class="pill" data-cat="bonos" onclick="filterCat('bonos',this)">Bonos y acciones</div>
 </div></div>
 
-<!-- cotizaciones en vivo (módulo único del sitio: cotizaciones.js) -->
-<div id="valtia-cot"></div>
+<!-- AHORA: los últimos titulares (los pinta renderNews) -->
+<div class="ahora" id="ahora" hidden><span class="et">AHORA</span><div class="tits" id="ahora-tits"></div></div>
 
 <!-- contenido -->
 <div class="wrap" id="paper-body">
@@ -174,7 +159,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   </div>
 </footer>
 
-<a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail" style="background:#B08A3E;box-shadow:0 4px 16px rgba(176,138,62,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
+<a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
 <script>
 /* ── render del portal de noticias ── */
@@ -252,7 +237,19 @@ function newsletterHtml(){
   </div>`;
 }
 
+/* barra AHORA: los seis titulares más nuevos de todo el portal (sin filtro de
+   categoría), cada uno a su nota */
+function pintarAhora(){
+  const box = document.getElementById('ahora');
+  if(!box) return;
+  const ult = articles.slice().sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha))).slice(0,6);
+  box.hidden = !ult.length;
+  document.getElementById('ahora-tits').innerHTML = ult.map(a =>
+    `<a href="/nota?n=${encodeURIComponent(a.docId)}">${esc(a.title)}</a>`).join("");
+}
+
 function renderNews(){
+  pintarAhora();
   const list = filtered();
   const body = document.getElementById('paper-body');
   if(!list.length){
@@ -301,14 +298,6 @@ function openArticle(id){
   const a = articles.find(x=>x.id===id); if(!a) return;
   location.href = '/nota?n=' + encodeURIComponent(a.docId);
 }
-
-/* fecha */
-(function(){
-  const DIAS=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
-  const MES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-  const d=new Date();
-  document.getElementById('mh-fecha').textContent=`${DIAS[d.getDay()]} ${d.getDate()} de ${MES[d.getMonth()]}, ${d.getFullYear()} · Mercados · Economía · Cripto`;
-})();
 
 </script>
 <script type="module" src="cotizaciones.js?v=3"></script>
@@ -367,7 +356,7 @@ window.suscribirNews = async () => {
   }
 };
 </script>
-<script type="module" src="nav-auth.js?v=9"></script>
-<script src="nav-menu.js?v=9"></script>
+<script type="module" src="nav-auth.js?v=10"></script>
+<script src="nav-menu.js?v=10"></script>
 </body>
 </html>

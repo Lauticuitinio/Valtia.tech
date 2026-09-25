@@ -1,0 +1,110 @@
+/* sitio.css — reglas globales del rediseño (SPEC §0), las mismas en todas las
+   páginas públicas. Cada página lo enlaza DESPUÉS de su propio <style>, así que
+   acá manda lo global: nav, barra de cotizaciones, título de página, botón de
+   mail, selectores y tipografía. Lo propio de cada página sigue en su <style>.
+   Los valores son los de los prototipos del zip "Mejora del diseño… completo".
+   Si cambiás este archivo, subí el ?v= en TODAS las páginas que lo enlazan. */
+
+:root{
+  --v-navy:#0E1830;--v-navy2:#0B1327;--v-navy3:#14213D;
+  --v-oro:#B08A3E;--v-oro2:#8A6A2F;--v-oro-claro:#E8CE96;   /* oro claro: SOLO sobre azul */
+  --v-tinta:#101010;--v-sub:#57534A;--v-mut:#8B8375;--v-linea:#E7E3DA;
+  --v-btn-borde:rgba(176,138,62,.4);--v-btn-on:#FBF5E8;
+  --v-sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --v-ancho:1340px;   /* ancho máximo del contenido: todos los bordes alineados */
+  --v-gutter:52px;    /* margen lateral (20px en celular) */
+  --v-nav-h:64px;     /* alto del nav */
+  --v-cot-h:40px;     /* alto de la barra de cotizaciones */
+  --v-top:104px;      /* nav + barra: lo que tapa a cualquier cosa pegada arriba */
+}
+@media(max-width:880px){:root{--v-gutter:20px}}
+
+/* los anclas (#seccion) no quedan debajo del nav + la barra. Las páginas no
+   suman scroll-margin propio (se acumularía). En el panel del inversor el nav
+   se esconde y la barra no queda fija: ahí manda su propio scroll-margin. */
+html{scroll-padding-top:calc(var(--v-top) + 16px)}
+html:has(body.fl-app-on){scroll-padding-top:0}
+
+/* ── Tipografía única: IBM Plex Sans, números tabulares en todo (sin Plex Mono).
+   El !important es a propósito: el atajo `font:` de cada regla vuelve
+   font-variant-numeric a "normal", y la regla es que todos los números alineen.
+   El panel del inversor (body.fl-app-on) tiene su propia etapa: queda afuera. ── */
+body:not(.fl-app-on),body:not(.fl-app-on) *{font-variant-numeric:tabular-nums!important}
+
+/* ── NAV (prototipos: nav 64px navy, logo 40px, VALTIA Playfair 700 25px) ── */
+.vnav{position:sticky;top:0;z-index:200;height:var(--v-nav-h);box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:0 var(--v-gutter);background:rgba(14,24,48,.97);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid rgba(232,206,150,.14)}
+.vnav .nav-brand{display:flex;align-items:center;gap:10px;flex-shrink:0;text-decoration:none}
+.vnav .nav-logo{width:40px;height:40px;display:block;flex:none}
+.vnav .nav-name{font:700 25px/1 'Playfair Display',Georgia,serif;letter-spacing:.06em;color:#fff;white-space:nowrap}
+.vnav .nav-name span{color:#E8CE96;font-style:normal}
+.vnav .nav-sub{font:400 11.5px var(--v-sans);letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.45);white-space:nowrap}
+.vnav .nav-links{display:flex;align-items:center;gap:26px;min-width:0;overflow:hidden}
+.vnav .nav-links a{font:500 12.5px var(--v-sans);letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6);white-space:nowrap;text-decoration:none;transition:color .15s}
+.vnav .nav-links a:hover,.vnav .nav-links a.active{color:#E8CE96}
+.vnav .nav-right{display:flex;align-items:center;gap:14px;flex-shrink:0}
+.vnav .nav-cta{font:600 12.5px var(--v-sans);letter-spacing:.12em;text-transform:uppercase;color:#0E1830;background:#E8CE96;padding:9px 22px;border-radius:8px;white-space:nowrap;flex-shrink:0;text-decoration:none;transition:background .15s}
+.vnav .nav-cta:hover{background:#fff;color:#0E1830}
+/* los ocho enlaces + el botón miden ~1.380px con las medidas del prototipo.
+   Entre 1.200 y 1.399 se aprietan (sin bajar de 12px); por debajo de 1.200
+   manda la hamburguesa de nav-menu.js, que esconde enlaces y botón. */
+@media(max-width:1399px){
+  .vnav{gap:18px;padding:0 28px}
+  .vnav .nav-links{gap:14px}
+  .vnav .nav-links a{font-size:12px;letter-spacing:.08em}
+  .vnav .nav-cta{font-size:12px;letter-spacing:.1em;padding:9px 18px}
+}
+@media(max-width:1199px){.vnav{padding:0 var(--v-gutter)}}
+
+/* ── BARRA DE COTIZACIONES (prototipo "Valtia Ticker"): debajo del nav, fija al
+   bajar. El contenido lo pinta cotizaciones.js, que no se toca: acá solo se
+   pisa su piel con #valtia-cot (le gana al CSS que inyecta, que es por clase). ── */
+#valtia-cot{position:sticky;top:var(--v-nav-h);z-index:140;display:block;height:var(--v-cot-h);box-sizing:border-box;overflow:hidden;background:#0B1327;border-bottom:1px solid rgba(255,255,255,.06)}
+#valtia-cot .vc-track{height:100%}
+#valtia-cot .vc-seq{height:100%;gap:24px;padding:0 24px}
+#valtia-cot .vc-g{font:600 11px var(--v-sans);letter-spacing:.14em;color:#E8CE96;padding:0 0 0 12px;border-right:0;border-left:1px solid rgba(255,255,255,.15)}
+#valtia-cot .vc-i{font:500 13.5px/20px var(--v-sans);gap:7px}
+#valtia-cot .vc-n{color:rgba(255,255,255,.6);letter-spacing:0}
+#valtia-cot .vc-v{color:#fff;font-weight:600}
+#valtia-cot .vc-c{font-size:13.5px;font-weight:600}
+#valtia-cot .vc-up{color:#3FCE8A}
+#valtia-cot .vc-dn{color:#F07A7A}
+#valtia-cot .vc-nt{color:rgba(255,255,255,.4)}
+#valtia-cot a.vc-i:hover .vc-n,#valtia-cot a.vc-i:hover .vc-v{color:#E8CE96}
+@media(prefers-reduced-motion:reduce){
+  #valtia-cot{height:auto;min-height:var(--v-cot-h);overflow-x:auto}
+  #valtia-cot .vc-seq{height:auto;padding:10px 24px}
+}
+/* adentro del panel del inversor la barra queda como estaba (etapa propia) */
+body.fl-app-on #valtia-cot{position:relative;top:auto}
+
+/* ── TÍTULO DE PÁGINA: negro sobre blanco, Plex Sans 700 28px + bajada gris ── */
+.v-tit{padding:30px var(--v-gutter) 8px}
+.v-tit[hidden]{display:none}
+.v-tit-in{max-width:var(--v-ancho);margin:0 auto}
+.v-tit h1{font:700 28px/1.15 var(--v-sans);letter-spacing:-.01em;color:#101010;margin:0;text-wrap:balance}
+.v-tit .v-baj{font:400 14px/1.6 var(--v-sans);color:#57534A;margin:8px 0 0;max-width:760px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+.v-tit .volver{display:inline-block;font:600 12px var(--v-sans);letter-spacing:.1em;text-transform:uppercase;color:#57534A;background:none;border:0;padding:0;margin:0 0 14px;cursor:pointer;text-decoration:none}
+.v-tit .volver:hover{color:#8A6A2F}
+
+/* ── contenedor de ancho único (1340 centrado, mismos márgenes que el título) ── */
+.v-caja{max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin-left:auto;margin-right:auto;padding-left:var(--v-gutter);padding-right:var(--v-gutter);box-sizing:border-box;width:100%}
+
+/* ── texto corrido ancho: justificado con guiones (solo bajadas, introducciones,
+   informes y legales; en tarjetas angostas el texto va a la izquierda) ── */
+.v-just{text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+
+/* ── BOTONES Y SELECTORES: borde dorado sutil, radio 8, texto #57534A; el
+   activo con borde #B08A3E, relleno #FBF5E8 y texto #101010 ── */
+.v-chip{font:500 12.5px var(--v-sans);letter-spacing:.06em;padding:7px 11px;border:1px solid var(--v-btn-borde);border-radius:8px;background:#fff;color:#57534A;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}
+.v-chip:hover{color:#101010}
+.v-chip.on,.v-chip.active,.v-chip[aria-selected="true"],.v-chip[aria-pressed="true"]{border-color:#B08A3E;background:#FBF5E8;color:#101010}
+
+/* ── BOTÓN DE MAIL flotante, abajo a la izquierda, en todas las páginas ── */
+.wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;background:#B08A3E;box-shadow:0 4px 16px rgba(176,138,62,.4);transition:transform .2s;text-decoration:none}
+.wa-float:hover{transform:scale(1.1)}
+.wa-float svg{display:block}
+body.fl-app-on .wa-float{display:none}
+
+/* ── pie navy de las páginas: textos a 12.5px como en los prototipos ── */
+footer .footer-copy{font-size:12.5px}
+footer .footer-links a{font-size:12.5px}

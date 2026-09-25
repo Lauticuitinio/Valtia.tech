@@ -10,10 +10,11 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#0E1830">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Calendario — mismo lenguaje editorial que Noticias (navy + dorado):
-     página blanca, Playfair + IBM Plex, hairlines, esquinas rectas. Solo claro. ── */
+/* ── Calendario — reglas globales del rediseño (sitio.css): título negro sobre
+     blanco, Plex Sans en todo, esquinas redondeadas, columna de 960px alineada
+     con el título. Solo claro. ── */
 :root{
   --navy:#0E1830;--navy2:#0B1327;
   --gold:#B08A3E;--gold2:#8A6A2F;--gold-claro:#E8CE96;
@@ -24,89 +25,65 @@
   --up:#1F7A4D;--dn:#B23A3A;--greenTx:#1F7A4D;--redTx:#B23A3A;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;--v-ancho:960px}
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
 
-/* nav global (navy, igual a Noticias) */
-nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;background:rgba(14,24,48,.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(232,206,150,.14)}
-.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.nav-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;letter-spacing:.06em;color:#fff}
-.nav-name em{color:#E8CE96;font-style:italic}
-.nav-sub{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4)}
-.nav-links{display:flex;align-items:center;gap:26px}
-.nav-links a{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6)}
-.nav-links a:hover,.nav-links a.active{color:#E8CE96}
-.nav-cta{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#0E1830;background:#E8CE96;padding:9px 22px;border-radius:8px;text-decoration:none}
-.nav-cta:hover{background:#fff;color:#0E1830}
-@media(max-width:1100px){.nav-links{display:none}}
+/* columna del prototipo de Calendario: 960px, con los bordes del título */
+main{width:100%;flex:1 0 auto;max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto;padding:18px var(--v-gutter) 60px}
+.sub{color:var(--sub);font-size:15px;line-height:1.75;max-width:700px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
 
-/* masthead centrado sobre la franja navy, con el título de la página */
-.masthead{background:#0E1830;padding:26px 52px 20px;text-align:center}
-.masthead .t{font:700 clamp(30px,3.6vw,44px) 'Playfair Display',serif;color:#fff;letter-spacing:.01em;line-height:1.1;text-wrap:balance}
-.masthead .t em{color:#E8CE96;font-style:italic}
-.masthead .d{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(232,206,150,.75);margin-top:12px}
-
-.top-volver{width:100%;max-width:960px;margin:0 auto;padding:22px 52px 0}
-.volver{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);background:none;border:none;padding:0;cursor:pointer}
-.volver:hover{color:var(--gold)}
-main{width:100%;flex:1 0 auto;max-width:960px;margin:0 auto;padding:26px 52px 60px}
-.sub{color:var(--sub);font-size:15px;line-height:1.75;max-width:700px}
-
-/* filtros: pills hairline, activo navy (como .sector-pills .sp de Informes) */
+/* filtros: la regla de botones y selectores del sitio (borde dorado sutil,
+   radio 8; encendido con borde dorado y relleno crema) */
 .filtros{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0 8px}
-.ftr{font:500 11.5px 'IBM Plex Sans',sans-serif;padding:8px 14px;border:1px solid var(--line);background:#fff;color:var(--sub);cursor:pointer;white-space:nowrap;transition:all .15s}
-.ftr:hover{border-color:var(--gold);color:var(--ink)}
-.ftr.on{background:#0E1830;border-color:#0E1830;color:#fff}
-.ftr:disabled,.ftr:disabled:hover{border-color:var(--line);color:var(--sub);cursor:not-allowed}
+.ftr{font:500 12.5px 'IBM Plex Sans',sans-serif;padding:8px 14px;border:1px solid rgba(176,138,62,.4);border-radius:8px;background:#fff;color:#57534A;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}
+.ftr:hover{color:#101010}
+.ftr.on{border-color:#B08A3E;background:#FBF5E8;color:#101010}
+.ftr:disabled,.ftr:disabled:hover{border-color:rgba(176,138,62,.4);background:#fff;color:#57534A;cursor:not-allowed}
 
-/* cada día: fecha en Playfair + hairline que se estira (patrón .sec-h) */
+/* cada día: fecha + hairline que se estira (patrón .sec-h) */
 .dia{margin-top:28px}
 .dia .fecha{display:flex;align-items:baseline;gap:12px;margin-bottom:12px}
-.dia .fecha b{font:700 18px 'Playfair Display',serif;line-height:1.2;color:var(--ink);font-variant-numeric:lining-nums}
-.dia .fecha span{font:500 10px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);white-space:nowrap}
+.dia .fecha b{font:700 18px 'IBM Plex Sans',sans-serif;line-height:1.2;color:var(--ink);font-variant-numeric:lining-nums}
+.dia .fecha span{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);white-space:nowrap}
 .dia .fecha::after{content:'';flex:1;height:1px;background:var(--line);align-self:center}
 .dia .fecha.hoy b{color:var(--gold2)}
 
-/* eventos: filas blancas con hairline, sin radio ni sombra */
-.ev{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);padding:13px 16px;margin-top:-1px;position:relative;color:var(--ink);text-decoration:none}
+/* eventos: tarjetas blancas con borde fino y esquinas de 10px, sin sombra */
+.ev{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:13px 16px;margin-bottom:8px;position:relative;color:var(--ink);text-decoration:none}
 .ev:hover{background:var(--marfil);border-color:var(--gold);color:var(--ink);z-index:1}
 .ev .ic{font-size:18px;width:26px;text-align:center;flex-shrink:0}
 .ev .t{flex:1;min-width:0;font-size:14px;font-weight:500;line-height:1.45;font-variant-numeric:tabular-nums}
 .ev .t small{display:block;font-size:11.5px;font-weight:400;color:var(--sub);margin-top:2px}
-.ev .tipo{font:700 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:4px 8px;white-space:nowrap}
+.ev .tipo{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:4px 8px;border-radius:6px;white-space:nowrap}
 .tipo.ear{color:var(--gold2);background:rgba(176,138,62,.12)}
 .tipo.cup{color:var(--greenTx);background:rgba(31,122,77,.1)}
 .tipo.let{color:#2B5FB0;background:rgba(43,95,176,.1)}
-.state{border:1px dashed var(--line);text-align:center;padding:44px 20px;color:var(--sub);font-size:14px;line-height:1.9;margin-top:24px}
-.nota{font-size:12px;color:var(--sub);line-height:1.7;margin-top:14px;max-width:70ch}
+.state{border:1px dashed var(--line);border-radius:12px;text-align:center;padding:44px 20px;color:var(--sub);font-size:14px;line-height:1.9;margin-top:24px}
+.nota{font-size:12.5px;color:var(--sub);line-height:1.7;margin-top:14px;max-width:70ch}
 
 /* footer (el de Noticias) */
-footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px 32px;margin-top:40px}
+footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px 32px;margin-top:40px}
 .footer-copy{font:400 11px 'IBM Plex Sans',sans-serif;line-height:1.7;color:rgba(255,255,255,.55);flex:1 1 420px;max-width:780px}
 .footer-links{display:flex;gap:20px}
 .footer-links a{font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase}
 .footer-links a:hover{color:#E8CE96}
 
-/* botón de mail flotante (el mismo de activo.html / noticias.html) */
-.wa-float{position:fixed;bottom:28px;left:28px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:100;transition:transform .2s;text-decoration:none}
-.wa-float:hover{transform:scale(1.1)}
-
-@media(max-width:880px){.masthead,.top-volver,main,footer{padding-left:20px;padding-right:20px}}
 @media(max-width:480px){.ev{gap:10px;padding:12px}.ev .ic{width:22px}}
 </style>
+<link rel="stylesheet" href="sitio.css?v=1">
 </head>
 <body>
-<nav>
-  <a href="/" class="nav-brand">
-    <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
-    <div><div class="nav-name">VAL<em>T</em>IA</div><div class="nav-sub">Analytics</div></div>
+<nav class="vnav">
+  <a href="/" class="nav-brand" aria-label="Valtia Analytics — inicio">
+    <svg class="nav-logo" width="40" height="40" viewBox="0 0 34 34" fill="none" aria-hidden="true"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <div><div class="nav-name">VAL<span>T</span>IA</div><div class="nav-sub">Analytics</div></div>
   </a>
   <div class="nav-links">
     <a href="/">Inicio</a>
     <a href="/cartera">Carteras</a>
     <a href="/inversion-mensual">Inversión mensual</a>
-    <a href="/mercados" class="active">Mercados</a>
+    <a href="/mercados" class="active" aria-current="page">Mercados</a>
     <a href="/noticias">Noticias</a>
     <a href="/informes">Informes</a>
     <a href="/herramientas">Herramientas</a>
@@ -117,15 +94,16 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   </div>
 </nav>
 
-<!-- masthead: el título de la página sobre la franja navy -->
-<div class="masthead">
-  <h1 class="t">Lo que viene en <em>tu mercado</em></h1>
-  <div class="d">Calendario del inversor</div>
-</div>
-
-<!-- cotizaciones en vivo (módulo único del sitio: cotizaciones.js) -->
+<!-- cotizaciones en vivo, debajo del nav (módulo único del sitio: cotizaciones.js) -->
 <div id="valtia-cot"></div>
-<div class="top-volver"><button class="volver" onclick="volver()">← Volver</button></div>
+
+<!-- título de la página: negro sobre blanco -->
+<header class="v-tit"><div class="v-tit-in">
+  <button class="volver" onclick="volver()">← Volver</button>
+  <h1>Calendario Valtia</h1>
+  <p class="v-baj">Resultados · Cupones · Vencimientos · Próximos 120 días</p>
+</div></header>
+
 <main>
   <p class="sub">Resultados de las empresas del radar, cupones y amortizaciones de los bonos, y vencimientos de las
   letras — en una sola agenda, con los próximos 120 días. Cada evento lleva a su ficha.</p>
@@ -148,7 +126,7 @@ footer{background:#0B1327;padding:28px 52px;display:flex;justify-content:space-b
   </div>
 </footer>
 
-<a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail" style="background:#B08A3E;box-shadow:0 4px 16px rgba(176,138,62,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
+<a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
 <script>
 function volver() {
@@ -277,8 +255,8 @@ cargar().catch(e => {
   document.getElementById("lista").innerHTML = `<div class="state">No se pudo cargar la agenda (${esc(String(e).slice(0, 120))}).</div>`;
 });
 </script>
-<script type="module" src="nav-auth.js?v=9"></script>
+<script type="module" src="nav-auth.js?v=10"></script>
 <script type="module" src="cotizaciones.js?v=3"></script>
-<script src="nav-menu.js?v=9"></script>
+<script src="nav-menu.js?v=10"></script>
 </body>
 </html>
