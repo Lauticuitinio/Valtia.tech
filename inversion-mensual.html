@@ -12,7 +12,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--navy:#0E1830;--navy2:#0B1327;--gold:#B08A3E;--gold2:#E8CE96;--gold3:#8A6A2F;--ink:#0E1830;--text:#4A453B;--muted:#6B6459;--line:#E5E7EB;--line2:#EEF0F3;--bg:#fff;--bg2:#F8F9FB;--green:#1F7A4D;--amber:#B7791F;--red:#B23A3A;--grey:#8A9BAD}
+/* Inversión mensual — valores del prototipo "Valtia Inversion Mensual" (zip
+   completo, 24/09): textos de 14–17px, etiquetas 11–11,5px, tarjetas 10–12px,
+   filetes #E5E7EB. Sin la barra de pasos (SPEC §5). */
+:root{--navy:#0E1830;--navy2:#0B1327;--gold:#B08A3E;--gold2:#E8CE96;--gold3:#8A6A2F;--ink:#0E1830;--text:#4A453B;--muted:#8B8375;--line:#E5E7EB;--line2:#EEF0F3;--bg:#fff;--bg2:#F8F9FB;--green:#1F7A4D;--amber:#B7791F;--red:#B23A3A;--grey:#8A9BAD}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;--v-ancho:1056px}
 a{color:var(--gold3);text-decoration:none}a:hover{color:var(--gold)}
@@ -22,10 +25,10 @@ main{padding:18px var(--v-gutter) 70px;max-width:calc(var(--v-ancho) + 2 * var(-
 /* textos corridos anchos (intro, bajadas de cada paso, notas): justificados
    con guiones, como en el prototipo; las tarjetas angostas van a la izquierda */
 .intro,.sub,.note{text-align:justify;-webkit-hyphens:auto;hyphens:auto}
-.intro{max-width:72ch;margin-bottom:40px}.intro .lead{font:400 17px 'IBM Plex Sans';line-height:1.75;color:var(--ink);margin-bottom:10px}.intro p{font-size:14.5px;line-height:1.75;color:var(--text)}
-.eye{font:600 10.5px 'IBM Plex Sans';letter-spacing:.22em;text-transform:uppercase;color:var(--gold3);display:flex;align-items:center;gap:12px}.eye::before{content:'';width:32px;height:1px;background:var(--gold)}
+.intro{max-width:72ch;margin-bottom:40px}.intro .lead{font:400 17px 'IBM Plex Sans';line-height:1.75;color:var(--ink);margin-bottom:10px}.intro p{font-size:16px;line-height:1.75;color:var(--text)}
+.eye{font:600 11.5px 'IBM Plex Sans';letter-spacing:.22em;text-transform:uppercase;color:var(--gold3);display:flex;align-items:center;gap:12px}.eye::before{content:'';width:32px;height:1px;background:var(--gold)}
 h2{font:700 clamp(26px,3vw,34px) 'IBM Plex Sans',sans-serif;color:var(--ink);line-height:1.15;margin:12px 0 10px}
-.sub{font-size:15px;line-height:1.75;color:var(--text);margin-bottom:22px;max-width:75ch}.sub b{color:var(--ink)}
+.sub{font-size:16.5px;line-height:1.75;color:var(--text);margin-bottom:22px;max-width:70ch}.sub b{color:var(--ink)}
 .src{border-bottom:1px dotted var(--gold)}
 .hr{height:1px;background:var(--line);margin:48px 0}
 /* pegados arriba van el nav y la barra de cotizaciones (104px): el salto a
@@ -36,57 +39,58 @@ h2{font:700 clamp(26px,3vw,34px) 'IBM Plex Sans',sans-serif;color:var(--ink);lin
 .tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
 /* pestañas y selectores: la regla de botones del sitio (borde dorado sutil,
    radio 8, texto gris; el activo con borde dorado y relleno crema) */
-.tabs button{font:600 12px 'IBM Plex Sans';letter-spacing:.08em;text-transform:uppercase;padding:9px 16px;border-radius:8px;cursor:pointer;border:1px solid rgba(176,138,62,.4);background:#fff;color:#57534A;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}.tabs button:hover{color:#101010}.tabs button.on{background:#FBF5E8;border-color:#B08A3E;color:#101010}
+.tabs button{font:600 12.5px 'IBM Plex Sans';letter-spacing:.08em;text-transform:uppercase;padding:9px 16px;border-radius:8px;cursor:pointer;border:1px solid rgba(176,138,62,.4);background:#fff;color:#57534A;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}.tabs button:hover{color:#101010}.tabs button.on{background:#FBF5E8;border-color:#B08A3E;color:#101010}
 .card{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .card-h{padding:14px 20px;border-bottom:1px solid var(--line2);display:flex;justify-content:space-between;align-items:baseline;gap:12px}
-.card-h b{font:600 16px 'IBM Plex Sans',sans-serif;color:var(--ink)}.card-h span{font-size:12px;color:var(--muted)}
-.row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line2)}.row>span,.row>label{font-size:14px;color:var(--text)}
-.money{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:0 10px;background:#FAFAFA}.money:focus-within{border-color:var(--gold)}
-.money i{font:500 12px 'IBM Plex Sans',sans-serif;color:var(--muted);font-style:normal}
-.money input{width:96px;padding:9px 0;border:0;background:transparent;font:600 15px 'IBM Plex Sans',sans-serif;color:var(--ink);text-align:right;outline:none}
+.card-h b{font:600 17.5px 'IBM Plex Sans',sans-serif;color:var(--ink)}.card-h span{font-size:13.5px;color:var(--muted)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line2)}.row>span,.row>label{font-size:15.5px;color:var(--text)}
+.money{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:7px;padding:0 10px;background:#FAFAFA}.money:focus-within{border-color:var(--gold)}
+.money i{font:500 13.5px 'IBM Plex Sans',sans-serif;color:var(--muted);font-style:normal}
+.money input{width:96px;padding:9px 0;border:0;background:transparent;font:600 16.5px 'IBM Plex Sans',sans-serif;color:var(--ink);text-align:right;outline:none}
 /* el outline propio se saca, pero el foco de teclado tiene que verse igual */
 .money input:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:3px}
-.total{display:flex;justify-content:space-between;align-items:center;padding:13px 20px;background:var(--bg2);font-size:14px;color:var(--text)}.total b{font:600 16px 'IBM Plex Sans',sans-serif;color:var(--ink)}
-.side{display:flex;flex-direction:column;gap:14px;position:sticky;top:calc(var(--v-top) + 20px)}
+.total{display:flex;justify-content:space-between;align-items:center;padding:13px 20px;background:var(--bg2);font-size:15.5px;color:var(--text)}.total b{font:600 17.5px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+/* la columna derecha queda pegada a 130px del borde (nav + barra + 26), como en el prototipo */
+.side{display:flex;flex-direction:column;gap:14px;position:sticky;top:calc(var(--v-top) + 26px)}
 .navycard{background:var(--navy);border-radius:12px;padding:22px 24px;color:#fff}
-.navycard .k{font:600 10.5px 'IBM Plex Sans';letter-spacing:.16em;text-transform:uppercase;color:rgba(232,206,150,.8)}
+.navycard .k{font:600 11px 'IBM Plex Sans';letter-spacing:.16em;text-transform:uppercase;color:rgba(232,206,150,.8)}
 .trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}.trio>div{min-width:0}
-.trio b{display:block;font:600 clamp(15px,1.6vw,22px) 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}.trio small{font-size:11px;color:rgba(255,255,255,.55);display:block;margin-top:3px}
-.bar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:rgba(255,255,255,.1);margin-top:18px}
-.leg{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:rgba(255,255,255,.7)}.leg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
+.trio b{display:block;font:600 clamp(15px,1.6vw,22px) 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}.trio small{font-size:12.5px;color:rgba(255,255,255,.55);display:block;margin-top:3px}
+.bar{display:flex;height:10px;border-radius:6px;overflow:hidden;background:rgba(255,255,255,.1);margin-top:18px}
+.leg{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:rgba(255,255,255,.7)}.leg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px}
 .rule{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px}
-.rule .k{font:600 10.5px 'IBM Plex Sans';letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}.rule p{font-size:12.5px;color:var(--text);line-height:1.6;margin:8px 0 12px}
-.rule .r{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line2);font-size:13px}.rule .r small{color:var(--muted);font-size:11px}
-.rule .r b{font:600 13px 'IBM Plex Sans',sans-serif;color:var(--ink)}
-.tag{font:600 10.5px 'IBM Plex Sans';letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.rule .k{font:600 11px 'IBM Plex Sans';letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}.rule p{font-size:14px;color:var(--text);line-height:1.6;margin:8px 0 12px}
+.rule .r{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line2);font-size:14.5px}.rule .r small{color:var(--muted);font-size:12.5px}
+.rule .r b{font:600 14.5px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.tag{font:600 11px 'IBM Plex Sans';letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px;white-space:nowrap}
 .tag.ok{color:var(--green);background:rgba(31,122,77,.12)}.tag.casi{color:var(--amber);background:rgba(183,121,31,.12)}.tag.mal{color:var(--red);background:rgba(178,58,58,.12)}
 .trio-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-bottom:26px}
-.tc{border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:10px;padding:16px 18px}.tc .n{font:400 24px 'IBM Plex Sans',sans-serif;color:var(--gold);line-height:1}.tc b{display:block;font-size:14px;margin:8px 0 5px;color:var(--ink)}.tc p{font-size:12.5px;color:var(--text);line-height:1.6}
+.tc{border:1px solid var(--line);border-top:3px solid var(--ink);border-radius:10px;padding:16px 18px}.tc .n{font:400 24px 'IBM Plex Sans',sans-serif;color:var(--gold);line-height:1}.tc b{display:block;font-size:15.5px;margin:8px 0 5px;color:var(--ink)}.tc p{font-size:14px;color:var(--text);line-height:1.6}
 .pct{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:22px 26px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center}
 @media(max-width:700px){.pct{grid-template-columns:1fr}.pct .big{border-left:0;border-top:1px solid var(--line);padding-top:16px}}
-.pct .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px}.pct .top span{font:600 13px 'IBM Plex Sans';color:var(--ink)}.pct .top b{font:600 20px 'IBM Plex Sans',sans-serif;color:var(--gold)}
-.pct input{width:100%;accent-color:var(--gold)}.pct .lab{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px}
-.pct .big{text-align:center;padding:0 12px;border-left:1px solid var(--line);min-width:180px}.pct .big .k{font:600 10.5px 'IBM Plex Sans';letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-.pct .big b{display:block;font:700 40px 'IBM Plex Sans',sans-serif;color:var(--ink);line-height:1;margin-top:6px;font-variant-numeric:tabular-nums}.pct .big small{font-size:11.5px;color:var(--muted);display:block;margin-top:6px}
-.infl{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:18px}.infl p{font-size:13px;color:var(--text);line-height:1.55;max-width:60ch}
-.seg{display:inline-flex;gap:6px;flex-shrink:0;flex-wrap:wrap}.seg button{font:600 12px 'IBM Plex Sans';letter-spacing:.06em;padding:8px 14px;cursor:pointer;background:#fff;color:#57534A;border:1px solid rgba(176,138,62,.4);border-radius:8px;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}.seg button:hover{color:#101010}.seg button.on{background:#FBF5E8;border-color:#B08A3E;color:#101010}
+.pct .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px}.pct .top span{font:600 14.5px 'IBM Plex Sans';color:var(--ink);white-space:nowrap}.pct .top b{font:600 20px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.pct input{width:100%;accent-color:var(--gold)}.pct .lab{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-top:4px}
+.pct .big{text-align:center;padding:0 12px;border-left:1px solid var(--line);min-width:180px}.pct .big .k{font:600 11px 'IBM Plex Sans';letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.pct .big b{display:block;font:700 40px 'IBM Plex Sans',sans-serif;color:var(--ink);line-height:1;margin-top:6px;font-variant-numeric:tabular-nums}.pct .big small{font-size:13px;color:var(--muted);display:block;margin-top:6px}
+.infl{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:18px}.infl p{font-size:14.5px;color:var(--text);line-height:1.55;max-width:60ch}
+.seg{display:inline-flex;gap:6px;flex-shrink:0;flex-wrap:wrap}.seg button{font:600 12.5px 'IBM Plex Sans';letter-spacing:.06em;padding:8px 14px;cursor:pointer;background:#fff;color:#57534A;border:1px solid rgba(176,138,62,.4);border-radius:8px;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}.seg button:hover{color:#101010}.seg button.on{background:#FBF5E8;border-color:#B08A3E;color:#101010}
 .chart{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px 24px 14px}
-.chart .legend{display:flex;flex-direction:column;gap:6px;margin-bottom:22px}.chart .legend div{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--text)}.chart .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}.chart .legend b{color:var(--ink)}.chart .legend small{font-size:11px;color:var(--muted)}
-.plot{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px}.yt{display:flex;flex-direction:column;justify-content:space-between;font:500 10.5px 'IBM Plex Sans',sans-serif;color:var(--muted);text-align:right;min-width:56px}
+.chart .legend{display:flex;flex-direction:column;gap:6px;margin-bottom:22px}.chart .legend div{display:flex;gap:18px;flex-wrap:wrap;font-size:14px;color:var(--text)}.chart .legend div span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.chart .legend i{display:inline-block;width:10px;height:10px;border-radius:50%}.chart .legend b{color:var(--ink)}.chart .legend small{font-size:12.5px;color:var(--muted)}
+.plot{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px}.yt{display:flex;flex-direction:column;justify-content:space-between;font:500 12px 'IBM Plex Sans',sans-serif;color:var(--muted);text-align:right;min-width:56px}
 .plot svg{width:100%;height:clamp(240px,34vw,360px);display:block;overflow:visible}
-.xt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;margin-top:8px}.xt>span{min-width:56px}.xt div{display:flex;justify-content:space-between;font:500 10.5px 'IBM Plex Sans',sans-serif;color:var(--muted)}
+.xt{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;margin-top:8px}.xt>span{min-width:56px}.xt div{display:flex;justify-content:space-between;font:500 12px 'IBM Plex Sans',sans-serif;color:var(--muted)}
 .hitos{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin-top:14px}
-.hito{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:#fff}.hito .k{font:600 10.5px 'IBM Plex Sans';letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-.hito .r{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:12px;color:var(--text)}.hito .r:first-of-type{margin-top:8px}.hito .r span{white-space:nowrap}.hito .r b{font:600 12.5px 'IBM Plex Sans',sans-serif;color:var(--ink)}.hito .r b.g{color:var(--gold3)}
-.note{font-size:12.5px;color:var(--text);line-height:1.7;margin-top:16px;max-width:80ch}.note b{color:var(--ink)}
-.resp{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-.rc{border:1px solid var(--line);border-top:3px solid var(--grey);border-radius:10px;padding:16px 18px;background:#fff}.rc.gold{border-top-color:var(--gold)}.rc.navy{border-top-color:var(--ink)}
-.rc .k{font:600 10.5px 'IBM Plex Sans';letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}.rc .v{display:flex;align-items:baseline;gap:6px;margin-top:8px}.rc .v b{font:700 32px 'IBM Plex Sans',sans-serif;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--grey)}.rc.gold .v b{color:var(--gold)}.rc.navy .v b{color:var(--ink)}.rc .v span{font-size:12px;color:var(--text)}.rc small{display:block;font-size:12px;color:var(--muted);margin-top:6px}
+.hito{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:#fff}.hito .k{font:600 11px 'IBM Plex Sans';letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.hito .r{display:flex;justify-content:space-between;gap:8px;margin-top:5px;font-size:13.5px;color:var(--text)}.hito .r:first-of-type{margin-top:8px}.hito .r span{white-space:nowrap}.hito .r b{font:600 14px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.note{font-size:14px;color:var(--text);line-height:1.7;margin-top:16px;max-width:80ch}.note b{color:var(--ink)}
+.resp{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.rc{border:1px solid var(--line);border-top:3px solid var(--muted);border-radius:10px;padding:16px 18px;background:#fff}.rc.gold{border-top-color:var(--gold)}.rc.navy{border-top-color:var(--ink)}
+.rc .k{font:600 11px 'IBM Plex Sans';letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}.rc .v{display:flex;align-items:baseline;gap:6px;margin-top:8px}.rc .v b{font:700 32px 'IBM Plex Sans',sans-serif;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--muted)}.rc.gold .v b{color:var(--gold)}.rc.navy .v b{color:var(--ink)}.rc .v span{font-size:13.5px;color:var(--text)}.rc small{display:block;font-size:13.5px;color:var(--muted);margin-top:6px}
 .cta{margin-top:48px;background:var(--navy);border-radius:14px;padding:30px 34px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
-.cta .k{font:600 10.5px 'IBM Plex Sans';letter-spacing:.16em;text-transform:uppercase;color:rgba(232,206,150,.8)}.cta h3{font:700 26px 'IBM Plex Sans',sans-serif;color:#fff;margin:8px 0 6px;line-height:1.2}.cta p{font-size:13.5px;color:rgba(255,255,255,.7);line-height:1.65;max-width:60ch}
-.btn{background:var(--gold2);color:var(--navy);font:600 11px 'IBM Plex Sans';letter-spacing:.12em;text-transform:uppercase;padding:14px 26px;border-radius:8px;white-space:nowrap;border:0;cursor:pointer}.btn:hover{background:#fff;color:var(--navy)}.btn:disabled{background:rgba(232,206,150,.35);color:rgba(14,24,48,.55);cursor:not-allowed}.btn:disabled:hover{background:rgba(232,206,150,.35)}
-.msg{font-size:12.5px;margin-top:10px;min-height:16px;color:rgba(255,255,255,.75)}.msg.ok{color:#9be0b6}.msg.err{color:#f0a0a0}
-footer.legal{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;font-size:12px;color:var(--text);line-height:1.9;max-width:900px}
+.cta .k{font:600 11px 'IBM Plex Sans';letter-spacing:.16em;text-transform:uppercase;color:rgba(232,206,150,.8)}.cta h3{font:700 26px 'IBM Plex Sans',sans-serif;color:#fff;margin:8px 0 6px;line-height:1.2}.cta p{font-size:15px;color:rgba(255,255,255,.7);line-height:1.65;max-width:60ch}
+.btn{background:var(--gold2);color:var(--navy);font:600 12.5px 'IBM Plex Sans';letter-spacing:.12em;text-transform:uppercase;padding:14px 26px;border-radius:8px;white-space:nowrap;border:0;cursor:pointer}.btn:hover{background:#fff;color:var(--navy)}.btn:disabled{background:rgba(232,206,150,.35);color:rgba(14,24,48,.55);cursor:not-allowed}.btn:disabled:hover{background:rgba(232,206,150,.35)}
+.msg{font-size:13.5px;margin-top:10px;min-height:16px;color:rgba(255,255,255,.75)}.msg.ok{color:#9be0b6}.msg.err{color:#f0a0a0}
+footer.legal{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;font-size:12.5px;color:var(--muted);line-height:1.9;max-width:900px}
 .oculto{display:none!important}
 .site-foot{background:var(--navy2);padding:26px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;font:400 12.5px 'IBM Plex Sans';color:rgba(255,255,255,.35)}.site-foot a{font-weight:500;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase;white-space:nowrap}
 </style>
@@ -130,7 +134,7 @@ footer.legal{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;f
     <div>
       <div class="eye">Paso 1 · Tu presupuesto</div>
       <h2>Primero, cuánto te sobra</h2>
-      <p class="sub">Anotá lo que entra y lo que sale en un mes normal. No hace falta que sea exacto: con un número aproximado alcanza para saber cuánto podés invertir sin apretarte.</p>
+      <p class="sub" style="max-width:60ch">Anotá lo que entra y lo que sale en un mes normal. No hace falta que sea exacto: con un número aproximado alcanza para saber cuánto podés invertir sin apretarte.</p>
       <div class="tabs" id="tabs" role="tablist" aria-label="Tipo de movimiento"></div>
       <div class="card"><div class="card-h"><b id="tab-t"></b><span id="tab-h"></span></div><div id="campos" role="tabpanel" tabindex="0"></div><div class="total"><span>Total</span><b id="tab-total"></b></div></div>
     </div>
@@ -143,7 +147,7 @@ footer.legal{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;f
       </div>
       <div class="rule">
         <div class="k">La regla 50 / 30 / 20</div>
-        <p>Una referencia, no una ley: hasta el 50% en lo necesario, hasta el 30% en gustos, y al menos el 20% para ahorrar. La propusieron Elizabeth Warren y Amelia Warren Tyagi en <i>All Your Worth</i> (2005).</p>
+        <p>Una referencia, no una ley: hasta la mitad en lo necesario, hasta un tercio en gustos, y al menos un quinto para ahorrar. La propusieron Elizabeth Warren y Amelia Warren Tyagi en <a class="src" href="https://www.google.com/books/edition/All_Your_Worth/" target="_blank" rel="noopener"><i>All Your Worth</i></a> (2005).</p>
         <div id="salud"></div>
       </div>
     </div>
@@ -161,8 +165,8 @@ footer.legal{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;f
       <div class="tc"><div class="n">3</div><b>Cualquier gasto grande a menos de un año</b><p>Un auto, una mudanza, un curso. Lo que necesitás pronto no puede depender del mercado.</p></div>
     </div>
     <div class="pct">
-      <div><div class="top"><span>Porcentaje del ahorro que va a inversión</span><b id="pct-v">50%</b></div><input type="range" id="pct" min="0" max="100" step="5" value="50"><div class="lab"><span>0% · todo a mano</span><span>50% · referencia</span><span>100% · todo al mercado</span></div></div>
-      <div class="big" aria-live="polite"><div class="k">Invertís por mes</div><b id="aporte"></b><small>y quedan <span id="colchon"></span> a mano</small><small id="regla-big" style="color:var(--gold3)"></small></div>
+      <div><div class="top"><span>Parte del ahorro que invertís</span><b id="pct-v">50%</b></div><input type="range" id="pct" min="0" max="100" step="5" value="50"><div class="lab"><span>0% · todo a mano</span><span>50% · referencia</span><span>100% · todo al mercado</span></div></div>
+      <div class="big" aria-live="polite"><div class="k">Invertís por mes</div><b id="aporte"></b><small>y quedan <span id="colchon"></span> a mano</small></div>
     </div>
   </section>
 
@@ -171,10 +175,10 @@ footer.legal{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;f
   <section id="paso-3">
     <div class="eye">Paso 3 · Qué hace el tiempo</div>
     <h2 id="h-paso3">Qué pasa con tu aporte al mes durante veinte años</h2>
-    <p class="sub" style="margin-bottom:14px">Tres caminos con la misma plata. Debajo del colchón no rinde nada. Para renta fija tomamos <b>5% al año</b>: es lo que rindieron los bonos del Tesoro de EE.UU. a diez años en promedio desde 1928 (<a class="src" href="https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html" target="_blank" rel="noopener">Damodaran, NYU Stern</a>). Para acciones, <b>10% al año</b>: el promedio del S&amp;P 500 con dividendos desde 1957 (<a class="src" href="https://www.officialdata.org/us/stocks/s-p-500/1957" target="_blank" rel="noopener">Official Data</a>, <a class="src" href="https://www.fidelity.com/learning-center/trading-investing/sp-500-average-return" target="_blank" rel="noopener">Fidelity</a>). No usamos lo que rindió Valtia: veinte años no se prometen. Y ojo con leer el promedio como si fuera el resultado: ventanas reales de veinte años rindieron entre 6% y 13% anual. El mismo aporte entre 1999 y 2019 habría terminado bastante por debajo de lo que muestra el gráfico.</p>
+    <p class="sub" style="margin-bottom:14px;max-width:75ch">Tres caminos con la misma plata. Debajo del colchón no rinde nada. Para renta fija tomamos <b>5% al año</b>: es lo que rindieron los bonos del Tesoro de EE.UU. a diez años en promedio desde 1928 (<a class="src" href="https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html" target="_blank" rel="noopener">Damodaran, NYU Stern</a>). Para acciones, <b>10% al año</b>: el promedio del S&amp;P 500 con dividendos desde 1957 (<a class="src" href="https://www.officialdata.org/us/stocks/s-p-500/1957" target="_blank" rel="noopener">Official Data</a>, <a class="src" href="https://www.fidelity.com/learning-center/trading-investing/sp-500-average-return" target="_blank" rel="noopener">Fidelity</a>). No usamos lo que rindió Valtia: veinte años no se prometen. Y ojo con leer el promedio como si fuera el resultado: ventanas reales de veinte años rindieron entre 6% y 13% anual.</p>
     <div class="infl" id="infl"><p id="infl-t"></p><div class="seg"><button id="b-nom" class="on">Sin descontar inflación</button><button id="b-real">En plata de hoy</button></div></div>
     <div class="chart" id="chart">
-      <div class="legend"><div><span><i style="background:#8A9BAD"></i>Debajo del colchón <b id="f-cash"></b></span><span><i style="background:#B08A3E"></i>Renta fija <b id="f-rf"></b></span><span><i style="background:#0E1830"></i>Acciones <b id="f-acc"></b></span></div><small>valor de la inversión, en dólares</small></div>
+      <div class="legend"><div><span><i style="background:#8A9BAD"></i>Debajo del colchón <b id="f-cash"></b></span><span><i style="background:#B08A3E"></i>Renta fija en dólares <b id="f-rf"></b></span><span><i style="background:#0E1830"></i>Acciones <b id="f-acc"></b></span></div><small>valor de la inversión, en dólares</small></div>
       <div class="plot"><div class="yt" id="yt"></div>
         <svg viewBox="0 0 1000 340" preserveAspectRatio="none" role="img" aria-label="Evolución del aporte mensual a veinte años en tres caminos: debajo del colchón, renta fija y acciones. Los montos exactos están en la leyenda y en las tarjetas de abajo.">
           <line x1="0" y1="0" x2="1000" y2="0" stroke="#EEF0F3"/><line x1="0" y1="85" x2="1000" y2="85" stroke="#EEF0F3"/><line x1="0" y1="170" x2="1000" y2="170" stroke="#EEF0F3"/><line x1="0" y1="255" x2="1000" y2="255" stroke="#EEF0F3"/><line x1="0" y1="340" x2="1000" y2="340" stroke="#D9DCE1"/>
@@ -191,7 +195,7 @@ footer.legal{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;f
   <section id="paso-4">
     <div class="eye">Para tener en perspectiva</div>
     <h2>Cuántos meses de gastos tendrías cubiertos</h2>
-    <p class="sub">Una forma concreta de leer los números de arriba: si mañana se cortara el ingreso, ¿cuántos meses podrías vivir de lo invertido? Hoy gastás <b id="gastos-mes"></b> por mes. <b>Esta sección siempre va en plata de hoy</b>, sin importar cómo tengas el interruptor de arriba: comparar dólares de dentro de veinte años contra tus gastos de este mes no diría nada. Las proyecciones incluyen lo que ya tenés invertido, creciendo a la misma tasa. No es una meta ni una promesa; es una medida de respaldo.</p>
+    <p class="sub">Una forma concreta de leer los números de arriba: si mañana se cortara el ingreso, ¿cuántos meses podrías vivir de lo invertido? Hoy gastás <b id="gastos-mes"></b> por mes. <b>Esta sección siempre va en plata de hoy</b>, sin importar el interruptor de arriba. Las proyecciones incluyen lo que ya tenés invertido. No es una meta ni una promesa; es una medida de respaldo.</p>
     <div class="row" style="border:1px solid var(--line);border-radius:10px;margin-bottom:16px;max-width:480px"><label for="stock">¿Cuánto tenés invertido hoy?</label><div class="money"><i>US$</i><input type="text" id="stock" inputmode="decimal" autocomplete="off" value="0" style="width:110px"></div></div>
     <div class="resp" id="resp" aria-live="polite"></div>
   </section>
@@ -369,9 +373,9 @@ function calc() {
   $('#yt').innerHTML = [1, .75, .5, .25, 0].map(f => `<span>${usdK(max * f)}</span>`).join('');
   $('#f-cash').textContent = usd(cash[Y]); $('#f-rf').textContent = usd(sRF[Y]); $('#f-acc').textContent = usd(sAcc[Y]);
   $('#hitos').innerHTML = hayAporte
-    ? [5, 10, 15, 20].map(y => `<div class="hito"><div class="k">Año ${y}</div><div class="r"><span>Pusiste</span><b>${usd(cash[y])}</b></div><div class="r"><span>Renta fija</span><b class="g">${usd(sRF[y])}</b></div><div class="r"><span>Acciones</span><b>${usd(sAcc[y])}</b></div></div>`).join('')
+    ? [5, 10, 15, 20].map(y => `<div class="hito"><div class="k">Año ${y}</div><div class="r"><span>Pusiste</span><b>${usd(cash[y])}</b></div><div class="r"><span>Renta fija</span><b>${usd(sRF[y])}</b></div><div class="r"><span>Acciones</span><b>${usd(sAcc[y])}</b></div></div>`).join('')
     : '<div class="hito" style="grid-column:1/-1"><div class="k">Todavía no hay aporte</div>' +
-      '<p style="font-size:12.5px;color:var(--text);line-height:1.6;margin-top:8px">Con lo que anotaste no te sobra nada para invertir. ' +
+      '<p style="font-size:14px;color:var(--text);line-height:1.6;margin-top:8px">Con lo que anotaste no te sobra nada para invertir. ' +
       'Revisá los números del paso 1 o bajá el porcentaje del paso 2: el gráfico se dibuja solo cuando hay un aporte mayor que cero.</p></div>';
 
   $('#gastos-mes').textContent = usd(gas);

@@ -12,9 +12,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Calendario — reglas globales del rediseño (sitio.css): título negro sobre
-     blanco, Plex Sans en todo, esquinas redondeadas, columna de 960px alineada
-     con el título. Solo claro. ── */
+/* ── Calendario — valores del prototipo "Valtia Calendario" (zip completo,
+     24/09) sobre las reglas globales de sitio.css: título negro sobre blanco,
+     Plex Sans en todo, filtros con punto de color, fecha grande por día y cada
+     evento con el borde izquierdo del color de su tipo. Solo claro. ── */
 :root{
   --navy:#0E1830;--navy2:#0B1327;
   --gold:#B08A3E;--gold2:#8A6A2F;--gold-claro:#E8CE96;
@@ -23,53 +24,58 @@
   --border:#E7E3DA;--card:#fff;
   --ink:#101010;--mut:#8B8375;--line:#E7E3DA;--marfil:#F6F3EC;
   --up:#1F7A4D;--dn:#B23A3A;--greenTx:#1F7A4D;--redTx:#B23A3A;
+  --c-ear:#8A6A2F;--c-cup:#1F7A4D;--c-let:#2B5FB0;   /* resultados · pagos · letras */
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;--v-ancho:960px}
+/* columna del prototipo: 960 con 40 de margen = 880 de contenido, con los bordes del título */
+body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;--v-ancho:880px}
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
 
-/* columna del prototipo de Calendario: 960px, con los bordes del título */
-main{width:100%;flex:1 0 auto;max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto;padding:18px var(--v-gutter) 60px}
-.sub{color:var(--sub);font-size:15px;line-height:1.75;max-width:700px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+main{width:100%;flex:1 0 auto;max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto;padding:18px var(--v-gutter) 70px}
+.sub{color:var(--sub);font-size:16.5px;line-height:1.75;max-width:700px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
 
-/* filtros: la regla de botones y selectores del sitio (borde dorado sutil,
-   radio 8; encendido con borde dorado y relleno crema) */
+/* filtros: los del prototipo (punto del color del tipo + nombre en mayúsculas)
+   con la regla de botones del sitio: borde dorado sutil, radio 8; encendido
+   con borde dorado y relleno crema */
 .filtros{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0 8px}
-.ftr{font:500 12.5px 'IBM Plex Sans',sans-serif;padding:8px 14px;border:1px solid rgba(176,138,62,.4);border-radius:8px;background:#fff;color:#57534A;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}
+.ftr{display:flex;align-items:center;gap:7px;font:600 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:8px 14px;border:1px solid rgba(176,138,62,.4);border-radius:8px;background:#fff;color:#57534A;cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}
+.ftr i{width:8px;height:8px;border-radius:50%;display:block;flex:none}
+.ftr[data-f="ear"] i{background:var(--c-ear)}.ftr[data-f="cup"] i{background:var(--c-cup)}.ftr[data-f="let"] i{background:var(--c-let)}
 .ftr:hover{color:#101010}
 .ftr.on{border-color:#B08A3E;background:#FBF5E8;color:#101010}
-.ftr:disabled,.ftr:disabled:hover{border-color:rgba(176,138,62,.4);background:#fff;color:#57534A;cursor:not-allowed}
+.ftr:disabled,.ftr:disabled:hover{border-color:rgba(176,138,62,.4);background:#fff;color:#57534A;cursor:not-allowed;opacity:.45}
 
-/* cada día: fecha + hairline que se estira (patrón .sec-h) */
-.dia{margin-top:28px}
-.dia .fecha{display:flex;align-items:baseline;gap:12px;margin-bottom:12px}
-.dia .fecha b{font:700 18px 'IBM Plex Sans',sans-serif;line-height:1.2;color:var(--ink);font-variant-numeric:lining-nums}
-.dia .fecha span{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);white-space:nowrap}
-.dia .fecha::after{content:'';flex:1;height:1px;background:var(--line);align-self:center}
+/* cada día: fecha grande y, al lado, "hoy / mañana / en n días" */
+.dia{margin-top:22px}
+.dia .fecha{display:flex;align-items:baseline;gap:12px;margin-bottom:8px;white-space:nowrap}
+.dia .fecha b{font:500 22px 'IBM Plex Sans',sans-serif;color:var(--ink);white-space:nowrap}
+.dia .fecha span{font:500 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
 .dia .fecha.hoy b{color:var(--gold2)}
 
-/* eventos: tarjetas blancas con borde fino y esquinas de 10px, sin sombra */
-.ev{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:13px 16px;margin-bottom:8px;position:relative;color:var(--ink);text-decoration:none}
-.ev:hover{background:var(--marfil);border-color:var(--gold);color:var(--ink);z-index:1}
-.ev .ic{font-size:18px;width:26px;text-align:center;flex-shrink:0}
-.ev .t{flex:1;min-width:0;font-size:14px;font-weight:500;line-height:1.45;font-variant-numeric:tabular-nums}
-.ev .t small{display:block;font-size:11.5px;font-weight:400;color:var(--sub);margin-top:2px}
-.ev .tipo{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:4px 8px;border-radius:6px;white-space:nowrap}
-.tipo.ear{color:var(--gold2);background:rgba(176,138,62,.12)}
-.tipo.cup{color:var(--greenTx);background:rgba(31,122,77,.1)}
-.tipo.let{color:#2B5FB0;background:rgba(43,95,176,.1)}
-.state{border:1px dashed var(--line);border-radius:12px;text-align:center;padding:44px 20px;color:var(--sub);font-size:14px;line-height:1.9;margin-top:24px}
-.nota{font-size:12.5px;color:var(--sub);line-height:1.7;margin-top:14px;max-width:70ch}
+/* eventos: tarjeta blanca con el borde izquierdo del color del tipo; al pasar,
+   todo el borde dorado (como el prototipo) */
+.ev{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--line);border-radius:11px;padding:12px 16px;margin-bottom:8px;color:var(--ink);text-decoration:none;transition:border-color .15s}
+.ev.ear{border-left-color:var(--c-ear)}.ev.cup{border-left-color:var(--c-cup)}.ev.let{border-left-color:var(--c-let)}
+.ev:hover{border-color:var(--gold);color:var(--ink)}
+.ev .t{flex:1;min-width:0;font-size:15.5px;line-height:1.45}
+.ev .t small{display:block;font-size:13px;color:var(--sub)}
+.ev .tipo{font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.tipo.ear{color:var(--c-ear);background:rgba(176,138,62,.14)}
+.tipo.cup{color:var(--c-cup);background:rgba(31,122,77,.12)}
+.tipo.let{color:var(--c-let);background:rgba(43,95,176,.12)}
+.state{border:1px dashed var(--line);border-radius:14px;text-align:center;padding:50px 20px;color:var(--sub);font-size:14px;line-height:1.9;margin-top:24px}
+.nota{font-size:13.5px;color:var(--mut);line-height:1.7;margin-top:18px;max-width:70ch;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
 
-/* footer (el de Noticias) */
-footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px 32px;margin-top:40px}
-.footer-copy{font:400 11px 'IBM Plex Sans',sans-serif;line-height:1.7;color:rgba(255,255,255,.55);flex:1 1 420px;max-width:780px}
-.footer-links{display:flex;gap:20px}
-.footer-links a{font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase}
-.footer-links a:hover{color:#E8CE96}
+/* pie legal dentro de la columna (gris, como el prototipo) y pie navy del sitio */
+footer.legal{margin-top:44px;border-top:1px solid var(--line);padding-top:18px;font-size:12.5px;color:var(--mut);line-height:1.9;max-width:900px}
+footer.legal a{color:inherit;text-decoration:underline}
+.site-foot{background:var(--navy2);padding:26px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px 20px;font:400 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
+.site-foot .links{display:flex;gap:20px;flex-wrap:wrap}
+.site-foot a{font-weight:500;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase;white-space:nowrap}
+.site-foot a:hover{color:#E8CE96}
 
-@media(max-width:480px){.ev{gap:10px;padding:12px}.ev .ic{width:22px}}
+@media(max-width:480px){.ev{gap:10px;padding:12px 14px}}
 </style>
 <link rel="stylesheet" href="sitio.css?v=1">
 </head>
@@ -98,7 +104,6 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
 
 <!-- título de la página: negro sobre blanco -->
 <header class="v-tit"><div class="v-tit-in">
-  <button class="volver" onclick="volver()">← Volver</button>
   <h1>Calendario Valtia</h1>
   <p class="v-baj">Resultados · Cupones · Vencimientos · Próximos 120 días</p>
 </div></header>
@@ -107,37 +112,22 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
   <p class="sub">Resultados de las empresas del radar, cupones y amortizaciones de los bonos, y vencimientos de las
   letras — en una sola agenda, con los próximos 120 días. Cada evento lleva a su ficha.</p>
   <div class="filtros">
-    <button class="ftr on" data-f="ear">📄 Resultados</button>
-    <button class="ftr on" data-f="cup">💵 Cupones y amortizaciones</button>
-    <button class="ftr on" data-f="let">⏳ Vencen letras</button>
+    <button class="ftr on" data-f="ear" aria-pressed="true"><i aria-hidden="true"></i>Resultados</button>
+    <button class="ftr on" data-f="cup" aria-pressed="true"><i aria-hidden="true"></i>Cupones y amortizaciones</button>
+    <button class="ftr on" data-f="let" aria-pressed="true"><i aria-hidden="true"></i>Vencen letras</button>
   </div>
   <div id="lista"><div class="state">Armando la agenda…</div></div>
   <p class="nota" id="nota"></p>
-</main>
-
-<footer>
-  <div class="footer-copy">Fechas de resultados según los calendarios corporativos publicados (pueden cambiar); pagos de bonos según
+  <footer class="legal">Fechas de resultados según los calendarios corporativos publicados (pueden cambiar); pagos de bonos según
   cronogramas oficiales (Dto. 701/2020 y prospectos BCRA); vencimientos de letras según condiciones de emisión.
   Análisis de carácter general y educativo, no constituye asesoramiento financiero.
-  · <a href="/terminos" style="color:inherit;text-decoration:underline">Términos</a> · <a href="/privacidad" style="color:inherit;text-decoration:underline">Privacidad</a></div>
-  <div class="footer-links">
-    <a href="/">Inicio</a><a href="/cartera">Carteras</a><a href="/informes">Informes</a><a href="/herramientas">Herramientas</a>
-  </div>
-</footer>
+  · <a href="/terminos">Términos</a> · <a href="/privacidad">Privacidad</a></footer>
+</main>
+
+<div class="site-foot"><span>© 2026 Valtia Analytics</span><div class="links"><a href="/">Inicio</a><a href="/cartera">Carteras</a><a href="/informes">Informes</a><a href="/herramientas">Herramientas</a></div></div>
 
 <a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
-<script>
-function volver() {
-  try {
-    if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
-      history.back();
-      return;
-    }
-  } catch (e) {}
-  location.href = '/';
-}
-</script>
 <script type="module">
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -218,7 +208,7 @@ async function cargar() {
     : "") + aviso;
   faltan.forEach(t => {
     const b = document.querySelector(`.ftr[data-f="${t}"]`);
-    if (b) { b.classList.remove("on"); b.disabled = true; b.style.opacity = ".45"; filtros[t] = false; }
+    if (b) { b.classList.remove("on"); b.setAttribute("aria-pressed", "false"); b.disabled = true; filtros[t] = false; }
   });
   pintar();
 }
@@ -234,12 +224,11 @@ function pintar() {
   }
   const porDia = new Map();
   vis.forEach(e => { if (!porDia.has(e.fecha)) porDia.set(e.fecha, []); porDia.get(e.fecha).push(e); });
-  const ICO = { ear: "📄", cup: "💵", let: "⏳" }, TIPO = { ear: "resultados", cup: "pago", let: "vencimiento" };
+  const TIPO = { ear: "resultados", cup: "pago", let: "vencimiento" };
   lista.innerHTML = [...porDia.entries()].map(([f, evs]) => `
     <div class="dia">
       <div class="fecha${f === hoyISO ? " hoy" : ""}"><b>${fechaLarga(f)}</b><span>${relativa(f)}</span></div>
-      ${evs.map(e => `<a class="ev" href="${e.href}">
-        <span class="ic">${ICO[e.tipo]}</span>
+      ${evs.map(e => `<a class="ev ${e.tipo}" href="${e.href}">
         <span class="t">${esc(e.titulo)}<small>${esc(e.sub)}</small></span>
         <span class="tipo ${e.tipo}">${TIPO[e.tipo]}</span></a>`).join("")}
     </div>`).join("");
@@ -248,6 +237,7 @@ function pintar() {
 document.querySelectorAll(".ftr").forEach(b => b.addEventListener("click", () => {
   filtros[b.dataset.f] = !filtros[b.dataset.f];
   b.classList.toggle("on", filtros[b.dataset.f]);
+  b.setAttribute("aria-pressed", filtros[b.dataset.f] ? "true" : "false");
   pintar();
 }));
 cargar().catch(e => {

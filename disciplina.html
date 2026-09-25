@@ -12,9 +12,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Candidatas del mes — reglas globales del rediseño (sitio.css): título
-     negro sobre blanco, Plex Sans en todo, esquinas redondeadas, botones con
-     borde dorado sutil y columna de 1080px alineada con el título. Solo claro. ── */
+/* ── Candidatas del mes — valores del prototipo "Valtia Disciplina" (zip
+     completo, 24/09) sobre las reglas globales de sitio.css: título negro,
+     Plex Sans en todo, tarjetas 12–13px, títulos de sección como etiqueta
+     dorada, tablas con filete gris, botones con la regla del sitio. Solo claro. ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --navy:#0E1830;--navy2:#0B1327;
@@ -22,95 +23,98 @@
   --bg:#fff;--bg2:#F6F3EC;--bg3:#F6F3EC;
   --text:#101010;--sub:#57534A;--muted:#8B8375;
   --border:#E7E3DA;--card:#fff;
-  --ink:#101010;--mut:#8B8375;--line:#E7E3DA;--marfil:#F6F3EC;
+  --ink:#101010;--mut:#8B8375;--line:#E7E3DA;--line2:#F2EFE8;--marfil:#F6F3EC;
   --up:#1F7A4D;--dn:#B23A3A;--greenTx:#1F7A4D;--redTx:#B23A3A;
   --green:#1F7A4D;--red:#B23A3A;
 }
-body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);min-height:100vh;overflow-x:hidden;--v-ancho:1080px}
+/* columna del prototipo: 1080 con 40 de margen = 1000 de contenido, con los bordes del título */
+body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);min-height:100vh;overflow-x:hidden;--v-ancho:1000px}
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
 
-/* columna del prototipo de Candidatas: 1080px, con los bordes del título */
-main{max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto;padding:18px var(--v-gutter) 60px;min-height:52vh}
-.sub{color:var(--sub);font-size:15px;line-height:1.75;max-width:720px;margin-bottom:8px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
-/* título de sección: patrón .sec-h de Informes (texto + hairline que se
-   estira). El JS pinta solo texto adentro, así que la hairline es un ::after
-   en línea; queda en bloque para que ::first-letter capitalice el mes. */
-.sec{margin:38px 0 16px;font:700 17px 'IBM Plex Sans',sans-serif;line-height:1.3;color:var(--ink);overflow:hidden}
-.sec::first-letter{text-transform:uppercase}
-.sec::after{content:'';display:inline-block;vertical-align:middle;width:100%;height:1px;background:var(--line);margin-left:14px;margin-right:-100%}
-.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px 24px}
-.pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:26px}
-.paso{background:#fff;border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:12px;padding:18px 20px}
-.paso .n{font:600 20px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--gold2);line-height:1;margin-bottom:10px}
-.paso b{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:6px}
-.paso p{font-size:12.5px;color:var(--sub);line-height:1.6}
+main{max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto;padding:18px var(--v-gutter) 70px;min-height:52vh}
+/* "← Inversión mensual", arriba de la introducción, como en el prototipo */
+.atras{display:inline-block;margin:0 0 16px;font:500 13.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--gold2);white-space:nowrap}
+.atras:hover{color:var(--gold)}
+.sub{color:var(--sub);font-size:16.5px;line-height:1.75;max-width:720px;margin:0;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+/* título de sección del prototipo: etiqueta dorada en mayúsculas, un trazo
+   corto adelante y la hairline que se estira hasta el borde */
+.sec{display:flex;align-items:center;gap:12px;margin:34px 0 14px;font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--gold2)}
+.sec::before{content:'';width:32px;height:1px;background:var(--gold);opacity:.6;flex:none}
+.sec::after{content:'';flex:1;height:1px;background:var(--line)}
+.card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:20px 22px}
+.pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:24px}
+.paso{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.paso .n{font:400 30px 'IBM Plex Sans',sans-serif;color:var(--gold);line-height:1;margin-bottom:8px}
+.paso b{display:block;font-size:15.5px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.paso p{font-size:14px;color:var(--sub);line-height:1.6}
 .regla{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
-.regla .campo label{display:block;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin-bottom:6px}
-.regla input{width:130px;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:8px;color:var(--ink);font:500 14px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;outline:none}
+.regla .campo label{display:block;font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
+.regla input{width:130px;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:7px;color:var(--ink);font:400 16.5px 'IBM Plex Sans',sans-serif;outline:none}
 .regla input:focus{border-color:var(--gold)}
-/* botones: primario navy; el secundario, con la regla del sitio (borde dorado
-   sutil y texto gris; al pasar, borde dorado y relleno crema). Radio 8. */
-.btn{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--navy);border:1px solid var(--navy);border-radius:8px;padding:10px 19px;cursor:pointer}
-.btn:hover{background:var(--gold);border-color:var(--gold);color:#fff}
+/* botones: primario navy (al pasar, dorado claro como el prototipo); el
+   secundario con la regla del sitio (borde dorado sutil y texto gris; al
+   pasar, borde dorado y relleno crema). Radio 8. */
+.btn{font:600 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--navy);border:1px solid var(--navy);border-radius:8px;padding:11px 20px;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.btn:hover{background:#D4AF6E;border-color:#D4AF6E;color:#fff}
 .btn.sec2{background:#fff;color:#57534A;border:1px solid rgba(176,138,62,.4)}
 .btn.sec2:hover{background:#FBF5E8;border-color:#B08A3E;color:#101010}
 .btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
-.regla-txt{font-size:14px;color:var(--sub);line-height:1.6;font-variant-numeric:tabular-nums}
+.regla-txt{font-size:15.5px;color:var(--sub);line-height:1.6}
 .regla-txt b{color:var(--ink);font-weight:600}
 .mes-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .dots{display:flex;gap:7px}
-.dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line);background:transparent}
+.dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line);background:transparent;display:block}
 .dot.on{background:var(--gold);border-color:var(--gold)}
-.estado-mes{font-size:14px;margin-top:10px;color:var(--sub)}
+.estado-mes{font-size:15.5px;color:var(--sub)}
 .estado-mes b{color:var(--ink)}
-.racha{display:inline-flex;align-items:center;gap:10px;font-size:13px;color:var(--sub);margin-top:14px;flex-wrap:wrap}
-.racha b{color:var(--ink)}
-.racha .fuego{font-size:16px}
-.mchip{font-size:10.5px;font-weight:600;font-variant-numeric:tabular-nums;border:1px solid var(--line);border-radius:6px;padding:3px 9px;letter-spacing:.04em}
+.racha{display:inline-flex;align-items:center;gap:10px;font-size:14.5px;color:var(--sub);margin-top:14px;flex-wrap:wrap}
+.racha b{color:var(--ink);white-space:nowrap}
+.mchip{font:600 12px 'IBM Plex Sans',sans-serif;border:1px solid var(--line);border-radius:6px;padding:3px 9px;white-space:nowrap;color:var(--mut)}
 .mchip.ok{color:var(--up);border-color:rgba(31,122,77,.35)}
-.mchip.no{color:var(--sub)}
-/* tablas: encabezado con línea de tinta, números tabulares (Plex Sans) */
+/* tablas del prototipo: encabezado gris de 11px con filete #E7E3DA, filas de
+   14,5px separadas por #F2EFE8, sin sombreado al pasar; la caja scrollea en celular */
 .panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
-th{text-align:left;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:12px 16px;border-bottom:1px solid var(--ink);white-space:nowrap}
-td{padding:11px 16px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;vertical-align:middle}
-td.num{font:500 12.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-size:14.5px;min-width:760px}
+table.hist{min-width:600px}
+table.muestra{min-width:560px}
+th{text-align:left;font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.15em;text-transform:uppercase;color:var(--mut);padding:12px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 16px;border-bottom:1px solid var(--line2);vertical-align:middle}
 tr:last-child td{border-bottom:none}
-tbody tr:hover td{background:var(--marfil)}
 .num{text-align:right}
 .pos{color:var(--up)!important}.neg{color:var(--dn)!important}.mut{color:var(--mut)!important}
-.tk a{font:600 13px 'IBM Plex Sans',sans-serif;color:var(--gold2);text-decoration:none;border-bottom:1px dotted var(--gold)}
-.tk a:hover{color:var(--ink)}
-.tk b{font:600 13px 'IBM Plex Sans',sans-serif;color:var(--ink)}
-.nom{font:400 11px 'IBM Plex Sans',sans-serif;color:var(--sub)}
-/* enlaces dentro de notas chicas: el dorado oscuro, que sí llega a AA (el inline trae --gold) */
-.nom a{color:var(--gold2)!important;text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:2px}
-.ver{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.tk a{font-weight:600;color:var(--gold);text-decoration:none;border-bottom:1px dotted var(--gold)}
+.tk a:hover{color:var(--gold2)}
+.tk b{font-weight:600;color:var(--ink)}
+.fecha{font-size:13.5px;white-space:nowrap}
+.nom{font:400 12.5px 'IBM Plex Sans',sans-serif;color:var(--sub)}
+.lectura{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.ver{font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:6px;white-space:nowrap}
 .ver.infra{color:var(--up);background:rgba(31,122,77,.12)}
 .ver.precio{color:var(--gold2);background:rgba(176,138,62,.14)}
-.ver.cara{color:var(--dn);background:rgba(178,58,58,.1)}
-.zona{font-size:10.5px;font-weight:700;color:var(--gold2);border:1px solid var(--gold);border-radius:6px;padding:2.5px 7px;letter-spacing:.05em;white-space:nowrap}
+.ver.cara{color:var(--dn);background:rgba(178,58,58,.12)}
+.zona{font:700 11px 'IBM Plex Sans',sans-serif;color:var(--gold2);border:1px solid rgba(176,138,62,.4);border-radius:6px;padding:2.5px 7px;letter-spacing:.05em;white-space:nowrap}
 .compra-form{display:flex;align-items:center;gap:8px;justify-content:flex-end;flex-wrap:wrap}
-.compra-form input{width:92px;padding:7px 10px;background:#fff;border:1px solid var(--line);border-radius:8px;color:var(--ink);font:500 13px 'IBM Plex Sans',sans-serif;outline:none}
-.compra-form input[list]{font-family:'IBM Plex Sans',system-ui,sans-serif}
+.compra-form input{width:92px;padding:7px 10px;background:#fff;border:1px solid var(--line);border-radius:7px;color:var(--ink);font:500 14px 'IBM Plex Sans',sans-serif;outline:none}
 .compra-form input:focus{border-color:var(--gold)}
-.btn.mini{padding:8px 13px;font-size:10.5px}
-.msg{font-size:12px;margin-top:10px}
+.btn.mini{padding:8px 13px;font-size:11.5px}
+.msg{font-size:13.5px;margin-top:10px;min-height:16px}
 .otra{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;align-items:end;margin-top:12px}
-.otra label{display:block;font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin-bottom:6px}
-.otra input{width:100%;padding:9px 11px;background:#fff;border:1px solid var(--line);border-radius:8px;color:var(--ink);font:400 14px 'IBM Plex Sans',system-ui,sans-serif;outline:none}
-.otra input[type="number"]{font:500 14px 'IBM Plex Sans',sans-serif}
+.otra label{display:block;font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
+.otra input{width:100%;padding:9px 11px;background:#fff;border:1px solid var(--line);border-radius:7px;color:var(--ink);font:400 15px 'IBM Plex Sans',sans-serif;outline:none}
 .otra input:focus{border-color:var(--gold)}
-.state{border:1px dashed var(--line);border-radius:12px;text-align:center;padding:60px 20px;color:var(--sub);font-size:14px;margin-top:30px}
-/* el único "← Volver" de la página va en el título (sitio.css .v-tit .volver) */
+.state{border:1px dashed var(--line);border-radius:14px;text-align:center;padding:50px 20px;color:var(--sub);font-size:14px;margin-top:24px}
 .gate{background:var(--marfil);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:12px;padding:22px 24px;margin-top:26px}
 .gate>b{font:600 17px 'IBM Plex Sans',sans-serif;color:var(--ink)}
 .gate p b{color:var(--ink);font-weight:600}
-.gate p{font-size:13px;color:var(--sub);line-height:1.7;margin:8px 0 14px}
-/* footer de Noticias (navy2), a sangre: el JS lo pinta adentro de <main> */
-footer{margin:48px calc(50% - 50vw) -60px;background:#0B1327;padding:28px calc(50vw - 50%);font:400 12.5px 'IBM Plex Sans',sans-serif;line-height:1.9;color:rgba(255,255,255,.55)}
-footer a:hover{color:#E8CE96}
+.gate p{font-size:14px;color:var(--sub);line-height:1.7;margin:8px 0 14px}
+/* pie legal dentro de la columna (gris, como el prototipo) y pie navy del sitio */
+footer.legal{margin-top:44px;border-top:1px solid var(--line);padding-top:18px;font-size:12.5px;color:var(--mut);line-height:1.9;max-width:900px}
+footer.legal a{color:inherit;text-decoration:underline}
+.site-foot{background:var(--navy2);padding:26px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px 20px;font:400 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
+.site-foot .links{display:flex;gap:20px;flex-wrap:wrap}
+.site-foot a{font-weight:500;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase;white-space:nowrap}
+.site-foot a:hover{color:#E8CE96}
 @media(max-width:600px){.regla input{width:100%}.regla .campo{flex:1}}
 </style>
 <link rel="stylesheet" href="sitio.css?v=1">
@@ -140,7 +144,6 @@ footer a:hover{color:#E8CE96}
 
 <!-- el título de la página va acá y en ningún otro lado: abajo arranca el contenido -->
 <header class="v-tit"><div class="v-tit-in">
-  <button class="volver" onclick="volver()">← Volver</button>
   <h1>Candidatas del mes</h1>
   <p class="v-baj">El método del inversor constante · Radar · Compras</p>
 </div></header>
@@ -148,6 +151,7 @@ footer a:hover{color:#E8CE96}
 <main id="main">
   <div class="state">Cargando tu plan…</div>
 </main>
+<div class="site-foot"><span>© 2026 Valtia Analytics</span><div class="links"><a href="/">Inicio</a><a href="/inversion-mensual">Inversión mensual</a><a href="/cartera">Carteras</a><a href="/herramientas">Herramientas</a></div></div>
 
 <a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
@@ -165,17 +169,6 @@ const app = initializeApp({
   projectId: 'valtia-analytics',
 });
 const db = getFirestore(app);
-
-// volver: atrás si venís de adentro de la web; si no, a la home
-window.volver = () => {
-  try {
-    if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
-      history.back();
-      return;
-    }
-  } catch (e) {}
-  location.href = '/';
-};
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
@@ -273,9 +266,10 @@ async function registrarCompra(tickerFicha, cantidad, precio, broker = "") {
 /* ── vistas ── */
 function intro(publico) {
   return `
-    <p class="sub">El método del inversor constante: no se trata de acertarle al momento, sino de aportar siempre y comprar lo que está barato.
+    <a class="atras" href="/inversion-mensual">← Inversión mensual</a>
+    <p class="sub">El secreto del largo plazo no es acertarle al momento: es aportar siempre y comprar lo que está barato.
     Definís tu regla —cuánto aportás por mes y en cuántas compras—, el radar te propone los activos mejor puntuados
-    que todavía no tenés, y cada compra que marcás se agrega sola a Mi Cartera. Tu constancia queda a la vista.</p>
+    que todavía no tenés, y cada compra que marcás se agrega sola a Mi Cartera.</p>
     <div class="pasos">
       <div class="paso"><div class="n">01</div><b>Tu regla, una vez</b><p>Elegí tu aporte mensual en dólares y en cuántas compras lo repartís. Es tu contrato con vos mismo.</p></div>
       <div class="paso"><div class="n">02</div><b>Candidatas del radar</b><p>Cada mes te mostramos lo mejor puntuado por la lectura Valtia que falta en tu cartera, con precio del día.</p></div>
@@ -300,7 +294,7 @@ function filaCandidata(a) {
   return `<tr data-sym="${a.sym}">
     <td class="tk">${linkTk(a.sym)}<div class="nom">${esc(a.nombre)} · ${esc(a.sector || "")}</div></td>
     <td class="num"><b>${a.score}</b><div class="nom">puntaje valor</div></td>
-    <td><span class="ver ${verCls(a.veredicto)}">${esc(a.veredicto)}</span>${a.entrada ? ' <span class="zona">◎ zona de compra</span>' : ""}</td>
+    <td><span class="lectura"><span class="ver ${verCls(a.veredicto)}">${esc(a.veredicto)}</span>${a.entrada ? '<span class="zona">◎ zona de compra</span>' : ""}</span></td>
     <td class="num">${a.per != null ? a.per.toFixed(1) + "x" : "—"}</td>
     <td class="num">${a.rsi != null ? a.rsi.toFixed(0) : "—"}<div class="nom">${esc(a.rsiZona || "")}</div></td>
     <td class="num">${px != null ? fmtUSD(px) : "—"}</td>
@@ -326,7 +320,7 @@ function vistaPlan() {
     const px = precioDe(norm(c.ticker));
     const ret = px != null && c.precio > 0 ? (px / c.precio - 1) * 100 : null;
     return `<tr>
-      <td style="white-space:nowrap">${esc(c.fecha)}</td>
+      <td class="fecha">${esc(c.fecha)}</td>
       <td class="tk">${linkTk(norm(c.ticker))}</td>
       <td class="num">${Number(c.cantidad).toLocaleString("es-AR", { maximumFractionDigits: 4 })}</td>
       <td class="num">${fmtUSD(c.precio)}</td>
@@ -356,20 +350,20 @@ function vistaPlan() {
           : `<b>Plan cumplido este mes ✓</b> — ${hechas} de ${obj} compras hechas.`}</div>
         <div class="dots">${dots}</div>
       </div>
-      ${r ? `<div class="racha"><span class="fuego">🔥</span> <b>${r} mes${r > 1 ? "es" : ""}</b>&nbsp;seguido${r > 1 ? "s" : ""} cumpliendo tu plan &nbsp; ${chipsMeses()}</div>` : (_log.length ? `<div class="racha">${chipsMeses()}</div>` : "")}
+      ${r ? `<div class="racha"><b>${r} mes${r > 1 ? "es" : ""}</b><span>seguido${r > 1 ? "s" : ""} cumpliendo tu plan</span> ${chipsMeses()}</div>` : (_log.length ? `<div class="racha">${chipsMeses()}</div>` : "")}
     </div>
 
-    <div class="sec">Lo mejor del radar que todavía no tenés</div>
+    <div class="sec">Candidatas del mes · lo mejor del radar que no tenés</div>
     <div class="panel"><table>
       <thead><tr><th>Activo</th><th class="num">Puntaje</th><th>Lectura Valtia</th><th class="num">P/E</th><th class="num">RSI</th><th class="num">Precio hoy</th><th class="num"></th></tr></thead>
       <tbody>${cands.map(filaCandidata).join("") || '<tr><td colspan="7" class="mut" style="text-align:center">Ya tenés todo lo puntuado por el radar — constancia de acero.</td></tr>'}</tbody>
     </table></div>
     <div class="msg" id="msg-compra"></div>
-    <p class="nom" style="margin-top:10px">El puntaje y la lectura salen del <a href="/herramientas" style="color:var(--gold)">radar de valuación Valtia</a> (valor relativo dentro del radar, no recomendación). Precio del día con actualización de rueda.</p>
+    <p class="nom" style="margin-top:6px">El puntaje y la lectura salen del <a href="/herramientas#radar">radar de valuación Valtia</a> (valor relativo dentro del radar, no recomendación). Precio del día con actualización de rueda.</p>
 
     <datalist id="d-brokers">${BROKERS.map(b => `<option value="${b}">`).join("")}</datalist>
     <div class="card" style="margin-top:18px">
-      <b style="font-size:13.5px">¿Compraste otra cosa o reforzaste una posición?</b>
+      <b style="font-size:15.5px">¿Compraste otra cosa o reforzaste una posición?</b>
       <div class="nom" style="margin-top:3px">Contala igual para tu plan del mes — también se agrega a Mi Cartera.</div>
       <div class="otra">
         <div><label>Ticker</label><input id="o-tk" placeholder="AAPL" maxlength="12"></div>
@@ -383,15 +377,20 @@ function vistaPlan() {
 
     ${_log.length ? `
     <div class="sec">Tu historial · cada compra, fechada</div>
-    <div class="panel"><table>
+    <div class="panel"><table class="hist">
       <thead><tr><th>Fecha</th><th>Activo</th><th class="num">Cantidad</th><th class="num">Pagaste</th><th class="num">Hoy</th><th class="num">Retorno</th></tr></thead>
       <tbody>${histRows}</tbody></table></div>` : ""}
     ` : ""}
-    <footer>Candidatas del mes es una herramienta de organización personal de Valtia: registra las compras que vos decidís y hacés en tu broker.
-    Valtia no ejecuta operaciones ni custodia fondos. La lectura del radar es análisis de carácter general y educativo,
-    no constituye asesoramiento financiero personalizado. Invertir implica riesgo de pérdida del capital. · <a href="/terminos" style="color:inherit;text-decoration:underline">Términos</a> · <a href="/privacidad" style="color:inherit;text-decoration:underline">Privacidad</a></footer>`;
+    ${legal()}`;
 
   enganchar();
+}
+
+// pie legal de la columna (el del prototipo, más el riesgo de capital y los links)
+function legal() {
+  return `<footer class="legal">Candidatas del mes es una herramienta de organización personal: registra las compras que vos decidís y hacés en tu broker.
+    Valtia no ejecuta operaciones ni custodia fondos. La lectura del radar es análisis de carácter general y educativo,
+    no constituye asesoramiento financiero personalizado. Invertir implica riesgo de pérdida del capital. · <a href="/terminos">Términos</a> · <a href="/privacidad">Privacidad</a></footer>`;
 }
 
 function enganchar() {
@@ -452,7 +451,7 @@ async function render() {
     if (!_user) {
       $("#main").innerHTML = intro(true) + `
         <div class="sec">Así se ve un mes del plan</div>
-        <div class="panel"><table>
+        <div class="panel"><table class="muestra">
           <thead><tr><th>Activo</th><th class="num">Puntaje</th><th>Lectura Valtia</th><th class="num">P/E</th><th class="num">Precio hoy</th></tr></thead>
           <tbody>${candidatas(3).map(a => {
             const px = precioDe(a.sym);
@@ -463,7 +462,7 @@ async function render() {
               <td class="num">${px != null ? fmtUSD(px) : "—"}</td></tr>`;
           }).join("")}</tbody></table></div>
         <p class="nom" style="margin-top:10px">Muestra libre: las tres mejor puntuadas del radar hoy. Con tu cuenta ves cinco candidatas filtradas contra tu propia cartera.</p>
-        <footer>Candidatas del mes es una herramienta de organización personal. La lectura del radar es análisis de carácter general y educativo, no constituye asesoramiento financiero personalizado.</footer>`;
+        ${legal()}`;
       return;
     }
     if (!_user.emailVerified) {
