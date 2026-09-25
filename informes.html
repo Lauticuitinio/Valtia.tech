@@ -12,11 +12,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Informes — reglas globales del rediseño (sitio.css): fondo blanco,
-     navy #0E1830, dorados #B08A3E / #8A6A2F / #E8CE96, línea #E7E3DA, IBM
-     Plex Sans en todo (números tabulares), esquinas redondeadas, filtros con
-     borde dorado sutil y columna de 1240px alineada con el título.
-     La página tiene dos caras: el catálogo (destacado, lo último, empresas
+/* ── Informes — prototipo "Valtia Informes v2" del zip completo (24/09) con
+     las reglas globales de sitio.css: fondo blanco, navy #0E1830, dorados
+     #B08A3E / #8A6A2F / #E8CE96, línea #E7E3DA, IBM Plex Sans en todo
+     (números tabulares), esquinas redondeadas, filtros con el .v-chip del
+     sitio y columna de 1240px (la del prototipo) alineada con el título.
+     La página tiene dos caras: el catálogo (destacado + lo último, empresas
      que seguimos, macro/sectores/registros) y el lector de un informe suelto
      (?i=slug), que trae su propio título. ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -30,192 +31,208 @@ img{max-width:100%}
 /* columna del prototipo de Informes: 1240px, con los bordes del título */
 .wrap{padding:0 var(--v-gutter) 64px;max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto}
 
-/* ── una sola fila de filtros (la regla de botones del sitio: borde dorado
-     sutil, radio 8; el activo con borde dorado y relleno crema) y el
-     buscador a la derecha ── */
+/* ── una sola fila de filtros (Todo · Empresas · Macro y sectores · Registro
+     mensual) con el .v-chip de sitio.css —borde dorado sutil, radio 8; el
+     activo con borde #B08A3E y relleno #FBF5E8— a la medida del prototipo,
+     y el buscador a la derecha ── */
 .tools{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:18px 0 28px}
-.tabs{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;min-width:0;padding-bottom:12px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tab{font:500 13px 'IBM Plex Sans',sans-serif;letter-spacing:.04em;padding:9px 12px;cursor:pointer;color:#57534A;border:1px solid rgba(176,138,62,.4);border-radius:8px;background:#fff;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}
-.tab:hover{color:var(--ink)}
-.tab.on{color:var(--ink);font-weight:600;border-color:#B08A3E;background:#FBF5E8}
-.tab b{font:500 12px 'IBM Plex Sans',sans-serif;color:var(--mut);margin-left:4px}
-.tab.on b{color:var(--gold2)}
-.buscar{flex:none;width:230px;max-width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;font:400 13px 'IBM Plex Sans',sans-serif;color:var(--ink);outline:none;margin:6px 0}
-.buscar:focus{border-color:var(--gold)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;min-width:0;padding-bottom:12px}
+.tabs .v-chip{font:500 13px 'IBM Plex Sans',sans-serif;letter-spacing:.04em;padding:11px 12px}
+.tabs .v-chip b{font:500 12px 'IBM Plex Sans',sans-serif;color:var(--mut);margin-left:3px}
+.buscar{flex:none;width:220px;max-width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:7px;background:#fff;font:400 14.5px 'IBM Plex Sans',sans-serif;color:var(--ink);outline:none;margin:6px 0}
+.buscar:focus{border-color:#0E1830}
 
 /* títulos de sección */
 .sec-t{font:700 21px 'IBM Plex Sans',sans-serif;color:var(--ink)}
 .sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-.sec-h .s{font-size:12px;color:var(--mut)}
+.sec-h .s{font-size:13.5px;color:var(--mut)}
 .solo-chico{display:none}
-.pill-h{display:inline-block;font:700 12px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;background:#0E1830;color:#fff;padding:7px 13px;border-radius:8px;margin-bottom:14px}
+.pill-h{display:inline-block;font:700 12px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;background:#0E1830;color:#fff;padding:7px 13px;border-radius:6px;margin-bottom:4px;white-space:nowrap}
+.kick{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2)}
 
 /* portadas: la foto real del informe sobre un fondo navy→dorado. Si el
    informe no tiene foto propia queda el degradé con el tipo, nunca una
    portada de otro informe. */
 .cov{position:relative;overflow:hidden;border-radius:10px;background:linear-gradient(135deg,#0E1830,#B08A3E);display:flex;align-items:flex-end}
 .cov img{width:100%;height:100%;object-fit:cover;display:block}
+/* las portadas SVG de img/ son 1200×630 con el texto arrancando a la
+   izquierda: al recortarlas a 16:10 o 4:3 se ancla ese lado, si no el
+   recorte centrado se come el principio del título */
+.cov img[src$=".svg"]{object-position:left center}
 .cov .cov-l{position:absolute;left:14px;bottom:12px;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#E8CE96}
 /* el rótulo del degradé solo se ve si NO hay foto: si la foto falla, el
    onerror saca la <img> y la regla deja de aplicar, así que aparece solo */
 .cov img ~ .cov-l{display:none}
 
-/* destacado: foto grande a la izquierda, ficha a la derecha */
-.dest{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px;align-items:start;padding-bottom:30px;border-bottom:1px solid var(--line);margin-bottom:30px}
-.dest .cov{aspect-ratio:16/10}
+/* ── destacado (foto grande arriba) + "Lo último" (lista con miniaturas a
+     la derecha), en la grilla del prototipo: dos columnas que pasan a una
+     cuando no entran. Si no hay nada más que el destacado (por ejemplo, sin
+     sesión solo hay un informe abierto) la columna de "Lo último" quedaría
+     vacía: ahí el destacado ocupa todo el ancho con la foto al costado. ── */
+.portada{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));gap:28px;padding-bottom:30px;border-bottom:1px solid var(--line);margin-bottom:30px}
+.dest{display:block;min-width:0;color:inherit}
+.dest:hover{color:inherit}
+.dest .cov{aspect-ratio:16/10;margin-bottom:14px}
 .dest .ficha{min-width:0}
-.dest .top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-.dest .kick{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2)}
-.dest h2{font:700 clamp(24px,2.4vw,32px) 'IBM Plex Sans',sans-serif;color:var(--ink);line-height:1.15;margin:0 0 12px;text-wrap:pretty;overflow-wrap:anywhere}
-.dest a.tit:hover h2{text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
-.dest p{font-size:14px;line-height:1.68;color:var(--sub);margin:0 0 14px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
-.dest .meta{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:16px}
-.leer{display:inline-block;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:#0E1830;padding:12px 24px;border-radius:8px}
-.leer:hover{background:var(--gold);color:#fff}
+.dest .top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.dest h2{font:700 clamp(24px,2.4vw,32px) 'IBM Plex Sans',sans-serif;color:var(--ink);line-height:1.15;margin:0 0 10px;text-wrap:pretty;overflow-wrap:anywhere}
+.dest:hover h2{text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
+.dest p{font-size:15.5px;line-height:1.65;color:var(--sub);margin:0 0 10px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+.dest .meta{font:500 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.portada.solo{grid-template-columns:minmax(0,1fr)}
+.portada.solo .dest{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:28px;align-items:center}
+.portada.solo .dest .cov{margin-bottom:0}
+.ult{min-width:0}
+.ult-i{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);align-items:start;color:inherit}
+.ult-i:hover{color:inherit}
+.ult-i .top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:5px}
+.ult-i .fch{font:500 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.ult-i h4{font:600 17.5px 'IBM Plex Sans',sans-serif;color:var(--ink);line-height:1.3;text-wrap:pretty;overflow-wrap:anywhere}
+.ult-i:hover h4{text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
+.ult-i .cov{aspect-ratio:4/3}
+.ult-i .cov .cov-l{left:9px;right:9px;bottom:8px;line-height:1.3}
 
-/* lo último: fila de miniaturas con foto chica */
-.ult{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:22px;padding-bottom:30px;border-bottom:1px solid var(--line);margin-bottom:34px}
-.mini{display:block;min-width:0}
-.mini .cov{aspect-ratio:16/10;margin-bottom:10px}
-.mini .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
-.mini .kick{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2)}
-.mini .fch{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
-.mini h4{font:600 15px 'IBM Plex Sans',sans-serif;color:var(--ink);line-height:1.3;text-wrap:pretty;overflow-wrap:anywhere}
-.mini:hover h4{text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
-
-/* empresas que seguimos */
-.tbl-box{border:1px solid var(--line);border-radius:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
-.tbl{min-width:760px}
-.tr{display:grid;grid-template-columns:var(--cols);gap:10px;padding:13px 16px;align-items:center;border-bottom:1px solid #F1EFEA}
+/* ── empresas que seguimos: tabla (reemplaza a las fichas) ── */
+.emp-sec{margin-bottom:34px}
+.tbl-box{border:1px solid var(--line);border-radius:10px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;max-width:100%}
+.tbl{min-width:var(--minw,810px)}
+.tr{display:grid;grid-template-columns:var(--cols);gap:12px;padding:13px 18px;align-items:center;border-bottom:1px solid #F0F1F4}
 .tr:last-child{border-bottom:none}
 a.tr{color:inherit}
-a.tr:hover{background:var(--marfil);color:inherit}
-.th{background:var(--marfil);border-bottom:1px solid var(--line);padding:11px 16px;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--sub)}
-.th span{cursor:pointer;user-select:none;white-space:nowrap}
+a.tr:hover{background:#F6F7F9;color:inherit}
+.th{background:#F6F7F9;border-bottom:1px solid var(--line);padding:11px 18px;font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--sub)}
+.th span{cursor:pointer;user-select:none}
 .th span:hover{color:var(--ink)}
 .th span.on{color:var(--gold2)}
-.th .ar{font:600 10.5px 'IBM Plex Sans',sans-serif}
+.th .ar{font:600 10.5px 'IBM Plex Sans',sans-serif;font-style:normal}
 .num{text-align:right;font-family:'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums}
-.emp{display:flex;align-items:center;gap:11px;min-width:0}
-.chip{width:34px;height:34px;background:var(--marfil);border:1px solid var(--line);border-radius:8px;color:var(--navy);display:flex;align-items:center;justify-content:center;font:600 10.5px 'IBM Plex Sans',sans-serif;flex:none}
-.emp .n{font:600 13.5px 'IBM Plex Sans',sans-serif;color:var(--ink)}
-.emp .s{font-size:11.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.inf-t{font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.inf-f{font-size:11px;color:var(--mut);margin-top:2px}
-.up{color:var(--up)}.dn{color:var(--dn)}
-.tbl-pie{font-size:11.5px;color:var(--mut);line-height:1.7;margin-top:10px}
+.emp{display:flex;align-items:center;gap:12px;min-width:0}
+.chip{width:34px;height:34px;background:#EEF2FA;border-radius:8px;color:#14213D;display:flex;align-items:center;justify-content:center;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:-.02em;flex:none}
+.emp .n{font:600 15px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.emp .s{font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-pre{font:500 14.5px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.c-dia{font:500 14px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.c-des{font:600 14.5px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.c-lec{font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase}
+.inf-t{font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inf-f{font-size:12.5px;color:var(--mut);margin-top:2px}
+.up,.c-dia.up,.c-des.up{color:var(--up)}.dn,.c-dia.dn,.c-des.dn{color:var(--dn)}
+.tbl-pie{font-size:12.5px;color:var(--mut);line-height:1.7;margin-top:10px}
 
-/* acceso */
+/* acceso (los tres del prototipo: Gratis · Acceso · PRO) */
 .acc{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:6px;white-space:nowrap;display:inline-block}
 .acc-libre{color:var(--up);background:rgba(31,122,77,.1)}
-.acc-mio{color:var(--navy);background:var(--marfil);border:1px solid var(--line)}
-.acc-cli{color:#fff;background:#0E1830}
+.acc-mio{color:#14213D;background:#EEF2FA}
+.acc-pro{color:#fff;background:#0E1830}
 
 /* macro, sectores y registro mensual: tarjetas con la foto arriba */
-.tjs{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:26px}
-.tj{display:flex;flex-direction:column;gap:8px;min-width:0}
+.tjs{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:26px}
+.tj{display:flex;flex-direction:column;gap:8px;min-width:0;color:inherit}
+.tj:hover{color:inherit}
 .tj .cov{aspect-ratio:16/9;margin-bottom:4px}
 .tj .top{display:flex;justify-content:space-between;gap:10px;align-items:center}
-.tj .kick{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2)}
 .tj h3{font:600 18px 'IBM Plex Sans',sans-serif;color:var(--ink);line-height:1.25;text-wrap:pretty;overflow-wrap:anywhere}
 .tj:hover h3{text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
-.tj p{font-size:12.5px;line-height:1.6;color:var(--sub);flex:1}
-.tj .meta{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.tj p{font-size:14px;line-height:1.6;color:var(--sub);flex:1}
+.tj .meta{font:500 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
 
 /* estados honestos */
-.vacio{border:1px dashed var(--line);border-radius:12px;padding:34px 22px;text-align:center;font-size:13.5px;color:var(--sub);line-height:1.8}
-.aviso{border:1px solid var(--line);border-left:3px solid var(--dn);border-radius:12px;background:var(--marfil);padding:16px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:26px;font-size:13.5px;color:var(--sub);line-height:1.7}
+.vacio{padding:60px 20px;text-align:center;font-size:15.5px;color:var(--sub);line-height:1.8}
+.aviso{border:1px solid var(--line);border-left:3px solid var(--dn);border-radius:10px;background:#fff;padding:16px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:26px;font-size:14px;color:var(--sub);line-height:1.7}
 .aviso .b{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:#0E1830;border:none;border-radius:8px;padding:10px 18px;cursor:pointer}
 .aviso .b:hover{background:var(--gold)}
 .sk{background:var(--sk);animation:lat 1.1s ease-in-out infinite}
 @keyframes lat{0%,100%{opacity:1}50%{opacity:.55}}
 .sk-l{height:13px;margin-bottom:9px}
 .sk-t{height:26px;margin-bottom:12px}
-.sec-sep{height:1px;background:var(--line);margin:38px 0}
 
 /* contacto */
-.contact{background:var(--marfil);border:1px solid var(--line);border-radius:12px;padding:34px 36px;display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-top:48px}
+.contact{background:#fff;border:1px solid var(--line);border-radius:12px;padding:34px 36px;display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-top:48px}
 .contact .ic{width:58px;height:58px;background:#0E1830;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .contact h3{font:700 24px 'IBM Plex Sans',sans-serif;color:var(--ink);margin-bottom:6px}
-.contact p{font-size:13px;color:var(--sub);line-height:1.7;margin-bottom:16px;max-width:640px}
+.contact p{font-size:14px;color:var(--sub);line-height:1.7;margin-bottom:16px;max-width:640px}
 .contact .btn{display:inline-flex;align-items:center;gap:8px;background:#0E1830;color:#fff;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:12px 24px;border-radius:8px;text-decoration:none}
 .contact .btn:hover{background:var(--gold);color:#fff}
 
-/* ── lector de un informe suelto (?i=slug) ── */
-.fsr-crumb{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin:26px 0 18px}
+/* ── lector de un informe suelto (?i=slug), con las medidas del lector del
+     prototipo: cajas blancas con radio 10, cuerpo a 16px justificado, banda
+     de datos con el filete navy. Las clases fsr-* son las que trae el
+     contenido_html de cada informe (las comparte activo.html). ── */
+.lector{max-width:880px;margin:0 auto}
+.fsr-crumb{font:600 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin:26px 0 18px}
 .fsr-crumb a{color:var(--sub)}
 .fsr-crumb a:hover{color:var(--gold)}
-.fsr-reader{background:#fff;border:1px solid var(--line);border-radius:12px;padding:clamp(24px,4vw,50px);max-width:880px;margin:0 auto}
+.fsr-reader{background:#fff;border:1px solid var(--line);border-radius:10px;padding:clamp(24px,4vw,48px);max-width:880px;margin:0 auto}
 .fsr-rhead{border-bottom:2px solid var(--gold);padding-bottom:22px;margin-bottom:8px}
-.fsr-rhead h1{font:700 clamp(28px,4vw,40px) 'IBM Plex Sans',sans-serif;line-height:1.15;color:var(--ink);overflow-wrap:anywhere}
-.fsr-rhead .meta{font:500 11px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-top:12px}
-.fsr-badge{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;background:var(--gold);color:#fff;padding:4px 10px;border-radius:6px;text-transform:uppercase}
+.fsr-rhead h1{font:700 clamp(28px,4vw,38px) 'IBM Plex Sans',sans-serif;line-height:1.15;color:var(--ink);overflow-wrap:anywhere}
+.fsr-rhead .meta{font:500 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-top:12px}
+.fsr-badge{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;background:var(--gold);color:#fff;padding:4px 10px;border-radius:6px;text-transform:uppercase}
 .fsr-tag{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;border:1px solid var(--line);border-radius:6px;padding:3px 8px;color:var(--sub);text-transform:uppercase}
-.fsr-reader h2{font:700 26px 'IBM Plex Sans',sans-serif;margin:42px 0 14px;padding-top:26px;border-top:1px solid var(--line);color:var(--ink)}
-.fsr-reader h3{font:600 15.5px 'IBM Plex Sans',sans-serif;margin:24px 0 8px;color:var(--ink)}
-.fsr-reader p{margin:11px 0;font-size:14.5px;line-height:1.85;color:#2E2A24;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+.fsr-reader h2{font:700 24px 'IBM Plex Sans',sans-serif;margin:36px 0 12px;padding-top:22px;border-top:1px solid var(--line);color:var(--ink)}
+.fsr-reader h3{font:600 17px 'IBM Plex Sans',sans-serif;margin:24px 0 8px;color:var(--ink)}
+.fsr-reader p{margin:11px 0;font-size:16px;line-height:1.85;color:#2E2A24;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
 .fsr-reader p strong,.fsr-reader li strong{color:var(--ink);font-weight:600}
 .fsr-reader ul{margin:10px 0 10px 22px}
-.fsr-reader li{margin:7px 0;font-size:14px;line-height:1.8;color:#2E2A24}
+.fsr-reader li{margin:7px 0;font-size:15px;line-height:1.8;color:#2E2A24}
 .fsr-reader .kicker{color:var(--mut);font-style:italic}
-.fsr-reader .tag{display:inline-block;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:var(--gold);padding:3px 9px;border-radius:6px;margin:18px 0 4px}
+.fsr-reader .tag{display:inline-block;font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:var(--gold);padding:3px 9px;border-radius:6px;margin:18px 0 4px}
 .fsr-reader .tag.bull{background:#1F7A4D}
 .fsr-reader .tag.bear{background:#B23A3A}
 .fsr-reader .tag.neutral{background:#b7791f}
-.fsr-reader .fecha{font:500 11px 'IBM Plex Sans',sans-serif;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
-.fsr-reader table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;display:block;overflow-x:auto}
-.fsr-reader th{text-align:left;background:var(--marfil);color:var(--ink);padding:10px 12px;font-weight:600;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--line)}
+.fsr-reader .fecha{font:500 11.5px 'IBM Plex Sans',sans-serif;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
+.fsr-reader table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;display:block;overflow-x:auto}
+.fsr-reader th{text-align:left;background:#F6F7F9;color:var(--ink);padding:10px 12px;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--line)}
 .fsr-reader td{padding:10px 12px;border-bottom:1px solid var(--line);color:#2E2A24;vertical-align:top;line-height:1.7;min-width:130px}
 .fsr-reader td strong{color:var(--ink)}
-.fsr-reader .card{background:var(--marfil);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:10px;padding:16px 20px;margin:18px 0;font-size:13.5px;line-height:1.8;color:#2E2A24}
+.fsr-reader .card{background:#fff;border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:10px;padding:16px 20px;margin:18px 0;font-size:15px;line-height:1.8;color:#2E2A24}
 .fsr-reader .card.warn{border-left-color:#b7791f}
 .fsr-reader .card.risk{border-left-color:#B23A3A}
 .fsr-reader .card.ok{border-left-color:#1F7A4D}
 .fsr-reader .card strong{color:var(--ink)}
-.fsr-reader .disclaimer{margin-top:44px;padding:18px 22px;background:var(--marfil);border-radius:10px;font-size:11.5px;color:var(--mut);line-height:1.7}
+.fsr-reader .disclaimer{margin-top:40px;padding:18px 22px;background:#fff;border-radius:10px;font-size:13px;color:var(--mut);line-height:1.7}
 .fsr-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:22px 0 8px}
-.fsr-kpi{background:var(--marfil);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.fsr-kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
 .fsr-kpi .l{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:5px}
-.fsr-kpi .v{font:600 15.5px 'IBM Plex Sans',sans-serif;color:var(--ink);white-space:nowrap}
-.fsr-kpi .s{font-size:10.5px;color:var(--sub);margin-top:3px;line-height:1.4}
+.fsr-kpi .v{font:600 17px 'IBM Plex Sans',sans-serif;color:var(--ink);white-space:nowrap}
+.fsr-kpi .s{font-size:11.5px;color:var(--sub);margin-top:3px;line-height:1.4}
 .fsr-bars{display:flex;gap:12px;align-items:flex-end;height:130px;margin:18px 0 4px;padding:0 2px}
 .fsr-bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;height:100%}
 .fsr-bar .col{width:100%;max-width:66px;background:#B08A3E;min-height:4px}
 .fsr-bar.est .col{background:repeating-linear-gradient(45deg,#B08A3E,#B08A3E 5px,#D9BE85 5px,#D9BE85 10px)}
-.fsr-bar .n{font:600 11px 'IBM Plex Sans',sans-serif;color:var(--ink)}
-.fsr-bar .y{font:600 10.5px 'IBM Plex Sans',sans-serif;color:var(--mut)}
-.fsr-caption{font-size:10.5px;color:var(--mut);margin:6px 0 18px}
-.fsr-rango{margin:20px 0 8px}
+.fsr-bar .n{font:600 11.5px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.fsr-bar .y{font:600 11px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+.fsr-caption{font-size:11.5px;color:var(--mut);margin:6px 0 18px}
+.fsr-rango{margin:26px 0 8px}
 .fsr-rango .track{position:relative;height:8px;background:linear-gradient(90deg,#E7E3DA,#B08A3E)}
 .fsr-rango .mark{position:absolute;top:-6px;width:3px;height:20px;background:#0E1830}
-.fsr-rango .mark span{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font:700 10.5px 'IBM Plex Sans',sans-serif;color:#0E1830;white-space:nowrap}
-.fsr-rango .labels{display:flex;justify-content:space-between;font:500 10.5px 'IBM Plex Sans',sans-serif;color:var(--sub);margin-top:8px}
-.fsr-foda{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:20px 0}
+.fsr-rango .mark span{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font:700 11.5px 'IBM Plex Sans',sans-serif;color:#0E1830;white-space:nowrap}
+.fsr-rango .labels{display:flex;justify-content:space-between;font:500 11.5px 'IBM Plex Sans',sans-serif;color:var(--sub);margin-top:8px}
+/* FODA en 2×2 (a 240px entraban tres por fila y la cuarta quedaba sola) */
+.fsr-foda{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:14px;margin:24px 0 4px}
 .fsr-foda .q{border:1px solid var(--line);border-top:3px solid var(--c);border-radius:10px;padding:14px 16px;min-width:0}
-.fsr-foda h4{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--c);margin:0 0 8px;border:none;padding:0}
+.fsr-foda h4{font:700 12px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--c);margin:0 0 8px;border:none;padding:0}
 .fsr-foda ul{margin:0 0 0 16px}
-.fsr-foda li{font-size:12.5px;line-height:1.65;color:#2E2A24;margin:6px 0}
+.fsr-foda li{font-size:14px;line-height:1.65;color:#2E2A24;margin:6px 0}
 .live-band{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0 6px}
-.live-band .lb{background:var(--marfil);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:10px;padding:12px 15px}
-.live-band .l{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.13em;text-transform:uppercase;color:var(--mut)}
-.live-band .v{font:600 18px 'IBM Plex Sans',sans-serif;color:var(--ink);margin-top:4px;font-variant-numeric:tabular-nums}
-.live-band .s{font:400 11px 'IBM Plex Sans',sans-serif;color:var(--mut);margin-top:2px;font-variant-numeric:tabular-nums}
+.live-band .lb{background:#fff;border:1px solid var(--line);border-left:3px solid #0E1830;border-radius:10px;padding:12px 15px}
+.live-band .l{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.13em;text-transform:uppercase;color:var(--mut)}
+.live-band .v{font:600 20px 'IBM Plex Sans',sans-serif;color:var(--ink);margin-top:4px;font-variant-numeric:tabular-nums}
+.live-band .s{font:400 12.5px 'IBM Plex Sans',sans-serif;color:var(--mut);margin-top:2px;font-variant-numeric:tabular-nums}
 .lb-up{color:#1F7A4D}.lb-dn{color:#B23A3A}
 .rel-news{margin-top:34px;padding-top:20px;border-top:1px solid var(--line)}
-.rel-news .h{font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;background:#0E1830;color:#fff;display:inline-block;padding:6px 12px;border-radius:8px;margin-bottom:6px}
-.rel-news a{display:block;padding:11px 0;border-bottom:1px solid var(--line);color:var(--ink);font:600 14px 'IBM Plex Sans',sans-serif;line-height:1.45}
+.rel-news .h{font:700 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;background:#0E1830;color:#fff;display:inline-block;padding:6px 12px;border-radius:6px;margin-bottom:6px}
+.rel-news a{display:block;padding:11px 0;border-bottom:1px solid var(--line);color:var(--ink);font:600 15.5px 'IBM Plex Sans',sans-serif;line-height:1.45}
 .rel-news a:last-child{border-bottom:none}
 .rel-news a:hover{text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
-.rel-news .f{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);display:block;margin-top:3px}
-.bloq{border:1px solid var(--line);border-radius:12px;text-align:center;padding:60px 28px}
+.rel-news .f{font:500 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);display:block;margin-top:3px}
+.bloq{border:1px solid var(--line);border-radius:10px;background:#fff;text-align:center;padding:64px 32px}
 .bloq .ic{width:52px;height:52px;margin:0 auto 18px;background:#0E1830;border-radius:10px;display:flex;align-items:center;justify-content:center}
 .bloq h2{font:700 26px 'IBM Plex Sans',sans-serif;color:var(--ink);margin-bottom:10px}
-.bloq p{font-size:14px;color:var(--sub);line-height:1.8;max-width:440px;margin:0 auto 22px}
+.bloq p{font-size:15.5px;color:var(--sub);line-height:1.8;max-width:440px;margin:0 auto 22px}
 .bloq .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.bloq .b1{background:#0E1830;color:#fff;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;padding:13px 28px;border-radius:8px}
+.bloq .b1{background:#0E1830;color:#fff;font:600 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;padding:13px 28px;border-radius:8px}
 .bloq .b1:hover{background:var(--gold);color:#fff}
-.bloq .b2{border:1px solid rgba(176,138,62,.4);border-radius:8px;color:#57534A;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;padding:13px 28px;background:#fff}
+.bloq .b2{border:1px solid rgba(176,138,62,.4);border-radius:8px;color:#57534A;font:600 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;padding:13px 28px;background:#fff}
 .bloq .b2:hover{border-color:#B08A3E;background:#FBF5E8;color:#101010}
 
 /* footer (el sobre flotante de mail es el de sitio.css) */
@@ -224,18 +241,21 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
 .footer-links{display:flex;gap:20px;flex-wrap:wrap}
 .footer-links a{font:500 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase}
 
-@media(max-width:1000px){.dest{grid-template-columns:1fr;gap:18px}}
 @media(max-width:880px){
   .contact{padding:26px 22px}
   .buscar{width:100%}
   .tools{gap:6px}
+  /* el destacado solo (sin "Lo último") deja la foto al costado hasta acá;
+     más angosto, la foto va arriba como en la grilla de dos columnas */
+  .portada.solo .dest{grid-template-columns:minmax(0,1fr);gap:0}
+  .portada.solo .dest .cov{margin-bottom:14px}
   /* en pantalla chica la tabla no entra entera y scrollea adentro de su caja:
      hay que avisarlo, si no las últimas columnas quedan escondidas */
   .solo-chico{display:inline}
 }
-@media(max-width:600px){
-  .ult{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:18px}
-  .tjs{grid-template-columns:1fr}
+@media(max-width:420px){
+  .ult-i{grid-template-columns:minmax(0,1fr) 100px;gap:12px}
+  .ult-i h4{font-size:16px}
 }
 </style>
 <link rel="stylesheet" href="sitio.css?v=1">
@@ -280,7 +300,7 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
       <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8CE96" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></div>
       <div style="flex:1;min-width:240px">
         <h3>Escribinos directo al equipo</h3>
-        <p>¿Dudas sobre un informe, querés pedir un análisis puntual o consultar por los planes de asesoría? Escribinos y lo vemos.</p>
+        <p>¿Dudas sobre un informe, querés pedir un análisis puntual o consultar por Valtia PRO o la cartera a medida? Escribinos y lo vemos.</p>
         <a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="btn">soporte@valtia.tech</a>
       </div>
     </div>
@@ -309,7 +329,7 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
                                       "desde el informe" cuando el informe
                                       no guardó precio_pub
      · empresas.js                  → nombre, ticker y sector de cada empresa
-   Lo que NO tiene fuente no se muestra (ver MOSTRAR_LECTURA más abajo). ══ */
+   Lo que NO tiene fuente no se muestra (ver lecturaDe más abajo). ══ */
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, getDocs, doc, getDoc, query, where }
@@ -327,12 +347,20 @@ const slug = new URLSearchParams(location.search).get('i');
 const content = document.querySelector('.content');
 const cajaCat = document.getElementById('cat');
 
-/* ── La columna LECTURA (alcista / neutral / bajista) todavía no tiene
-     campo propio en Firestore: el sesgo está escrito adentro del texto del
-     informe. No se deduce ni se inventa. Cuando el pipeline publique el
-     campo (por ejemplo `sesgo`), alcanza con poner esto en true y leerlo
-     en filaEmpresa(). ── */
-const MOSTRAR_LECTURA = false;
+/* ── La columna LECTURA (alcista / neutral / bajista) de "Empresas que
+     seguimos" sale SOLO de un campo del informe en Firestore: `lectura` o
+     `sesgo`. Hoy ningún informe lo trae (el sesgo está escrito adentro del
+     texto, y por sección, no como una lectura del informe entero), así que
+     la columna no se dibuja. No se deduce del texto ni se inventa: el día
+     que el pipeline publique el campo en algún informe, la columna aparece
+     sola y las filas sin el dato llevan un guion. ── */
+const lecturaDe = inf => {
+  const v = inf ? (inf.lectura ?? inf.sesgo) : null;
+  return typeof v === 'string' && v.trim() ? v.trim() : null;
+};
+const colorLectura = s => /alcista|comprar/i.test(s) ? 'var(--up)'
+  : /bajista|vender/i.test(s) ? 'var(--dn)'
+  : /neutral|mantener/i.test(s) ? '#B7791F' : 'var(--sub)';
 
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
   .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -343,8 +371,11 @@ const fCorta = f => { const s = fdate(f); return s.length === 10 ? `${s.slice(8,
 const fLarga = f => { const s = fdate(f); return s.length === 10 ? `${+s.slice(8, 10)} de ${MESES[+s.slice(5, 7) - 1]} de ${s.slice(0, 4)}` : s; };
 const nf2 = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const nf1 = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-const signo = v => (v > 0 ? '+' : v < 0 ? '−' : '') + nf1.format(Math.abs(v)) + '%';
-const clase = v => v > 0 ? 'up' : v < 0 ? 'dn' : '';
+/* signo y color salen del valor YA redondeado a un decimal: si no, un −0,04 %
+   se leía "−0,0%" en rojo y un +0,03 % "+0,0%" en verde */
+const r1 = v => Math.round(v * 10) / 10;
+const signo = v => { const r = r1(v); return (r > 0 ? '+' : r < 0 ? '−' : '') + nf1.format(Math.abs(r)) + '%'; };
+const clase = v => { const r = r1(v); return r > 0 ? 'up' : r < 0 ? 'dn' : ''; };
 const dosD = n => String(n).padStart(2, '0');
 /* día y hora de la última sincronización de precios, en la hora del visitante */
 const fHora = ts => ts && ts.toDate ? (t =>
@@ -352,7 +383,9 @@ const fHora = ts => ts && ts.toDate ? (t =>
 
 /* portadas que existen de verdad en img/ (listadas del repo). Cada una trae
    su título dibujado adentro, así que solo se usa la del propio informe:
-   nunca la de otro "por tema". Si no hay, queda el degradé navy→dorado. */
+   nunca la de otro informe. Si el informe no tiene `imagen` ni portada
+   propia, va la de img/noticias/ según el tema (SPEC §4, igual que en
+   Noticias); y si esa foto no carga, queda el degradé navy→dorado. */
 const PORTADAS = new Set(['informe-nvda', 'informe-meli', 'informe-macro-arg',
   'informe-registro-julio', 'informe-tech-sector', 'informe-ko', 'informe-ma',
   'informe-meta', 'informe-msft', 'informe-googl', 'informe-ggal', 'informe-nke',
@@ -379,34 +412,60 @@ const fotoDe = d => {
   if (e && e.slug && PORTADAS.has(e.slug)) return `img/${e.slug}.svg`;
   const porTk = d.ticker ? 'informe-' + String(d.ticker).toLowerCase() : '';
   if (porTk && PORTADAS.has(porTk)) return `img/${porTk}.svg`;
-  return '';
+  // variante 1-3 fija por informe, para que dos tarjetas del mismo tema
+  // no repitan la misma foto una al lado de la otra
+  const n = [...String(id)].reduce((s, c) => s + c.charCodeAt(0), 0) % 3 + 1;
+  return `img/noticias/${temaDe(d)}-${n}.svg`;
+};
+/* tema de la portada de noticias: local, wall, cripto o bonos (las cuatro
+   carpetas de img/noticias/, las mismas que usa noticias.html) */
+const temaDe = d => {
+  const e = empDe(d);
+  if (e) return e.sector === 'arg' ? 'local' : e.sector === 'cripto' ? 'cripto' : 'wall';
+  const t = `${String(d.categorias || '').split('·')[0]} ${d.titulo || ''}`.toLowerCase();
+  if (/cripto|bitcoin|ethereum/.test(t)) return 'cripto';
+  if (/bono|renta fija|soberan|deuda|letras?\b/.test(t)) return 'bonos';
+  if (/argentin|macro|inflaci|merval|bcra|d[oó]lar|registro/.test(t)) return 'local';
+  return 'wall';
 };
 /* El rótulo va siempre en el HTML, tapado por CSS mientras la <img> esté.
    Si la foto no existe (un `imagen` que apunte a un archivo borrado), el
    onerror saca la <img> y queda el degradé con el tipo: ni un hueco vacío
    ni la portada de otro informe. */
+/* La foto va siempre adentro de un enlace que ya lleva el título en texto:
+   alt vacío, para que un lector de pantalla no lo lea dos veces. */
 const cov = d => {
   const src = fotoDe(d);
   return `<div class="cov">${src
-    ? `<img src="${esc(src)}" alt="${esc(d.titulo || '')}" loading="lazy" onerror="this.remove()">`
+    ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">`
     : ''}<span class="cov-l">${esc(tipoDe(d))}</span></div>`;
 };
 
+/* Los informes de empresa se leen en la ficha del activo (una sola página
+   por activo): activo.html embebe el informe del `slug` del catálogo. Si la
+   empresa no tiene slug en el catálogo, la ficha no lo mostraría: ese
+   informe se abre acá, en el lector. */
 const linkDe = d => {
   const e = empDe(d);
-  return e && e.ticker ? `/activo?t=${encodeURIComponent(e.ticker)}#informe`
-                       : `/informes?i=${encodeURIComponent(d.slug || d.id)}`;
+  return e && e.ticker && e.slug ? `/activo?t=${encodeURIComponent(e.ticker)}#informe`
+                                 : `/informes?i=${encodeURIComponent(d.slug || d.id)}`;
 };
+/* acceso, con las tres etiquetas del prototipo: Gratis (abierto a todos),
+   Acceso (la sesión lo puede leer) y PRO (hace falta Valtia PRO o cuenta
+   de cliente) */
 const accesoDe = (d, pro) => d && d.visibilidad === 'publico'
-  ? { t: 'Abierto', c: 'acc-libre' }
-  : pro ? { t: 'Tu acceso', c: 'acc-mio' } : { t: 'Clientes', c: 'acc-cli' };
+  ? { t: 'Gratis', c: 'acc-libre' }
+  : pro ? { t: 'Acceso', c: 'acc-mio' } : { t: 'PRO', c: 'acc-pro' };
 const accHTML = (d, pro) => { const a = accesoDe(d, pro); return `<span class="acc ${a.c}">${a.t}</span>`; };
+/* "Coca-Cola (KO) — El defensivo que…": en la tabla la empresa ya está en su
+   columna, así que el último informe va con la parte después de la raya */
+const corto = t => { const s = String(t || ''); const i = s.indexOf(' — '); return i > 0 ? s.slice(i + 3) : s; };
 
 /* ── estado ── */
-let PRO = false, DATOS = [], PX = {}, PXHORA = '', HIST = {}, FALLO = false, PARCIAL = false;
+let PRO = false, LOGUEADO = false, VERIF = false, DATOS = [], PX = {}, PXHORA = '', HIST = {}, FALLO = false, PARCIAL = false;
 let TAB = 'todo', Q = '', ORD = { col: 'fecha', dir: -1 }, HISTPEDIDO = false;
 // Cuando Firestore no llega, el SDK reintenta solo y nunca contesta: sin esto
-// la página se quedaría con los esqueletos puestos para siempre.
+// la página se quedaría con los esqueletos puestos sin fin.
 let CARGA = 0;
 const TARDO = { tardo: true };   // marca para distinguir "no contestó" de "no te deja"
 const conTiempo = (p, ms) => Promise.race([p,
@@ -454,6 +513,8 @@ async function cargar(user) {
   // nuevos: hay que volver a permitir el pedido del histórico, si no las
   // empresas que se acaban de destapar se quedan sin "desde el informe"
   HISTPEDIDO = false;
+  LOGUEADO = !!(user && user.email);
+  VERIF = !!(user && user.emailVerified);
   pintarEsqueletos();
   PRO = await conTiempo(esPro(user), 6000).catch(() => false);
   if (mio !== CARGA) return;
@@ -530,13 +591,16 @@ function filasEmpresas() {
     if (!tk) continue;
     const prev = porTk.get(tk);
     if (!prev || !prev.inf || d._fecha > prev.inf._fecha)
-      porTk.set(tk, { ticker: tk, nombre: (e && e.nombre) || tk, inf: d });
+      porTk.set(tk, { ticker: tk, nombre: (e && e.nombre) || tk, inf: d, slug: !!(e && e.slug) });
   }
   // Empresas con informe publicado según el catálogo del repo que esta
-  // sesión no puede leer: la fila va igual, con el candado y sin título.
-  for (const e of EMPRESAS) {
+  // sesión no puede leer: la fila va igual, con la etiqueta PRO y sin título.
+  // Si la sesión ya lee todo (PRO y la lectura completa salió bien), una
+  // empresa del catálogo sin doc es un informe que no está en Firestore: no
+  // se lista con una etiqueta que no le corresponde.
+  if (!(PRO && !PARCIAL)) for (const e of EMPRESAS) {
     if (!e.slug || porTk.has(e.ticker)) continue;
-    porTk.set(e.ticker, { ticker: e.ticker, nombre: e.nombre, inf: null });
+    porTk.set(e.ticker, { ticker: e.ticker, nombre: e.nombre, inf: null, slug: true });
   }
   return [...porTk.values()].map(f => {
     const px = PX[f.ticker] || {};
@@ -554,26 +618,28 @@ function pintarEsqueletos() {
   const linea = w => `<div class="sk sk-l" style="width:${w}"></div>`;
   cajaCat.innerHTML = `
     ${barraHTML({ todo: '·', empresas: '·', macro: '·', registros: '·' })}
-    <div class="dest">
-      <div class="sk" style="aspect-ratio:16/10"></div>
-      <div>${linea('34%')}<div class="sk sk-t" style="width:92%"></div>
+    <div class="portada" aria-hidden="true">
+      <div><div class="sk" style="aspect-ratio:16/10;border-radius:10px;margin-bottom:14px"></div>
+        ${linea('34%')}<div class="sk sk-t" style="width:92%"></div>
         <div class="sk sk-t" style="width:66%"></div>${linea('100%')}${linea('88%')}${linea('40%')}</div>
+      <div>${linea('28%')}${Array.from({ length: 4 }, () =>
+        `<div class="ult-i"><div>${linea('42%')}${linea('96%')}${linea('70%')}</div>
+          <div class="sk" style="aspect-ratio:4/3;border-radius:10px"></div></div>`).join('')}</div>
     </div>
-    <div class="ult">${Array.from({ length: 4 }, () =>
-      `<div><div class="sk" style="aspect-ratio:16/10;margin-bottom:10px"></div>${linea('46%')}${linea('94%')}${linea('70%')}</div>`).join('')}</div>
     <div class="sec-h"><div class="sec-t">Empresas que seguimos</div></div>
-    <div class="tbl-box"><div class="tbl">${Array.from({ length: 6 }, () =>
-      `<div style="padding:13px 16px;border-bottom:1px solid #F1EFEA"><div class="sk sk-l" style="width:100%;height:34px;margin:0"></div></div>`).join('')}</div></div>`;
+    <div class="tbl-box"><div class="tbl" style="min-width:0">${Array.from({ length: 6 }, () =>
+      `<div style="padding:13px 18px;border-bottom:1px solid #F0F1F4"><div class="sk sk-l" style="width:100%;height:34px;margin:0"></div></div>`).join('')}</div></div>`;
 }
 
+/* una sola fila de filtros, con el .v-chip de sitio.css (activo = .on) */
 function barraHTML(cuenta) {
   const tabs = [['todo', 'Todo'], ['empresas', 'Empresas'],
     ['macro', 'Macro y sectores'], ['registros', 'Registro mensual']];
   return `<div class="tools">
-    <div class="tabs" id="tabs">${tabs.map(([k, l]) =>
-      `<button class="tab${TAB === k ? ' on' : ''}" data-k="${k}" type="button">${l} <b>${cuenta[k]}</b></button>`).join('')}</div>
+    <div class="tabs" id="tabs" role="group" aria-label="Filtrar informes">${tabs.map(([k, l]) =>
+      `<button class="v-chip${TAB === k ? ' on' : ''}" data-k="${k}" type="button" aria-pressed="${TAB === k}">${l} <b>${cuenta[k]}</b></button>`).join('')}</div>
     <input class="buscar" id="q" type="search" value="${esc(Q)}" autocomplete="off"
-      placeholder="Buscar por título, empresa o ticker…" aria-label="Buscar informes">
+      placeholder="Buscar empresa o ticker…" aria-label="Buscar informes por título, empresa o ticker">
   </div>`;
 }
 
@@ -603,25 +669,34 @@ function pintar() {
   const verOtros = otros.length > 0;
 
   let html = barraHTML(cuenta);
+  // qué ve esta sesión y por qué: sin cuenta, con cuenta sin PRO, o PRO al
+  // que no le llegó la lectura completa (cae a los informes gratis)
   if (PARCIAL) html += `<div class="aviso" style="border-left-color:#B08A3E">
-    <div style="flex:1;min-width:240px">Estás viendo los informes abiertos. Los de clientes se abren
-      cuando <a href="/?login=1">ingresás con tu cuenta</a>.</div></div>`;
+    <div style="flex:1;min-width:240px">${PRO
+      ? 'No pudimos traer los informes de tu plan: por ahora ves los gratis. Probá recargar la página en un rato.'
+      : LOGUEADO
+        ? 'Estás viendo los informes gratis. El resto se lee con Valtia PRO: mirá los <a href="/planes">planes</a>.'
+          // las reglas abren los informes de clientes solo con el mail verificado
+          + (VERIF ? '' : ' Si ya tenés Valtia PRO, verificá tu mail para verlos.')
+        : 'Estás viendo los informes gratis. El resto se lee con Valtia PRO: <a href="/?login=1">ingresá con tu cuenta</a> o mirá los <a href="/planes">planes</a>.'}</div></div>`;
 
-  if (verDest) html += destacadoHTML(vis[0]) + ultimosHTML(vis.slice(1, 6));
+  if (verDest) html += portadaHTML(vis[0], vis.slice(1, 5));
   if (verEmp) html += tablaHTML(filas);
   if (verOtros) html += tarjetasHTML(otros);
 
   if (!verDest && !verEmp && !verOtros) {
+    // sin PRO puede haber informes que esta sesión no lee: se dice cómo verlos
+    const acceso = PRO && !PARCIAL ? ''
+      : LOGUEADO ? '<br>Los de clientes se leen con Valtia PRO: mirá los <a href="/planes">planes</a>.'
+      : '<br><a href="/?login=1">Ingresá con tu cuenta</a> si sos cliente, o mirá los <a href="/planes">planes</a>.';
     html += Q
-      ? `<div class="vacio">Ningún informe coincide con “${esc(Q)}”.<br>Probá con otro título, empresa o ticker.</div>`
+      ? `<div class="vacio">No encontramos informes con “${esc(Q)}”.<br>Probá con otro título, empresa o ticker.</div>`
       : TAB === 'empresas'
         ? `<div class="vacio">Todavía no hay informes de empresas publicados.</div>`
         : TAB === 'registros'
-          ? `<div class="vacio">Todavía no hay registros mensuales que puedas leer.<br>
-              <a href="/?login=1">Ingresá con tu cuenta</a> si sos cliente, o mirá los <a href="/planes">planes</a>.</div>`
+          ? `<div class="vacio">Todavía no hay registros mensuales que puedas leer.${acceso}</div>`
           : TAB === 'macro'
-            ? `<div class="vacio">Todavía no hay informes de macro ni de sectores que puedas leer.<br>
-                <a href="/?login=1">Ingresá con tu cuenta</a> si sos cliente, o mirá los <a href="/planes">planes</a>.</div>`
+            ? `<div class="vacio">Todavía no hay informes de macro ni de sectores que puedas leer.${acceso}</div>`
             : `<div class="vacio">Todavía no hay informes publicados.</div>`;
   }
 
@@ -629,76 +704,95 @@ function pintar() {
   enganchar();
 }
 
-function destacadoHTML(d) {
+/* destacado (el informe más nuevo, con la foto grande) + "Lo último" (los
+   cuatro siguientes, con miniatura), como la cabecera del prototipo */
+function portadaHTML(d, ultimos) {
   const e = empDe(d);
-  return `<div class="dest">
-    <a href="${linkDe(d)}" aria-label="${esc(d.titulo || '')}">${cov(d)}</a>
-    <div class="ficha">
-      <div class="top"><span class="kick">${esc(tipoDe(d))}${d.categorias ? ' · ' + esc(d.categorias) : ''}</span>${accHTML(d, PRO)}</div>
-      <a class="tit" href="${linkDe(d)}"><h2>${esc(d.titulo || 'Sin título')}</h2></a>
-      ${d.resumen ? `<p>${esc(d.resumen)}</p>` : ''}
-      <div class="meta">${esc(fLarga(d.fecha))}${e ? ' · ' + esc(e.nombre) + ' (' + esc(e.ticker) + ')' : ''} · ${esc(d.autor || 'Valtia Analytics')}</div>
-      <a class="leer" href="${linkDe(d)}">Leer el informe →</a>
+  const dest = `<a class="dest" href="${linkDe(d)}">
+      ${cov(d)}
+      <div class="ficha">
+        <div class="top"><span class="kick">${esc(tipoDe(d))}${d.categorias ? ' · ' + esc(d.categorias) : ''}</span>${accHTML(d, PRO)}</div>
+        <h2>${esc(d.titulo || 'Sin título')}</h2>
+        ${d.resumen ? `<p>${esc(d.resumen)}</p>` : ''}
+        <div class="meta">${esc(fLarga(d.fecha))}${e ? ' · ' + esc(e.nombre) + ' (' + esc(e.ticker) + ')' : ''} · ${esc(d.autor || 'Valtia Analytics')}</div>
+      </div>
+    </a>`;
+  // sin nada más para listar, "Lo último" quedaría vacío: el destacado va solo
+  if (!ultimos.length) return `<div class="portada solo">${dest}</div>`;
+  return `<div class="portada">${dest}
+    <div class="ult">
+      <div class="pill-h">Lo último</div>
+      ${ultimos.map(u => `<a class="ult-i" href="${linkDe(u)}">
+        <div style="min-width:0">
+          <div class="top"><span class="kick">${esc(tipoDe(u))}</span><span class="fch">${esc(fCorta(u.fecha))}</span></div>
+          <h4>${esc(u.titulo || 'Sin título')}</h4>
+        </div>
+        ${cov(u)}
+      </a>`).join('')}
     </div>
   </div>`;
 }
 
-function ultimosHTML(lista) {
-  if (!lista.length) return '';
-  return `<div class="pill-h">Lo último</div>
-    <div class="ult">${lista.map(d => `<a class="mini" href="${linkDe(d)}">
-      ${cov(d)}
-      <div class="top"><span class="kick">${esc(tipoDe(d))}</span><span class="fch">${esc(fCorta(d.fecha))}</span></div>
-      <h4>${esc(d.titulo || 'Sin título')}</h4>
-    </a>`).join('')}</div>`;
-}
-
-/* La columna LECTURA queda definida pero apagada: ver MOSTRAR_LECTURA. */
+/* columnas de "Empresas que seguimos", con los anchos del prototipo. La de
+   LECTURA solo entra si algún informe de la tabla trae el dato (lecturaDe). */
 const COLS = [
-  { k: 'empresa', l: 'Empresa', w: 'minmax(150px,1.5fr)' },
-  { k: 'precio', l: 'Precio', w: '88px', num: true },
-  { k: 'dia', l: 'Hoy', w: '72px', num: true },
-  { k: 'desde', l: 'Desde el informe', w: '112px', num: true },
-  { k: 'lectura', l: 'Lectura', w: '92px', off: !MOSTRAR_LECTURA },
-  { k: 'fecha', l: 'Último informe', w: 'minmax(170px,1.4fr)' },
-  { k: 'acceso', l: 'Acceso', w: '84px', num: true },
-].filter(c => !c.off);
+  { k: 'empresa', l: 'Empresa', w: 'minmax(190px,1.5fr)', min: 190 },
+  { k: 'precio', l: 'Precio', w: '96px', num: true, min: 96 },
+  { k: 'dia', l: 'Hoy', w: '72px', num: true, min: 72 },
+  { k: 'desde', l: 'Desde el informe', w: '110px', num: true, min: 110 },
+  { k: 'lectura', l: 'Lectura', w: '92px', min: 92 },
+  { k: 'fecha', l: 'Último informe', w: 'minmax(170px,1.4fr)', min: 170 },
+  { k: 'acceso', l: 'Acceso', w: '72px', num: true, min: 72 },
+];
 
 function tablaHTML(filas) {
+  const conLectura = filas.some(f => lecturaDe(f.inf));
+  const cols = COLS.filter(c => c.k !== 'lectura' || conLectura);
+  // ancho mínimo = la suma de las columnas + separaciones + márgenes: por
+  // debajo de eso la tabla scrollea adentro de su caja, nunca la página
+  const minw = cols.reduce((s, c) => s + c.min, 0) + 12 * (cols.length - 1) + 36;
   const orden = [...filas].sort(cmpFilas);
-  const cols = COLS.map(c => c.w).join(' ');
-  const th = COLS.map(c => {
+  const th = cols.map(c => {
     const on = ORD.col === c.k;
     return `<span class="${on ? 'on' : ''}" data-col="${c.k}" role="button" tabindex="0"
       style="${c.num ? 'text-align:right;display:block' : ''}">${c.l}${on ? ` <i class="ar">${ORD.dir > 0 ? '▲' : '▼'}</i>` : ''}</span>`;
   }).join('');
-  return `<div class="sec-h"><div class="sec-t">Empresas que seguimos</div>
-      <span class="s">Tocá una fila para ver la ficha del activo<span class="solo-chico"> · deslizá la tabla para ver el resto de las columnas</span></span></div>
-    <div class="tbl-box"><div class="tbl" style="--cols:${cols}">
+  const hayPro = orden.some(f => (f.inf ? accesoDe(f.inf, PRO).c : 'acc-pro') === 'acc-pro');
+  return `<div class="emp-sec">
+    <div class="sec-h"><div class="sec-t">Empresas que seguimos</div>
+      <span class="s">Tocá una fila para leer el informe<span class="solo-chico"> · deslizá la tabla para ver el resto de las columnas</span></span></div>
+    <div class="tbl-box"><div class="tbl" style="--cols:${cols.map(c => c.w).join(' ')};--minw:${minw}px">
       <div class="tr th" id="tabla-th">${th}</div>
-      ${orden.map(f => filaEmpresa(f)).join('')}
+      ${orden.map(f => filaEmpresa(f, cols)).join('')}
     </div></div>
     <div class="tbl-pie">Precio y variación del día${PXHORA ? `, actualizados el ${esc(PXHORA)} h` : ''}.
-      “Desde el informe” compara ese precio contra el cierre del día en que salió el informe.
-      Las empresas marcadas <span class="acc acc-cli">Clientes</span> tienen el informe publicado,
-      pero hay que ingresar para leerlo.</div>
-    <div class="sec-sep"></div>`;
+      “Desde el informe” compara ese precio contra el cierre del día en que salió el informe.${hayPro
+      ? ` Las empresas marcadas <span class="acc acc-pro">PRO</span> tienen el informe publicado: se lee con Valtia PRO.`
+      : ''}</div>
+  </div>`;
 }
 
-function filaEmpresa(f) {
-  const a = f.inf ? accesoDe(f.inf, PRO) : { t: 'Clientes', c: 'acc-cli' };
-  const cel = [];
-  cel.push(`<div class="emp"><div class="chip">${esc(f.ticker)}</div>
-    <div style="min-width:0"><div class="n">${esc(f.ticker)}</div><div class="s">${esc(f.nombre)}</div></div></div>`);
-  cel.push(`<span class="num">${f.precio != null ? 'US$' + nf2.format(f.precio) : '—'}</span>`);
-  cel.push(`<span class="num ${f.dia == null ? '' : clase(f.dia)}">${f.dia == null ? '—' : signo(f.dia)}</span>`);
-  cel.push(`<span class="num ${f.desde == null ? '' : clase(f.desde)}" style="font-weight:600">${f.desde == null ? '—' : signo(f.desde)}</span>`);
-  if (MOSTRAR_LECTURA) cel.push(`<span>—</span>`);   // esperando el campo del pipeline
-  cel.push(`<div style="min-width:0">${f.inf
-    ? `<div class="inf-t">${esc(f.inf.titulo || 'Sin título')}</div><div class="inf-f">${esc(fCorta(f.inf.fecha))}</div>`
-    : `<div class="inf-t" style="color:var(--mut)">Informe para clientes</div><div class="inf-f">Ingresá para verlo</div>`}</div>`);
-  cel.push(`<span class="num"><span class="acc ${a.c}">${a.t}</span></span>`);
-  return `<a class="tr" href="/activo?t=${encodeURIComponent(f.ticker)}">${cel.join('')}</a>`;
+function filaEmpresa(f, cols) {
+  const a = f.inf ? accesoDe(f.inf, PRO) : { t: 'PRO', c: 'acc-pro' };
+  const lec = lecturaDe(f.inf);
+  const celda = {
+    empresa: () => `<div class="emp"><div class="chip">${esc(f.ticker)}</div>
+      <div style="min-width:0"><div class="n">${esc(f.ticker)}</div><div class="s">${esc(f.nombre)}</div></div></div>`,
+    precio: () => `<span class="num c-pre">${f.precio != null ? 'US$' + nf2.format(f.precio) : '—'}</span>`,
+    dia: () => `<span class="num c-dia ${f.dia == null ? '' : clase(f.dia)}">${f.dia == null ? '—' : signo(f.dia)}</span>`,
+    desde: () => `<span class="num c-des ${f.desde == null ? '' : clase(f.desde)}">${f.desde == null ? '—' : signo(f.desde)}</span>`,
+    lectura: () => lec ? `<span class="c-lec" style="color:${colorLectura(lec)}">${esc(lec)}</span>`
+                       : `<span class="c-lec" style="color:var(--mut)">—</span>`,
+    fecha: () => `<div style="min-width:0">${f.inf
+      ? `<div class="inf-t" title="${esc(f.inf.titulo || '')}">${esc(corto(f.inf.titulo) || 'Sin título')}</div><div class="inf-f">${esc(fCorta(f.inf.fecha))}</div>`
+      : `<div class="inf-t" style="color:var(--mut)">Informe publicado</div><div class="inf-f">Se lee con Valtia PRO</div>`}</div>`,
+    acceso: () => `<span class="num"><span class="acc ${a.c}">${a.t}</span></span>`,
+  };
+  // la ficha del activo embebe el informe del catálogo: la fila salta ahí.
+  // Un informe de una empresa sin slug en el catálogo se abre en el lector.
+  const href = f.slug ? `/activo?t=${encodeURIComponent(f.ticker)}#informe`
+    : f.inf ? linkDe(f.inf) : `/activo?t=${encodeURIComponent(f.ticker)}`;
+  return `<a class="tr" href="${href}">${cols.map(c => celda[c.k]()).join('')}</a>`;
 }
 
 function cmpFilas(a, b) {
@@ -709,6 +803,10 @@ function cmpFilas(a, b) {
     case 'precio': return num(a.precio, b.precio);
     case 'dia': return num(a.dia, b.dia);
     case 'desde': return num(a.desde, b.desde);
+    case 'lectura': {
+      const la = lecturaDe(a.inf) || '', lb = lecturaDe(b.inf) || '';
+      return (!la) - (!lb) || la.localeCompare(lb) * d;
+    }
     // abierto → de clientes → sin informe legible, y al revés al invertir
     case 'acceso': {
       const rango = f => !f.inf ? 2 : (f.inf.visibilidad === 'publico' ? 0 : 1);
@@ -736,7 +834,7 @@ function tarjetasHTML(lista) {
 
 function enganchar() {
   const tabs = document.getElementById('tabs');
-  if (tabs) tabs.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
+  if (tabs) tabs.querySelectorAll('button[data-k]').forEach(b => b.addEventListener('click', () => {
     TAB = b.dataset.k; pintar();
   }));
   const q = document.getElementById('q');
@@ -766,41 +864,61 @@ function enganchar() {
 }
 
 /* ══ lector de un informe suelto (?i=slug) ══ */
-async function lector() {
+async function lector(user) {
   // los informes de empresa viven en la ficha del activo: una sola página
   const emp = empPorSlug.get(slug);
   if (emp && emp.ticker) { location.replace(`/activo?t=${encodeURIComponent(emp.ticker)}#informe`); return; }
-  content.innerHTML = `<div class="fsr-crumb"><a href="/informes">← Todos los informes</a></div>
+  // columna de 880px del lector del prototipo: la miga, el candado y el informe
+  const miga = `<div class="fsr-crumb"><a href="/informes">← Todos los informes</a></div>`;
+  content.innerHTML = `<div class="lector">${miga}
     <div class="fsr-reader"><div class="sk sk-t" style="width:70%"></div>
       <div class="sk sk-l" style="width:38%"></div><div class="sk sk-l" style="width:100%"></div>
-      <div class="sk sk-l" style="width:94%"></div><div class="sk sk-l" style="width:88%"></div></div>`;
-  let d = null, tardo = false;
+      <div class="sk sk-l" style="width:94%"></div><div class="sk sk-l" style="width:88%"></div></div></div>`;
+  let d = null, tardo = false, noEsta = false;
   try {
     const snap = await conTiempo(getDoc(doc(db, 'informes', slug)), 12000);
-    if (snap.exists()) d = snap.data();
+    // Si la lectura contesta pero el doc no existe, las reglas la dejaron
+    // pasar (sesión de cliente): el informe no está, no es un candado.
+    if (snap.exists()) d = snap.data(); else noEsta = true;
   } catch (e) { d = null; tardo = (e === TARDO); }
   if (tardo) {
-    content.innerHTML = `<div class="fsr-crumb"><a href="/informes">← Todos los informes</a></div>
+    content.innerHTML = `<div class="lector">${miga}
       <div class="aviso">
         <div style="flex:1;min-width:240px"><strong>No pudimos cargar este informe.</strong><br>
           Puede ser la conexión o un corte del servicio. Probá de nuevo en un momento.</div>
-        <button class="b" id="reintentar-lector" type="button">Reintentar</button></div>`;
-    document.getElementById('reintentar-lector').onclick = () => lector();
+        <button class="b" id="reintentar-lector" type="button">Reintentar</button></div></div>`;
+    document.getElementById('reintentar-lector').onclick = () => lector(getAuth(app).currentUser);
+    return;
+  }
+  if (noEsta) {
+    content.innerHTML = `<div class="lector">${miga}
+      <div class="bloq"><h2>No encontramos este informe</h2>
+        <p>Puede que el enlace esté incompleto o que el informe ya no esté publicado.</p>
+        <div class="row"><a class="b1" href="/informes">Ver todos los informes</a></div></div></div>`;
     return;
   }
   if (!d) {
-    content.innerHTML = `<div class="fsr-crumb"><a href="/informes">← Todos los informes</a></div>
+    // con sesión iniciada "Ingresá con tu cuenta" no sirve: esa cuenta ya
+    // entró y las reglas no la dejan leer. O no tiene Valtia PRO, o tiene el
+    // mail sin verificar (las reglas piden el mail verificado para abrirlo).
+    const conCuenta = !!(user && user.email);
+    const texto = !conCuenta
+      ? 'Es exclusivo para clientes de Valtia. Ingresá con tu cuenta para leerlo, o conocé los planes de suscripción.'
+      : user.emailVerified
+        ? 'Es exclusivo para clientes de Valtia y tu cuenta todavía no tiene Valtia PRO. Conocé los planes de suscripción.'
+        : 'Es exclusivo para clientes de Valtia. Si ya tenés Valtia PRO, verificá tu mail para leerlo: te mandamos un correo cuando creaste la cuenta (mirá también en correo no deseado). Si no, conocé los planes de suscripción.';
+    content.innerHTML = `<div class="lector">${miga}
       <div class="bloq">
         <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8CE96" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 018 0v3.5"/></svg></div>
         <h2>Este informe es de clientes</h2>
-        <p>Ingresá con tu cuenta de Valtia para leerlo, o conocé los planes de asesoría.</p>
-        <div class="row"><a class="b1" href="/planes">Ver planes →</a><a class="b2" href="/?login=1">Ingresar</a></div>
-      </div>`;
+        <p>${texto}</p>
+        <div class="row"><a class="b1" href="/planes">Ver planes →</a>${conCuenta ? '' : '<a class="b2" href="/?login=1">Ingresar</a>'}</div>
+      </div></div>`;
     return;
   }
   document.title = `${d.titulo} — Valtia Analytics`;
-  content.innerHTML = `
-    <div class="fsr-crumb"><a href="/informes">← Todos los informes</a></div>
+  content.innerHTML = `<div class="lector">
+    ${miga}
     <div class="fsr-reader">
       <div class="fsr-rhead">
         <div style="display:flex;gap:9px;margin-bottom:12px;flex-wrap:wrap"><span class="fsr-badge">${esc(d.tipo || 'Informe')}</span>${d.categorias ? `<span class="fsr-tag">${esc(d.categorias)}</span>` : ''}</div>
@@ -810,7 +928,7 @@ async function lector() {
       </div>
       ${d.contenido_html || '<p>Sin contenido.</p>'}
       <div id="rel-news"></div>
-    </div>`;
+    </div></div>`;
   if (d.ticker) { bandaViva(d); noticiasRelacionadas(d); }
 }
 
@@ -821,7 +939,7 @@ async function bandaViva(d) {
     if (!snap.exists()) return;
     const px = (JSON.parse(snap.data().json || '{}'))[d.ticker];
     if (!px || !px.p) return;
-    const cl = v => v > 0 ? 'lb-up' : v < 0 ? 'lb-dn' : '';
+    const cl = v => clase(v) ? 'lb-' + clase(v) : '';
     const desde = d.precio_pub > 0 ? (px.p / d.precio_pub - 1) * 100 : null;
     // día y hora reales de la sincronización: la última puede ser de ayer
     const hora = fHora(snap.data().actualizado_utc);
@@ -862,7 +980,7 @@ async function noticiasRelacionadas(d) {
 }
 
 onAuthStateChanged(getAuth(app), user => {
-  if (slug) lector();
+  if (slug) lector(user);
   else cargar(user);
 });
 </script>

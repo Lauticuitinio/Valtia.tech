@@ -27,7 +27,7 @@
   <text x="72" y="188" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="4" fill="#D4AF6E">INFORME · MACRO</text>
   <!-- título -->
   <text x="70" y="256" font-family="Georgia, 'Times New Roman', serif" font-size="72" fill="#F5F2EC">Argentina Q3</text>
-  <text x="72" y="252" font-family="Helvetica, Arial, sans-serif" font-size="22" fill="rgba(245,242,236,.6)">Perspectivas macroeconómicas</text>
+  <text x="72" y="300" font-family="Helvetica, Arial, sans-serif" font-size="22" fill="rgba(245,242,236,.6)">Perspectivas macroeconómicas</text>
   
   <!-- fecha / pie -->
   <line x1="72" y1="556" x2="180" y2="556" stroke="#B8975A" stroke-width="2"/>
