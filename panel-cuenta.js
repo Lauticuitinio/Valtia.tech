@@ -180,8 +180,13 @@ const planDe = S => PLANES[S.isAdmin ? 'admin' : S.cliente ? 'cliente' : S.pro ?
    "ya" dice si HOY hay alguien mandando ese aviso. Al 23/09/2026 no lo hay para
    ninguno: el único mail que sale es el de las alertas del radar (alertas_cartera.py),
    que se prende en Resumen y usa otros campos de este mismo documento. Cuando el
-   envío de uno exista, se le pone ya:true acá y desaparece su "todavía no". */
+   envío de uno exista, se le pone ya:true acá y desaparece su "todavía no".
+   "cierre" (25/09/2026, pedido de Lauti después de ver el de Senta) sí sale: lo
+   manda cierre_cartera.py desde precios_intradia.py al cierre de cada rueda, solo
+   a quien lo prende acá y con el mail verificado. */
 const AVISOS = [
+  { k: 'cierre', pro: false, t: 'Cierre diario de tu cartera',
+    d: 'Cada día de rueda, al cierre: cuánto vale, cuánto se movió en pesos y en dólares, contra el S&P 500 y lo que más se movió.', ya: true },
   { k: 'compraventa', pro: true, t: 'Compras y ventas',
     d: 'El mismo día que operamos, con el precio y la razón.', ya: false },
   { k: 'rotacion', pro: true, t: 'Rotaciones de las carteras que seguís',

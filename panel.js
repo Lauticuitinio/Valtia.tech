@@ -21,7 +21,7 @@ import { renderAlertas, contarNoLeidas } from './panel-alertas.js?v=2';
 // panel las evalúa con los precios que lee y cuenta las que saltaron para la pastilla
 import { instalarEvaluacion, evaluarConPrecios, contarDisparadasNoVistas, fraseDisparo, fmtPrecio } from './alertas-precio.js?v=1';
 import { renderAgenda } from './panel-agenda.js?v=1';
-import { renderCuenta } from './panel-cuenta.js?v=1';
+import { renderCuenta } from './panel-cuenta.js?v=2';
 import { renderOperar } from './panel-operar.js?v=3';
 import { eventos } from './panel-eventos.js?v=1';
 import { renderMovimientos } from './panel-movimientos.js?v=1';
