@@ -12,10 +12,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Herramientas — reglas globales del rediseño (sitio.css): título negro
-     sobre blanco, Plex Sans en todo, esquinas redondeadas (tarjetas 10–12,
-     botones 8, etiquetas 6), selectores con borde dorado sutil y contenido de
-     1340px alineado con el título. El lateral de herramientas es su etapa. ── */
+/* ── Herramientas — etapa 7 del rediseño (SPEC §7, prototipo "Valtia
+     Herramientas"): sin encabezado propio ni pestañas. Lateral fijo a la
+     izquierda de 260px con las 11 herramientas (ícono en círculo + etiqueta
+     GRATIS/PRO); en celular pasa arriba, deslizable. Lo global (nav, barra de
+     cotizaciones, botón de mail, chips) viene de sitio.css. ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --navy:#0E1830;--navy2:#0B1327;--navy3:#14213D;
@@ -32,93 +33,163 @@ body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
 img{max-width:100%}
-
-
+button{font-family:inherit}
 
 /* sube / baja */
 .up{color:var(--up)}.down{color:var(--dn)}.neutral{color:var(--muted)}
 
-/* TABS — la regla de botones y selectores del sitio: borde dorado sutil,
-   radio 8 y texto gris; la abierta con borde dorado, relleno crema y texto
-   negro. En pantalla grande las que no entran pasan al renglón de abajo; en
-   teléfono la fila se desplaza de costado (ver la media query del final). */
-.tools-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:18px var(--v-gutter) 16px;max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto;background:#fff;border-bottom:1px solid var(--line)}
-.tool-tab{font:500 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.04em;cursor:pointer;padding:8px 12px;border:1px solid rgba(176,138,62,.4);border-radius:8px;background:#fff;color:#57534A;white-space:nowrap;transition:color .15s,border-color .15s,background .15s;display:flex;align-items:center;gap:7px}
-.tool-tab:hover{color:#101010}
-.tool-tab.active{color:#101010;font-weight:600;border-color:#B08A3E;background:#FBF5E8}
-.badge-f{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;padding:2px 5px;border-radius:6px;background:rgba(31,122,77,.1);color:var(--up);white-space:nowrap}
-.badge-p{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;padding:2px 5px;border-radius:6px;background:rgba(176,138,62,.12);color:var(--gold2);white-space:nowrap}
+/* ── LATERAL + CONTENIDO (prototipo: grid 260px / resto, lateral pegado
+   debajo del nav y la barra, con scroll propio) ── */
+#tools{display:grid;grid-template-columns:260px minmax(0,1fr);gap:0;align-items:start;min-height:calc(100vh - var(--v-top))}
+#tools-side{position:sticky;top:var(--v-top);height:calc(100vh - var(--v-top));overflow:auto;scrollbar-width:none;border-right:1px solid var(--line);padding:18px 12px;background:#fff}
+#tools-side::-webkit-scrollbar{display:none}
+.ts-title{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);padding:6px 12px 10px}
+.ts-list{display:flex;flex-direction:column;gap:4px}
+/* gap 10 y padding lateral 10 (el prototipo usa 12/12 con 272px de ancho y
+   trunca con puntos suspensivos): con los 260px del SPEC y las etiquetas
+   completas, así ninguna pasa de dos renglones */
+.ts-item{display:flex;align-items:center;gap:10px;width:100%;padding:11px 10px;border-radius:10px;cursor:pointer;border:1px solid transparent;background:transparent;color:#8B8375;text-align:left;transition:background .15s,color .15s,border-color .15s}
+.ts-item:hover{background:#FBF5E8;color:#101010}
+.ts-item.active{border-color:#B08A3E;background:#FBF5E8;color:#101010}
+.ts-ic{width:30px;height:30px;border-radius:50%;border:1px solid rgba(176,138,62,.5);display:flex;align-items:center;justify-content:center;flex:none;color:#8A6A2F;font:600 12px 'IBM Plex Sans',sans-serif}
+.ts-label{font:500 14px/1.25 'IBM Plex Sans',sans-serif;flex:1;min-width:0}
+.badge-f{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;padding:3px 5px;border-radius:6px;background:rgba(31,122,77,.1);color:var(--up);white-space:nowrap;flex:none}
+.badge-p{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;padding:3px 5px;border-radius:6px;background:rgba(176,138,62,.12);color:var(--gold2);white-space:nowrap;flex:none}
 
-.tool-content{padding:30px var(--v-gutter) 20px;display:none;max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto}
+.tool-main{padding:28px 40px 70px;min-width:0}
+.tool-in{max-width:var(--v-ancho)}
+.tool-content{display:none}
 .tool-content.active{display:block}
-/* título de herramienta: texto + etiqueta + hairline que se estira */
-.tool-title{display:flex;align-items:center;gap:14px;font:700 26px/1.2 'IBM Plex Sans',sans-serif;color:var(--ink);margin-bottom:8px;text-wrap:pretty}
-.tool-title .badge-f,.tool-title .badge-p{position:relative;top:1px}
-.tool-title::after{content:"";flex:1;min-width:20px;height:1px;background:var(--line)}
-.tool-desc{font-size:14px;font-weight:400;color:var(--sub);line-height:1.65;margin-bottom:24px;max-width:820px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+/* título de la herramienta: negro 28px + bajada (prototipo) */
+.tool-h1{font:700 28px/1.15 'IBM Plex Sans',sans-serif;color:#101010;letter-spacing:-.01em;margin:0 0 6px}
+.tool-desc{font-size:15px;font-weight:400;color:var(--sub);line-height:1.65;margin:0 0 24px;max-width:820px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
 .widget-box{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:24px}
-.widget-header{padding:13px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:6px 14px;flex-wrap:wrap}
-.widget-title{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
-.widget-source{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--mut)}
-.nota{font-size:12px;color:var(--sub);line-height:1.7;max-width:820px}
+.widget-header{padding:13px 18px;border-bottom:1px solid #F2EFE8;display:flex;align-items:center;justify-content:space-between;gap:6px 14px;flex-wrap:wrap}
+.widget-title{font:700 13px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
+.widget-source{font:400 12px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+.nota{font-size:13px;color:var(--sub);line-height:1.7;max-width:820px}
 .nota strong{color:var(--ink)}
+/* las tarjetas que arma tv.js toman las esquinas y el cabezal del prototipo
+   (12px, título 13px, fuente 12px). Es CSS de la página: tv.js no se toca. */
+.tool-content .vtv{border-radius:12px}
+.tool-content .vtv-titulo{font-size:13px}
+.tool-content .vtv-fuente{font-size:12px}
 
 /* botón navy (candados) */
-.btn-navy{display:inline-block;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:#0E1830;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;transition:background .2s}
+.btn-navy{display:inline-block;font:600 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:#0E1830;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;transition:background .2s}
 .btn-navy:hover{background:#B08A3E;color:#fff}
-.deriva{background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px;max-width:760px}
-.deriva p{font-size:14px;line-height:1.7;color:var(--sub);margin-bottom:16px}
 
 /* MAPA DE CALOR — los cinco mapas uno debajo del otro (tv.js arma cada tarjeta) */
 .hm-stack{display:flex;flex-direction:column}
 
-/* DÓLAR HISTÓRICO — gráfico SVG propio */
-.dolar-chart-wrap{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px 24px 16px;margin-bottom:16px}
+/* DÓLAR HISTÓRICO — gráfico SVG propio, cierre mensual (ArgentinaDatos) */
+.dolar-chart-wrap{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px 22px 14px;margin-bottom:16px}
 .dolar-top{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap;margin-bottom:14px}
-.dolar-legend{display:flex;gap:16px;flex-wrap:wrap}
-.dolar-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:var(--sub)}
-.dolar-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.dolar-readout{font:500 11.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--sub);min-height:18px}
+.dolar-sel{display:flex;gap:8px;flex-wrap:wrap}
+.dolar-chip{display:flex;align-items:center;gap:7px;font:500 13px 'IBM Plex Sans',sans-serif;color:#101010;padding:7px 12px;border-radius:8px;border:1px solid rgba(176,138,62,.4);background:#fff;cursor:pointer;opacity:.45;transition:opacity .15s,background .15s,border-color .15s}
+.dolar-chip:hover{background:#FBF5E8;opacity:1}
+.dolar-chip.on{opacity:1;border-color:#B08A3E;background:#FBF5E8}
+.dolar-chip i{width:10px;height:10px;border-radius:50%;display:block;flex:none}
+.dolar-hint{font-size:12.5px;color:var(--mut)}
 .dolar-grid{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px}
-.dolar-y{display:flex;flex-direction:column;justify-content:space-between;font:500 10.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--mut);text-align:right;min-width:48px}
-.dolar-svg{width:100%;height:300px;display:block;touch-action:pan-y}
+.dolar-y{display:flex;flex-direction:column;justify-content:space-between;font:500 12px 'IBM Plex Sans',sans-serif;color:var(--mut);text-align:right;min-width:56px;padding:20px 0 2px}
+.dolar-plot{position:relative}
+.dolar-svg{width:100%;height:340px;display:block;touch-action:pan-y}
+.dolar-pt{position:absolute;width:8px;height:8px;border-radius:50%;background:#fff;border:2px solid var(--gold);transform:translate(-50%,-50%);pointer-events:none}
+.dolar-lbl{position:absolute;transform:translate(-50%,-100%);font:600 11px 'IBM Plex Sans',sans-serif;background:rgba(255,255,255,.85);padding:1px 4px;border-radius:4px;white-space:nowrap;pointer-events:none}
+.dolar-lbl.ini{transform:translate(0,-100%)}
+.dolar-lbl.fin{transform:translate(-100%,-100%)}
 .dolar-x{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;margin-top:8px}
-.dolar-x .lbl{display:flex;justify-content:space-between;font:500 10.5px 'IBM Plex Sans',sans-serif;color:var(--mut)}
-.dolar-vacio{display:flex;align-items:center;justify-content:center;min-height:200px;font-size:13px;color:var(--sub);text-align:center;padding:20px}
-.dolar-current{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:16px}
+.dolar-x-pad{min-width:56px}
+.dolar-x-lbl{position:relative;height:16px;font:500 11.5px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+.dolar-x-lbl span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+.dolar-x-lbl span.ini{transform:none}
+.dolar-x-lbl span.fin{transform:translateX(-100%)}
+.dolar-readout{font:500 12.5px 'IBM Plex Sans',sans-serif;color:var(--sub);min-height:18px;margin-top:12px;line-height:1.5}
+.dolar-fuente{font-size:12.5px;color:var(--mut);line-height:1.6;margin-top:8px}
+.dolar-vacio{display:flex;align-items:center;justify-content:center;min-height:200px;font-size:14px;color:var(--sub);text-align:center;padding:20px;line-height:1.6}
+.dolar-current{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
 .dolar-card{background:#fff;border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:10px;padding:14px;text-align:center}
-.dolar-card-name{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:8px}
-.dolar-card-price{font:600 17px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1}
-.dolar-card-sub{font-size:10.5px;color:var(--mut);margin-top:6px}
+.dolar-card-name{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:8px}
+.dolar-card-price{font:600 19px 'IBM Plex Sans',sans-serif;color:var(--ink);line-height:1}
+.dolar-card-sub{font-size:11.5px;color:var(--mut);margin-top:6px}
 
-/* PRO LOCK OVERLAY */
+/* PRO LOCK OVERLAY (nav-auth.js lo apaga para los clientes) */
 .pro-section{position:relative}
-.pro-overlay{position:absolute;inset:0;border-radius:12px;background:rgba(246,243,236,.9);backdrop-filter:blur(3px);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;text-align:center}
-.pro-lock-icon{font-size:30px;opacity:.75}
+.pro-overlay{position:absolute;inset:0;border-radius:12px;background:rgba(251,249,243,.88);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;text-align:center}
 .pro-overlay h4{font:700 21px/1.2 'IBM Plex Sans',sans-serif;color:var(--ink)}
-.pro-overlay p{font-size:13px;color:var(--sub);text-align:center;max-width:320px;line-height:1.6}
-.pro-overlay .btn{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:#0E1830;color:#fff;padding:12px 26px;border-radius:8px;text-decoration:none;transition:background .2s;margin-top:4px}
+.pro-overlay p{font-size:14.5px;color:var(--sub);text-align:justify;-webkit-hyphens:auto;hyphens:auto;max-width:320px;line-height:1.6}
+.pro-overlay .btn{font:600 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:#0E1830;color:#fff;padding:12px 26px;border-radius:8px;text-decoration:none;transition:background .2s;margin-top:4px}
 .pro-overlay .btn:hover{background:#B08A3E;color:#fff}
 .preview-blur{filter:blur(4px);pointer-events:none;user-select:none}
 
-/* CALC — recalcula al escribir, sin botón */
+/* CALCULADORAS — recalculan al escribir, sin botón */
 .calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:32px;align-items:start;max-width:960px}
 .calc-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px}
 .form-group{margin-bottom:14px}
 .form-group:last-of-type{margin-bottom:0}
-.form-group label{display:block;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin-bottom:7px}
-.form-group input{width:100%;padding:11px 12px;background:#fff;border:1px solid var(--line);border-radius:8px;color:var(--ink);font:500 14px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;outline:none;transition:border-color .2s;-moz-appearance:textfield}
+.form-group label{display:block;font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin-bottom:7px}
+.form-group input,.ppc-row input,.glos-search input{width:100%;padding:11px 12px;background:#fff;border:1px solid var(--line);border-radius:8px;color:var(--ink);font:500 15px 'IBM Plex Sans',sans-serif;outline:none;transition:border-color .2s;-moz-appearance:textfield;min-width:0}
 .form-group input::-webkit-outer-spin-button,.form-group input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.form-group input::placeholder{color:var(--mut);font-weight:400}
-.form-group input:focus{border-color:var(--gold)}
+.form-group input::placeholder,.ppc-row input::placeholder,.glos-search input::placeholder{color:var(--mut);font-weight:400}
+.form-group input:focus,.ppc-row input:focus,.glos-search input:focus{border-color:var(--gold)}
 .result-box{background:#fff;border:1px solid var(--line);border-top:3px solid #0E1830;border-radius:12px;padding:18px 20px}
-.result-row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:9px 0;border-bottom:1px solid var(--line)}
-.result-row:last-of-type{border:none;padding-top:12px}
-.result-label{font-size:13px;color:var(--sub)}
-.result-value{font:500 14px 'IBM Plex Sans',sans-serif;color:var(--ink);font-variant-numeric:tabular-nums;text-align:right}
+.result-box.oro{border-top-color:#B08A3E}
+.result-row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:9px 0;border-bottom:1px solid #F2EFE8}
+.result-row:last-of-type{border:none;padding:12px 0 4px}
+.result-label{font-size:14.5px;color:var(--sub)}
+.result-value{font:500 15.5px 'IBM Plex Sans',sans-serif;color:var(--ink);text-align:right}
 .result-value.interes{color:var(--up)}
 .result-value.highlight{font:600 20px 'IBM Plex Sans',sans-serif;color:var(--gold2)}
-.calc-nota{font-size:12px;color:var(--mut);margin-top:14px;line-height:1.6}
+.result-value.highlight.grande{font-size:22px}
+.calc-nota{font-size:13.5px;color:var(--mut);margin-top:14px;line-height:1.6}
+
+/* INTERÉS COMPUESTO */
+.ci-grid{max-width:none}
+.ci-right{display:flex;flex-direction:column;gap:14px}
+.ci-chart-box{padding:16px 20px 12px;margin:0}
+.ci-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--sub);margin-bottom:10px}
+.ci-legend span{display:flex;align-items:center;gap:7px}
+.ci-legend i{display:block;width:18px;height:0;border-top:2px solid #14213D}
+.ci-legend i.ap{border-top:2px dashed #B08A3E}
+.ci-plot{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px}
+.ci-y{display:flex;flex-direction:column;justify-content:space-between;font:500 11.5px 'IBM Plex Sans',sans-serif;color:var(--mut);text-align:right;min-width:60px;padding:0 0 2px}
+.ci-svg{width:100%;height:220px;display:block;touch-action:pan-y}
+.ci-x{position:relative;height:16px;margin:6px 0 0 68px;font:500 11.5px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+.ci-x span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+.ci-x span.ini{transform:none}
+.ci-x span.fin{transform:translateX(-100%)}
+.ci-readout{font:500 12.5px 'IBM Plex Sans',sans-serif;color:var(--sub);min-height:18px;margin-top:8px}
+.ci-vacio{display:flex;align-items:center;justify-content:center;min-height:160px;font-size:14px;color:var(--sub);text-align:center;padding:20px;line-height:1.6}
+.ci-tabla{padding:16px 20px;margin:0}
+.ci-th{display:grid;grid-template-columns:60px 1fr 1fr;gap:10px;padding:6px 0;border-bottom:1px solid #101010;font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.ci-th span:not(:first-child),.ci-tr span:not(:first-child){text-align:right}
+.ci-tr{display:grid;grid-template-columns:60px 1fr 1fr;gap:10px;padding:8px 0;border-bottom:1px solid #F2EFE8;font:500 13.5px 'IBM Plex Sans',sans-serif}
+.ci-tr span:nth-child(2){color:var(--sub)}
+.ci-tr:last-child{border-bottom:none}
+.ci-tabla-vacia{font-size:13.5px;color:var(--mut);padding:10px 0 2px}
+
+/* PPC */
+.ppc-grid{grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px}
+.ppc-mon{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.ppc-mon-l{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin-right:4px}
+.ppc-head{display:grid;grid-template-columns:1fr 1fr 28px;gap:10px;font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin-bottom:8px}
+.ppc-rows{display:flex;flex-direction:column;gap:8px}
+.ppc-row{display:grid;grid-template-columns:1fr 1fr 28px;gap:10px;align-items:center}
+.ppc-row input{padding:10px 12px}
+.ppc-x{background:none;border:0;color:var(--mut);cursor:pointer;text-align:center;font-size:18px;line-height:1;padding:4px 0}
+.ppc-x:hover{color:var(--dn)}
+.ppc-add{display:inline-block;margin-top:12px;font:600 13px 'IBM Plex Sans',sans-serif;color:#14213D;padding:8px 14px;border:1px solid rgba(176,138,62,.4);border-radius:8px;background:#fff;cursor:pointer}
+.ppc-add:hover{background:#FBF5E8}
+
+/* GLOSARIO */
+.glos-search{max-width:420px;margin-bottom:16px}
+.glos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.glos-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.glos-card[hidden]{display:none}
+.glos-t{font:600 15px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.glos-d{font-size:13.5px;color:var(--sub);line-height:1.6;margin-top:6px}
+.glos-vacio{font-size:14px;color:var(--sub);padding:14px 0}
 
 /* ATRIBUCIÓN DE TRADINGVIEW. Los embebidos son gratis y están permitidos en
    sitios comerciales justamente porque queda este link: no se saca, no se
@@ -132,55 +203,55 @@ img{max-width:100%}
 /* RADAR DE VALUACIÓN */
 .radar-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
 .radar-stat{background:#fff;border:1px solid var(--line);border-top:2px solid #0E1830;border-radius:10px;padding:14px 18px}
-.radar-stat .n{font:600 22px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;line-height:1;color:var(--ink)}
-.radar-stat .l{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-top:8px}
+.radar-stat .n{font:600 22px 'IBM Plex Sans',sans-serif;line-height:1;color:var(--ink)}
+.radar-stat .l{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-top:8px}
 .radar-stat.infra .n{color:var(--up)}.radar-stat.precio .n{color:var(--gold2)}.radar-stat.cara .n{color:var(--dn)}
-.radar-note{font-size:12px;color:var(--sub);line-height:1.7;margin:2px 0 18px;max-width:820px}
+.radar-note{font-size:13px;color:var(--sub);line-height:1.7;margin:2px 0 18px;max-width:820px}
 .radar-note strong{color:var(--ink)}
-.radar-kicker{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--up);margin-bottom:6px}
-.radar-regla{font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:12px}
+.radar-kicker{font:700 12px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--up);margin-bottom:6px}
+.radar-regla{font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:12px}
 .radar-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px;margin-bottom:22px}
 .radar-card{background:#fff;border:1px solid var(--line);border-left:3px solid var(--up);border-radius:10px;padding:15px 16px}
 .radar-card .rc-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:3px}
-.radar-card .rc-sym{font:600 14px 'IBM Plex Sans',sans-serif;color:var(--ink)}
-.radar-card .rc-px{font:500 13px 'IBM Plex Sans',sans-serif;color:var(--ink);font-variant-numeric:tabular-nums}
-.radar-card .rc-name{font-size:11px;color:var(--sub);margin-bottom:10px}
-.radar-card .rc-ver{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;color:var(--up);text-transform:uppercase}
+.radar-card .rc-sym{font:600 15.5px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.radar-card .rc-px{font:500 14.5px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.radar-card .rc-name{font-size:12.5px;color:var(--sub);margin-bottom:10px}
+.radar-card .rc-ver{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;color:var(--up);text-transform:uppercase}
 .radar-card .rc-ver.precio{color:var(--gold2)}.radar-card .rc-ver.cara{color:var(--dn)}
-.radar-card .rc-meta{display:flex;gap:12px;font:500 11.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--sub);margin-top:8px}
+.radar-card .rc-meta{display:flex;gap:12px;font:500 11.5px 'IBM Plex Sans',sans-serif;color:var(--sub);margin-top:8px}
 .radar-card .rc-meta b{font-weight:600;color:var(--ink)}
-.radar-card .rc-entry{font-size:10.5px;font-weight:600;color:var(--gold2);margin-top:6px}
+.radar-card .rc-entry{font-size:11.5px;font-weight:600;color:var(--gold2);margin-top:5px}
 .radar-card .rc-entry.no{color:var(--mut);font-weight:500}
-.radar-table{width:100%;border-collapse:collapse;font-size:13px}
-.radar-table th{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:10px 10px;border-bottom:1px solid var(--ink);text-align:right;white-space:nowrap}
+.radar-table{width:100%;border-collapse:collapse;font-size:14px}
+.radar-table th{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:10px 10px;border-bottom:1px solid var(--ink);text-align:right;white-space:nowrap}
 .radar-table th:first-child,.radar-table th.l{text-align:left}
-.radar-table td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--ink);font:500 12.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
-.radar-table td.l{text-align:left;font-family:'IBM Plex Sans',sans-serif}
+.radar-table td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--ink);font:500 14px 'IBM Plex Sans',sans-serif;text-align:right;white-space:nowrap}
+.radar-table td.l{text-align:left}
 .radar-table tr:last-child td{border:none}
 .radar-table tbody tr:hover td{background:var(--marfil)}
-.rsym{font:600 13px 'IBM Plex Sans',sans-serif;color:var(--ink)}
-.rname{font:400 11px 'IBM Plex Sans',sans-serif;color:var(--mut);display:block}
+.rsym{font:600 14px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.rname{font:400 12.5px 'IBM Plex Sans',sans-serif;color:var(--mut);display:block}
 .rbar{display:inline-flex;align-items:center;gap:7px;justify-content:flex-end}
-.rbar-track{width:52px;height:5px;background:var(--line)}
+.rbar-track{width:52px;height:5px;background:var(--line);border-radius:3px;overflow:hidden}
 .rbar-fill{height:100%}
-.rver{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:6px}
+.rver{font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:6px}
 .rver.infra{color:var(--up);background:rgba(31,122,77,.1)}
 .rver.precio{color:var(--gold2);background:rgba(176,138,62,.12)}
 .rver.cara{color:var(--dn);background:rgba(178,58,58,.1)}
 .rver.sin{color:var(--sub);background:var(--marfil)}
-.rzona{font-size:12px;font-weight:600}
+.rzona{font-size:13px;font-weight:600}
 .rzona.sv{color:var(--up)}.rzona.db{color:var(--sub)}.rzona.fi{color:var(--ink)}.rzona.sc{color:var(--dn)}
 .rentry{color:var(--gold);font-weight:700}
 
 /* RATIOS */
-.ratios-table{width:100%;border-collapse:collapse;font-size:13px}
-.ratios-table th{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:10px 12px;border-bottom:1px solid var(--ink);text-align:left;white-space:nowrap}
-.ratios-table td{padding:10px 12px;border-bottom:1px solid var(--line);color:var(--ink)}
-.ratios-table td:nth-child(3){font:500 12.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums}
+.ratios-table{width:100%;border-collapse:collapse;font-size:14.5px}
+.ratios-table th{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:10px 14px;border-bottom:1px solid var(--ink);text-align:left;white-space:nowrap}
+.ratios-table td{padding:10px 14px;border-bottom:1px solid #F2EFE8;color:var(--ink)}
+.ratios-table td:nth-child(3){font:500 14px 'IBM Plex Sans',sans-serif}
 .ratios-table td:nth-child(4),.ratios-table td:nth-child(5){color:var(--sub)}
 .ratios-table tr:last-child td{border:none}
 .ratios-table tbody tr:hover td{background:var(--marfil)}
-.ticker-badge{font:600 12.5px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+.ticker-badge{font:600 14px 'IBM Plex Sans',sans-serif;color:var(--ink)}
 
 /* footer (el mail flotante es el de sitio.css) */
 footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px 32px;margin-top:40px}
@@ -192,41 +263,54 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
 /* ── Panel de bonos (estilo mesa) ── */
 .bp-vars{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px;margin-bottom:10px}
 .bp-var{background:#fff;border:1px solid var(--line);border-top:2px solid #0E1830;border-radius:10px;padding:12px 14px}
-.bp-var .l{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--sub)}
-.bp-var .v{font:600 16px 'IBM Plex Sans',sans-serif;color:var(--ink);margin-top:6px;font-variant-numeric:tabular-nums}
-.bp-var .s{font-size:11px;margin-top:3px;color:var(--sub);font-variant-numeric:tabular-nums}
+.bp-var .l{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--sub)}
+.bp-var .v{font:600 17.5px 'IBM Plex Sans',sans-serif;color:var(--ink);margin-top:6px}
+.bp-var .s{font-size:12.5px;margin-top:3px;color:var(--sub)}
 .bp-nota{margin-bottom:16px}
 .bp-table-wrap{overflow-x:auto}
-.bp-table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.bp-table th{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);text-align:right;padding:10px 10px;border-bottom:1px solid var(--ink)}
+.bp-table{width:100%;border-collapse:collapse;font-size:14px;white-space:nowrap}
+.bp-table th{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);text-align:right;padding:10px 10px;border-bottom:1px solid var(--ink)}
 .bp-table th:first-child,.bp-table td:first-child{text-align:left}
-.bp-table td{padding:8px 10px;border-bottom:1px solid var(--line);color:var(--ink);text-align:right;font:500 12.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums}
+.bp-table td{padding:9px 10px;border-bottom:1px solid #F2EFE8;color:var(--ink);text-align:right;font:500 14px 'IBM Plex Sans',sans-serif}
 .bp-table tr:last-child td{border-bottom:none}
 .bp-table tbody tr:hover td{background:var(--marfil)}
 .bp-sym{font-weight:600;letter-spacing:.02em;color:var(--ink)}
-.bp-ley{display:inline-block;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;padding:1px 6px;border-radius:6px;margin-left:7px;vertical-align:1px;border:1px solid var(--line);color:var(--sub)}
+.bp-ley{display:inline-block;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;padding:1px 6px;border-radius:10px;margin-left:6px;vertical-align:1px;border:1px solid var(--line);color:var(--sub)}
 .bp-ley.ny{color:var(--gold2);border-color:var(--gold)}
 .bp-up{color:var(--up)}.bp-dn{color:var(--dn)}.bp-nt{color:var(--sub)}
 .bp-tir{font-weight:600;color:var(--gold2)}
 .bp-curva-box{height:340px;position:relative}
-.bp-asof{font-size:11px;color:var(--sub);text-align:right;margin-top:10px;line-height:1.6}
+.bp-asof{font-size:12px;color:var(--sub);text-align:right;margin-top:10px;line-height:1.6}
 @media(max-width:760px){.bp-2col{grid-template-columns:1fr!important}}
 
-/* responsive: el margen lateral (52px / 20px debajo de 880) es --v-gutter de sitio.css */
+/* ── celular: el lateral pasa arriba, deslizable de costado; el contenido usa
+   el margen del sitio (--v-gutter, 20px) ── */
 @media(max-width:880px){
-  /* en teléfono los selectores no bajan de renglón: la fila se desplaza de
-     costado y la página se queda quieta */
-  .tools-nav{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-  .tools-nav::-webkit-scrollbar{display:none}
+  /* minmax(0,1fr) y min-width:0: si no, la fila deslizable estira la columna
+     al ancho de sus once chips y la página entera queda con scroll de costado */
+  #tools{grid-template-columns:minmax(0,1fr);min-height:0}
+  #tools-side{position:static;height:auto;overflow:visible;min-width:0;border-right:0;border-bottom:1px solid var(--line);padding:10px 0}
+  .ts-title{display:none}
+  .ts-list{flex-direction:row;gap:6px;overflow-x:auto;min-width:0;padding:0 var(--v-gutter);scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .ts-list::-webkit-scrollbar{display:none}
+  .ts-item{flex:none;width:auto;padding:8px 10px;gap:8px;border-color:rgba(176,138,62,.4)}
+  .ts-item.active{border-color:#B08A3E}
+  .ts-ic{width:26px;height:26px;font-size:11px}
+  .ts-label{white-space:nowrap}
+  .tool-main{padding:22px var(--v-gutter) 60px}
 }
 @media(max-width:760px){
   .calc-grid{gap:20px}
-  .tool-title{font-size:22px}
+  .tool-h1{font-size:24px}
   .dolar-chart-wrap{padding:16px 14px 12px}
-  .deriva{padding:22px 18px}
+  .ci-x{margin-left:64px}
 }
 @media(max-width:600px){
-  .dolar-svg{height:220px}
+  .tool-desc,.pro-overlay p{text-align:left;hyphens:manual}
+  .dolar-svg{height:240px}
+  .dolar-y{min-width:48px;font-size:11px}
+  .dolar-x-pad{min-width:48px}
+  .ci-svg{height:180px}
   .ratios-table{white-space:nowrap}
 }
 </style>
@@ -256,29 +340,35 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
 <!-- COTIZACIONES EN VIVO, debajo del nav (módulo único del sitio: cotizaciones.js) -->
 <div id="valtia-cot"></div>
 
-<!-- título de la página: negro sobre blanco -->
-<header class="v-tit"><div class="v-tit-in">
-  <h1>Herramientas</h1>
-  <p class="v-baj">Mapa de calor · Radar · Bonos · CEDEARs · Dólar · Cauciones</p>
-</div></header>
+<!-- LATERAL + CONTENIDO. Cada herramienta conserva su #id (heatmap, radar,
+     acciones, bonos, ratios, calendario, dolar, cauciones) y suma compuesto,
+     ppc y glosario: /herramientas#radar la abre (links de la Home, del panel
+     y de Candidatas). -->
+<div id="tools">
+  <aside id="tools-side" aria-label="Herramientas">
+    <div class="ts-title">Herramientas</div>
+    <div class="ts-list">
+      <button type="button" class="ts-item active" data-tool="heatmap" onclick="switchTool('heatmap',this)"><span class="ts-ic" aria-hidden="true">▦</span><span class="ts-label">Mapa de calor</span><span class="badge-f">GRATIS</span></button>
+      <button type="button" class="ts-item" data-tool="radar" onclick="switchTool('radar',this)"><span class="ts-ic" aria-hidden="true">◎</span><span class="ts-label">Radar de valuación</span><span class="badge-p">PRO</span></button>
+      <button type="button" class="ts-item" data-tool="acciones" onclick="switchTool('acciones',this)"><span class="ts-ic" aria-hidden="true">▲</span><span class="ts-label">Acciones ARG/EEUU</span><span class="badge-f">GRATIS</span></button>
+      <button type="button" class="ts-item" data-tool="bonos" onclick="switchTool('bonos',this)"><span class="ts-ic" aria-hidden="true">≋</span><span class="ts-label">Bonos soberanos</span><span class="badge-p">PRO</span></button>
+      <button type="button" class="ts-item" data-tool="ratios" onclick="switchTool('ratios',this)"><span class="ts-ic" aria-hidden="true">÷</span><span class="ts-label">Ratios de CEDEARs</span><span class="badge-p">PRO</span></button>
+      <button type="button" class="ts-item" data-tool="calendario" onclick="switchTool('calendario',this)"><span class="ts-ic" aria-hidden="true">▤</span><span class="ts-label">Calendario económico</span><span class="badge-f">GRATIS</span></button>
+      <button type="button" class="ts-item" data-tool="dolar" onclick="switchTool('dolar',this)"><span class="ts-ic" aria-hidden="true">$</span><span class="ts-label">Dólar histórico</span><span class="badge-f">GRATIS</span></button>
+      <button type="button" class="ts-item" data-tool="cauciones" onclick="switchTool('cauciones',this)"><span class="ts-ic" aria-hidden="true">%</span><span class="ts-label">Calculadora de cauciones</span><span class="badge-f">GRATIS</span></button>
+      <button type="button" class="ts-item" data-tool="compuesto" onclick="switchTool('compuesto',this)"><span class="ts-ic" aria-hidden="true">∑</span><span class="ts-label">Interés compuesto</span><span class="badge-f">GRATIS</span></button>
+      <button type="button" class="ts-item" data-tool="ppc" onclick="switchTool('ppc',this)"><span class="ts-ic" aria-hidden="true">⌀</span><span class="ts-label">Precio promedio (PPC)</span><span class="badge-f">GRATIS</span></button>
+      <button type="button" class="ts-item" data-tool="glosario" onclick="switchTool('glosario',this)"><span class="ts-ic" aria-hidden="true">A</span><span class="ts-label">Glosario</span><span class="badge-f">GRATIS</span></button>
+    </div>
+  </aside>
 
-<!-- TOOL TABS -->
-<div class="tools-nav">
-  <button class="tool-tab active" onclick="switchTool('heatmap',this)">Mapa de calor <span class="badge-f">GRATIS</span></button>
-  <button class="tool-tab" onclick="switchTool('radar',this)">Radar de valuación <span class="badge-p">PRO</span></button>
-  <button class="tool-tab" onclick="switchTool('acciones',this)">Acciones ARG/EEUU <span class="badge-f">GRATIS</span></button>
-  <button class="tool-tab" onclick="switchTool('bonos',this)">Bonos soberanos <span class="badge-p">PRO</span></button>
-  <button class="tool-tab" onclick="switchTool('ratios',this)">Ratios CEDEARs <span class="badge-p">PRO</span></button>
-  <button class="tool-tab" onclick="switchTool('calendario',this)">Calendario económico <span class="badge-f">GRATIS</span></button>
-  <button class="tool-tab" onclick="switchTool('dolar',this)">Dólar histórico <span class="badge-f">GRATIS</span></button>
-  <button class="tool-tab" onclick="switchTool('cauciones',this)">Calc. cauciones <span class="badge-f">GRATIS</span></button>
-</div>
+  <div class="tool-main"><div class="tool-in">
 
 <!-- MAPA DE CALOR: los cinco mapas uno debajo del otro. Cada tarjeta la arma
      tv.js (cabezal, hueco, atribución de TradingView) y se dibuja recién
      cuando entra en pantalla. -->
 <div class="tool-content active" id="tool-heatmap">
-  <div class="tool-title">Mapa de calor del mercado <span class="badge-f">GRATIS</span></div>
+  <h1 class="tool-h1">Mapa de calor del mercado</h1>
   <p class="tool-desc">Qué sectores y activos están subiendo o bajando ahora mismo. El tamaño del bloque es la capitalización; el color, la variación del día.</p>
   <div class="hm-stack">
     <div id="hm-sp500"></div>
@@ -292,7 +382,7 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
 
 <!-- RADAR DE VALUACIÓN PRO -->
 <div class="tool-content" id="tool-radar">
-  <div class="tool-title">Radar de valuación Valtia <span class="badge-p">PRO</span></div>
+  <h1 class="tool-h1">Radar de valuación Valtia</h1>
   <p class="tool-desc">Nuestra lectura sistemática de las acciones que seguimos: qué tan barata cotiza cada una frente a sus fundamentos, con puntaje de calidad y momento técnico.</p>
 
   <div class="radar-strip" id="radar-strip"></div>
@@ -321,7 +411,6 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
       </div>
     </div>
     <div class="pro-overlay">
-      <div class="pro-lock-icon">🔒</div>
       <h4>Radar completo PRO</h4>
       <p><span id="radar-lock-n">Todos los activos que seguimos</span> con puntaje de valor y calidad por familia sectorial, EV/EBITDA, FCF yield, RSI y veredicto Valtia. Se actualiza todos los días.</p>
       <a href="/planes" class="btn">Ver planes →</a>
@@ -332,7 +421,7 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
 <!-- ACCIONES ARG/EEUU: los dos listados completos con filtros (antes vivían en
      Mercados, que se sacó el 25/09/2026). Los dibuja tv.js, con su atribución. -->
 <div class="tool-content" id="tool-acciones">
-  <div class="tool-title">Acciones ARG, EEUU y ETFs <span class="badge-f">GRATIS</span></div>
+  <h1 class="tool-h1">Acciones ARG, EEUU y ETFs</h1>
   <p class="tool-desc">Todas las especies de BYMA y de Estados Unidos, con precio, variación del día y filtros. Tocá un papel para ver su gráfico.</p>
   <div id="tv-acc-ar" style="margin-bottom:18px"></div>
   <div id="tv-acc-us"></div>
@@ -341,7 +430,7 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
 
 <!-- BONOS Y LETRAS PRO -->
 <div class="tool-content" id="tool-bonos">
-  <div class="tool-title">Análisis de bonos <span class="badge-p">PRO</span></div>
+  <h1 class="tool-h1">Análisis de bonos</h1>
   <p class="tool-desc">Precio, TIR, paridad y duration de la curva soberana en dólares, Bopreal, tasa fija, CER y dólar linked — calculados por Valtia sobre los flujos oficiales de cada bono.</p>
 
   <!-- Variables de mesa (visible) -->
@@ -398,7 +487,7 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
       </div>
       <div class="widget-box" style="margin:16px 0 0">
         <div class="widget-header"><span class="widget-title">Cómo leer la curva — guía Valtia</span></div>
-        <div style="padding:18px 20px;font-size:13px;line-height:1.8;color:var(--sub)">
+        <div style="padding:18px 20px;font-size:14px;line-height:1.8;color:var(--sub)">
           <p style="margin-bottom:10px"><strong style="color:var(--text)">El eje no es solo la duración: es el calendario electoral.</strong> Los bonos que amortizan antes o durante 2027 (AL29, AL30, GD29, GD30, AO27) cobran la mayor parte de su flujo antes del evento político. Los largos (AL35, AE38, GD35 en adelante) concentran el flujo después — más torque si el riesgo país comprime, más golpe si no.</p>
           <p style="margin-bottom:10px"><strong style="color:var(--text)">Ley local vs ley Nueva York:</strong> a igual vencimiento, el Global (ley NY) cotiza con premio por la protección jurídica; el Bonar (ley local) paga más rendimiento. El spread entre ambos es el precio del paraguas legal.</p>
           <p><strong style="color:var(--text)">El tramo medio como punto dulce:</strong> los 2029/2030 combinan carry razonable con devolución de capital pre-electoral. El análisis completo de posicionamiento está en los informes para clientes.</p>
@@ -406,7 +495,6 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
       </div>
     </div>
     <div class="pro-overlay">
-      <div class="pro-lock-icon">🔒</div>
       <h4>Contenido PRO</h4>
       <p>La curva soberana completa con TIR, paridad y duration, Bopreal, tasa fija, CER, dólar linked y la guía Valtia para leerla.</p>
       <a href="/planes" class="btn">Ver planes →</a>
@@ -417,7 +505,7 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
 
 <!-- RATIOS CEDEARs -->
 <div class="tool-content" id="tool-ratios">
-  <div class="tool-title">Ratios de conversión CEDEARs <span class="badge-p">PRO</span></div>
+  <h1 class="tool-h1">Ratios de conversión CEDEARs</h1>
   <p class="tool-desc">Cuántos CEDEARs equivalen a una acción del exterior. Indispensable para comparar precios con el mercado de origen.</p>
   <div class="widget-box">
     <div class="widget-header"><span class="widget-title">CEDEARs de acciones — ratios</span><span class="widget-source">5 de referencia · confirmá el ratio vigente con tu broker</span></div>
@@ -451,7 +539,6 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
          comparativa. El texto dice lo que realmente se destapa; el ratio de
          cualquier otro CEDEAR está gratis abajo, en el listado de BYMA. -->
     <div class="pro-overlay">
-      <div class="pro-lock-icon">🔒</div>
       <h4>El resto de la tabla</h4>
       <p>Cuatro CEDEARs más de referencia —ETFs y acciones— con su ratio de conversión. Es una tabla corta y la estamos ampliando: el ratio de cualquier otro CEDEAR lo tenés gratis acá abajo, en el listado de BYMA.</p>
       <a href="/planes" class="btn">Ver planes →</a>
@@ -471,25 +558,27 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
 
 <!-- CALENDARIO ECONÓMICO: se queda con el widget de eventos de TradingView -->
 <div class="tool-content" id="tool-calendario">
-  <div class="tool-title">Calendario económico <span class="badge-f">GRATIS</span></div>
+  <h1 class="tool-h1">Calendario económico</h1>
   <p class="tool-desc">Fed, INDEC, BCE, empleo de Estados Unidos y todas las fechas clave de la semana.</p>
   <div id="tv-calendario"></div>
   <div id="tv-calendario-nota"></div>
 </div>
 
-<!-- DÓLAR HISTÓRICO -->
+<!-- DÓLAR HISTÓRICO: cierre mensual desde enero de 2024, cinco series de
+     ArgentinaDatos (el módulo de abajo las trae recién cuando se abre la
+     herramienta). Las tarjetas muestran el valor de hoy si la barra de
+     cotizaciones lo trajo; si no, el último dato de la serie. -->
 <div class="tool-content" id="tool-dolar">
-  <div class="tool-title">Cotización histórica del dólar <span class="badge-f">GRATIS</span></div>
-  <p class="tool-desc">CCL y MEP de los últimos 90 días, con las series diarias de Valtia. Abajo, el valor de hoy de cada dólar según la barra de cotizaciones.</p>
+  <h1 class="tool-h1">Cotización histórica del dólar</h1>
+  <p class="tool-desc">Cierre de cada mes desde enero de 2024 para los cinco tipos de dólar. Datos de ArgentinaDatos, actualizados a diario.</p>
   <div class="dolar-chart-wrap">
     <div class="dolar-top">
-      <div class="dolar-legend">
-        <div class="dolar-legend-item"><div class="dolar-dot" style="background:#1F7A4D"></div><span>CCL</span></div>
-        <div class="dolar-legend-item"><div class="dolar-dot" style="background:#B08A3E"></div><span>MEP</span></div>
-      </div>
-      <div class="dolar-readout" id="dolar-readout"></div>
+      <div class="dolar-sel" id="dolar-sel" role="group" aria-label="Elegí un dólar"></div>
+      <span class="dolar-hint">Tocá un dólar para ver sus precios · cierre mensual · desde ene 2024</span>
     </div>
-    <div id="dolar-chart"><div class="dolar-vacio">Cargando las series…</div></div>
+    <div id="dolar-chart"><div class="dolar-vacio">Cargando el histórico…</div></div>
+    <div class="dolar-readout" id="dolar-readout"></div>
+    <p class="dolar-fuente">Fuente: <a href="https://argentinadatos.com" target="_blank" rel="noopener">ArgentinaDatos</a> (api.argentinadatos.com) · precio de venta, último dato de cada mes; el mes en curso muestra el último disponible.</p>
   </div>
   <div class="dolar-current">
     <div class="dolar-card" style="border-top-color:#2B5FB0"><div class="dolar-card-name">Blue</div><div class="dolar-card-price" id="dc-blue">—</div><div class="dolar-card-sub" id="ds-blue">Informal</div></div>
@@ -498,12 +587,11 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
     <div class="dolar-card" style="border-top-color:#B23A3A"><div class="dolar-card-name">Oficial</div><div class="dolar-card-price" id="dc-oficial">—</div><div class="dolar-card-sub" id="ds-oficial">Minorista</div></div>
     <div class="dolar-card" style="border-top-color:#0E1830"><div class="dolar-card-name">Cripto</div><div class="dolar-card-price" id="dc-cripto">—</div><div class="dolar-card-sub" id="ds-cripto">USDT/ARS</div></div>
   </div>
-  <p class="nota" style="margin-top:14px">Las series de CCL y MEP son las que Valtia guarda a diario para los informes. Blue, oficial y cripto todavía no tienen serie histórica: de esos mostramos solo el valor de hoy. Si una fuente no responde, la tarjeta queda con guion.</p>
 </div>
 
 <!-- CALC CAUCIONES -->
 <div class="tool-content" id="tool-cauciones">
-  <div class="tool-title">Calculadora de cauciones <span class="badge-f">GRATIS</span></div>
+  <h1 class="tool-h1">Calculadora de cauciones</h1>
   <p class="tool-desc">Estimá el rendimiento bruto de una caución bursátil colocadora según monto, plazo y tasa nominal anual.</p>
   <div class="calc-grid">
     <div class="calc-card">
@@ -524,6 +612,86 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
   </div>
 </div>
 
+<!-- INTERÉS COMPUESTO: capitalización mensual, sin nada externo -->
+<div class="tool-content" id="tool-compuesto">
+  <h1 class="tool-h1">Interés compuesto</h1>
+  <p class="tool-desc">Cuánto crece un capital con aportes mensuales y una tasa anual, año por año.</p>
+  <div class="calc-grid ci-grid">
+    <div class="calc-card">
+      <div class="form-group"><label for="ci-cap">Capital inicial (USD)</label><input type="text" id="ci-cap" placeholder="Ej: 1.000" inputmode="decimal" autocomplete="off" oninput="calcCompuesto()"></div>
+      <div class="form-group"><label for="ci-ap">Aporte mensual (USD)</label><input type="text" id="ci-ap" placeholder="Ej: 200" inputmode="decimal" autocomplete="off" oninput="calcCompuesto()"></div>
+      <div class="form-group"><label for="ci-tasa">Tasa anual (%)</label><input type="text" id="ci-tasa" placeholder="Ej: 8" inputmode="decimal" autocomplete="off" oninput="calcCompuesto()"></div>
+      <div class="form-group"><label for="ci-anios">Años</label><input type="text" id="ci-anios" placeholder="Ej: 10 (hasta 50)" inputmode="numeric" autocomplete="off" oninput="calcCompuesto()"></div>
+      <p class="calc-nota">Se recalcula solo. Capitaliza mes a mes: cada mes se suma el aporte y el interés (tasa anual / 12). Es una proyección con tasa constante, no un rendimiento garantizado.</p>
+    </div>
+    <div class="ci-right">
+      <div class="result-box oro">
+        <div class="result-row"><span class="result-label">Total aportado</span><span class="result-value" id="ci-r-aportado">—</span></div>
+        <div class="result-row"><span class="result-label">Intereses ganados</span><span class="result-value interes" id="ci-r-interes">—</span></div>
+        <div class="result-row"><span class="result-label">Capital final</span><span class="result-value highlight grande" id="ci-r-final">—</span></div>
+      </div>
+      <div class="widget-box ci-chart-box">
+        <div class="ci-legend"><span><i></i>Capital</span><span><i class="ap"></i>Aportado</span></div>
+        <div id="ci-chart"><div class="ci-vacio">Completá los cuatro campos para ver la evolución.</div></div>
+        <div class="ci-readout" id="ci-readout"></div>
+      </div>
+      <div class="widget-box ci-tabla">
+        <div class="ci-th"><span>Año</span><span>Aportado</span><span>Capital</span></div>
+        <div id="ci-filas"><div class="ci-tabla-vacia">Sin datos todavía.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PPC: precio promedio de compra -->
+<div class="tool-content" id="tool-ppc">
+  <h1 class="tool-h1">Precio promedio de compra</h1>
+  <p class="tool-desc">Cargá tus compras y te calcula el PPC, la inversión total y a qué precio estás ganando o perdiendo.</p>
+  <div class="calc-grid ppc-grid">
+    <div class="calc-card">
+      <div class="ppc-mon"><span class="ppc-mon-l">Moneda</span><button type="button" class="v-chip on" data-mon="ARS" onclick="ppcMoneda('ARS',this)">$ Pesos</button><button type="button" class="v-chip" data-mon="USD" onclick="ppcMoneda('USD',this)">US$ Dólares</button></div>
+      <div class="ppc-head"><span>Cantidad</span><span>Precio</span><span></span></div>
+      <div class="ppc-rows" id="ppc-rows"></div>
+      <button type="button" class="ppc-add" onclick="ppcAgregar()">+ Agregar compra</button>
+    </div>
+    <div>
+      <div class="result-box oro">
+        <div class="result-row"><span class="result-label">Cantidad total</span><span class="result-value" id="ppc-r-cant">—</span></div>
+        <div class="result-row"><span class="result-label">Invertido</span><span class="result-value" id="ppc-r-inv">—</span></div>
+        <div class="result-row"><span class="result-label">Precio promedio de compra</span><span class="result-value highlight grande" id="ppc-r-ppc">—</span></div>
+      </div>
+      <p class="calc-nota">Por encima de ese precio estás ganando; por debajo, perdiendo. No incluye comisiones.</p>
+    </div>
+  </div>
+</div>
+
+<!-- GLOSARIO: los términos del prototipo, con búsqueda -->
+<div class="tool-content" id="tool-glosario">
+  <h1 class="tool-h1">Glosario financiero</h1>
+  <p class="tool-desc">Los términos que aparecen en Valtia, explicados en una frase.</p>
+  <div class="glos-search"><input type="search" id="glos-q" placeholder="Buscar un término (TIR, CEDEAR, RSI…)" aria-label="Buscar en el glosario" autocomplete="off" oninput="glosFiltrar()"></div>
+  <div class="glos-grid" id="glos-grid">
+    <div class="glos-card"><div class="glos-t">PPC</div><div class="glos-d">Precio promedio de compra: cuánto pagaste en promedio por cada unidad, sumando todas tus compras.</div></div>
+    <div class="glos-card"><div class="glos-t">CEDEAR</div><div class="glos-d">Certificado que se compra en pesos en Argentina y representa una fracción de una acción del exterior.</div></div>
+    <div class="glos-card"><div class="glos-t">Ratio</div><div class="glos-d">Cuántos CEDEARs equivalen a una acción. Sirve para comparar el precio local con el de afuera.</div></div>
+    <div class="glos-card"><div class="glos-t">TIR</div><div class="glos-d">Tasa interna de retorno: el rendimiento anual de un bono si lo comprás hoy y cobrás todos sus pagos.</div></div>
+    <div class="glos-card"><div class="glos-t">Paridad</div><div class="glos-d">Precio del bono dividido por lo que técnicamente vale. Debajo de 100% cotiza con descuento.</div></div>
+    <div class="glos-card"><div class="glos-t">Duration</div><div class="glos-d">Cuánto cae el precio de un bono si la tasa sube un punto. A más duration, más riesgo.</div></div>
+    <div class="glos-card"><div class="glos-t">Riesgo país</div><div class="glos-d">Cuánto más paga Argentina que Estados Unidos por endeudarse, en puntos básicos (100 = 1%).</div></div>
+    <div class="glos-card"><div class="glos-t">MEP / CCL</div><div class="glos-d">Dólares que se compran con bonos: el MEP queda en el país, el CCL sale al exterior.</div></div>
+    <div class="glos-card"><div class="glos-t">Caución</div><div class="glos-d">Préstamo a muy corto plazo garantizado con títulos. Rinde una tasa fija por pocos días.</div></div>
+    <div class="glos-card"><div class="glos-t">P/E</div><div class="glos-d">Precio sobre ganancias: cuántos años de ganancias estás pagando por una acción.</div></div>
+    <div class="glos-card"><div class="glos-t">EV/EBITDA</div><div class="glos-d">Valor de la empresa sobre su resultado operativo. Sirve para comparar empresas con distinta deuda.</div></div>
+    <div class="glos-card"><div class="glos-t">RSI</div><div class="glos-d">Índice de fuerza relativa. Arriba de 70 la acción subió mucho y rápido; abajo de 30, lo contrario.</div></div>
+    <div class="glos-card"><div class="glos-t">Rebalanceo</div><div class="glos-d">Volver a los pesos originales de una cartera vendiendo lo que creció y comprando lo que quedó atrás.</div></div>
+    <div class="glos-card"><div class="glos-t">Backtest</div><div class="glos-d">Simular cómo habría rendido una estrategia en el pasado. Valtia no los usa para mostrar rendimientos.</div></div>
+  </div>
+  <p class="glos-vacio" id="glos-vacio" hidden></p>
+</div>
+
+  </div></div><!-- /tool-in /tool-main -->
+</div><!-- /tools -->
+
 <a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
 <footer>
@@ -535,20 +703,60 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
 
 <script src="chart.umd.min.js?v=1"></script>
 <script>
-// TOOL TABS
-function switchTool(name,btn){
-  document.querySelectorAll('.tool-content').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.tool-tab').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tool-'+name).classList.add('active');
-  btn.classList.add('active');
+// ── LATERAL: abre una herramienta. Firma de siempre, switchTool(name, btn);
+// btn es opcional (se busca por data-tool). Avisa con el evento
+// 'valtia:tool' a los módulos que cargan datos recién al abrirse (dólar).
+function switchTool(name,btn,opts){
+  const cont=document.getElementById('tool-'+name);
+  if(!cont)return false;
+  opts=opts||{};
+  document.querySelectorAll('.tool-content').forEach(el=>el.classList.toggle('active',el===cont));
+  document.querySelectorAll('.ts-item').forEach(b=>{
+    const on=b.dataset.tool===name;
+    b.classList.toggle('active',on);
+    if(on)b.setAttribute('aria-current','true');else b.removeAttribute('aria-current');
+  });
+  // el #id queda en la barra de direcciones sin sumar historial ni saltar
+  // (no hay elementos con ese id: el contenido es tool-<id>)
+  if(!opts.sinHash){try{history.replaceState(null,'','#'+name);}catch(e){}}
+  // en celular la fila se corre para dejar el chip elegido a la vista
+  centrarChip(name,'smooth');
+  // si la página estaba scrolleada más abajo del inicio del contenido, sube
+  const tools=document.getElementById('tools');
+  const top=tools.getBoundingClientRect().top+window.scrollY-104;
+  if(!opts.sinScroll&&window.scrollY>top+8)window.scrollTo({top:Math.max(0,top),behavior:'smooth'});
+  document.dispatchEvent(new CustomEvent('valtia:tool',{detail:{name}}));
+  return true;
 }
-// herramientas.html#radar / #bonos / ... abre esa pestaña (links del panel)
-window.addEventListener('DOMContentLoaded',()=>{
-  const h=location.hash.replace('#','');
-  if(!h||!document.getElementById('tool-'+h))return;
-  const b=[...document.querySelectorAll('.tool-tab')].find(x=>(x.getAttribute('onclick')||'').indexOf("'"+h+"'")>-1);
-  if(b)switchTool(h,b);
-});
+function centrarChip(name,modo){
+  const item=document.querySelector('.ts-item[data-tool="'+(name||'')+'"]')||document.querySelector('.ts-item.active');
+  if(!item||!window.matchMedia('(max-width:880px)').matches)return;
+  const list=item.parentElement;
+  list.scrollTo({left:Math.max(0,item.offsetLeft-(list.clientWidth-item.offsetWidth)/2),behavior:modo||'auto'});
+}
+// herramientas#radar / #bonos / #compuesto… abre esa herramienta (links de la
+// Home, del panel y de Candidatas); también si el hash cambia con la página abierta
+(function(){
+  // al terminar de cargar (fuentes incluidas) el chip elegido queda centrado
+  window.addEventListener('load',()=>centrarChip(null,'auto'));
+  const abrirDelHash=(sinScroll)=>{
+    const h=(location.hash||'').replace('#','');
+    if(h&&document.getElementById('tool-'+h))switchTool(h,null,{sinHash:true,sinScroll:sinScroll});
+  };
+  abrirDelHash(true);
+  window.addEventListener('hashchange',()=>abrirDelHash(false));
+})();
+
+// números escritos a la argentina ("1.500,50") o con punto ("1500.50")
+function numAR(s){
+  s=String(s==null?'':s).trim().replace(/\s|US\$|\$/g,'');
+  if(!s)return NaN;
+  if(s.indexOf(',')>-1)s=s.replace(/\./g,'').replace(',','.');
+  else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');
+  const n=Number(s);
+  return isFinite(n)?n:NaN;
+}
+const fmtAR=(n,d)=>Number(n).toLocaleString('es-AR',{minimumFractionDigits:d==null?0:d,maximumFractionDigits:d==null?0:d});
 
 // CALC CAUCIONES — recalcula al escribir; interés simple: TNA × días / 365
 function calcCaucion(){
@@ -565,10 +773,149 @@ function calcCaucion(){
   document.getElementById('r-total').textContent=ok?fmt(monto+interes):'—';
 }
 
+// INTERÉS COMPUESTO — capitalización mensual: cada mes cap = cap·(1+r/12) + aporte
+function calcCompuesto(){
+  const cap0=numAR(document.getElementById('ci-cap').value);
+  const ap=numAR(document.getElementById('ci-ap').value);
+  const tasa=numAR(document.getElementById('ci-tasa').value);
+  let anios=Math.floor(numAR(document.getElementById('ci-anios').value));
+  const fmtU=n=>'US$'+Math.round(n).toLocaleString('es-AR');
+  const rA=document.getElementById('ci-r-aportado'),rI=document.getElementById('ci-r-interes'),rF=document.getElementById('ci-r-final');
+  const chart=document.getElementById('ci-chart'),filas=document.getElementById('ci-filas'),readout=document.getElementById('ci-readout');
+  const c0=isFinite(cap0)?cap0:0,a0=isFinite(ap)?ap:0;
+  const ok=(c0>0||a0>0)&&c0>=0&&a0>=0&&isFinite(tasa)&&tasa>=0&&isFinite(anios)&&anios>0;
+  if(!ok){
+    rA.textContent=rI.textContent=rF.textContent='—';
+    chart.innerHTML='<div class="ci-vacio">Completá los cuatro campos para ver la evolución.</div>';
+    filas.innerHTML='<div class="ci-tabla-vacia">Sin datos todavía.</div>';
+    readout.textContent='';
+    return;
+  }
+  anios=Math.min(anios,50);
+  const rm=tasa/100/12;
+  let cap=c0,aportado=c0;
+  const serie=[{m:0,cap,ap:aportado}];
+  const porAnio=[];
+  for(let y=1;y<=anios;y++){
+    for(let m=0;m<12;m++){cap=cap*(1+rm)+a0;aportado+=a0;serie.push({m:(y-1)*12+m+1,cap,ap:aportado});}
+    porAnio.push({a:y,ap:aportado,cap});
+  }
+  rA.textContent=fmtU(aportado);
+  rI.textContent=fmtU(cap-aportado);
+  rF.textContent=fmtU(cap);
+  filas.innerHTML=porAnio.map(r=>`<div class="ci-tr"><span>${r.a}</span><span>${fmtU(r.ap)}</span><span>${fmtU(r.cap)}</span></div>`).join('');
+
+  // gráfico: capital (navy) y aportado (dorado punteado), mes a mes
+  const W=1000,H=260,PADT=10,PADB=2,n=serie.length;
+  const hi=Math.max(cap,aportado)||1;
+  const X=i=>i/(n-1)*W, Y=v=>H-PADB-(v/hi)*(H-PADT-PADB);
+  const path=k=>serie.map((p,i)=>(i?'L':'M')+X(i).toFixed(1)+','+Y(p[k]).toFixed(1)).join('');
+  const area=path('cap')+'L'+W+','+H+'L0,'+H+'Z';
+  const grid=[0,1,2,3].map(k=>{const y=Y(hi*k/3);return `<line x1="0" y1="${y.toFixed(1)}" x2="${W}" y2="${y.toFixed(1)}" stroke="#F2EFE8" vector-effect="non-scaling-stroke"/>`;}).join('');
+  const yL=[3,2,1,0].map(k=>`<span>${fmtU(hi*k/3)}</span>`).join('');
+  // etiquetas del eje x: las que entran sin pisarse (unas 64px cada una)
+  const anchoPx=chart.clientWidth||600;
+  const maxLbl=Math.max(2,Math.floor((anchoPx-68)/64));
+  const paso=Math.max(1,Math.ceil(anios/maxLbl));
+  const xL=[];
+  for(let y=0;y<=anios;y+=paso)xL.push(y);
+  if(xL[xL.length-1]!==anios){if(anios-xL[xL.length-1]<paso/2)xL.pop();xL.push(anios);}
+  const xLbl=xL.map(y=>`<span class="${y===0?'ini':y===anios?'fin':''}" style="left:${(y*12/(n-1)*100).toFixed(2)}%">${y===0?'inicio':'año '+y}</span>`).join('');
+  chart.innerHTML=`<div class="ci-plot"><div class="ci-y">${yL}</div>
+    <svg class="ci-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Evolución del capital y de lo aportado, ${anios} años">
+      ${grid}<line x1="0" y1="${H-0.5}" x2="${W}" y2="${H-0.5}" stroke="#D9DCE1" vector-effect="non-scaling-stroke"/>
+      <path d="${area}" fill="rgba(20,33,61,.06)" stroke="none"/>
+      <path d="${path('ap')}" fill="none" stroke="#B08A3E" stroke-width="1.6" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"/>
+      <path d="${path('cap')}" fill="none" stroke="#14213D" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <line id="ci-cursor" x1="0" y1="0" x2="0" y2="${H}" stroke="#0E1830" stroke-dasharray="4 4" vector-effect="non-scaling-stroke" style="display:none"/>
+    </svg></div><div class="ci-x">${xLbl}</div>`;
+  const svg=chart.querySelector('svg'),cursor=chart.querySelector('#ci-cursor');
+  const reposo=()=>{cursor.style.display='none';readout.textContent='Al final de '+anios+(anios===1?' año':' años')+': capital '+fmtU(cap)+' · aportado '+fmtU(aportado)+' · interés '+fmtU(cap-aportado);};
+  reposo();
+  const mover=ev=>{
+    const r=svg.getBoundingClientRect(),p=ev.touches?ev.touches[0]:ev;
+    const i=Math.max(0,Math.min(n-1,Math.round((p.clientX-r.left)/r.width*(n-1))));
+    cursor.setAttribute('x1',X(i));cursor.setAttribute('x2',X(i));cursor.style.display='';
+    const s=serie[i],y=Math.floor((i-1)/12)+1,m=((i-1)%12)+1;
+    readout.textContent=(i===0?'Inicio':'Año '+y+' · mes '+m)+' · capital '+fmtU(s.cap)+' · aportado '+fmtU(s.ap)+' · interés '+fmtU(s.cap-s.ap);
+  };
+  svg.addEventListener('mousemove',mover);
+  svg.addEventListener('touchmove',mover,{passive:true});
+  svg.addEventListener('mouseleave',reposo);
+  svg.addEventListener('touchend',reposo);
+}
+// las etiquetas del eje se reparten según el ancho: si cambia (girar el
+// teléfono, achicar la ventana, abrir la herramienta con el gráfico ya hecho
+// a otro ancho) se vuelve a dibujar con los mismos valores
+(function(){
+  let t;
+  const redibujar=()=>{
+    const c=document.getElementById('tool-compuesto');
+    if(c&&c.classList.contains('active')&&document.querySelector('#ci-chart svg'))calcCompuesto();
+  };
+  window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(redibujar,150);});
+  document.addEventListener('valtia:tool',e=>{if(e.detail&&e.detail.name==='compuesto')setTimeout(redibujar,0);});
+})();
+
+// PPC — filas de compras (cantidad · precio); se lee del DOM, sin estado aparte
+let ppcMon='ARS';
+function ppcMoneda(m,btn){
+  ppcMon=m;
+  document.querySelectorAll('.ppc-mon .v-chip').forEach(b=>b.classList.toggle('on',b===btn));
+  ppcCalc();
+}
+function ppcFila(){
+  const d=document.createElement('div');
+  d.className='ppc-row';
+  d.innerHTML='<input type="text" inputmode="decimal" placeholder="0" aria-label="Cantidad" autocomplete="off" oninput="ppcCalc()">'+
+    '<input type="text" inputmode="decimal" placeholder="0,00" aria-label="Precio" autocomplete="off" oninput="ppcCalc()">'+
+    '<button type="button" class="ppc-x" aria-label="Quitar esta compra" onclick="ppcQuitar(this)">×</button>';
+  return d;
+}
+function ppcAgregar(){
+  const f=ppcFila();
+  document.getElementById('ppc-rows').appendChild(f);
+  f.querySelector('input').focus();
+}
+function ppcQuitar(btn){
+  const rows=document.getElementById('ppc-rows'),fila=btn.parentElement;
+  if(rows.children.length<=1)fila.querySelectorAll('input').forEach(i=>{i.value='';});
+  else fila.remove();
+  ppcCalc();
+}
+function ppcCalc(){
+  let cant=0,inv=0;
+  document.querySelectorAll('#ppc-rows .ppc-row').forEach(r=>{
+    const ins=r.querySelectorAll('input'),q=numAR(ins[0].value),px=numAR(ins[1].value);
+    if(q>0&&px>0){cant+=q;inv+=q*px;}
+  });
+  const sym=ppcMon==='USD'?'US$':'$';
+  const ok=cant>0;
+  document.getElementById('ppc-r-cant').textContent=ok?cant.toLocaleString('es-AR',{maximumFractionDigits:4}):'—';
+  document.getElementById('ppc-r-inv').textContent=ok?sym+fmtAR(inv,2):'—';
+  document.getElementById('ppc-r-ppc').textContent=ok?sym+fmtAR(inv/cant,2):'—';
+}
+(function(){const rows=document.getElementById('ppc-rows');rows.appendChild(ppcFila());rows.appendChild(ppcFila());})();
+
+// GLOSARIO — búsqueda sin acentos ni mayúsculas
+function glosFiltrar(){
+  const norm=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const q=norm(document.getElementById('glos-q').value.trim());
+  let vistos=0;
+  document.querySelectorAll('#glos-grid .glos-card').forEach(c=>{
+    const ok=!q||norm(c.textContent).indexOf(q)>-1;
+    c.hidden=!ok;
+    if(ok)vistos++;
+  });
+  const v=document.getElementById('glos-vacio');
+  v.hidden=vistos>0;
+  if(!vistos)v.textContent='Ningún término coincide con «'+document.getElementById('glos-q').value.trim()+'».';
+}
+
 // TARJETAS DEL DÓLAR — se alimentan del módulo de cotizaciones (un solo
 // fetch para toda la página: la barra y las tarjetas comparten el dato).
-// Las que la barra no trae quedan con guion (o con el último cierre de la
-// serie, si es CCL o MEP: lo pone el módulo del gráfico).
+// Las que la barra no trae quedan con el último dato de ArgentinaDatos (lo
+// pone el módulo del gráfico) o con guion.
 window.__dolarHoy={};
 document.addEventListener('valtia:cotizaciones', e=>{
   const M={'d-bolsa':'mep','d-blue':'blue','d-contadoconliqui':'ccl','d-oficial':'oficial','d-cripto':'cripto'};
@@ -660,7 +1007,7 @@ async function loadRadar() {
     window.__radarPro = m.pro;
   } catch (e) {
     const s = document.getElementById('radar-strip');
-    if (s) s.innerHTML = '<p style="font-size:13px;color:var(--sub);padding:20px 0">El radar se está actualizando. Volvé en unos minutos.</p>';
+    if (s) s.innerHTML = '<p style="font-size:14px;color:var(--sub);padding:20px 0">El radar se está actualizando. Volvé en unos minutos.</p>';
     return;
   }
   const activos = data.activos || [];
@@ -721,104 +1068,188 @@ async function loadRadar() {
 loadRadar();
 </script>
 
-<!-- DÓLAR HISTÓRICO — gráfico SVG propio con las series diarias de Valtia
-     (historialInformes/_ccl y _mep, públicas). Blue, oficial y cripto no
-     tienen serie: van solo en las tarjetas, con el dato de la barra. -->
+<!-- DÓLAR HISTÓRICO — cierre mensual desde enero de 2024 de ArgentinaDatos
+     (api.argentinadatos.com/v1/cotizaciones/dolares/{casa}: un array de
+     {casa, compra, venta, fecha}, verificado el 25/09/2026). Se toma el último
+     dato de cada mes (precio de venta). Cada serie se pide recién cuando se
+     abre la herramienta: son cinco listados desde 2011. Si una serie falla se
+     dibujan las demás; si fallan todas, el aviso honesto y nada inventado. -->
 <script type="module">
-(async () => {
-  const FS = "https://firestore.googleapis.com/v1/projects/valtia-analytics/databases/(default)/documents/historialInformes/";
-  const KEY = "AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw";
+(() => {
+  const API = "https://api.argentinadatos.com/v1/cotizaciones/dolares/";
+  const SERIES = [
+    { k: "blue",    casa: "blue",            n: "Blue",    c: "#2B5FB0" },
+    { k: "mep",     casa: "bolsa",           n: "MEP",     c: "#B08A3E" },
+    { k: "ccl",     casa: "contadoconliqui", n: "CCL",     c: "#1F7A4D" },
+    { k: "oficial", casa: "oficial",         n: "Oficial", c: "#B23A3A" },
+    { k: "cripto",  casa: "cripto",          n: "Cripto",  c: "#0E1830" },
+  ];
+  const DESDE = "2024-01";
+  const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
   const host = document.getElementById("dolar-chart");
+  const selBox = document.getElementById("dolar-sel");
   const readout = document.getElementById("dolar-readout");
   const ars = n => "$" + Math.round(n).toLocaleString("es-AR");
   const ddmm = f => f.slice(8, 10) + "/" + f.slice(5, 7);
-  const serie = async id => {
-    const r = await fetch(FS + id + "?key=" + KEY, { cache: "no-store" });
-    if (!r.ok) throw new Error(id);
-    const d = await r.json();
-    const arr = JSON.parse(d.fields.json.stringValue || "[]");
-    return arr.filter(p => Array.isArray(p) && p[0] && Number(p[1]) > 0).map(p => [String(p[0]).slice(0, 10), Number(p[1])]);
-  };
-  let ccl = [], mep = [];
-  // cada serie falla por su cuenta: con una sola también se dibuja
-  const [rc, rm] = await Promise.allSettled([serie("_ccl"), serie("_mep")]);
-  if (rc.status === "fulfilled") ccl = rc.value;
-  if (rm.status === "fulfilled") mep = rm.value;
-  const SERIES = [
-    { k: "ccl", n: "CCL", color: "#1F7A4D", datos: ccl },
-    { k: "mep", n: "MEP", color: "#B08A3E", datos: mep },
-  ].filter(s => s.datos.length);
-  if (!SERIES.length) {
-    host.innerHTML = '<div class="dolar-vacio">No pudimos cargar las series del dólar en este momento. Las cotizaciones de hoy siguen abajo. Reintentá en unos minutos.</div>';
-    return;
+  const mesEtq = m => MESES[Number(m.slice(5, 7)) - 1] + " " + m.slice(2, 4);   // "2024-01" → "ene 24"
+
+  async function traer(s) {
+    const r = await fetch(API + s.casa);
+    if (!r.ok) throw new Error(s.casa + " " + r.status);
+    const arr = await r.json();
+    if (!Array.isArray(arr)) throw new Error(s.casa + " sin lista");
+    const porMes = new Map();   // "2024-01" → { fecha, v } del último día del mes
+    arr.forEach(p => {
+      if (!p || typeof p.fecha !== "string" || p.fecha.slice(0, 7) < DESDE) return;
+      const v = Number(p.venta != null ? p.venta : p.compra);
+      if (!(v > 0)) return;
+      const m = p.fecha.slice(0, 7), ant = porMes.get(m);
+      if (!ant || p.fecha > ant.fecha) porMes.set(m, { fecha: p.fecha.slice(0, 10), v });
+    });
+    return porMes;
   }
 
-  // las tarjetas de CCL y MEP arrancan con el último cierre de la serie; si la
-  // barra ya trajo (o trae después) el dato de hoy, ese manda
-  SERIES.forEach(s => {
-    const u = s.datos[s.datos.length - 1];
-    const el = document.getElementById("dc-" + s.k), sub = document.getElementById("ds-" + s.k);
-    if (el && u && !(window.__dolarHoy || {})[s.k]) {
-      el.textContent = ars(u[1]);
-      if (sub) sub.textContent = "cierre " + ddmm(u[0]);
+  async function cargar() {
+    const res = await Promise.allSettled(SERIES.map(traer));
+    const ok = SERIES.map((s, i) => res[i].status === "fulfilled" && res[i].value.size ? { ...s, porMes: res[i].value } : null).filter(Boolean);
+    const faltan = SERIES.filter((s, i) => !(res[i].status === "fulfilled" && res[i].value.size));
+    if (!ok.length) {
+      host.innerHTML = '<div class="dolar-vacio">No pudimos traer el histórico ahora. Probá de nuevo en unos minutos; las cotizaciones de hoy siguen en la barra de arriba.</div>';
+      readout.textContent = "";
+      return;
     }
-  });
 
-  // eje: todas las fechas de los últimos 90 días (unión de las series)
-  const fechas = [...new Set(SERIES.flatMap(s => s.datos.map(p => p[0])))].sort();
-  const ultima = fechas[fechas.length - 1];
-  const desdeT = Date.parse(ultima + "T12:00:00Z") - 90 * 864e5;
-  const sel = fechas.filter(f => Date.parse(f + "T12:00:00Z") >= desdeT);
-  if (sel.length < 2) { host.innerHTML = '<div class="dolar-vacio">Todavía no hay suficientes días de historia para dibujar el gráfico.</div>'; return; }
-  const porFecha = SERIES.map(s => new Map(s.datos));
-  const vals = SERIES.flatMap((s, i) => sel.map(f => porFecha[i].get(f)).filter(v => v != null));
-  let lo = Math.min(...vals), hi = Math.max(...vals);
-  const pad = Math.max((hi - lo) * 0.06, 5); lo -= pad; hi += pad;
-
-  const W = 1000, H = 300, n = sel.length;
-  const X = i => (i / (n - 1)) * W;
-  const Y = v => H - ((v - lo) / (hi - lo)) * H;
-  const paths = SERIES.map((s, i) => {
-    let d = "", abierto = false;
-    sel.forEach((f, j) => {
-      const v = porFecha[i].get(f);
-      if (v == null) { abierto = false; return; }
-      d += (abierto ? "L" : "M") + X(j).toFixed(1) + "," + Y(v).toFixed(1);
-      abierto = true;
+    // tarjetas: último dato de cada serie, salvo que la barra ya haya traído el de hoy
+    ok.forEach(s => {
+      const claves = [...s.porMes.keys()].sort();
+      const u = s.porMes.get(claves[claves.length - 1]);
+      const el = document.getElementById("dc-" + s.k), sub = document.getElementById("ds-" + s.k);
+      if (el && u && !(window.__dolarHoy || {})[s.k]) {
+        el.textContent = ars(u.v);
+        if (sub) sub.textContent = "último dato " + ddmm(u.fecha);
+      }
     });
-    return `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
-  }).join("");
-  const grid = [0, 75, 150, 225].map(y => `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="#E7E3DA" vector-effect="non-scaling-stroke"/>`).join("")
-    + `<line x1="0" y1="${H - 0.5}" x2="${W}" y2="${H - 0.5}" stroke="#CFCABF" vector-effect="non-scaling-stroke"/>`;
-  const yLabels = [0, 1, 2, 3, 4].map(k => `<span>${ars(hi - (hi - lo) * k / 4)}</span>`).join("");
-  const xi = [0, Math.round((n - 1) / 4), Math.round((n - 1) / 2), Math.round(3 * (n - 1) / 4), n - 1];
-  const xLabels = [...new Set(xi)].map(i => `<span>${ddmm(sel[i])}</span>`).join("");
-  host.innerHTML = `
-    <div class="dolar-grid">
-      <div class="dolar-y">${yLabels}</div>
-      <svg class="dolar-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Dólar CCL y MEP, últimos 90 días">
-        ${grid}${paths}
-        <line id="dolar-cursor" x1="0" y1="0" x2="0" y2="${H}" stroke="#0E1830" stroke-dasharray="4 4" vector-effect="non-scaling-stroke" style="display:none"/>
-      </svg>
-    </div>
-    <div class="dolar-x"><span style="min-width:48px"></span><div class="lbl">${xLabels}</div></div>`;
 
-  // lectura al pasar el cursor (o el dedo): fecha y valor de cada serie
-  const svg = host.querySelector("svg"), cursor = host.querySelector("#dolar-cursor");
-  const ultimo = () => SERIES.map(s => { const u = s.datos[s.datos.length - 1]; return `${s.n} ${ars(u[1])}`; }).join(" · ");
-  const reposo = () => { cursor.style.display = "none"; readout.textContent = "último cierre " + ddmm(ultima) + " · " + ultimo(); };
-  reposo();
-  const mover = ev => {
-    const r = svg.getBoundingClientRect();
-    const p = ev.touches ? ev.touches[0] : ev;
-    const i = Math.max(0, Math.min(n - 1, Math.round((p.clientX - r.left) / r.width * (n - 1))));
-    cursor.setAttribute("x1", X(i)); cursor.setAttribute("x2", X(i)); cursor.style.display = "";
-    readout.textContent = ddmm(sel[i]) + " · " + SERIES.map((s, k) => { const v = porFecha[k].get(sel[i]); return `${s.n} ${v == null ? "—" : ars(v)}`; }).join(" · ");
-  };
-  svg.addEventListener("mousemove", mover);
-  svg.addEventListener("touchmove", mover, { passive: true });
-  svg.addEventListener("mouseleave", reposo);
-  svg.addEventListener("touchend", reposo);
+    // eje: todos los meses desde ene 2024 hasta el último con dato en alguna serie
+    const ultMes = ok.flatMap(s => [...s.porMes.keys()]).sort().pop();
+    const meses = [];
+    for (let y = 2024, m = 1; ; ) {
+      const k = y + "-" + String(m).padStart(2, "0");
+      if (k > ultMes) break;
+      meses.push(k);
+      if (++m > 12) { m = 1; y++; }
+    }
+    const NF = meses.length;
+    if (NF < 2) { host.innerHTML = '<div class="dolar-vacio">Todavía no hay meses suficientes para dibujar el gráfico.</div>'; return; }
+    const val = (s, i) => { const p = s.porMes.get(meses[i]); return p ? p.v : null; };
+    const todos = ok.flatMap(s => meses.map((_, i) => val(s, i)).filter(v => v != null));
+    let mn = Math.floor(Math.min(...todos) / 100) * 100, mx = Math.ceil(Math.max(...todos) / 100) * 100;
+    if (mx === mn) mx = mn + 100;
+
+    const W = 1000, H = 300, PADT = 26, PADB = 8;
+    const xv = i => i / (NF - 1) * W;
+    const yv = v => H - PADB - (v - mn) / (mx - mn) * (H - PADT - PADB);
+    const paths = ok.map(s => {
+      let d = "", abierto = false;
+      meses.forEach((_, i) => {
+        const v = val(s, i);
+        if (v == null) { abierto = false; return; }
+        d += (abierto ? "L" : "M") + xv(i).toFixed(1) + "," + yv(v).toFixed(1);
+        abierto = true;
+      });
+      return `<path data-k="${s.k}" d="${d}" fill="none" stroke="${s.c}" stroke-width="1.4" opacity="0.45" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
+    }).join("");
+    const grid = meses.map((_, i) => i % 3 === 0 ? `<line x1="${xv(i).toFixed(1)}" y1="0" x2="${xv(i).toFixed(1)}" y2="${H}" stroke="#F2EFE8" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/>` : "").join("")
+      + `<line x1="0" y1="${H - 1}" x2="${W}" y2="${H - 1}" stroke="#D9DCE1" vector-effect="non-scaling-stroke"/>`;
+    const yLabels = [0, .25, .5, .75, 1].map(f => `<span>${ars(mx - (mx - mn) * f)}</span>`).join("");
+
+    // chips: uno por serie que llegó
+    selBox.innerHTML = ok.map(s => `<button type="button" class="dolar-chip" data-k="${s.k}" aria-pressed="false"><i style="background:${s.c}"></i>${s.n}</button>`).join("");
+    let selK = ok.some(s => s.k === "mep") ? "mep" : ok[0].k;
+    const faltanTxt = faltan.length ? " · sin datos ahora de " + faltan.map(s => s.n).join(", ") : "";
+    const ultimo = () => ok.map(s => { const v = val(s, NF - 1); return s.n + " " + (v == null ? "—" : ars(v)); }).join(" · ");
+
+    // El dibujo depende del ancho: cada cuántos meses va una etiqueta (de
+    // fecha y de precio) se decide con los píxeles que hay, así que se vuelve
+    // a armar si el ancho cambia (girar el teléfono, achicar la ventana).
+    let anchoDibujado = 0, resaltar = () => {};
+    const dibujar = () => {
+      anchoDibujado = host.clientWidth;
+      // unos 46px por etiqueta: cada 3 meses si entran, si no cada 6 o cada 12
+      const anchoPlot = Math.max(120, (anchoDibujado || 800) - 66);
+      const PASO = [3, 6, 12].find(p => Math.ceil(NF / p) * 46 <= anchoPlot) || 12;
+      const pxMes = anchoPlot / (NF - 1);
+      // la del último mes va siempre (pegada a la derecha); las demás solo si
+      // no se le pisan: una fecha necesita ~58px de aire, un precio ~75px
+      const cabe = (i, aire) => i % PASO === 0 && (NF - 1 - i) * pxMes >= aire;
+      const xLabels = meses.map((m, i) => cabe(i, 58) || i === NF - 1 ? `<span class="${i === 0 ? "ini" : i === NF - 1 ? "fin" : ""}" style="left:${(xv(i) / W * 100).toFixed(2)}%">${mesEtq(m)}</span>` : "").join("");
+      host.innerHTML = `
+        <div class="dolar-grid">
+          <div class="dolar-y">${yLabels}</div>
+          <div class="dolar-plot">
+            <svg class="dolar-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Cierre mensual del dólar desde enero de 2024: ${ok.map(s => s.n).join(", ")}">
+              ${grid}${paths}
+              <line id="dolar-cursor" x1="0" y1="0" x2="0" y2="${H}" stroke="#0E1830" stroke-dasharray="4 4" vector-effect="non-scaling-stroke" style="display:none"/>
+            </svg>
+            <div id="dolar-pts"></div>
+          </div>
+        </div>
+        <div class="dolar-x"><span class="dolar-x-pad"></span><div class="dolar-x-lbl">${xLabels}</div></div>`;
+      const pts = host.querySelector("#dolar-pts");
+      const svg = host.querySelector("svg"), cursor = host.querySelector("#dolar-cursor");
+
+      // tocar un dólar lo resalta y muestra las etiquetas de precio sobre sus puntos
+      resaltar = () => {
+        const sel = ok.find(s => s.k === selK);
+        svg.querySelectorAll("path[data-k]").forEach(p => {
+          const on = p.dataset.k === selK;
+          p.setAttribute("stroke-width", on ? "2.5" : "1.4");
+          p.setAttribute("opacity", on ? "1" : "0.45");
+          if (on) svg.insertBefore(p, cursor);   // la elegida por encima de las otras
+        });
+        selBox.querySelectorAll(".dolar-chip").forEach(b => { const on = b.dataset.k === selK; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
+        pts.innerHTML = meses.map((_, i) => {
+          const v = val(sel, i);
+          if (v == null) return "";
+          const lx = (xv(i) / W * 100).toFixed(2) + "%", py = (yv(v) / H * 100).toFixed(2) + "%", ly = ((yv(v) - 12) / H * 100).toFixed(2) + "%";
+          const conEtq = cabe(i, 75) || i === NF - 1;
+          return `<span class="dolar-pt" style="left:${lx};top:${py};border-color:${sel.c}"></span>` +
+            (conEtq ? `<span class="dolar-lbl ${i === 0 ? "ini" : i === NF - 1 ? "fin" : ""}" style="left:${lx};top:${ly};color:${sel.c}">${ars(v)}</span>` : "");
+        }).join("");
+      };
+      resaltar();
+
+      // lectura al pasar el cursor (o el dedo): mes y valor de cada serie
+      const reposo = () => { cursor.style.display = "none"; readout.textContent = mesEtq(meses[NF - 1]) + " (último dato) · " + ultimo() + faltanTxt; };
+      reposo();
+      const mover = ev => {
+        const r = svg.getBoundingClientRect(), p = ev.touches ? ev.touches[0] : ev;
+        const i = Math.max(0, Math.min(NF - 1, Math.round((p.clientX - r.left) / r.width * (NF - 1))));
+        cursor.setAttribute("x1", xv(i)); cursor.setAttribute("x2", xv(i)); cursor.style.display = "";
+        readout.textContent = mesEtq(meses[i]) + " · " + ok.map(s => { const v = val(s, i); return s.n + " " + (v == null ? "—" : ars(v)); }).join(" · ");
+      };
+      svg.addEventListener("mousemove", mover);
+      svg.addEventListener("touchmove", mover, { passive: true });
+      svg.addEventListener("mouseleave", reposo);
+      svg.addEventListener("touchend", reposo);
+    };
+    selBox.addEventListener("click", ev => { const b = ev.target.closest(".dolar-chip"); if (!b) return; selK = b.dataset.k; resaltar(); });
+    dibujar();
+    // si el ancho cambió (o el gráfico se armó con la herramienta cerrada), se rehace
+    const revisar = () => { const w = host.clientWidth; if (w && w !== anchoDibujado) dibujar(); };
+    let t;
+    window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(revisar, 150); });
+    document.addEventListener("valtia:tool", e => { if (e.detail && e.detail.name === "dolar") setTimeout(revisar, 0); });
+  }
+
+  // recién cuando se abre la herramienta (o si la página cargó en #dolar)
+  let iniciado = false;
+  const init = () => { if (iniciado) return; iniciado = true; cargar().catch(() => {
+    host.innerHTML = '<div class="dolar-vacio">No pudimos traer el histórico ahora. Probá de nuevo en unos minutos.</div>';
+  }); };
+  const cont = document.getElementById("tool-dolar");
+  if (cont && cont.classList.contains("active")) init();
+  document.addEventListener("valtia:tool", e => { if (e.detail && e.detail.name === "dolar") init(); });
 })();
 </script>
 
@@ -915,7 +1346,7 @@ loadRadar();
   const canvas = document.getElementById("bp-curva");
   if (!canvas) return;
   if (typeof Chart === "undefined") {
-    const aviso = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:12px;color:var(--sub);padding:0 24px;text-align:center">El gráfico no pudo cargarse (el navegador bloqueó la librería). Los datos de la curva están en la tabla.</div>';
+    const aviso = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:13px;color:var(--sub);padding:0 24px;text-align:center">El gráfico no pudo cargarse (el navegador bloqueó la librería). Los datos de la curva están en la tabla.</div>';
     canvas.parentElement.innerHTML = aviso;
     const ct = document.getElementById("bp-curva-tem");
     if (ct) ct.parentElement.innerHTML = aviso;
@@ -1038,7 +1469,7 @@ loadRadar();
       }],
     });
   };
-  // dibujo perezoso: el canvas nace oculto (pestaña display:none) y Chart.js
+  // dibujo perezoso: el canvas nace oculto (herramienta display:none) y Chart.js
   // no puede medirlo — mismo motivo por el que los widgets de tv.js son lazy.
   let dibujado = false;
   const intentar = () => { if (!dibujado && canvas.offsetParent) { dibujado = true; dibujar(); dibujarTem(); } };
@@ -1047,7 +1478,7 @@ loadRadar();
     if (es.some(e => e.isIntersecting)) { intentar(); if (dibujado) io.disconnect(); }
   });
   io.observe(canvas);
-  document.querySelectorAll(".tool-tab").forEach(t =>
+  document.querySelectorAll(".ts-item").forEach(t =>
     t.addEventListener("click", () => setTimeout(intentar, 50)));
   new MutationObserver(() => { if (dibujado) { dibujar(); dibujarTem(); } }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 })();
