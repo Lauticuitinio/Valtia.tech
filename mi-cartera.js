@@ -22,6 +22,10 @@ export { convertir } from './fx.js?v=1';
 // el ÚNICO camino a inversores/{email}/alertasPrecio: acá se crea y se lee lo que
 // ya hay; la pestaña Alertas lista, marca vistas y limpia
 import { crearAlerta, precargaUmbral, alertasDe, textoAlerta, fmtPrecio, tickerCorto } from './alertas-precio.js?v=1';
+// un solo criterio de "qué tipo de activo es" (el mismo que usan panel.js, el
+// Resumen y Movimientos): de acá salen los grupos de "Por tipo", el color del
+// logo de cada fila y el "tipo · broker" de su segunda línea
+import { tipoActivo, GRUPOS_TIPO } from './tipos-activo.js?v=1';
 
 /* ── el catálogo grande (catalogo-activos.js: 1.469 CEDEARs, acciones, ETFs,
    bonos, letras y cripto; solo símbolo, nombre y en qué mercado cotiza, y en
@@ -41,329 +45,365 @@ function catalogo() {
   return _catProm;
 }
 
-/* Panel v3 (handoff de Lauti): la ESTRUCTURA es la del prototipo —fila de totales,
-   dos gráficos, tabla con desplegable por fila— y los COLORES y la TIPOGRAFÍA son
-   los de Noticias: fondo blanco, Playfair 700 en los títulos, IBM Plex Sans en
-   rótulos y cuerpo, IBM Plex Mono en todos los números. Los colores salen de las
-   variables --v3-* que define panel.js (así anda el tema oscuro); el único literal
-   es el texto #0E1830 sobre el dorado claro, igual en los dos temas. */
+/* Diseño nuevo (handoff completo del 24/09, "Pestaña 2 · Mi cartera"): la
+   ESTRUCTURA y los valores son los del prototipo «Valtia Panel v3» —card de
+   resumen con el valor total y cuatro tiles, las dos cards de gráficos, la card
+   Tenencias con logo por tipo, Cantidad/PPC, Hoy y Ganancia en dos líneas, y el
+   modal "Agregar activo"— con la paleta vigente (SPEC §0): IBM Plex Sans en todo,
+   también en los números (cifras tabulares, sin Plex Mono), nada de Playfair,
+   botones y selectores con borde dorado sutil y radio 8 (el activo con borde
+   dorado y relleno crema), tarjetas de 10-12 px, etiquetas de 6 px y el dorado
+   claro solo sobre azul. Los colores salen de las variables --v3-* que define
+   panel.js en sus dos bloques (claro y oscuro); lo que es propio de esta pestaña
+   (los tramos del peso y el logo por tipo) se define acá abajo, también en los
+   dos temas. Las etiquetas que el prototipo pone en 8,5 px suben a 10,5, el
+   mínimo del SPEC §0 (como el lateral de panel.js). */
 const STYLE = `
-.mc-wrap{width:100%;color:var(--v3-ink);font-family:'IBM Plex Sans',system-ui,sans-serif;
-  --mc3-p1:var(--v3-serie);--mc3-p2:var(--v3-gold);--mc3-p3:var(--v3-goldL);--mc3-p4:var(--v3-up);--mc3-p5:var(--v3-azul);--mc3-p6:var(--v3-mut)}
-/* en oscuro --v3-serie y --v3-goldL son el mismo dorado: dos tramos seguidos no se distinguirían */
-[data-theme="dark"] .mc-wrap{--mc3-p1:var(--v3-ink);--mc3-p3:var(--v3-goldS)}
+.mc-wrap{width:100%;color:var(--v3-ink);font-family:'IBM Plex Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;
+  /* los tramos del peso de cada posición: los siete colores del prototipo */
+  --mc3-p1:#14213D;--mc3-p2:#1F7A4D;--mc3-p3:#D9BE85;--mc3-p4:#8FB8A2;--mc3-p5:#B08A3E;--mc3-p6:#3D5A80;--mc3-p7:#C9C3B6;
+  /* el logo de cada activo, por tipo: fondo y letra (prototipo: LOGO) */
+  --mc3-lg-ced:#EEF2FA;--mc3-lgt-ced:#14213D;--mc3-lg-acc:#EAF5EF;--mc3-lgt-acc:#1F7A4D;--mc3-lg-rf:#F6EEDC;--mc3-lgt-rf:#8A6A2F;
+  --mc3-lg-cri:#F1ECF9;--mc3-lgt-cri:#5B3FA8;--mc3-lg-otro:#F0F1F3;--mc3-lgt-otro:#57534A}
+/* en oscuro el navy del primer tramo no se ve sobre el fondo: pasa al dorado claro
+   (sobre azul, como pide el SPEC) y los logos van en velos del mismo tono */
+[data-theme="dark"] .mc-wrap{--mc3-p1:#E8CE96;--mc3-p2:#5FCB8E;--mc3-p3:#8FB3E8;--mc3-p4:#8FB8A2;--mc3-p5:#B08A3E;--mc3-p6:#6F8FBF;
+  --mc3-p7:rgba(244,241,234,.42);
+  --mc3-lg-ced:rgba(143,179,232,.16);--mc3-lgt-ced:#A9C4EE;--mc3-lg-acc:rgba(95,203,142,.14);--mc3-lgt-acc:#5FCB8E;
+  --mc3-lg-rf:rgba(232,206,150,.14);--mc3-lgt-rf:#E8CE96;--mc3-lg-cri:rgba(185,166,240,.16);--mc3-lgt-cri:#C4B3F5;
+  --mc3-lg-otro:rgba(255,255,255,.08);--mc3-lgt-otro:rgba(244,241,234,.74)}
+/* en oscuro, los controles nativos (el calendario de las fechas, las listas de
+   los selectores) también van en oscuro: si no, el ícono de la fecha no se ve */
+[data-theme="dark"] .mc-wrap,[data-theme="dark"] .mc-modal{color-scheme:dark}
 /* botones y campos heredan la tipografía de la página (si no, el navegador les pone Arial) */
-.mc-wrap button,.mc-wrap input,.mc-wrap select,.mc-wrap textarea{font-family:inherit}
+.mc-wrap button,.mc-wrap input,.mc-wrap select,.mc-wrap textarea{font-family:inherit;font-variant-numeric:tabular-nums}
 .mc-pos{color:var(--v3-up)}.mc-neg{color:var(--v3-dn)}.mc-mut{color:var(--v3-mut)}
-.mc-orig{display:block;font-size:10.5px;color:var(--v3-mut);font-weight:400}.mc-orig.il{display:inline;font-size:inherit}
+.mc-orig{display:block;font-size:11.5px;color:var(--v3-mut);font-weight:400}.mc-orig.il{display:inline;font-size:inherit}
 
-/* ── fila superior: totales + agrupar ── */
-.mc3-top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px}
-.mc3-tot{display:flex;gap:8px 18px;font-size:13px;color:var(--v3-sub);flex-wrap:wrap;align-items:baseline}
-.mc3-tot b{font:600 15px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-ink);letter-spacing:-.01em}
-.mc3-tot b.mc-pos{color:var(--v3-up)}.mc3-tot b.mc-neg{color:var(--v3-dn)}
-.mc3-tot b.k{font-size:13px}
-/* la aclaración de los totales (qué quedó afuera de la suma del día) */
-.mc3-tot em{font-style:normal;font-size:11.5px;color:var(--v3-mut);margin-left:6px}
-.mc3-pp{font:600 11px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-style:normal;padding:2px 7px;border-radius:4px;margin-left:6px;white-space:nowrap}
-.mc3-pp.up{color:var(--v3-up);background:var(--v3-upBg)}.mc3-pp.dn{color:var(--v3-dn);background:var(--v3-dnBg)}
-.mc3-ctrl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-/* "Ocultar $": tapa los importes para mostrarle la pantalla a alguien */
-.mc3-ojo{font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-mut);
-  background:none;border:1px solid var(--v3-line);padding:6px 11px;border-radius:5px;cursor:pointer;white-space:nowrap;
+/* ── botones y selectores (SPEC §0): borde dorado sutil, radio 8, texto gris; el
+   activo con borde dorado, relleno crema y texto negro. Son los mismos tokens
+   --v3-sel* que usa el selector de moneda del encabezado ── */
+.mc3-agr,.mc3-seg{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}
+.mc3-agr button,.mc3-seg button,.mc3-ojo,.mc-tab{font:500 12px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;padding:7px 10px;
+  cursor:pointer;color:var(--v3-selTx);background:var(--v3-selBg);border:1px solid var(--v3-sel);border-radius:8px;white-space:nowrap;
   transition:color .15s,border-color .15s,background .15s}
-.mc3-ojo:hover{color:var(--v3-ink);border-color:var(--v3-gold)}
-.mc3-ojo[aria-pressed="true"]{color:var(--v3-gold2);border-color:var(--v3-gold);background:var(--v3-goldBg)}
-.mc3-seg{display:inline-flex;gap:2px;align-items:center}
-.mc3-seg button{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;padding:7px 10px;cursor:pointer;color:var(--v3-mut);
-  background:none;border:none;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s}
-.mc3-seg button:hover{color:var(--v3-ink)}
-.mc3-seg button.on{color:var(--v3-ink);border-bottom-color:var(--v3-gold)}
+.mc3-agr button:hover,.mc3-seg button:hover,.mc3-ojo:hover,.mc-tab:hover{color:var(--v3-selOnTx)}
+.mc3-agr button.on,.mc3-seg button.on,.mc3-ojo[aria-pressed="true"],.mc-tab.on{color:var(--v3-selOnTx);border-color:var(--v3-selOn);background:var(--v3-selOnBg)}
+.mc3-agr button:focus-visible,.mc3-seg button:focus-visible,.mc3-ojo:focus-visible,.mc-tab:focus-visible,
+.mc3-add:focus-visible,.mc3-b:focus-visible,.mc-btn:focus-visible{outline:2px solid var(--v3-focus);outline-offset:2px}
+/* el primario: navy lleno, radio 8 (en oscuro se invierte con los tokens) */
+.mc3-add{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-btnTx);background:var(--v3-btn);
+  border:1px solid var(--v3-btn);padding:9px 16px;border-radius:8px;white-space:nowrap;cursor:pointer;transition:background .15s,border-color .15s}
+.mc3-add:hover{background:var(--v3-btnHover);border-color:var(--v3-btnHover)}
 
 /* ── avisos ── */
 .mc3-aviso{background:var(--v3-warnBg);border:1px solid var(--v3-line);border-left:3px solid var(--v3-warn);border-radius:10px;
-  padding:10px 14px;font-size:12.5px;line-height:1.6;margin-bottom:16px;color:var(--v3-ink)}
+  padding:10px 14px;font-size:14px;line-height:1.6;margin-bottom:14px;color:var(--v3-ink)}
+/* la fila de "Ocultar $" cuando no quedan posiciones pero sí ventas */
+.mc3-top{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 
-/* ── dos cards de gráficos ── */
+/* ── card resumen: "Valor total de la cartera" + cuatro tiles (prototipo 372-383) ── */
+.mc3-res{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;padding:20px 22px;margin-bottom:14px;min-width:0}
+.mc3-res-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.mc3-res-k{font-size:14px;color:var(--v3-sub)}
+.mc3-total{font:600 38px/1.15 'IBM Plex Sans',sans-serif;color:var(--v3-ink);letter-spacing:-.01em;margin:4px 0 16px;overflow-wrap:anywhere}
+.mc3-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(128px,100%),1fr));gap:10px}
+/* radio 10 y no el 9 del prototipo: la paleta vigente pide 10-12 en las tarjetas */
+.mc3-tile{border:1px solid var(--v3-line);border-radius:10px;padding:11px 14px;min-width:0}
+/* el rótulo no se corta con "…": entre 641 y ~1100 px "Resultado · no realizado"
+   no entra en un renglón del tile y baja al siguiente */
+.mc3-tile .l{font-size:12.5px;color:var(--v3-mut);line-height:1.35}
+/* el monto y el % van cada uno entero: si no entran juntos, el % baja de renglón.
+   Cada uno es un bloque en línea con tope en el ancho del tile: solo un monto que
+   no entra ni solo en su renglón (miles de millones de pesos a 375 px) se parte,
+   en vez de salirse del borde */
+.mc3-tile .v{font:600 17.5px/1.3 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin-top:5px;overflow-wrap:anywhere}
+.mc3-tile .v span{display:inline-block;max-width:100%;overflow-wrap:anywhere}
+.mc3-tile .v.mc-pos{color:var(--v3-up)}.mc3-tile .v.mc-neg{color:var(--v3-dn)}
+.mc3-tile .s{font-size:12px;color:var(--v3-mut);margin-top:3px;line-height:1.4}
+
+/* ── dos cards de gráficos (prototipo 385-408) ── */
 .mc3-graf{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:14px;margin-bottom:14px}
 .mc3-card{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;padding:16px 18px;min-width:0}
 .mc3-ch{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
-.mc3-ch span{font-size:11px;color:var(--v3-mut);white-space:nowrap}
-.mc3-k{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut)}
+.mc3-ch span{font-size:12.5px;color:var(--v3-mut);white-space:nowrap}
+.mc3-k{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut)}
 .mc3-bars{display:flex;flex-direction:column;gap:7px;margin-top:12px}
-.mc3-bar{display:grid;gap:10px;align-items:center;font-size:11.5px}
-.mc3-bar b{color:var(--v3-gold);font:700 11.5px 'IBM Plex Sans',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mc3-bar .t{position:relative;height:10px;background:var(--v3-track2);border-radius:3px}
-.mc3-bar .t i{position:absolute;top:0;bottom:0;border-radius:3px;display:block}
+.mc3-bar{display:grid;gap:10px;align-items:center;font-size:13px}
+.mc3-bar b{color:var(--v3-gold);font:700 13px 'IBM Plex Sans',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc3-bar .t{position:relative;height:10px;background:var(--v3-track2);border-radius:6px}
+.mc3-bar .t i{position:absolute;top:0;bottom:0;border-radius:6px;display:block}
 .mc3-bar .t i.z{top:-2px;bottom:-2px;width:1px;background:var(--v3-cero);border-radius:0}
-.mc3-bar .v{text-align:right;font:600 11.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
-.mc3-mas{font-size:11px;color:var(--v3-mut);text-align:center;letter-spacing:.04em}
-.mc3-nota{font-size:11.5px;color:var(--v3-mut);line-height:1.6;margin-top:10px}
+.mc3-bar .v{text-align:right;font:600 13px 'IBM Plex Sans',sans-serif;white-space:nowrap}
+.mc3-mas{font-size:12.5px;color:var(--v3-mut);text-align:center;letter-spacing:.04em}
+.mc3-nota{font-size:13px;color:var(--v3-mut);line-height:1.6;margin-top:10px}
 .mc3-stack{display:flex;height:22px;border-radius:6px;overflow:hidden;margin-top:14px;gap:2px}
 .mc3-stack div{min-width:3px}
-.mc3-ley{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:12px;font-size:11.5px;color:var(--v3-sub)}
+.mc3-ley{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:12px;font-size:13px;color:var(--v3-sub)}
 .mc3-ley span{display:flex;align-items:center;gap:6px;white-space:nowrap}
 .mc3-ley i{width:8px;height:8px;border-radius:2px;display:block;flex:none}
-.mc3-ley b{color:var(--v3-ink);font:600 11.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
-.mc3-frase{font-size:12px;color:var(--v3-sub);line-height:1.6;margin-top:14px;padding-top:12px;border-top:1px solid var(--v3-track)}
-.mc3-frase b{color:var(--v3-ink);font:600 12px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+.mc3-ley b{color:var(--v3-ink);font-weight:600}
+.mc3-frase{font-size:13.5px;color:var(--v3-sub);line-height:1.6;margin-top:14px;padding-top:12px;border-top:1px solid var(--v3-track)}
+.mc3-frase b{color:var(--v3-ink);font-weight:600}
 
-/* ── la tabla (grilla del prototipo) ── */
-.mc3-tbl{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;overflow-x:auto}
-/* con la columna "Hoy" son ocho: para que la grilla siga entrando en una
-   pantalla de 1280 con el lateral abierto, las columnas angostas se apretaron
-   un poco (todas tienen de sobra para el número más largo que muestran).
-   El ancho mínimo es el que REALMENTE ocupa la fila —las ocho columnas (870)
-   + los siete espacios (84) + los costados (36)—: si fuera menor, entre ese
-   número y 990 la fila se salía de la caja y aparecía una barra de desplazamiento
-   de unos pocos píxeles, justo antes de pasar a la vista angosta. */
-.mc3-in{min-width:990px}
-.mc3-hd,.mc3-row{display:grid;grid-template-columns:minmax(176px,1.5fr) 82px 110px 112px 120px 108px 130px 32px;gap:12px}
-.mc3-hd{padding:10px 18px;border-bottom:1px solid var(--v3-line);font:700 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;
+/* ── Tenencias: la card con título, "{n} activos", agrupar y "+ Agregar" (prototipo 411-422) ── */
+.mc3-ten{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;min-width:0}
+.mc3-ten-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:16px 18px 6px}
+.mc3-ten-t{display:flex;align-items:baseline;gap:8px;min-width:0}
+.mc3-ten-t h3{font:600 19px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin:0;line-height:1.3}
+.mc3-ten-t span{font-size:13.5px;color:var(--v3-mut);white-space:nowrap}
+.mc3-ten-c{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+/* la grilla: el scroll horizontal queda adentro de la card, nunca en la página */
+.mc3-tbl{overflow-x:auto;overflow-y:hidden;border-radius:0 0 12px 12px}
+/* ancho mínimo = el que REALMENTE ocupa la fila: las siete columnas (838) + los
+   seis espacios (72) + los costados (36). Si fuera menor, entre ese número y el
+   corte de la vista angosta la fila se saldría de la caja */
+.mc3-in{min-width:946px}
+.mc3-hd,.mc3-row{display:grid;grid-template-columns:minmax(240px,2fr) 110px 110px 120px 110px 120px 28px;gap:12px}
+.mc3-hd{padding:12px 18px 10px;border-bottom:1px solid var(--v3-line);font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;
   text-transform:uppercase;color:var(--v3-mut)}
 .mc3-hd .r{text-align:right}
 .mc3-hd [data-col]{cursor:pointer;user-select:none;transition:color .15s}
 .mc3-hd [data-col]:hover,.mc3-hd [data-col].on{color:var(--v3-ink)}
+.mc3-hd [data-col]:focus-visible{outline:2px solid var(--v3-focus);outline-offset:2px;border-radius:4px}
 .mc3-row{align-items:center;padding:13px 18px;border-bottom:1px solid var(--v3-line2);cursor:pointer;background:var(--v3-card);
   scroll-margin-top:110px;transition:background .12s}
-.mc3-row:hover,.mc3-row.on{background:var(--v3-hover)}
-.mc3-row:focus-visible{outline:2px solid var(--v3-gold);outline-offset:-2px}
+.mc3-row:hover{background:var(--v3-hover)}
+.mc3-row:focus-visible{outline:2px solid var(--v3-focus);outline-offset:-2px}
 .mc3-row>*{min-width:0}
-.mc3-tk{display:flex;align-items:baseline;gap:8px;min-width:0}
-.mc3-tk b{font:700 14px 'IBM Plex Sans',sans-serif;color:var(--v3-gold);white-space:nowrap}
-.mc3-mk{font:600 8.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--v3-gold2);flex:none}
-.mc3-nm{font-size:12px;color:var(--v3-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.mc3-pills{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap}
-.mc3-pill{font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:4px;white-space:nowrap}
+/* la columna Activo: logo de 34 px con el ticker y el color de su tipo · nombre y pastillas · "tipo · broker" */
+.mc3-a{display:flex;align-items:center;gap:12px;min-width:0}
+.mc3-logo{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden;
+  font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:-.01em;white-space:nowrap;background:var(--mc3-lg-otro);color:var(--mc3-lgt-otro)}
+.mc3-logo.l5{font-size:9px}.mc3-logo.l6{font-size:8px}
+.mc3-logo.ced{background:var(--mc3-lg-ced);color:var(--mc3-lgt-ced)}
+.mc3-logo.acc{background:var(--mc3-lg-acc);color:var(--mc3-lgt-acc)}
+.mc3-logo.rf{background:var(--mc3-lg-rf);color:var(--mc3-lgt-rf)}
+.mc3-logo.cri{background:var(--mc3-lg-cri);color:var(--mc3-lgt-cri)}
+.mc3-at{min-width:0;flex:1}
+.mc3-nm{font:600 15px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc3-pills{display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap}
+.mc3-tp{font-size:12.5px;color:var(--v3-mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.mc3-pill{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:6px;white-space:nowrap}
 .mc3-pill.infra{color:var(--v3-up);background:var(--v3-upBg)}
 .mc3-pill.precio{color:var(--v3-gold2);background:var(--v3-goldBg)}
 .mc3-pill.cara{color:var(--v3-dn);background:var(--v3-dnBg)}
 .mc3-pill.sin{color:var(--v3-mut);background:var(--v3-neutro)}
 .mc3-pill.warn{color:var(--v3-warn);background:var(--v3-warnBg)}
-.mc3-brk{font-size:12.5px;color:var(--v3-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mc3-n{text-align:right;font:500 13px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-ink);white-space:nowrap}
+.mc3-n{text-align:right;font:500 14.5px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);white-space:nowrap}
 .mc3-n.f{font-weight:600}
 .mc3-n.mc-pos{color:var(--v3-up)}.mc3-n.mc-neg{color:var(--v3-dn)}.mc3-n.mc-mut{color:var(--v3-mut)}
-.mc3-n small{display:block;font:500 10.5px 'IBM Plex Mono',monospace;margin-top:2px}
-/* el precio promedio de compra, debajo de la cantidad */
-.mc3-n small.pm{color:var(--v3-mut);font-weight:400}
+/* la segunda línea: el PPC debajo de la cantidad, el % debajo de Hoy y de Ganancia */
+.mc3-n small{display:block;font:500 12.5px 'IBM Plex Sans',sans-serif;margin-top:2px}
+.mc3-n small.pm{color:var(--v3-mut)}
 /* el rótulo "Hoy" de esa celda: solo se ve en la vista angosta, donde la fila
    se abre en renglones y el número queda sin encabezado que lo explique */
-.mc3-hoyk{display:none;font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);margin-right:6px}
-.mc3-meta{display:none;font:500 11.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-mut);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mc3-rot{text-align:center;color:var(--v3-mut);font-size:12px;display:inline-block;transition:transform .15s}
+.mc3-hoyk{display:none;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);
+  margin-right:6px;font-style:normal}
+.mc3-meta{display:none;font:500 13px 'IBM Plex Sans',sans-serif;color:var(--v3-mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc3-rot{text-align:center;color:var(--v3-mut);font-size:13.5px;display:inline-block;transition:transform .15s}
 .mc3-row.on .mc3-rot{transform:rotate(180deg)}
-.mc3-grp{display:flex;gap:6px 14px;align-items:baseline;flex-wrap:wrap;padding:9px 18px;background:var(--v3-track2);
-  border-bottom:1px solid var(--v3-line2);font-size:12px;color:var(--v3-sub)}
-.mc3-grp b{font:700 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-gold2)}
-.mc3-grp span{font:500 11.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+/* la fila de grupo: "CEDEARS 4 ─── 45,2% · US$4.621" (prototipo 431-436) */
+.mc3-grp{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap;padding:16px 18px 8px}
+.mc3-grp b{font:700 12px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--v3-serie);white-space:nowrap}
+.mc3-grp .n{font:600 12px 'IBM Plex Sans',sans-serif;color:var(--v3-mut)}
+.mc3-grp i{flex:1 1 40px;height:1px;background:var(--v3-line);display:block}
+.mc3-grp .t{font:500 13px 'IBM Plex Sans',sans-serif;color:var(--v3-mut);white-space:nowrap}
+.mc3-grp .t b{font:600 13px 'IBM Plex Sans',sans-serif;letter-spacing:0;text-transform:none;color:var(--v3-ink)}
+.mc3-grp .x{font-size:12.5px;color:var(--v3-mut);white-space:nowrap}
 .mc3-grp em{font-style:normal}
-.mc3-pie{font-size:11.5px;color:var(--v3-mut);line-height:1.7;margin:18px 0 0;max-width:760px}
+.mc3-pie{font-size:13px;color:var(--v3-mut);line-height:1.7;margin:18px 0 0;max-width:760px;text-align:justify;hyphens:auto}
 
-/* ── el desplegable de cada fila ── */
-.mc3-det{background:var(--v3-hover);border-bottom:1px solid var(--v3-line);border-left:3px solid var(--v3-gold);cursor:default}
+/* ── el desplegable de cada fila (prototipo 455-491) ── */
+.mc3-det{background:var(--v3-card);border-bottom:1px solid var(--v3-line);border-left:3px solid var(--v3-serie);cursor:default}
 .mc3-mets{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;padding:16px 18px 0}
-.mc3-met{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:8px;padding:10px 12px;min-width:0}
-.mc3-met .k{font:600 8.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);
+.mc3-met{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:10px;padding:10px 12px;min-width:0}
+.mc3-met .k{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--v3-mut);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mc3-met .v{font:600 14px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-ink);margin-top:5px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mc3-met .s{font-size:10.5px;color:var(--v3-mut);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc3-met .v{font:600 15.5px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc3-met .s{font-size:12px;color:var(--v3-mut);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mc3-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:16px;padding:16px 18px 20px}
 .mc3-col{min-width:0}
-.mc3-ck{font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--v3-gold2)}
-.mc3-inf{font:700 14px 'Playfair Display',serif;color:var(--v3-ink);margin-top:8px;line-height:1.35}
-.mc3-txt{font-size:12px;color:var(--v3-sub);line-height:1.6;margin-top:4px}
+.mc3-ck{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--v3-gold2)}
+.mc3-inf{font:600 15.5px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin-top:8px;line-height:1.35}
+.mc3-txt{font-size:13.5px;color:var(--v3-sub);line-height:1.6;margin-top:4px}
 .mc3-txt a{color:var(--v3-gold);text-decoration:none}.mc3-txt a:hover{color:var(--v3-gold2)}
 .mc3-clamp{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
-.mc3-f{font:500 10.5px 'IBM Plex Mono',monospace;color:var(--v3-mut)}
-.mc3-lk{display:inline-block;margin-top:8px;font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;
+.mc3-f{font:500 12px 'IBM Plex Sans',sans-serif;color:var(--v3-mut)}
+.mc3-lk{display:inline-block;margin-top:8px;font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;
   color:var(--v3-gold);text-decoration:none}
 .mc3-lk:hover{color:var(--v3-gold2)}
 .mc3-nots{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-.mc3-nots a{display:block;font-size:12.5px;color:var(--v3-ink);line-height:1.5;text-decoration:none}
+.mc3-nots a{display:block;font-size:14px;color:var(--v3-ink);line-height:1.5;text-decoration:none}
 .mc3-nots a:hover{color:var(--v3-gold2)}
-.mc3-nots a span{font:600 10px 'IBM Plex Mono',monospace;color:var(--v3-mut);margin-right:6px}
-.mc3-ev{font:600 14px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin-top:8px}
-.mc3-ev span{font:500 10.5px 'IBM Plex Mono',monospace;color:var(--v3-mut);margin-left:6px;white-space:nowrap}
+.mc3-nots a span{font:600 11.5px 'IBM Plex Sans',sans-serif;color:var(--v3-mut);margin-right:6px}
+.mc3-ev{font:600 15.5px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin-top:8px}
+.mc3-ev span{font:500 12px 'IBM Plex Sans',sans-serif;color:var(--v3-mut);margin-left:6px;white-space:nowrap}
 .mc3-acc{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-.mc3-b{font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;border-radius:5px;
-  white-space:nowrap;cursor:pointer;background:none;transition:border-color .15s,color .15s}
+/* Vendí: el contorno navy del prototipo (dorado claro en oscuro, sobre azul);
+   Ajustar, Avisarme si… y Cancelar: los secundarios del SPEC §0 */
+.mc3-b{font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;border-radius:8px;
+  white-space:nowrap;cursor:pointer;background:none;transition:border-color .15s,color .15s,background .15s}
 .mc3-b.vend{color:var(--v3-serie);border:1px solid var(--v3-serie)}
-.mc3-b.vend:hover{color:var(--v3-gold2);border-color:var(--v3-gold)}
-.mc3-b.aj{color:var(--v3-sub);border:1px solid var(--v3-line)}
-.mc3-b.aj:hover,.mc3-b.aj[aria-expanded="true"]{color:var(--v3-ink);border-color:var(--v3-gold)}
-.mc3-ajp{margin-top:12px;padding:12px 14px;border:1px dashed var(--v3-line);border-radius:8px;background:var(--v3-card);
-  font-size:12px;color:var(--v3-sub);line-height:1.6}
-.mc3-ajp[hidden]{display:none}
+.mc3-b.vend:hover{background:var(--v3-navyBg)}
+.mc3-b.aj,.mc3-b.al,.mc3-b.sec{color:var(--v3-selTx);border:1px solid var(--v3-sel);background:var(--v3-selBg)}
+.mc3-b.aj:hover,.mc3-b.al:hover,.mc3-b.sec:hover{color:var(--v3-selOnTx)}
+.mc3-b.aj[aria-expanded="true"],.mc3-b.al[aria-expanded="true"]{color:var(--v3-selOnTx);border-color:var(--v3-selOn);background:var(--v3-selOnBg)}
+.mc3-b.al[disabled],.mc3-b.al[disabled]:hover{color:var(--v3-mut);border-color:var(--v3-line);opacity:.55;cursor:default}
+.mc3-b.ok{color:var(--v3-btnTx);background:var(--v3-btn);border:1px solid var(--v3-btn)}
+.mc3-b.ok:hover{background:var(--v3-btnHover);border-color:var(--v3-btnHover)}
+.mc3-b.ok[disabled],.mc3-b.ok[disabled]:hover{opacity:.45;cursor:default}
+.mc3-ajp,.mc3-alp{margin-top:12px;padding:12px 14px;border:1px dashed var(--v3-line);border-radius:10px;background:var(--v3-card);
+  font-size:13.5px;color:var(--v3-sub);line-height:1.6;min-width:0}
+.mc3-ajp[hidden],.mc3-alp[hidden]{display:none}
 .mc3-ajp .fila{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .mc3-ajp .fila+.fila{margin-top:10px;padding-top:10px;border-top:1px solid var(--v3-line2)}
-/* ── "Avisarme si…": la alerta de precio del activo (alertas-precio.js). Mismo
-   dibujo que el panel de Ajustar: borde punteado sobre la card, sin crema. El
-   segmento sube/baja subraya en dorado (.mc3-seg, como el agrupar de arriba);
-   "Crear alerta" es el primario navy de la piel (--v3-btn/--v3-btnTx, que en
-   oscuro se invierte solo) y Cancelar el secundario blanco con borde. El umbral
-   va en Mono tabular de 140 px; a 375 px el renglón se parte en líneas. ── */
-.mc3-b.al{color:var(--v3-sub);border:1px solid var(--v3-line)}
-.mc3-b.al:hover,.mc3-b.al[aria-expanded="true"]{color:var(--v3-ink);border-color:var(--v3-gold)}
-.mc3-b.al[disabled],.mc3-b.al[disabled]:hover{color:var(--v3-mut);border-color:var(--v3-line);opacity:.55;cursor:default}
-.mc3-b.ok{color:var(--v3-btnTx);background:var(--v3-btn);border:1px solid var(--v3-btn);transition:opacity .15s}
-.mc3-b.ok:hover{opacity:.86}
-.mc3-b.ok[disabled],.mc3-b.ok[disabled]:hover{opacity:.4;cursor:default}
-.mc3-b.sec{color:var(--v3-sub);background:var(--v3-card);border:1px solid var(--v3-line)}
-.mc3-b.sec:hover{color:var(--v3-ink);border-color:var(--v3-ink)}
-.mc3-alp{margin-top:12px;padding:12px 14px;border:1px dashed var(--v3-line);border-radius:8px;background:var(--v3-card);
-  font-size:12px;color:var(--v3-sub);line-height:1.6;min-width:0}
-.mc3-alp[hidden]{display:none}
+/* ── "Avisarme si…": la alerta de precio del activo (alertas-precio.js). El umbral
+   va en 140 px con cifras tabulares; a 375 px el renglón se parte en líneas ── */
 .mc3-alp .fila{display:flex;gap:8px 10px;align-items:center;flex-wrap:wrap}
 .mc3-alp .fila+.fila{margin-top:10px}
-.mc3-alp input{font:500 13px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;text-align:right;width:140px;max-width:100%;
-  box-sizing:border-box;padding:7px 9px;background:var(--v3-card);border:1px solid var(--v3-line);border-radius:6px;color:var(--v3-ink);outline:none}
-.mc3-alp input:focus{border-color:var(--v3-gold)}
-.mc3-alp .u{font-size:11.5px;color:var(--v3-mut)}
+.mc3-alp input{font:500 14px 'IBM Plex Sans',sans-serif;text-align:right;width:140px;max-width:100%;
+  box-sizing:border-box;padding:7px 9px;background:var(--v3-input);border:1px solid var(--v3-line);border-radius:8px;color:var(--v3-ink);outline:none}
+.mc3-alp input:focus{border-color:var(--v3-focus)}
+.mc3-alp .u{font-size:12.5px;color:var(--v3-mut)}
 .mc3-alp .u:empty{display:none}
-.mc3-alp .u b{font:600 11.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-sub)}
-.mc3-alp .msg{font-size:12px;line-height:1.5;margin-top:8px}
+.mc3-alp .u b{font-weight:600;color:var(--v3-sub)}
+.mc3-alp .msg{font-size:13.5px;line-height:1.5;margin-top:8px}
 .mc3-alp .msg:empty{display:none}
-.mc3-alp .nota{font-size:11.5px;color:var(--v3-mut);line-height:1.6;margin-top:8px}
+.mc3-alp .nota{font-size:12.5px;color:var(--v3-mut);line-height:1.6;margin-top:8px}
 .mc3-alp .nota:empty{display:none}
 .mc3-alp .nota a{color:var(--v3-gold);text-decoration:none;font-weight:600}
 .mc3-alp .nota a:hover{color:var(--v3-gold2)}
 /* con varias compras el botón va debajo de "Tus compras": la alerta es del activo, no de una compra */
 .mc3-alw{padding:0 18px 20px}
 .mc3-alw>.mc3-acc{margin-top:0}
-.mc-brk{display:inline-block;font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--v3-ink);
-  border:1px solid var(--v3-line);background:var(--v3-card);padding:4px 9px;border-radius:4px;cursor:pointer}
-.mc-brk:hover{border-color:var(--v3-gold);color:var(--v3-gold2)}
-.mc-brk-in{font:400 12px 'IBM Plex Sans',system-ui,sans-serif;padding:4px 8px;background:var(--v3-card);border:1px solid var(--v3-gold);
-  border-radius:4px;color:var(--v3-ink);width:140px;outline:none}
+.mc-brk{display:inline-block;font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--v3-ink);
+  border:1px solid var(--v3-sel);background:var(--v3-selBg);padding:4px 9px;border-radius:8px;cursor:pointer}
+.mc-brk:hover{border-color:var(--v3-selOn);color:var(--v3-selOnTx)}
+.mc-brk-in{font:400 14px 'IBM Plex Sans',system-ui,sans-serif;padding:4px 8px;background:var(--v3-input);border:1px solid var(--v3-selOn);
+  border-radius:8px;color:var(--v3-ink);width:150px;outline:none}
 select.mc-brk-in{width:auto;max-width:200px}
 /* ── la posición guardada con el sufijo de otro mercado (NVDA-USD): el precio
    no va a llegar nunca; el desplegable lo dice y ofrece pasarla con un clic ── */
-.mc3-fix{margin:14px 18px 0;padding:12px 14px;border:1px solid var(--v3-line);border-left:3px solid var(--v3-warn);border-radius:8px;
-  background:var(--v3-card);font-size:12.5px;color:var(--v3-sub);line-height:1.6}
+.mc3-fix{margin:14px 18px 0;padding:12px 14px;border:1px solid var(--v3-line);border-left:3px solid var(--v3-warn);border-radius:10px;
+  background:var(--v3-card);font-size:13.5px;color:var(--v3-sub);line-height:1.6}
 .mc3-fix b{color:var(--v3-ink)}
 .mc3-fix .mc3-acc{margin-top:8px}
-.mc-del{font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-dn);background:none;
-  border:1px solid var(--v3-line);padding:6px 12px;border-radius:5px;cursor:pointer;white-space:nowrap}
+.mc-del{font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-dn);background:none;
+  border:1px solid var(--v3-sel);padding:6px 12px;border-radius:8px;cursor:pointer;white-space:nowrap}
 .mc-del:hover{border-color:var(--v3-dn)}
 
-/* ── "Tus compras": un activo comprado varias veces es UNA fila (como en Senta),
-   y su desplegable lista cada compra con SUS botones, porque las ventas y los
-   ajustes siguen siendo por compra. Cada renglón es flex con salto de línea: a
-   375 px la fecha, los números y los botones se acomodan en varias líneas y no
-   aparece desplazamiento horizontal. ── */
+/* ── "Tus compras": un activo comprado varias veces es UNA fila, y su desplegable
+   lista cada compra con SUS botones (las ventas y los ajustes siguen siendo por
+   compra). Cada renglón es flex con salto de línea: a 375 px no hay scroll ── */
 .mc3-cmps{padding:0 18px 20px}
 .mc3-cmp{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:10px 0;border-top:1px solid var(--v3-line2)}
-.mc3-cmp-i{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;flex:1 1 260px;min-width:0;font-size:12.5px;color:var(--v3-sub)}
-.mc3-cmp-i b{font:600 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-ink);white-space:nowrap}
-.mc3-cmp-i .n{font:500 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-ink);white-space:nowrap}
-.mc3-cmp-i .n em{font:400 11.5px 'IBM Plex Sans',sans-serif;font-style:normal;color:var(--v3-warn)}
-.mc3-cmp-i .pl{font:600 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mc3-cmp-i{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;flex:1 1 260px;min-width:0;font-size:13.5px;color:var(--v3-sub)}
+.mc3-cmp-i b{font-weight:600;color:var(--v3-ink);white-space:nowrap}
+.mc3-cmp-i .n{font-weight:500;color:var(--v3-ink);white-space:nowrap}
+.mc3-cmp-i .n em{font-style:normal;font-weight:400;font-size:12.5px;color:var(--v3-warn)}
+.mc3-cmp-i .pl{font-weight:600;white-space:nowrap}
 .mc3-cmp>.mc3-acc{margin-top:0;flex:none}
 .mc3-cmp>.mc3-ajp{flex-basis:100%;margin-top:0}
-.mc3-cmps-nota{font-size:11.5px;color:var(--v3-mut);line-height:1.6;margin-top:10px}
+.mc3-cmps-nota{font-size:12.5px;color:var(--v3-mut);line-height:1.6;margin-top:10px}
 
 /* ── venta: el formulario que abre "Vendí" ── */
-.mc-vrow{background:var(--v3-hover);border-bottom:1px solid var(--v3-line);border-left:3px solid var(--v3-serie);padding:14px 18px;cursor:default}
+.mc-vrow{background:var(--v3-card);border-bottom:1px solid var(--v3-line);border-left:3px solid var(--v3-serie);padding:14px 18px;cursor:default}
 .mc-vform{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;padding:4px 0}
-.mc-vform label{display:block;font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-mut);margin-bottom:3px}
-.mc-vform input{padding:7px 9px;background:var(--v3-card);border:1px solid var(--v3-line);border-radius:6px;color:var(--v3-ink);
-  font:500 13px 'IBM Plex Mono',monospace;width:140px;outline:none}
-.mc-vform input:focus{border-color:var(--v3-gold)}
-.mc-vform .prev{font-size:12.5px;color:var(--v3-sub);align-self:center;min-width:200px}
-.mc-vform .prev b{font-family:'IBM Plex Mono',monospace}
-.mc-vform .nota{flex-basis:100%;font-size:11.5px;color:var(--v3-mut);line-height:1.5}
-.mc-undo{background:none;border:none;color:var(--v3-mut);cursor:pointer;font-size:11px;text-decoration:underline;padding:0}
+.mc-vform label{display:block;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-mut);margin-bottom:4px}
+.mc-vform input{padding:8px 10px;background:var(--v3-input);border:1px solid var(--v3-line);border-radius:8px;color:var(--v3-ink);
+  font:500 14px 'IBM Plex Sans',sans-serif;width:150px;max-width:100%;box-sizing:border-box;outline:none}
+.mc-vform input:focus{border-color:var(--v3-focus)}
+.mc-vform .prev{font-size:13.5px;color:var(--v3-sub);align-self:center;min-width:200px}
+.mc-vform .prev b{font-weight:600}
+.mc-vform .nota{flex-basis:100%;font-size:12.5px;color:var(--v3-mut);line-height:1.55}
+.mc-undo{background:none;border:none;color:var(--v3-mut);cursor:pointer;font-size:12.5px;text-decoration:underline;padding:0}
 .mc-undo:hover{color:var(--v3-gold2)}
 
 /* ── avisos del sync ── */
 .mc-aj{background:var(--v3-warnBg);border:1px solid var(--v3-line);border-left:3px solid var(--v3-warn);border-radius:12px;padding:12px 16px;margin-bottom:14px}
-.mc-aj .t{font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut)}
-.mc-aj p{margin:4px 0 8px;font-size:13.5px;color:var(--v3-ink);line-height:1.5}
+.mc-aj .t{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut)}
+.mc-aj p{margin:4px 0 8px;font-size:14px;color:var(--v3-ink);line-height:1.5}
 
-/* ── botones y formulario de alta ── */
-.mc-btn{font:600 10.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#0E1830;
-  background:var(--v3-goldL);border:1px solid var(--v3-goldL);padding:10px 18px;border-radius:7px;cursor:pointer;
-  transition:background .15s,color .15s,border-color .15s}
-.mc-btn:hover{background:var(--v3-card);color:var(--v3-ink);border-color:var(--v3-gold)}
-.mc-btn[disabled]{opacity:.5;cursor:default}
-.mc-btn.sec{background:transparent;color:var(--v3-ink);border:1px solid var(--v3-line)}
-.mc-btn.sec:hover{border-color:var(--v3-gold)}
-.mc-btn-mini{padding:7px 12px;font-size:10px}
-.mc-msg{font-size:12px;margin-top:10px}
-.mc-tabs{display:flex;gap:2px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
-.mc-tab{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;padding:7px 10px;background:none;border:none;
-  border-bottom:2px solid transparent;color:var(--v3-mut);cursor:pointer;white-space:nowrap;transition:color .15s}
-.mc-tab:hover{color:var(--v3-ink)}
-.mc-tab.on{color:var(--v3-ink);border-bottom-color:var(--v3-gold)}
+/* ── botones del resto de la pestaña: el primario navy (radio 8) y el secundario del §0 ── */
+.mc-btn{font:600 12px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-btnTx);
+  background:var(--v3-btn);border:1px solid var(--v3-btn);padding:10px 18px;border-radius:8px;cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s,opacity .15s}
+.mc-btn:hover{background:var(--v3-btnHover);border-color:var(--v3-btnHover)}
+.mc-btn[disabled]{opacity:.45;cursor:default}
+.mc-btn.sec{background:var(--v3-selBg);color:var(--v3-selTx);border:1px solid var(--v3-sel)}
+.mc-btn.sec:hover{color:var(--v3-selOnTx);border-color:var(--v3-selOn);background:var(--v3-selBg)}
+.mc-btn-mini{padding:7px 12px;font-size:11.5px}
+.mc-msg{font-size:13.5px;margin-top:10px;line-height:1.5}
+.mc-msg:empty{margin:0}
+.mc-tabs{display:flex;gap:6px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
 
-/* ── el modal de alta (prototipo, "Agregar activo") ──
+/* ── el modal "Agregar activo" (prototipo 502-539) ──
    Cuelga de <body> y no de la pestaña: los repintados de la tabla (el refresco
    de precios cada 2 min) no pueden borrar lo que el usuario está tipeando.
-   El velo es el navy de la piel con transparencia; como el texto sobre el
-   dorado claro, es de los pocos literales, porque es el mismo en los dos temas. */
+   El velo es el navy del prototipo con transparencia y desenfoque; es de los
+   pocos literales, porque es el mismo en los dos temas. */
 .mc-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;
-  background:rgba(14,24,48,.45);color:var(--v3-ink);font-family:'IBM Plex Sans',system-ui,sans-serif;
-  /* la piel del modal: nada de crema. El acento es el navy de la piel (botón
-     sólido, foco de los campos) y las cajas fijas van en un gris neutro muy
-     tenue. En oscuro el navy no se distingue del fondo: ahí el acento es el
-     dorado claro con texto navy, y el gris es un velo blanco, como --v3-track2. */
-  --mc-soft:#F7F7F8;--mc-acc:var(--v3-navy);--mc-accTx:#fff}
-[data-theme="dark"] .mc-modal{--mc-soft:rgba(255,255,255,.05);--mc-acc:var(--v3-goldL);--mc-accTx:#0E1830}
-.mc-modal button,.mc-modal input,.mc-modal select,.mc-modal textarea{font-family:inherit}
-.mc-mdl{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:14px;width:100%;max-width:560px;min-width:0;
+  background:rgba(14,24,48,.42);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);color:var(--v3-ink);
+  font-family:'IBM Plex Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;
+  /* las cajas fijas (nombre, PPC, referencia) en el gris del prototipo (#F6F7F9);
+     Guardar apagado en su gris (#A9AFBC). En oscuro, velos blancos */
+  --mc-soft:#F6F7F9;--mc-cmpl:#EEF0F3;--mc-off:#A9AFBC;--mc-offTx:#fff}
+[data-theme="dark"] .mc-modal{--mc-soft:rgba(255,255,255,.05);--mc-cmpl:rgba(255,255,255,.1);--mc-off:rgba(244,241,234,.22);--mc-offTx:rgba(244,241,234,.7)}
+.mc-modal button,.mc-modal input,.mc-modal select,.mc-modal textarea{font-family:inherit;font-variant-numeric:tabular-nums}
+.mc-mdl{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;width:100%;max-width:540px;min-width:0;
   max-height:calc(100vh - 40px);display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(14,24,48,.25)}
-.mc-mdl-hd{display:flex;align-items:flex-start;gap:12px;padding:22px 24px 0}
-/* dentro del modal no hay Playfair: el título va en Plex Sans 600 */
-.mc-mdl-hd h3{font:600 20px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:-.01em;color:var(--v3-ink);margin:0;line-height:1.25;flex:1;min-width:0}
-.mc-mdl-x{font-size:17px;line-height:1;color:var(--v3-mut);background:none;border:1px solid transparent;border-radius:6px;
+.mc-mdl-hd{display:flex;align-items:flex-start;gap:12px;padding:26px 26px 0}
+.mc-mdl-hd h3{font:600 22px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:-.01em;color:var(--v3-ink);margin:0;line-height:1.25;flex:1;min-width:0}
+.mc-mdl-x{font-size:17px;line-height:1;color:var(--v3-mut);background:none;border:1px solid transparent;border-radius:8px;
   cursor:pointer;padding:5px 9px;flex:none}
 .mc-mdl-x:hover{color:var(--v3-ink);border-color:var(--v3-line)}
-.mc-mdl .mc-tabs{margin:14px 24px 0}
+.mc-mdl .mc-tabs{margin:14px 26px 0}
 /* overscroll-behavior: llegar al final del modal no arrastra la página de atrás */
-.mc-mdl-bd{padding:16px 24px 6px;overflow-y:auto;overscroll-behavior:contain;flex:1;min-height:0}
-.mc-mdl-pie{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;
-  padding:14px 24px 20px;border-top:1px solid var(--v3-line)}
-.mc-mdl-pie .mc-msg{margin:0;margin-right:auto;flex:1 1 170px;min-width:0;line-height:1.5}
+.mc-mdl-bd{padding:18px 26px 6px;overflow-y:auto;overscroll-behavior:contain;flex:1;min-height:0}
+.mc-mdl-pie{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;padding:14px 26px 22px;border-top:1px solid var(--v3-line2)}
+.mc-mdl-pie .mc-msg{margin:0;margin-right:auto;flex:1 1 170px;min-width:0}
 .mc-gr{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:14px}
-.mc-mdl label,.mc-mdl .mc-lbl{display:block;font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;
+.mc-mdl label,.mc-mdl .mc-lbl{display:block;font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;
   color:var(--v3-sub);margin-bottom:6px}
-.mc-mdl input,.mc-mdl select{width:100%;box-sizing:border-box;padding:10px 12px;background:var(--v3-card);
-  border:1px solid var(--v3-line);border-radius:8px;color:var(--v3-ink);font:400 14px 'IBM Plex Sans',system-ui,sans-serif;outline:none}
-.mc-mdl select{font-size:13.5px}
-.mc-mdl input:focus,.mc-mdl select:focus{border-color:var(--mc-acc)}
-.mc-mdl input#mc-ticker{font:600 14px 'IBM Plex Mono',monospace;text-transform:uppercase}
-/* el nombre no se escribe: sale del catálogo (activos.js y catalogo-activos.js) */
-.mc-mdl .fijo{box-sizing:border-box;font:500 13.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut);padding:10px 12px;
-  border:1px solid var(--v3-line);border-radius:8px;background:var(--mc-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-mdl input,.mc-mdl select{width:100%;box-sizing:border-box;padding:10px 12px;background:var(--v3-input);
+  border:1px solid var(--v3-line);border-radius:8px;color:var(--v3-ink);font:500 15px 'IBM Plex Sans',system-ui,sans-serif;outline:none}
+.mc-mdl select{font-size:14.5px}
+.mc-mdl input:focus,.mc-mdl select:focus{border-color:var(--v3-focus)}
+.mc-mdl input#mc-ticker{font:600 15.5px 'IBM Plex Sans',sans-serif;text-transform:uppercase}
+/* el nombre no se escribe: sale del catálogo (activos.js y catalogo-activos.js),
+   con el tipo que le da ese mismo catálogo al lado */
+.mc-mdl .fijo{display:flex;align-items:center;gap:8px;box-sizing:border-box;font:500 15px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut);
+  padding:10px 12px;border:1px solid var(--v3-line);border-radius:8px;background:var(--mc-soft);min-width:0}
+.mc-mdl .fijo .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mc-mdl .fijo.ok{color:var(--v3-ink)}
-.mc-sub{font-size:11.5px;color:var(--v3-mut);line-height:1.6;margin-top:8px;min-height:1px}
-.mc-sub b{color:var(--v3-sub);font:600 11.5px 'IBM Plex Mono',monospace}
+.mc-mdl .fijo .tp{flex:none;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;
+  border-radius:6px;color:var(--v3-sub);background:var(--v3-neutro);font-style:normal}
+.mc-sub{font-size:13px;color:var(--v3-mut);line-height:1.6;margin-top:8px;min-height:1px}
+.mc-sub b{color:var(--v3-sub);font-weight:600}
 /* la sugerencia del catálogo ("IBIT es un CEDEAR en BYMA y un ETF en EE.UU.") y
    el motivo por el que con ese mercado no se guarda */
 .mc-sub .warn{color:var(--v3-warn)}
 .mc-sub .bad{color:var(--v3-dn)}
 /* el precio de referencia, debajo de "Se guarda como…" (como Senta): último
    precio y cierre anterior con la hora del dato y, en los CEDEARs, el ratio y
-   el subyacente. Caja gris tenue como las fijas (nada de crema), Plex Sans con
-   cifras tabulares; el botón es el chico de los choques de mercado */
-.mc-ref{margin-top:10px;padding:9px 12px;border:1px solid var(--v3-line);border-radius:8px;background:var(--mc-soft);
-  font:400 12px/1.6 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-sub);font-variant-numeric:tabular-nums}
+   el subyacente. Caja gris tenue como las fijas; el botón es el chico de los
+   choques de mercado */
+.mc-ref{margin-top:10px;padding:9px 12px;border:1px solid var(--v3-line);border-radius:10px;background:var(--mc-soft);
+  font:400 13px/1.6 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-sub)}
 .mc-ref[hidden]{display:none}
 .mc-ref b{font-weight:600;color:var(--v3-ink)}
-.mc-ref small{font-size:11px;color:var(--v3-mut)}
+.mc-ref small{font-size:12px;color:var(--v3-mut)}
 .mc-ref-p{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
 .mc-ref-p>span{flex:1 1 220px;min-width:0}
 .mc-ref-l+.mc-ref-p,.mc-ref-p+.mc-ref-l{margin-top:3px}
 .mc-ref .mc-sug-b{padding:4px 10px;flex:none}
 /* los botones de un clic del choque de mercado ("Cargarlo en BYMA (NVDA.BA)"):
-   secundarios, blancos con borde */
+   secundarios del §0 */
 .mc-sug-bs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.mc-sug-b{font:600 11px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);background:var(--v3-card);border:1px solid var(--v3-line);
-  border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s}
-.mc-sug-b:hover{border-color:var(--v3-ink)}
+.mc-sug-b{font:600 12px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-selTx);background:var(--v3-selBg);border:1px solid var(--v3-sel);
+  border-radius:8px;padding:6px 10px;cursor:pointer;transition:border-color .15s,color .15s}
+.mc-sug-b:hover{border-color:var(--v3-selOn);color:var(--v3-selOnTx)}
 /* ── las sugerencias del catálogo debajo del símbolo: lista propia (listbox),
    posicionada absoluta para que al abrirse no empuje los campos de compras ── */
 .mc-sug{position:relative}
@@ -371,9 +411,9 @@ select.mc-brk-in{width:auto;max-width:200px}
   max-height:min(264px,44vh);overflow-y:auto;overscroll-behavior:contain;background:var(--v3-card);border:1px solid var(--v3-line);
   border-radius:8px;box-shadow:0 12px 32px rgba(14,24,48,.14)}
 .mc-sug-l[hidden]{display:none}
-.mc-sug-l li{padding:7px 10px;border-radius:6px;font-size:12.5px;color:var(--v3-sub);cursor:pointer;white-space:nowrap;
+.mc-sug-l li{padding:7px 10px;border-radius:6px;font-size:14px;color:var(--v3-sub);cursor:pointer;white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis}
-.mc-sug-l li b{font:600 12.5px 'IBM Plex Mono',monospace;color:var(--v3-ink)}
+.mc-sug-l li b{font-weight:600;color:var(--v3-ink)}
 .mc-sug-l li span{color:var(--v3-mut)}
 .mc-sug-l li.hl{background:var(--mc-soft)}
 /* ── el broker: un <select> con la lista entera y, con «Otro…», un campo corto al lado ── */
@@ -381,145 +421,155 @@ select.mc-brk-in{width:auto;max-width:200px}
 .mc-bk select{flex:1 1 auto;min-width:0}
 .mc-bk-otro{flex:0 1 46%;min-width:0}
 .mc-bk-otro[hidden]{display:none}
-.mc-k2{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-sub);margin:20px 0 8px}
+/* "Movimientos": acá van solo compras (las ventas, con «Vendí» en la fila) */
+.mc-k2{display:flex;align-items:baseline;justify-content:space-between;gap:4px 12px;flex-wrap:wrap;
+  font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--v3-sub);margin:20px 0 8px}
+.mc-k2 small{font:400 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:0;text-transform:none;color:var(--v3-mut)}
 .mc-cmps{display:flex;flex-direction:column;gap:8px}
-.mc-cmp-hd,.mc-cmp{display:grid;grid-template-columns:1.15fr .85fr .95fr 28px;gap:8px;align-items:center}
-.mc-cmp-hd{font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);padding:0 9px 2px}
-.mc-cmp{border:1px solid var(--v3-line);border-radius:9px;padding:8px}
-.mc-cmp input{padding:8px;border-radius:6px;border-color:var(--v3-line2);font:500 12.5px 'IBM Plex Mono',monospace;
-  font-variant-numeric:tabular-nums;min-width:0}
+.mc-cmp-hd,.mc-cmp{display:grid;grid-template-columns:1.1fr .72fr .9fr 1fr 24px;gap:8px;align-items:center}
+.mc-cmp-hd{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);padding:0 9px 2px}
+.mc-cmp{border:1px solid var(--v3-line);border-radius:10px;padding:8px}
+.mc-cmp input{padding:8px;border-radius:6px;border-color:var(--mc-cmpl);font:500 14px 'IBM Plex Sans',sans-serif;min-width:0}
 /* cantidad y precio son campos de texto (aceptan coma o punto): la alineación
    va por el data-*, no por el type */
 .mc-cmp [data-c-cant],.mc-cmp [data-c-px]{text-align:right}
-.mc-cmp-x{background:none;border:none;color:var(--v3-mut);font-size:16px;line-height:1;cursor:pointer;padding:4px;border-radius:5px}
+/* el tipo del movimiento: siempre Compra (no es un selector: las ventas no van acá) */
+.mc-cmp-tipo{font:500 14px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);padding:8px;border:1px solid var(--mc-cmpl);border-radius:6px;
+  background:var(--mc-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mc-cmp-x{background:none;border:none;color:var(--v3-mut);font-size:16.5px;line-height:1;cursor:pointer;padding:4px;border-radius:6px;text-align:center}
 .mc-cmp-x:hover{color:var(--v3-dn)}
 .mc-cmp-x[disabled]{opacity:.3;cursor:default}
-.mc-mas{font:600 12px 'IBM Plex Sans',sans-serif;color:var(--mc-acc);background:none;border:none;cursor:pointer;padding:9px 0 2px}
+.mc-mas{font:600 13.5px 'IBM Plex Sans',sans-serif;color:var(--v3-serie);background:none;border:none;cursor:pointer;padding:10px 0 2px}
 .mc-mas:hover{text-decoration:underline}
-/* el resumen: caja blanca con línea, sin fondo crema */
-.mc-res{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:9px;padding:12px 14px;margin-top:16px;font-size:12.5px;color:var(--v3-sub)}
+/* el precio promedio en vivo: la caja gris del prototipo, con la posición y el total invertido */
+.mc-res{background:var(--mc-soft);border-radius:9px;padding:12px 14px;margin-top:18px;font-size:14px;color:var(--v3-sub)}
 .mc-res .f{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
-.mc-res .f+.f{margin-top:7px}
-/* el Mono y el nowrap son para los NÚMEROS (los dos renglones de arriba). La
-   nota de abajo es prosa: si hereda esto, la frase de la cantidad negativa sale
-   en Mono de 14 px y en un solo renglón de 470 px, y el cuerpo del modal se
-   desplaza para el costado a 375 px justo cuando hay algo para leer. */
-.mc-res .f b{font:600 14px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-ink);white-space:nowrap}
-.mc-res .nota{font-size:11.5px;color:var(--v3-mut);line-height:1.6;margin-top:9px}
-.mc-res .nota b{font:600 11.5px 'IBM Plex Sans',system-ui,sans-serif;color:inherit;white-space:normal}
-.mc-res .nota.bad{color:var(--v3-dn)}
-.mc-imp textarea{width:100%;min-height:120px;padding:12px;background:var(--v3-card);border:1px solid var(--v3-line);border-radius:6px;
-  color:var(--v3-ink);font:400 12.5px 'IBM Plex Mono',ui-monospace,monospace;outline:none;resize:vertical}
-.mc-imp textarea:focus{border-color:var(--mc-acc)}
-/* los botones del modal: navy sólido con texto blanco (en oscuro, dorado claro
-   con texto navy: ver --mc-acc) y el secundario blanco con borde. Las pestañas
-   de arriba subrayan con el mismo acento: nada dorado adentro del modal. */
-.mc-modal .mc-btn{background:var(--mc-acc);border-color:var(--mc-acc);color:var(--mc-accTx)}
-.mc-modal .mc-btn:hover{background:var(--mc-acc);border-color:var(--mc-acc);color:var(--mc-accTx);opacity:.86}
-.mc-modal .mc-btn[disabled],.mc-modal .mc-btn[disabled]:hover{opacity:.4}
-.mc-modal .mc-btn.sec,.mc-modal .mc-btn.sec:hover{background:var(--v3-card);color:var(--v3-ink);border-color:var(--v3-line);opacity:1}
-.mc-modal .mc-btn.sec:hover{border-color:var(--v3-ink)}
-.mc-modal .mc-tab.on{border-bottom-color:var(--mc-acc)}
-.mc-hint{font-size:11.5px;color:var(--v3-mut);line-height:1.7;margin:8px 0 12px}
+.mc-res .f+.f{margin-top:6px}
+.mc-res .f b{font:600 15.5px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);white-space:nowrap}
+.mc-res .f.sec{font-size:13px}
+.mc-res .f.sec b{font-size:14px;font-weight:500}
+/* la nota de abajo es prosa (la cantidad negativa, las compras sin precio, de
+   dónde sale el precio de hoy): renglones normales, nunca nowrap */
+.mc-res-nota{font-size:13px;color:var(--v3-mut);line-height:1.6;margin-top:8px}
+.mc-res-nota b{font-weight:600;color:inherit}
+.mc-res-nota.bad{color:var(--v3-dn)}
+.mc-imp textarea{width:100%;box-sizing:border-box;min-height:120px;padding:12px;background:var(--v3-input);border:1px solid var(--v3-line);border-radius:8px;
+  color:var(--v3-ink);font:400 14px 'IBM Plex Sans',system-ui,sans-serif;outline:none;resize:vertical}
+.mc-imp textarea:focus{border-color:var(--v3-focus)}
+/* los botones del modal: el prototipo los pone en Sans 600 14 px, sin mayúsculas */
+.mc-modal .mc-btn{font:600 14px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:0;text-transform:none;padding:10px 20px}
+.mc-modal .mc-btn.sec{padding:10px 16px}
+/* Guardar "apagado" (sin símbolo o sin cantidad, SPEC): se ve gris pero se puede
+   tocar, y al tocarlo dice qué falta en vez de quedarse callado */
+.mc-modal .mc-btn[aria-disabled="true"],.mc-modal .mc-btn[aria-disabled="true"]:hover{background:var(--mc-off);border-color:var(--mc-off);color:var(--mc-offTx)}
+.mc-hint{font-size:13px;color:var(--v3-mut);line-height:1.7;margin:8px 0 12px}
 .mc-hint b{color:var(--v3-sub)}
 .mc-prev{margin-top:12px;border:1px solid var(--v3-line);border-radius:10px;overflow-x:auto}
-.mc-prev table{width:100%;border-collapse:collapse;font-size:12.5px}
-.mc-prev th{font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);padding:8px 10px;
+.mc-prev table{width:100%;border-collapse:collapse;font-size:13.5px}
+.mc-prev th{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);padding:8px 10px;
   border-bottom:1px solid var(--v3-line);text-align:left;white-space:nowrap}
 .mc-prev td{padding:8px 10px;border-bottom:1px solid var(--v3-line2);color:var(--v3-ink);white-space:nowrap}
 .mc-prev tr:last-child td{border-bottom:none}
 .mc-bad{color:var(--v3-dn)}
-.mc-subnav{font-size:12px;color:var(--v3-mut);margin:8px 0 0}
+.mc-subnav{font-size:13px;color:var(--v3-mut);margin:8px 0 0}
 .mc-subnav a{color:var(--v3-gold);text-decoration:none;font-weight:600}
 .mc-subnav a:hover{color:var(--v3-gold2)}
 .mc-subnav span{margin:0 4px}
 
-/* ── estados vacíos y pie ── */
+/* ── estados: cargando (esqueletos del SPEC, con la altura de las cards), vacío y pie ── */
+.mc-skel{display:block;background:var(--v3-skel);border-radius:12px;animation:mc-pulso 1.4s ease-in-out infinite}
+.mc-skel+.mc-skel,.mc-skel+.mc-skel2,.mc-skel2+.mc-skel{margin-top:14px}
+.mc-skel2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:14px}
+.mc-skel2 .mc-skel{margin:0}
+@keyframes mc-pulso{50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.mc-skel{animation:none}}
+.mc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .mc-empty{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;padding:34px 28px;text-align:center}
-.mc-empty h4{font:700 20px 'Playfair Display',serif;color:var(--v3-ink);margin-bottom:8px;line-height:1.2}
-.mc-empty p{font-size:13px;color:var(--v3-sub);line-height:1.7;max-width:520px;margin:0 auto}
-.mc-cargando{color:var(--v3-sub);font-size:13px}
-.mc-foot{font-size:11px;color:var(--v3-mut);line-height:1.7;margin-top:22px;max-width:860px}
+.mc-empty h4{font:600 20px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);margin:0 0 8px;line-height:1.25}
+.mc-empty p{font-size:14px;color:var(--v3-sub);line-height:1.7;max-width:520px;margin:0 auto}
+.mc-cargando{color:var(--v3-sub);font-size:14px}
+.mc-foot{font-size:12.5px;color:var(--v3-mut);line-height:1.7;margin-top:22px;max-width:860px;text-align:justify;hyphens:auto}
 
 /* ── lectura, análisis y renta fija ── */
 .mc-lect{background:var(--v3-card);border:1px solid var(--v3-line);border-left:3px solid var(--v3-gold);border-radius:12px;
-  padding:14px 18px;margin-top:22px;font-size:13px;color:var(--v3-sub);line-height:1.7}
+  padding:14px 18px;margin-top:22px;font-size:14px;color:var(--v3-sub);line-height:1.7}
 .mc-lect b{color:var(--v3-ink)}
 .mc-an{margin-top:26px}
-.mc-an h4,.mc-ventas h4{font:700 19px 'Playfair Display',serif;color:var(--v3-ink);margin:0 0 6px;line-height:1.2}
-.mc-an .sub,.mc-ventas .sub{font-size:12.5px;color:var(--v3-mut);line-height:1.6;margin-bottom:14px;max-width:780px}
+.mc-an h4,.mc-ventas h4{font:600 19px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);margin:0 0 6px;line-height:1.3}
+.mc-an .sub,.mc-ventas .sub{font-size:13.5px;color:var(--v3-mut);line-height:1.6;margin-bottom:14px;max-width:780px}
 .mc-angrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:14px}
 .mc-anbox{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;padding:16px 18px;min-width:0;overflow-x:auto}
-.mc-anbox .t{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);margin-bottom:12px}
-.mc-bar{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12.5px}
+.mc-anbox .t{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);margin-bottom:12px}
+.mc-bar{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:13px}
 .mc-bar .n{flex:none;width:104px;color:var(--v3-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mc-bar .t2{flex:1;height:6px;background:var(--v3-track2);border-radius:3px;overflow:hidden}
 .mc-bar .t2 i{display:block;height:100%;background:var(--v3-gold);border-radius:3px}
-.mc-bar .p{flex:none;width:46px;text-align:right;color:var(--v3-sub);font:500 11.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
-.mc-anbox .nota{font-size:11.5px;color:var(--v3-mut);line-height:1.6;margin-top:10px}
+.mc-bar .p{flex:none;width:46px;text-align:right;color:var(--v3-sub);font:500 13px 'IBM Plex Sans',sans-serif}
+.mc-anbox .nota{font-size:12.5px;color:var(--v3-mut);line-height:1.6;margin-top:10px}
 .mc-anbox .nota b{color:var(--v3-ink)}
-.mc-rf{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
-.mc-rf th{font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--v3-mut);padding:7px 8px;
+.mc-rf{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:4px}
+.mc-rf th{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--v3-mut);padding:7px 8px;
   border-bottom:1px solid var(--v3-line);text-align:right;white-space:nowrap}
 .mc-rf th:first-child,.mc-rf td:first-child{text-align:left}
 .mc-rf td{padding:7px 8px;border-bottom:1px solid var(--v3-line2);color:var(--v3-ink);text-align:right;
-  font:500 12px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
-.mc-rf td:first-child b{font:700 12px 'IBM Plex Sans',sans-serif;color:var(--v3-gold)}
+  font:500 13.5px 'IBM Plex Sans',sans-serif;white-space:nowrap}
+.mc-rf td:first-child b{font:700 13.5px 'IBM Plex Sans',sans-serif;color:var(--v3-gold)}
 .mc-rf tr:last-child td{border-bottom:none}
 
 /* ── ventas y resultado realizado ── */
 .mc-ventas{margin-top:26px}
 .mc-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:14px;margin-bottom:14px}
 .mc-k{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;padding:14px 16px}
-.mc-k .l{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);margin-bottom:9px}
-.mc-k .v{font:600 22px 'IBM Plex Mono',monospace;line-height:1.1;color:var(--v3-ink);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.mc-k .l{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);margin-bottom:9px}
+.mc-k .v{font:600 22px 'IBM Plex Sans',sans-serif;line-height:1.15;color:var(--v3-ink);letter-spacing:-.01em}
 .mc-k .v.mc-pos{color:var(--v3-up)}.mc-k .v.mc-neg{color:var(--v3-dn)}
-.mc-k .s{font-size:11px;color:var(--v3-mut);margin-top:5px}
+.mc-k .s{font-size:12.5px;color:var(--v3-mut);margin-top:5px}
 .mc-tblwrap{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;overflow-x:auto}
-.mc-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:720px}
-.mc-tbl th{font:700 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);
-  padding:10px 12px;border-bottom:1px solid var(--v3-line);text-align:right;white-space:nowrap}
+.mc-tbl{width:100%;border-collapse:collapse;font-size:14px;min-width:720px}
+.mc-tbl th{font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);
+  padding:12px 12px 10px;border-bottom:1px solid var(--v3-line);text-align:right;white-space:nowrap}
 .mc-tbl th.l{text-align:left}
-.mc-tbl td{padding:11px 12px;border-bottom:1px solid var(--v3-line2);color:var(--v3-ink);text-align:right;
-  font:500 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
-.mc-tbl td.l{text-align:left;font:400 13px 'IBM Plex Sans',system-ui,sans-serif}
+.mc-tbl td{padding:12px;border-bottom:1px solid var(--v3-line2);color:var(--v3-ink);text-align:right;
+  font:500 14px 'IBM Plex Sans',sans-serif;white-space:nowrap}
+.mc-tbl td.l{text-align:left;font:400 14px 'IBM Plex Sans',system-ui,sans-serif}
 .mc-tbl td.mc-pos{color:var(--v3-up)}.mc-tbl td.mc-neg{color:var(--v3-dn)}.mc-tbl td.mc-mut{color:var(--v3-mut)}
 .mc-tbl tr:last-child td{border-bottom:none}
 .mc-tbl tbody tr:hover td{background:var(--v3-hover)}
-.mc-tk{font:700 13px 'IBM Plex Sans',sans-serif;color:var(--v3-gold)}
-.mc-nm{display:block;font:400 11px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut)}
+.mc-tk{font:700 14px 'IBM Plex Sans',sans-serif;color:var(--v3-gold)}
+.mc-nm{display:block;font:400 12.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut)}
 
 /* ── angosto: la fila pasa a cuatro líneas, sin scroll horizontal ──
    Se mide la CAJA de la tabla (no la ventana): con el lateral abierto, entre
-   920 y ~1180 px la grilla de 990 px tampoco entra. El corte es el ancho
+   920 y ~1230 px la grilla de 946 px puede no entrar. El corte es el ancho
    mínimo de .mc3-in menos uno: así no queda ninguna franja en la que la vista
    ancha esté puesta pero la fila no entre. Sin container queries (navegadores
    viejos) queda el scroll dentro de la caja, como el prototipo. */
 .mc3-tbl{container-type:inline-size;container-name:mc3t}
-@container mc3t (max-width:989px){
+@container mc3t (max-width:945px){
   .mc3-in{min-width:0}
   /* el encabezado no desaparece: queda como una línea de "ordenar por" (en el
      celular también se ordena, como antes) */
   .mc3-hd{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;padding:10px 14px}
   .mc3-hd::before{content:"Ordenar:";font-weight:600;color:var(--v3-mut)}
   .mc3-hd>span:last-child{display:none}
-  /* "Hoy" no entra en la línea de Valor y Resultado sin apretar los números:
+  .mc3-hd .r{text-align:left}
+  /* "Hoy" no entra en la línea de Valor y Ganancia sin apretar los números:
      va abajo, en su propio renglón y con el rótulo adelante */
   .mc3-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 14px;
     grid-template-areas:"act act rot" "meta meta rot" "val pl rot" "hoy hoy rot";
     gap:6px 12px;padding:12px 14px}
   .mc3-row>.c-act{grid-area:act}
   /* la línea de resumen puede saltar: con las compras juntas el broker dice
-     "IOL + Balanz" y en un solo renglón el precio de hoy quedaba cortado ("$90.…") */
+     "IOL + Balanz" y en un solo renglón el precio de hoy quedaba cortado */
   .mc3-row>.c-meta{display:block;grid-area:meta;white-space:normal}
   .mc3-row>.c-val{grid-area:val;text-align:left}
   .mc3-row>.c-pl{grid-area:pl}
-  .mc3-row>.c-hoy{grid-area:hoy;text-align:left;font-size:12px}
+  .mc3-row>.c-hoy{grid-area:hoy;text-align:left;font-size:13.5px}
   .mc3-row>.c-hoy .mc3-hoyk{display:inline}
   .mc3-row>.c-hoy small{display:inline;margin:0 0 0 6px}
   .mc3-row>.c-rot{grid-area:rot;align-self:center}
-  .mc3-row>.c-brk,.mc3-row>.c-cnt,.mc3-row>.c-px{display:none}
-  .mc3-grp{padding:9px 14px}
+  .mc3-row>.c-cnt,.mc3-row>.c-px{display:none}
+  .mc3-grp{padding:14px 14px 8px}
   .mc3-fix{margin:12px 14px 0}
   .mc3-mets{padding:14px 14px 0}
   .mc3-cols{padding:14px 14px 18px}
@@ -527,10 +577,13 @@ select.mc-brk-in{width:auto;max-width:200px}
   .mc3-alw{padding:0 14px 18px}
   .mc-vrow{padding:12px 14px}
 }
-/* en el celular el modal ocupa toda la pantalla, y la compra pasa a dos
-   renglones (fecha arriba, cantidad y precio abajo): a 375 px entra sin
-   desplazamiento horizontal */
 @media (max-width:640px){
+  .mc3-res{padding:16px}
+  .mc3-total{font-size:32px}
+  .mc3-ten-hd{padding:14px 14px 6px}
+  /* en el celular el modal ocupa toda la pantalla, y la compra pasa a dos
+     renglones (fecha y tipo arriba, cantidad y precio abajo): a 375 px entra
+     sin desplazamiento horizontal */
   .mc-modal{padding:0}
   .mc-mdl{max-width:none;height:100%;max-height:none;border:none;border-radius:0}
   .mc-mdl-hd{padding:16px 16px 0}
@@ -541,8 +594,9 @@ select.mc-brk-in{width:auto;max-width:200px}
   .mc-mdl-pie{padding:12px 16px 16px}
   .mc-mdl-pie .mc-msg{flex:1 1 100%;margin-right:0}
   .mc-cmp-hd{display:none}
-  .mc-cmp{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 28px;grid-template-areas:"fe fe qu" "ca px qu"}
+  .mc-cmp{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 28px;grid-template-areas:"fe ti qu" "ca px qu"}
   .mc-cmp>[data-c-fecha]{grid-area:fe}
+  .mc-cmp>.mc-cmp-tipo{grid-area:ti}
   .mc-cmp>[data-c-cant]{grid-area:ca}
   .mc-cmp>[data-c-px]{grid-area:px}
   .mc-cmp>.mc-cmp-x{grid-area:qu}
@@ -560,9 +614,12 @@ select.mc-brk-in{width:auto;max-width:200px}
 const BROKERS = ["IOL", "PPI", "Balanz", "Bull Market", "Cocos", "Allaria", "Eco Valores", "Adcap", "SBS", "Rava", "Criteria",
                  "Veta", "TSA Bursátil", "Santander", "Galicia", "BBVA", "Macro", "ICBC", "HSBC", "Supervielle",
                  "Binance", "Lemon", "Belo", "Ripio", "Buenbit", "Bybit", "OKX", "Interactive Brokers", "Schwab", "Otro"];
-const MERCADOS = [["byma", "BYMA · pesos (acciones, CEDEARs, bonos)"],
-                  ["ext", "Exterior · dólares (NYSE / Nasdaq)"],
-                  ["cripto", "Cripto"]];
+// los nombres van cortos: en el modal el selector tiene la mitad del ancho y
+// "BYMA · pesos (acciones, CEDEARs, bonos)" se cortaba. Qué va en cada uno lo
+// dice la línea de abajo del símbolo ("En BYMA van los CEDEARs, las acciones…")
+const MERCADOS = [["byma", "BYMA · en pesos"],
+                  ["ext", "Exterior · en dólares"],
+                  ["cripto", "Cripto · en dólares"]];
 const pref = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
 const setPref = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 
@@ -946,8 +1003,11 @@ function lectura(r) {
   if (est > 0) partes.push(`<b>${est.toFixed(0)}%</b> de tu cartera está en activos que nuestra lectura marca <b>estirados</b>`);
   if (inf > 0) partes.push(`<b>${inf.toFixed(0)}%</b> en activos <b>infravalorados</b>`);
   const corto = f => esc(base(f.ticker));
-  const sobrev = conVer.filter(f => f.px.rsi != null && f.px.rsi > 70).map(corto);
-  const sobrec = conVer.filter(f => f.px.rsi != null && f.px.rsi < 30).map(corto);
+  // un activo comprado dos veces son dos filas de r: se nombra una sola vez
+  // (antes salía "NVDA, NVDA vienen sobrecomprados")
+  const unicos = arr => [...new Set(arr)];
+  const sobrev = unicos(conVer.filter(f => f.px.rsi != null && f.px.rsi > 70).map(corto));
+  const sobrec = unicos(conVer.filter(f => f.px.rsi != null && f.px.rsi < 30).map(corto));
   let extra = "";
   if (sobrev.length) extra += ` ${sobrev.join(", ")} viene${sobrev.length > 1 ? "n" : ""} sobrecomprado${sobrev.length > 1 ? "s" : ""} (RSI &gt; 70).`;
   if (sobrec.length) extra += ` ${sobrec.join(", ")} está${sobrec.length > 1 ? "n" : ""} sobrevendido${sobrec.length > 1 ? "s" : ""} (RSI &lt; 30).`;
@@ -1254,29 +1314,85 @@ let _detCache = {};       // id -> columnas ya armadas del desplegable (no parpa
 let _evCache = { email: null, t: 0, p: null };
 
 const AGRUPAR = [["ninguno", "Todas"], ["broker", "Por broker"], ["tipo", "Por tipo"]];
-const agruparPref = () => { const v = pref("valtia-mc-agrupar", "ninguno"); return AGRUPAR.some(([k]) => k === v) ? v : "ninguno"; };
-const TIPOS_ORDEN = ["Acciones y CEDEARs", "Renta fija", "Cripto"];
-const tipoDe = (tk, bonos) => { const m = mercadoDe(tk, bonos); return m === "rf" ? "Renta fija" : m === "cripto" ? "Cripto" : "Acciones y CEDEARs"; };
+/* cómo se agrupa la tabla: POR TIPO de entrada (SPEC, "Tenencias"), salvo que la
+   persona ya haya elegido otra cosa: una preferencia guardada (valtia-mc-agrupar)
+   se respeta. Lo que no es una opción válida cae en "tipo". PURA y exportada */
+export function agruparElegido(v) {
+  return AGRUPAR.some(([k]) => k === v) ? v : "tipo";
+}
+const agruparPref = () => agruparElegido(pref("valtia-mc-agrupar", ""));
 
-/* subtotales por tipo, con la misma cuenta que agruparPorBroker */
-function agruparPorTipo(filas, total, bonos) {
-  const m = new Map();
-  filas.forEach(f => { const k = tipoDe(f.ticker, bonos); if (!m.has(k)) m.set(k, []); m.get(k).push(f); });
-  return [...m.entries()].map(([nombre, fs]) => {
-    const valor = fs.reduce((a, f) => a + (f.dValor ?? 0), 0);
-    const costo = fs.reduce((a, f) => a + (f.dValor != null ? (f.dCosto ?? 0) : 0), 0);
-    return { nombre, filas: fs, valor, costo, pl: valor - costo,
-             plPct: costo > 0 ? (valor - costo) / costo * 100 : null,
-             peso: total > 0 ? valor / total * 100 : null, ...hoyDe(fs) };
-  }).sort((a, b) => b.valor - a.valor || TIPOS_ORDEN.indexOf(a.nombre) - TIPOS_ORDEN.indexOf(b.nombre));
+/* el catálogo (catalogo-activos.js) para tipoActivo: cada ticker se busca en SU
+   mercado (GGAL.BA en BYMA, GGAL en el exterior, BTC-USD en cripto), así un
+   ETF del exterior no toma el tipo de su CEDEAR. null mientras no cargó: ahí
+   tipoActivo decide con las fichas de activos.js y no afirma lo que no sabe */
+function catalogoTipo(cat = _cat) {
+  if (!cat || typeof cat.buscarCatalogo !== "function") return null;
+  return s => {
+    const t = String(s || "").trim().toUpperCase();
+    return cat.buscarCatalogo(t, /\.BA$/.test(t) ? "byma" : /-USD$/.test(t) ? "cripto" : "ext");
+  };
+}
+/* el tipo de un ticker con el criterio único (tipos-activo.js). Nunca tira.
+   El catálogo se consulta SOLO con el ticker tal cual y en su mercado: tipoActivo
+   prueba también con base(ticker), y "AOS" sin sufijo se buscaría en el exterior,
+   así un AOS.BA (que no es CEDEAR) salía "CEDEAR" por la acción de allá.
+   catMod: el módulo del catálogo (por defecto el ya cargado). Exportada para probarla */
+export function tipoDeTicker(tk, bonos, panel, catMod = _cat) {
+  try {
+    const cat = catalogoTipo(catMod);
+    const entrada = cat ? cat(tk) : null;
+    return tipoActivo(tk, { bonos: bonos || new Set(), panel: panel || null, catalogo: cat ? () => entrada : null });
+  } catch (e) { return tipoActivo(""); }
+}
+/* "CEDEAR", "Acción", "Acción EE.UU.", "ETF EE.UU.", "Bono", "Letra", "Cripto",
+   "BYMA": la segunda línea de la fila ("CEDEAR · IOL") y la pastilla del modal.
+   El "EE.UU." es lo que antes decía la marca BYMA al revés: GGAL.BA y el ADR
+   GGAL son las dos "Acción", y no son lo mismo. PURA y exportada */
+export function tipoTxt(t) {
+  if (!t || !t.n) return "";
+  return (t.k === "accion" || t.k === "etf") && t.mercado === "ext" ? `${t.n} EE.UU.` : t.n;
+}
+/* el logo de 34 px de cada fila: color por tipo (el LOGO del prototipo; el ETF
+   va como el CEDEAR, "otro" en gris) y la letra más chica si el ticker es largo.
+   PURA y exportada */
+const LOGO_TIPO = { cedear: "ced", etf: "ced", accion: "acc", bono: "rf", letra: "rf", cripto: "cri", otro: "otro" };
+export function logoClase(k, tk) {
+  const n = String(tk || "").length;
+  return (LOGO_TIPO[k] || "otro") + (n >= 6 ? " l6" : n === 5 ? " l5" : "");
 }
 
-// tramos de la barra de pesos, en este orden (paleta de Noticias): serie, gold,
-// goldL, up, azul, mut. Van por variables locales (.mc-wrap) para el tema oscuro
-const PALETA = ["var(--mc3-p1)", "var(--mc3-p2)", "var(--mc3-p3)", "var(--mc3-p4)", "var(--mc3-p5)", "var(--mc3-p6)"];
+/* subtotales por tipo (los grupos de tipos-activo.js: CEDEARs, Acciones, ETFs,
+   Bonos, Letras, Cripto, Otros), con la misma cuenta que agruparPorBroker.
+   tipoDe(fila) -> { k } (tipoActivo). Orden: el grupo que más vale primero y, a
+   igual valor, el de GRUPOS_TIPO. PURA y exportada para probarla */
+export function agruparPorTipo(filas, total, tipoDe) {
+  const orden = GRUPOS_TIPO.map(([k]) => k);
+  const m = new Map();
+  (filas || []).forEach(f => {
+    const t = (typeof tipoDe === "function" ? tipoDe(f) : null) || {};
+    const k = orden.includes(t.k) ? t.k : "otro";
+    if (!m.has(k)) m.set(k, []);
+    m.get(k).push(f);
+  });
+  return [...m.entries()].map(([k, fs]) => {
+    const valor = fs.reduce((a, f) => a + (f.dValor ?? 0), 0);
+    const costo = fs.reduce((a, f) => a + (f.dValor != null ? (f.dCosto ?? 0) : 0), 0);
+    return { k, nombre: (GRUPOS_TIPO.find(([x]) => x === k) || [k, "Otros"])[1], filas: fs, valor, costo, pl: valor - costo,
+             plPct: costo > 0 ? (valor - costo) / costo * 100 : null,
+             peso: total > 0 ? valor / total * 100 : null, ...hoyDe(fs) };
+  }).sort((a, b) => b.valor - a.valor || orden.indexOf(a.k) - orden.indexOf(b.k));
+}
+
+// tramos de la barra de pesos: los siete colores del prototipo, en su orden
+// (navy, verde, dorado suave, verde agua, dorado, azul, gris). Van por variables
+// locales (.mc-wrap) para el tema oscuro
+const PALETA = ["var(--mc3-p1)", "var(--mc3-p2)", "var(--mc3-p3)", "var(--mc3-p4)", "var(--mc3-p5)", "var(--mc3-p6)", "var(--mc3-p7)"];
 
 const cantFmt = n => (Number(n) || 0).toLocaleString("es-AR", { maximumFractionDigits: 8 });
 const pct1 = n => n == null || !isFinite(n) ? "—" : (n >= 0 ? "+" : "−") + Math.abs(n).toFixed(1).replace(".", ",") + "%";
+// con dos decimales: la variación del día de toda la cartera suele ser chica (+0,14%)
+const pct2 = n => n == null || !isFinite(n) ? "—" : (n >= 0 ? "+" : "−") + Math.abs(n).toFixed(2).replace(".", ",") + "%";
 const isoOk = iso => /^\d{4}-\d{2}-\d{2}$/.test(String(iso || "").slice(0, 10));
 const ddmm = iso => isoOk(iso) ? String(iso).slice(8, 10) + "/" + String(iso).slice(5, 7) : "";
 const MES_AB = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
@@ -1330,7 +1446,9 @@ function graficos_(r, cur) {
   const maxPos = Math.max(0, ...res.map(a => a.pl)), maxNeg = Math.max(0, ...res.map(a => -a.pl));
   const k0 = Math.min(maxPos > 0 ? (100 - cero) / maxPos : Infinity, maxNeg > 0 ? cero / maxNeg : Infinity);
   const k = isFinite(k0) ? k0 : 0;
-  const ancho = Math.max(64, Math.ceil(Math.max(0, ...res.map(a => moneyS(a.pl, cur).length)) * 7.1) + 2);
+  // la columna del monto: 64 px como el prototipo, o lo que pida el más largo
+  // (unos 7,8 px por carácter en Plex Sans 600 de 13 px con cifras tabulares)
+  const ancho = Math.max(64, Math.ceil(Math.max(0, ...res.map(a => moneyS(a.pl, cur).length)) * 7.8) + 2);
   const barra = a => {
     const w = Math.max(a.pl !== 0 ? 0.8 : 0, Math.abs(a.pl) * k);
     const izq = a.pl < 0 ? Math.max(0, cero - w) : cero;
@@ -2034,8 +2152,20 @@ function instalarDelegado(el) {
       if (n) try { n.focus(); } catch (e) {}
       return;
     }
+    // "+ Agregar" de Tenencias y "+ Agregar posición" del estado vacío: el modal
+    // de alta (el "+ Agregar" del encabezado lo maneja panel.js con __mcAbrirForm)
+    const ab = t.closest("[data-mc-abrir]");
+    if (ab) { ev.preventDefault(); abrirFormulario(true); return; }
     const g = t.closest("[data-agrupar]");
-    if (g) { ev.preventDefault(); setPref("valtia-mc-agrupar", g.dataset.agrupar); repintar(); return; }
+    if (g) {
+      ev.preventDefault();
+      setPref("valtia-mc-agrupar", g.dataset.agrupar);
+      repintar();
+      // el repintado rehace los botones: el foco vuelve al elegido, para el teclado
+      const n = [...el.querySelectorAll("[data-agrupar]")].find(x => x.dataset.agrupar === g.dataset.agrupar);
+      if (n) try { n.focus(); } catch (e) {}
+      return;
+    }
     const s = t.closest(".mc3-hd [data-col]");
     if (s) { ev.preventDefault(); ordenar(s.dataset.col); return; }
     const row = t.closest(".mc3-row[data-fila]");
@@ -2073,6 +2203,51 @@ function instalarDelegado(el) {
   });
 }
 
+/* el nombre de la fila: el del sync (precios/{tk}.nombre), el de la ficha
+   (activos.js) o el del catálogo (catalogo-activos.js, si ya cargó). El genérico
+   de la renta fija completada desde el panel ("Renta fija BYMA · cotiza por 100
+   VN") no es un nombre. "" si no hay ninguno: la fila muestra el ticker */
+function nombreFila(f, bonos) {
+  const px = f.px || {}, T = String(f.ticker || "").toUpperCase(), tk = base(T);
+  const n = String(px.nombre || "").trim();
+  if (n && !px.delPanel && n.toUpperCase() !== T && n.toUpperCase() !== tk) return n;
+  const nd = nombreDe(T);
+  if (nd && nd !== tk) return nd;
+  if (!_cat) return "";
+  // la renta fija está en el catálogo de BYMA y se guarda sin sufijo
+  const e = esRentaFija(T, bonos) ? _cat.buscarCatalogo(tk, "byma") : (catalogoTipo() || (() => null))(T);
+  return e && e.n ? String(e.n) : "";
+}
+
+/* los cuatro tiles de la card de resumen (prototipo: carteraKpis): Hoy ($ y %),
+   Resultado no realizado ($ y %), Invertido y Con precio (k de n). Los importes
+   son los de calcular() —sumados por compra, como siempre— y las cuentas van por
+   activo. Sin dato no se inventa: un guion. Con "Ocultar $" los montos se tapan
+   y los porcentajes quedan. Devuelve [{ k, l, v (html), c (clase), s, t }]. PURA
+   y exportada para probarla (salvo por "Ocultar $", que lee el estado del módulo) */
+export function kpisCartera(r, { n = 0, conPrecio = 0, hoySin = 0, cur = "ARS", sinDolar = false } = {}) {
+  // el monto y el % van cada uno entero: si no entran juntos, el % baja de renglón
+  const par = (m, p) => `<span>${m}</span>${p ? ` <span>(${p})</span>` : ""}`;
+  const cls = v => v == null || !isFinite(v) ? "" : v >= 0 ? "mc-pos" : "mc-neg";
+  const hoyOk = !sinDolar && r && r.hoyTot != null;
+  const fuera = Math.max(0, n - conPrecio);
+  return [
+    { k: "hoy", l: "Hoy", v: hoyOk ? par(moneyS(r.hoyTot, cur), r.hoyTotPct != null ? pct2(r.hoyTotPct) : "") : "—",
+      c: hoyOk ? cls(r.hoyTot) : "",
+      s: !sinDolar && hoySin > 0 ? `${hoySin} ${hoySin === 1 ? "posición" : "posiciones"} sin variación del día` : "",
+      t: "Lo que se movió tu cartera hoy, contra el cierre de ayer" },
+    { k: "pl", l: "Resultado · no realizado", v: sinDolar || !r ? "—" : par(moneyS(r.plTot, cur), r.plTotPct != null ? pct1(r.plTotPct) : ""),
+      c: sinDolar || !r ? "" : cls(r.plTot), s: "",
+      t: sinDolar || !r ? "" : `Lo que va ganando o perdiendo lo que tenés, sobre ${money(r.costoTot, cur)} invertidos. Lo que ya vendiste está más abajo, en Ventas y resultado realizado` },
+    { k: "inv", l: "Invertido", v: sinDolar || !r ? "—" : money(r.costoTot, cur), c: "",
+      s: !sinDolar && fuera > 0 ? `sin contar ${fuera === 1 ? "la que no tiene" : `las ${fuera} que no tienen`} precio` : "",
+      t: "Lo que pagaste por las posiciones que ya tienen precio" },
+    { k: "con", l: "Con precio", v: `${conPrecio} de ${n}`, c: "",
+      s: fuera > 0 ? `${fuera === 1 ? "1 queda" : `${fuera} quedan`} fuera del total hasta que llegue su precio` : "",
+      t: "Cuántos de tus activos ya tienen precio" },
+  ];
+}
+
 /* ── render puro: se puede llamar con datos de prueba ── */
 export function renderMiCartera(el, posiciones, precios, opts = {}) {
   asegurarEstilo();
@@ -2083,6 +2258,7 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   const r = calcular(posiciones, precios, _cur, _fx, _bonos, opts.panel || _panel);
   const cur = curLabel();
   const bonos = opts.bonos || new Set();
+  const panelRF = opts.panel || _panel;
   // la fila que estaba abierta, ANTES de rehacer la vista: si el agrupado le
   // cambia el id a su activo (act:CLAVE ↔ act:CLAVE@broker) o se quitó una de
   // sus compras, se la vuelve a encontrar por sus compras y sigue abierta
@@ -2109,7 +2285,8 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   const avisoFx = fxFalta ? `<div class="mc3-aviso">⚠ No pudimos traer la cotización del dólar: ${sinDolar ? "por ahora <b>no podemos mostrar tu cartera en dólares</b>. Pasá a Pesos o recargá la página en unos minutos." : "los totales de abajo <b>excluyen tus posiciones en USD</b>. Recargá la página en unos minutos."}</div>` : "";
 
   // "Ocultar $": el estado vive en localStorage, así que sobrevive al refresco
-  // de dos minutos y a cambiar de pestaña
+  // de dos minutos y a cambiar de pestaña. Va en la card de resumen, al lado del
+  // valor total, que es lo primero que tapa
   const ojo = `<button type="button" class="mc3-ojo" data-ocultar aria-pressed="${_ocultar}"
       title="${_ocultar ? "Volver a mostrar los importes" : "Tapa los importes para poder mostrarle la pantalla a alguien; los porcentajes y las cantidades quedan"}"
     >${_ocultar ? "Mostrar $" : "Ocultar $"}</button>`;
@@ -2118,13 +2295,14 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     // sin posiciones no hay tabla, pero las ventas de abajo sí tienen importes:
     // si el botón no estuviera, no habría cómo destaparlos desde esta pantalla
     el.innerHTML = `<div class="mc-wrap">${cabecera}${bloqueAjustes(opts.ajustes || [], precios, opts.bonos || new Set())}${form}
-      ${(opts.ventas || []).length ? `<div class="mc3-top"><span></span><div class="mc3-ctrl">${ojo}</div></div>` : ""}
+      ${(opts.ventas || []).length ? `<div class="mc3-top">${ojo}</div>` : ""}
       ${(opts.ventas || []).length ? `<div class="mc-empty"><h4>No te quedan posiciones abiertas</h4>
         <p>Tus ventas y su resultado están más abajo. Si compraste algo nuevo, cargalo acá.</p>
         <button type="button" class="mc-btn" data-mc-abrir style="margin-top:16px">+ Agregar posición</button></div>` : `<div class="mc-empty">
         <h4>Todavía no cargaste posiciones</h4>
-        <p>Agregá lo que tenés —acciones, CEDEARs o cripto— con la cantidad y el precio al que compraste.
-           Al día siguiente vas a ver el valor actualizado, tu resultado y la lectura de Valtia sobre cada activo.</p>
+        <p>Agregá lo que tenés —acciones, CEDEARs, bonos o cripto— con la cantidad y el precio al que compraste.
+           Cuando llegue su precio (en la próxima actualización, en unos 15 minutos) vas a ver el valor, tu resultado
+           y la lectura de Valtia sobre cada activo.</p>
         <button type="button" class="mc-btn" data-mc-abrir style="margin-top:16px">+ Agregar posición</button>
       </div>`}${seccionVentas(opts.ventas || [], cur)}</div>`;
     reponerEscrito(el, escrito);
@@ -2144,17 +2322,24 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   // solo para mostrarlas. Los importes de arriba, los gráficos, la lectura y el
   // análisis siguen saliendo de r, por compra, como siempre: no cambia ningún total.
   const activos = agruparPorActivo(r.filas, r.total, cur);
-  // Todas | Por broker (agruparPorBroker, el criterio de siempre) | Por tipo.
-  // Por broker, los subtotales se cuentan sobre las COMPRAS y recién después
-  // cada broker junta las suyas por activo: KO en IOL y KO en PPI son dos filas,
-  // cada una con su parte (cantidad, promedio y valor de ese broker). Por tipo,
-  // el activo va entero a su grupo. El orden de columna elegido se respeta
+  // el tipo de cada ticker (tipos-activo.js), una vez por pintado
+  const tipos = new Map();
+  const tipoDe = f => {
+    const k = String((f && f.ticker) || "").toUpperCase();
+    if (!tipos.has(k)) tipos.set(k, tipoDeTicker(k, bonos, panelRF));
+    return tipos.get(k);
+  };
+  // Todas | Por broker (agruparPorBroker, el criterio de siempre) | Por tipo (el
+  // de entrada). Por broker, los subtotales se cuentan sobre las COMPRAS y recién
+  // después cada broker junta las suyas por activo: KO en IOL y KO en PPI son dos
+  // filas, cada una con su parte (cantidad, promedio y valor de ese broker). Por
+  // tipo, el activo va entero a su grupo. El orden de columna elegido se respeta
   // dentro de cada grupo.
   const agr = agruparPref();
   let grupos = null, lista = null;
   if (agr === "broker") grupos = agruparPorBroker(r.filas, r.total).map(g => ({ ...g, nombre: g.broker,
     filas: ordenar(agruparPorActivo(g.filas, r.total, cur, "@" + g.broker)) }));
-  else if (agr === "tipo") grupos = agruparPorTipo(ordenar(activos), r.total, bonos);
+  else if (agr === "tipo") grupos = agruparPorTipo(ordenar(activos), r.total, tipoDe);
   else lista = ordenar(activos);
   const visibles = grupos ? grupos.flatMap(g => g.filas) : lista;
   _vista.filas = visibles;
@@ -2166,20 +2351,24 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     if (otra) _abierta = otra.id; else { _abierta = null; _ajAbierto = null; }
   }
 
-  // encabezado de la grilla: las columnas que se pueden ordenar llevan data-col
+  // encabezado de la grilla (las columnas del prototipo): lo que se puede ordenar
+  // lleva data-col. Activo · Broker y Cantidad · PPC ordenan por cualquiera de
+  // las dos cosas, y Ganancia · % por el monto o por el porcentaje
   const flecha = c => _orden.col === c ? (_orden.desc ? " ↓" : " ↑") : "";
-  const ordPor = l => l === "%" ? "resultado en %" : l === "Hoy" ? "lo que se movió hoy" : l.toLowerCase();
-  const hc = (c, l, cl = "") => `<span class="${[cl, _orden.col === c ? "on" : ""].filter(Boolean).join(" ")}" data-col="${c}" role="button" tabindex="0" title="Ordenar por ${ordPor(l)}">${l}${flecha(c)}</span>`;
-  const encabezado = `<div class="mc3-hd">${hc("ticker", "Activo")}${hc("broker", "Broker")}${hc("cantidad", "Cantidad", "r")}${hc("dActual", "Precio hoy", "r")}${hc("dValor", "Valor", "r")}${hc("dHoy", "Hoy", "r")}<span class="r">${hc("dPl", "Resultado")} · ${hc("plPct", "%")}</span><span></span></div>`;
+  const ORD_POR = { ticker: "activo", broker: "broker", cantidad: "cantidad", dCompra: "precio promedio de compra",
+                    dActual: "precio actual", dValor: "valor", dHoy: "lo que se movió hoy", dPl: "ganancia", plPct: "ganancia en %" };
+  const hc = (c, l) => `<span${_orden.col === c ? ' class="on"' : ""} data-col="${c}" role="button" tabindex="0" title="Ordenar por ${ORD_POR[c]}">${l}${flecha(c)}</span>`;
+  const encabezado = `<div class="mc3-hd"><span>${hc("ticker", "Activo")} · ${hc("broker", "Broker")}</span>`
+    + `<span class="r">${hc("cantidad", "Cantidad")} · ${hc("dCompra", "PPC")}</span><span class="r">${hc("dActual", "Precio actual")}</span>`
+    + `<span class="r">${hc("dValor", "Valor")}</span><span class="r">${hc("dHoy", "Hoy")}</span>`
+    + `<span class="r">${hc("dPl", "Ganancia")} · ${hc("plPct", "%")}</span><span></span></div>`;
 
   const filaHTML = f => {
     const px = f.px || {};
     const rf = esRentaFija(f.ticker, bonos);
-    // la etiqueta sale del MERCADO y no de si el texto termina en ".BA": un bono
-    // bien guardado (TX26, AL30) también cotiza en BYMA
-    const mk = mercadoDe(f.ticker, bonos);
-    const tk = base(f.ticker), nd = nombreDe(f.ticker);
-    const nombre = px.nombre && String(px.nombre).toUpperCase() !== String(f.ticker).toUpperCase() ? px.nombre : (nd !== tk ? nd : "");
+    const tk = base(f.ticker);
+    const tp = tipoDe(f);
+    const nombre = nombreFila(f, bonos);
     const pills = [];
     // guardada con el sufijo de otro mercado (NVDA-USD): el desplegable la arregla
     const rota = filaRota(f, bonos);
@@ -2207,8 +2396,8 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     const cant = cantFmt(f.cantidad) + (rf ? " VN" : "");
     const pxHoy = f.dActual != null ? money(f.dActual, cur) : "—";
     const brk = String(f.broker || "").trim() || "sin broker";
-    // el precio promedio de compra, debajo de la cantidad: es el mismo que ya
-    // calcula calcular() (dCompra, convertido a la moneda de arriba) y el que
+    // el precio promedio de compra (PPC), debajo de la cantidad: es el mismo que
+    // ya calcula calcular() (dCompra, convertido a la moneda de arriba) y el que
     // muestra el desplegable, así que los dos dicen siempre lo mismo
     const fac = Number(f.factor) > 0 ? Number(f.factor) : (Number(px.factor) > 0 ? Number(px.factor) : 1);
     const prom = Number(f.precioCompra) > 0
@@ -2219,26 +2408,40 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     const hoyCls = f.dHoy == null ? "mc-mut" : f.dHoy >= 0 ? "mc-pos" : "mc-neg";
     const hoyTit = f.dHoy == null ? "Todavía no tenemos la variación del día de este activo: esta fila no entra en el total de arriba"
                                   : "Lo que se movió esta posición hoy, contra el cierre de ayer";
+    // la segunda línea del activo: "CEDEAR · IOL" (o "Acción EE.UU. · IOL + PPI")
+    const tipoBrk = [tipoTxt(tp), brk].filter(Boolean).join(" · ");
     return `<div class="mc3-pos" data-pos="${esc(f.id)}">
       <div class="mc3-row${on ? " on" : ""}" data-fila="${esc(f.id)}" role="button" tabindex="0" aria-expanded="${on}">
-        <div class="c-act"><div class="mc3-tk"><b>${esc(tk)}</b>${mk === "byma" || mk === "rf" ? '<span class="mc3-mk">BYMA</span>' : ""}${nombre ? `<span class="mc3-nm">${esc(nombre)}</span>` : ""}</div>
-          ${pills.length ? `<div class="mc3-pills">${pills.map(([c, t, tt]) => `<span class="mc3-pill ${c}"${tt ? ` title="${esc(tt)}"` : ""}>${esc(t)}</span>`).join("")}</div>` : ""}</div>
-        <span class="c-brk mc3-brk"${f.brokers && f.brokers.length > 1 ? ` title="En varios brokers: ${esc(f.brokerTitulo)}"` : ""}>${esc(brk)}</span>
+        <div class="c-act mc3-a">
+          <span class="mc3-logo ${logoClase(tp.k, tk)}" title="${esc(f.ticker)}">${esc(tk)}</span>
+          <div class="mc3-at">
+            <div class="mc3-nm" title="${esc(nombre ? `${nombre} · ${f.ticker}` : f.ticker)}">${esc(nombre || tk)}</div>
+            <div class="mc3-pills"><span class="mc3-tp"${f.brokers && f.brokers.length > 1 ? ` title="En varios brokers: ${esc(f.brokerTitulo)}"` : ""}>${esc(tipoBrk)}</span>${pills.map(([c, t, tt]) => `<span class="mc3-pill ${c}"${tt ? ` title="${esc(tt)}"` : ""}>${esc(t)}</span>`).join("")}</div>
+          </div>
+        </div>
         <span class="c-cnt mc3-n"><span data-cantde="${esc(f.id)}">${cant}</span>${prom ? `<small class="pm" title="${esc(promTit)}">${prom}</small>` : ""}</span>
         <span class="c-px mc3-n">${pxHoy}</span>
         <span class="c-val mc3-n f">${f.dValor != null ? money(f.dValor, cur) : "—"}</span>
-        <span class="c-hoy mc3-n f ${hoyCls}" title="${esc(hoyTit)}"><em class="mc3-hoyk">Hoy</em>${f.dHoy == null ? "—"
+        <span class="c-hoy mc3-n ${hoyCls}" title="${esc(hoyTit)}"><em class="mc3-hoyk">Hoy</em>${f.dHoy == null ? "—"
           : moneyS(f.dHoy, cur) + (f.hoyPct != null ? `<small>${pct1(f.hoyPct)}</small>` : "")}</span>
         <span class="c-pl mc3-n f ${f.dPl == null ? "mc-mut" : f.dPl >= 0 ? "mc-pos" : "mc-neg"}">${f.dPl == null ? "—" : moneyS(f.dPl, cur)}${f.plPct != null ? `<small>${pct1(f.plPct)}</small>` : ""}</span>
-        <span class="c-meta mc3-meta">${esc(brk)} · ${cant}${prom ? " · " + prom : ""} · ${pxHoy}</span>
+        <span class="c-meta mc3-meta">${cant}${prom ? ` · PPC ${prom}` : ""} · precio ${pxHoy}</span>
         <span class="c-rot mc3-rot" aria-hidden="true">▾</span>
       </div>${on ? detalleHTML(f, opts, cur) : ""}</div>`;
   };
 
-  // el renglón del grupo: cuánto suma, qué parte del total es, cuánto se movió
-  // hoy y cuánto va ganando. El peso va pegado al monto, que es la pregunta que
-  // se hace al agrupar ("¿cuánto tengo en IOL y qué parte de todo es?")
-  const grpHTML = g => `<div class="mc3-grp"><b>${esc(g.nombre)}</b><span>${g.filas.length} ${g.filas.length === 1 ? "posición" : "posiciones"}${sinDolar ? "" : ` · ${money(g.valor, cur)}${g.peso != null ? ` · <em title="Lo que pesa este grupo en el total de tu cartera">${num(g.peso)}% de tu cartera</em>` : ""}${g.hoy != null ? ` · hoy <em class="${g.hoy >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(g.hoy, cur)}</em>` : ""}${g.plPct != null ? ` · <em class="${g.pl >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(g.pl, cur)} (${pct1(g.plPct)})</em>` : ""}`}</span></div>`;
+  // el renglón del grupo (prototipo): "CEDEARS 4 ─── 45,2% · US$4.621". A la
+  // derecha, además, cuánto se movió hoy el grupo y cuánto va ganando: son los
+  // subtotales que ya estaban y no se pierden
+  const grpHTML = g => {
+    const extra = sinDolar ? "" : [
+      g.hoy != null ? `hoy <em class="${g.hoy >= 0 ? "mc-pos" : "mc-neg"}">${moneyS(g.hoy, cur)}</em>` : "",
+      g.plPct != null ? `<em class="${g.pl >= 0 ? "mc-pos" : "mc-neg"}" title="Ganancia del grupo, sin realizar">${moneyS(g.pl, cur)} (${pct1(g.plPct)})</em>` : "",
+    ].filter(Boolean).join(" · ");
+    return `<div class="mc3-grp"><b>${esc(g.nombre)}</b><span class="n">${g.filas.length}</span><i aria-hidden="true"></i>`
+      + (sinDolar ? "" : `<span class="t" title="Lo que pesa este grupo en el total de tu cartera y cuánto vale">${g.peso != null ? num(g.peso, 1) + "% · " : ""}<b>${money(g.valor, cur)}</b></span>`)
+      + (extra ? `<span class="x">${extra}</span>` : "") + `</div>`;
+  };
   const filasHTML = grupos ? grupos.map(g => grpHTML(g) + g.filas.map(filaHTML).join("")).join("") : lista.map(filaHTML).join("");
 
   // las cuentas ("N de M con precio", "N sin variación del día") van por ACTIVO,
@@ -2246,39 +2449,38 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
   // Los importes (valor, hoy, resultado y su %) salen de r, sumados por compra
   const conPrecio = activos.filter(f => f.actual != null).length;
   const hoySin = activos.filter(f => f.dValor != null && f.dHoy == null).length;
-  // el total del día: suma solo las filas que traen la variación, y si alguna
-  // quedó afuera se dice al lado del número (y no en un título que nadie abre)
-  const hoyOk = !sinDolar && r.hoyTot != null;
-  const hoyFuera = !sinDolar && hoySin > 0
-    ? `<em>· ${hoySin === 1 ? "1 posición sin variación del día" : `${hoySin} posiciones sin variación del día`}</em>` : "";
-  const arriba = `<div class="mc3-top">
-      <div class="mc3-tot">
-        <span><b>${sinDolar ? "—" : money(r.total, cur)}</b> valor</span>
-        <span title="Lo que se movió tu cartera hoy, contra el cierre de ayer"><b class="${hoyOk ? (r.hoyTot >= 0 ? "mc-pos" : "mc-neg") : ""}">${hoyOk ? moneyS(r.hoyTot, cur) : "—"}</b>${hoyOk && r.hoyTotPct != null
-          ? `<i class="mc3-pp ${r.hoyTotPct >= 0 ? "up" : "dn"}">${pct1(r.hoyTotPct)}</i>` : ""} hoy${hoyFuera}</span>
-        <span><b class="${sinDolar ? "" : r.plTot >= 0 ? "mc-pos" : "mc-neg"}">${sinDolar ? "—" : moneyS(r.plTot, cur)}</b>${!sinDolar && r.plTotPct != null
-          ? `<i class="mc3-pp ${r.plTotPct >= 0 ? "up" : "dn"}" title="sobre ${esc(money(r.costoTot, cur))} invertidos">${pct1(r.plTotPct)}</i>` : ""} resultado</span>
-        <span><b class="k">${conPrecio} de ${activos.length}</b> con precio</span>
+  const tiles = kpisCartera(r, { n: activos.length, conPrecio, hoySin, cur, sinDolar }).map(t =>
+    `<div class="mc3-tile"${t.t ? ` title="${esc(t.t)}"` : ""}><div class="l">${esc(t.l)}</div><div class="v${t.c ? " " + t.c : ""}">${t.v}</div>${t.s ? `<div class="s">${esc(t.s)}</div>` : ""}</div>`).join("");
+  const resumen = `<div class="mc3-res">
+      <div class="mc3-res-hd"><div class="mc3-res-k">Valor total de la cartera</div>${ojo}</div>
+      <div class="mc3-total">${sinDolar ? "—" : money(r.total, cur)}</div>
+      <div class="mc3-tiles">${tiles}</div>
+    </div>`;
+
+  // Tenencias: título, cuántos activos, agrupar (Todas | Por broker | Por tipo) y "+ Agregar"
+  const tenencias = `<div class="mc3-ten">
+      <div class="mc3-ten-hd">
+        <div class="mc3-ten-t"><h3>Tenencias</h3><span>${activos.length} ${activos.length === 1 ? "activo" : "activos"}</span></div>
+        <div class="mc3-ten-c">
+          <div class="mc3-agr" role="group" aria-label="Agrupar la tabla">${AGRUPAR.map(([k, l]) =>
+            `<button type="button" data-agrupar="${k}"${agr === k ? ' class="on"' : ""} aria-pressed="${agr === k}">${l}</button>`).join("")}</div>
+          <button type="button" class="mc3-add" data-mc-abrir>+ Agregar</button>
+        </div>
       </div>
-      <div class="mc3-ctrl">
-        ${ojo}
-        <div class="mc3-seg" role="group" aria-label="Agrupar la tabla">${AGRUPAR.map(([k, l]) =>
-          `<button type="button" data-agrupar="${k}" class="${agr === k ? "on" : ""}" aria-pressed="${agr === k}">${l}</button>`).join("")}</div>
-      </div>
+      <div class="mc3-tbl"><div class="mc3-in">${encabezado}${filasHTML}</div></div>
     </div>`;
 
   el.innerHTML = `<div class="mc-wrap">
     ${cabecera}${avisoFx}${bloqueAjustes(opts.ajustes || [], precios, bonos)}
     ${form}
-    ${arriba}
+    ${resumen}
     ${sinDolar ? "" : graficos(r, cur)}
-    <div class="mc3-tbl"><div class="mc3-in">${encabezado}${filasHTML}</div></div>
-    <p class="mc3-pie">Tocá una fila para ver la lectura de Valtia, las noticias y el próximo evento de ese activo. Los precios se
-      sincronizan en rueda; el costo y el valor se convierten con la cotización de hoy.
+    ${tenencias}
+    <p class="mc3-pie">Tocá una fila para ver la lectura de Valtia, las noticias y el próximo evento de ese activo. PPC es el
+      precio promedio de compra. Los precios se sincronizan en rueda; el costo y el valor se convierten con la cotización de hoy.
       «Hoy» es lo que se movió esa posición en la rueda, contra el cierre de ayer; si todavía no tenemos su variación del día
-      va un guion y esa fila no entra en el total de arriba. Debajo de la cantidad va tu precio promedio de compra.
-      Si compraste un activo varias veces, es una sola fila con la cantidad total y el promedio ponderado; al abrirla
-      ves cada compra por separado, y desde ahí vendés o ajustás cada una.</p>
+      va un guion y esa fila no entra en el total de arriba. Si compraste un activo varias veces, es una sola fila con la
+      cantidad total y el promedio ponderado; al abrirla ves cada compra por separado, y desde ahí vendés o ajustás cada una.</p>
     <div class="mc-subnav">Todos tus activos juntos: <a href="#panel/empresas" data-go="empresas">informes, noticias y agenda →</a>
       <span>·</span> <a href="#panel/herramientas" data-go="herramientas">ratios y datos →</a></div>
     ${lectura(r)}
@@ -2520,7 +2722,17 @@ function pintar() {
   // (NVDA-USD, con el mercado "Cripto" recordado de una carga anterior). Para
   // saberlo hace falta el catálogo, que se pide recién acá y una sola vez;
   // cuando llega se repinta y la fila ofrece arreglarla (filaRota)
-  if (!_cat && !_catPedido && _pos.some(p => { const px = _precios[String(p.ticker || "").toUpperCase()]; return !px || px.sinDatos || px.precio == null; })) {
+  // El catálogo también dice el TIPO (y el nombre) de lo que no tiene ficha en
+  // activos.js: un CEDEAR sin ficha (BRKB.BA) o un ETF del exterior. Sin él,
+  // "Por tipo" lo dejaría en "Otros" hasta que alguien abra el modal
+  const faltaCat = p => {
+    const tk = String(p.ticker || "").toUpperCase();
+    const px = _precios[tk];
+    if (!px || px.sinDatos || px.precio == null) return true;
+    const m = mercadoDe(tk, _bonos);
+    return (m === "byma" || m === "ext") && !tickerFicha(tk);
+  };
+  if (!_cat && !_catPedido && _pos.some(faltaCat)) {
     _catPedido = true;
     catalogo().then(m => { if (m && _el && _user) pintar(); });
   }
@@ -2643,8 +2855,8 @@ function enganchar() {
     if (tengo) tengo.onclick = () => recuperarAjuste(card, tengo);
     vistaAjuste(card);
   });
-  // el botón del estado vacío: el del encabezado lo maneja panel.js (__mcAbrirForm)
-  _el.querySelectorAll("[data-mc-abrir]").forEach(b => b.onclick = () => abrirFormulario(true));
+  // los botones que abren el modal ([data-mc-abrir]: el estado vacío y el
+  // "+ Agregar" de Tenencias) los atiende el escuchador único de instalarDelegado
 }
 
 /* cotizaciones para convertir (misma fuente que la barra del sitio) */
@@ -2736,11 +2948,33 @@ function engancharBrokerSel(root) {
    escribir, para poder explicar que las ventas van por otro lado. */
 const filaCompraHTML = (hoy, v = {}) => `<div class="mc-cmp" data-cmp>
     <input type="date" data-c-fecha max="${hoy}" value="${esc(v.fecha || hoy)}" aria-label="Fecha de la compra">
+    <span class="mc-cmp-tipo" aria-hidden="true" title="Acá van solo compras: las ventas se registran con «Vendí», en la fila del activo">Compra</span>
     <input type="text" inputmode="decimal" autocomplete="off" data-c-cant placeholder="Cantidad" value="${numIn(v.cant)}" aria-label="Cantidad comprada">
     <input type="text" inputmode="decimal" autocomplete="off" data-c-px placeholder="Precio" value="${numIn(v.px)}" aria-label="Precio de compra">
     <button type="button" class="mc-cmp-x" data-c-quitar aria-label="Sacar esta compra" title="Sacar esta compra">×</button>
   </div>`;
 
+/* lo que dice el campo de precio de cada compra: "Precio ARS" o "Precio USD",
+   la moneda en la que se guarda (la del mercado elegido), como en el prototipo.
+   PURA y exportada */
+export function placeholderPrecio(moneda) {
+  return moneda === "ARS" ? "Precio ARS" : "Precio USD";
+}
+/* ¿Guardar se ve encendido? Con la MISMA validación que hace al tocarlo
+   (validarCompras): sin símbolo, sin cantidad, con un choque de mercado o con
+   algo que no se entiende, se ve apagado —como pide el SPEC— pero se puede
+   tocar igual, y entonces dice qué falta. PURA y exportada */
+export function guardarListo(simbolo, choque, filas) {
+  return !validarCompras(simbolo, choque, filas).error;
+}
+
+/* el modal "Agregar activo" con el aspecto del prototipo (dos columnas de campos,
+   Movimientos, el precio promedio en vivo en la caja gris, Cancelar y Guardar) y
+   lo que ya hacía: el MERCADO (BYMA / Exterior / Cripto) con su choque, el
+   catálogo con sugerencias, el broker con «Otro…», el precio de referencia con
+   el ratio del CEDEAR, "Usar este precio", la posición y la carga desde una
+   planilla. El prototipo pedía el "tipo" a mano: acá lo dice el catálogo (la
+   pastilla al lado del nombre), y lo que decide la moneda es el mercado */
 function modalHTML() {
   const mkt = pref("valtia-mc-mercado", "byma");
   const brk = pref("valtia-mc-broker", "");
@@ -2757,34 +2991,34 @@ function modalHTML() {
       <div id="mc-modo-uno">
         <div class="mc-gr">
           <div><label for="mc-mercado">Mercado</label><select id="mc-mercado">${opcMercados(mkt)}</select></div>
-          <div><label for="mc-broker">Broker / cuenta</label>${brokerSelectHTML("mc-broker", brk)}</div>
+          <div><label for="mc-broker">Broker</label>${brokerSelectHTML("mc-broker", brk)}</div>
           <div><label for="mc-ticker">Símbolo</label>
             <div class="mc-sug">
-              <input id="mc-ticker" placeholder="GGAL, AL30, NVDA…" maxlength="12" autocomplete="off" spellcheck="false"
+              <input id="mc-ticker" placeholder="GGAL" maxlength="12" autocomplete="off" spellcheck="false"
                 role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-controls="mc-sug-l">
               <ul id="mc-sug-l" class="mc-sug-l" role="listbox" aria-label="Coincidencias del catálogo" hidden></ul>
             </div></div>
           <div><div class="mc-lbl" id="mc-nombre-k">Nombre</div>
-            <div class="fijo" id="mc-nombre" aria-labelledby="mc-nombre-k">—</div></div>
+            <div class="fijo" id="mc-nombre" aria-labelledby="mc-nombre-k"><span class="nm">Se completa solo</span></div></div>
         </div>
         <div class="mc-sub" id="mc-guarda"></div>
         <div class="mc-ref" id="mc-ref" hidden></div>
-        <div class="mc-k2">Tus compras</div>
-        <div class="mc-cmp-hd" aria-hidden="true"><span>Fecha</span><span>Cantidad</span><span>Precio</span><span></span></div>
+        <div class="mc-k2"><span>Movimientos</span><small>solo compras · para vender, «Vendí» en la fila</small></div>
+        <div class="mc-cmp-hd" aria-hidden="true"><span>Fecha</span><span>Tipo</span><span>Cantidad</span><span id="mc-cmp-hd-px">Precio</span><span></span></div>
         <div class="mc-cmps" id="mc-compras"></div>
         <button type="button" class="mc-mas" id="mc-mas">+ Agregar otra compra</button>
         <div class="mc-res">
-          <div class="f"><span>Posición</span><b id="mc-posic">—</b></div>
           <div class="f"><span>Precio promedio de compra</span><b id="mc-prom">—</b></div>
-          <div class="f"><span>Total invertido</span><b id="mc-tot">—</b></div>
-          <div class="nota" id="mc-resnota"></div>
+          <div class="f sec"><span>Posición</span><b id="mc-posic">—</b></div>
+          <div class="f sec"><span>Total invertido</span><b id="mc-tot">—</b></div>
         </div>
+        <div class="mc-res-nota" id="mc-resnota"></div>
       </div>
       <div id="mc-modo-imp" class="mc-imp" style="display:none">
         <div class="mc-gr" style="margin-bottom:12px">
           <div><label for="mc-imp-mercado">¿De qué mercado es este resumen?</label>
             <select id="mc-imp-mercado">${opcMercados(mkt)}</select></div>
-          <div><label for="mc-imp-broker">Broker / cuenta</label>${brokerSelectHTML("mc-imp-broker", brk)}</div>
+          <div><label for="mc-imp-broker">Broker</label>${brokerSelectHTML("mc-imp-broker", brk)}</div>
         </div>
         <div class="mc-hint">Copiá las filas del resumen de tu broker y pegalas acá: una posición por línea, en el orden
           <b>ticker · cantidad · precio de compra · fecha</b>. Sirven tabulaciones, comas o punto y coma, y los números
@@ -2798,7 +3032,7 @@ function modalHTML() {
     <div class="mc-mdl-pie">
       <div class="mc-msg" id="mc-mdl-msg"></div>
       <button type="button" class="mc-btn sec" data-mc-cerrar>Cancelar</button>
-      <button type="button" class="mc-btn" id="mc-add">Guardar</button>
+      <button type="button" class="mc-btn" id="mc-add" aria-disabled="true">Guardar</button>
     </div>
   </div>`;
 }
@@ -3442,8 +3676,9 @@ function pintarReferencia(ctx, r, nom) {
    y el desplegable— y va en la moneda del mercado elegido, que es la moneda
    en la que se guarda el precio. Con montoTxt() y no con money(): "Ocultar $"
    no puede tapar un número que la persona está tipeando en ese momento. El
-   resumen usa lo parseado, así se ve cómo se interpretó "1.234,5". Guardar
-   nunca se apaga: al tocarlo, guardarCompras dice qué falta. */
+   resumen usa lo parseado, así se ve cómo se interpretó "1.234,5". Guardar se
+   VE apagado mientras falte algo (SPEC), pero nunca se deshabilita: al tocarlo,
+   guardarCompras dice qué falta. */
 function actualizarModal() {
   if (!_modal) return;
   const sel = $m("#mc-mercado");
@@ -3473,7 +3708,15 @@ function actualizarModal() {
   const { tk, moneda, factor } = ctx;
   const nom = nombreCatalogo(tk, r);
   const nEl = $m("#mc-nombre");
-  if (nEl) { nEl.textContent = nom.txt; nEl.classList.toggle("ok", nom.ok); }
+  if (nEl) {
+    // al lado del nombre, el tipo (CEDEAR, Acción, Bono…): el mismo criterio que
+    // la tabla (tipos-activo.js), y solo si el catálogo lo tiene en ESTE mercado
+    // o es renta fija. De un símbolo que no conocemos no se afirma el tipo
+    const tp = tk && !r.choque && (r.entrada || esRentaFija(tk, _bonos)) ? tipoTxt(tipoDeTicker(tk, _bonos, _modal.panel || _panel)) : "";
+    nEl.innerHTML = `<span class="nm">${esc(tk ? nom.txt : "Se completa solo")}</span>${tp ? `<em class="tp">${esc(tp)}</em>` : ""}`;
+    nEl.classList.toggle("ok", nom.ok);
+    nEl.title = tk ? nom.txt : "";
+  }
   const unidad = factor !== 1 ? "cada 100 VN" : "por unidad";
   const enQue = moneda === "ARS" ? "en pesos" : "en dólares";
   const g = $m("#mc-guarda");
@@ -3483,7 +3726,7 @@ function actualizarModal() {
     const auto = a && a.crudo === ctx.crudo && a.a === ctx.mercado ? `${ctx.crudo} es ${a.esTxt}: pasé el mercado a ${MERCADO_NOM[a.a]}.` : "";
     const botones = !r.enCatalogo && r.sugerencias.length
       ? `<div class="mc-sug-bs">${r.sugerencias.map(sg => `<button type="button" class="mc-sug-b" data-mc-mercado="${sg.mercado}">${esc(sg.txt)}</button>`).join("")}</div>` : "";
-    g.innerHTML = !tk ? "Escribilo como lo ves en tu broker."
+    g.innerHTML = !tk ? "Escribilo como lo ves en tu broker. En BYMA van los CEDEARs, las acciones y los bonos que compraste en pesos; en Exterior, lo que compraste en dólares afuera."
       : r.choque ? `<span class="bad">${esc(r.choque)} Con ese mercado no se guarda.</span>${botones}`
       : (auto ? `<span class="warn">${esc(auto)}</span> ` : "")
         + (r.aviso ? `<span class="${r.enCatalogo ? "" : "warn"}">${esc(r.aviso)}</span> ` : "")
@@ -3520,6 +3763,16 @@ function actualizarModal() {
   // con un solo renglón no se puede sacar el último: siempre queda uno para escribir
   const xs = [..._modal.el.querySelectorAll("[data-c-quitar]")];
   xs.forEach(x => { x.disabled = xs.length < 2; });
+  // el precio de cada compra va en la moneda en que se guarda: "Precio ARS" o
+  // "Precio USD" en el campo, y "$" o "US$" (cada 100 VN en la renta fija) arriba
+  const ph = placeholderPrecio(moneda);
+  _modal.el.querySelectorAll("[data-c-px]").forEach(i => { if (i.placeholder !== ph) i.placeholder = ph; });
+  const hdPx = $m("#mc-cmp-hd-px");
+  if (hdPx) hdPx.textContent = `Precio · ${moneda === "ARS" ? "$" : "US$"}${factor !== 1 ? " c/100 VN" : ""}`;
+  // Guardar se ve apagado mientras no se pueda guardar (sin símbolo, sin
+  // cantidad, con un choque de mercado), pero se puede tocar: dice qué falta
+  const add = $m("#mc-add");
+  if (add) add.setAttribute("aria-disabled", String(!guardarListo(ctx.crudo, r.choque, todas)));
 }
 
 function agregarCompra(v) {
@@ -4356,7 +4609,12 @@ export async function initMiCartera(user, el) {
       y recargá la página — tus posiciones y el plan de inversión mensual se activan al instante.</p></div>`;
     return;
   }
-  el.innerHTML = `<p class="mc-cargando">Cargando tus posiciones…</p>`;
+  // cargando (SPEC «Estados»): esqueletos con la altura de lo que viene —la card
+  // de resumen, las dos de gráficos y Tenencias—; el texto queda para los lectores de pantalla
+  el.innerHTML = `<div class="mc-wrap" aria-busy="true"><span class="mc-sr">Cargando tus posiciones…</span>
+    <div class="mc-skel" style="height:172px"></div>
+    <div class="mc-skel2"><div class="mc-skel" style="height:196px"></div><div class="mc-skel" style="height:196px"></div></div>
+    <div class="mc-skel" style="height:340px"></div></div>`;
   let avisarListo = () => {};
   _listo = { email: user.email, p: new Promise(r => { avisarListo = r; }) };
   // el panel (panel.js) avisa cuando registra una compra o cambia la moneda.

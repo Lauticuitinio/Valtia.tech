@@ -450,6 +450,104 @@ ok("fuente: sin nada, null (el modal dice que no hay)", M.elegirPrecioRef({ tk: 
 ok("fuente: un catálogo con basura no cuenta", M.elegirPrecioRef({ tk: "X.BA", catalogo: { mapa: { "X.BA": [0, 1, "ARS"] } }, ahora: AHORA }) === null
    && M.elegirPrecioRef({ tk: "X.BA", catalogo: { mapa: { "X.BA": [5, 1, "EUR"] } }, ahora: AHORA }) === null);
 
+// ── diseño nuevo de Mi cartera (handoff del 24/09): agrupado, tipo, logo, tiles y Guardar ──
+// agrupar: POR TIPO de entrada; una preferencia guardada válida se respeta
+ok("agrupar: sin preferencia, por tipo", M.agruparElegido(undefined) === "tipo" && M.agruparElegido("") === "tipo" && M.agruparElegido(null) === "tipo");
+ok("agrupar: la preferencia guardada se respeta", M.agruparElegido("ninguno") === "ninguno" && M.agruparElegido("broker") === "broker" && M.agruparElegido("tipo") === "tipo");
+ok("agrupar: lo que no es una opción cae en tipo", M.agruparElegido("sector") === "tipo" && M.agruparElegido("Tipo") === "tipo");
+// la segunda línea de la fila ("CEDEAR · IOL"): del exterior se dice, de BYMA no
+ok("tipoTxt: CEDEAR", M.tipoTxt({ k: "cedear", n: "CEDEAR", mercado: "byma" }) === "CEDEAR");
+ok("tipoTxt: acción de BYMA", M.tipoTxt({ k: "accion", n: "Acción", mercado: "byma" }) === "Acción");
+ok("tipoTxt: acción del exterior", M.tipoTxt({ k: "accion", n: "Acción", mercado: "ext" }) === "Acción EE.UU.");
+ok("tipoTxt: ETF del exterior", M.tipoTxt({ k: "etf", n: "ETF", mercado: "ext" }) === "ETF EE.UU.");
+ok("tipoTxt: bono, letra y cripto sin agregado", M.tipoTxt({ k: "bono", n: "Bono", mercado: "rf" }) === "Bono"
+   && M.tipoTxt({ k: "letra", n: "Letra", mercado: "rf" }) === "Letra" && M.tipoTxt({ k: "cripto", n: "Cripto", mercado: "cripto" }) === "Cripto");
+ok("tipoTxt: sin tipo, nada", M.tipoTxt(null) === "" && M.tipoTxt({}) === "");
+{
+  const T = await import("../tipos-activo.js?v=1");
+  ok("tipoTxt con tipoActivo: GGAL.BA acción, AL30 bono, BTC-USD cripto, S30S5 letra",
+     M.tipoTxt(T.tipoActivo("GGAL.BA")) === "Acción" && M.tipoTxt(T.tipoActivo("AL30")) === "Bono"
+     && M.tipoTxt(T.tipoActivo("BTC-USD")) === "Cripto" && M.tipoTxt(T.tipoActivo("S30S5")) === "Letra");
+}
+// el tipo de la fila con el catálogo: cada ticker en SU mercado, sin caer en el
+// símbolo pelado (AOS.BA no es CEDEAR aunque AOS sea una acción de EE.UU.)
+{
+  const tt = tk => M.tipoDeTicker(tk, new Set(), null, C);
+  ok("tipoDeTicker: un .BA que solo existe afuera no se afirma CEDEAR", tt("AOS.BA").k === "otro" && M.tipoTxt(tt("AOS.BA")) === "BYMA", tt("AOS.BA"));
+  ok("tipoDeTicker: CEDEAR del catálogo de BYMA, ETF del exterior", tt("ACN.BA").k === "cedear" && tt("IBIT.BA").k === "cedear"
+     && tt("IBIT").k === "etf" && tt("SPY").k === "etf", [tt("ACN.BA"), tt("IBIT.BA"), tt("IBIT"), tt("SPY")].map(x => x.k));
+  ok("tipoDeTicker: sin catálogo no afirma, y nunca tira", M.tipoDeTicker("AOS.BA", new Set(), null, null).k === "otro"
+     && M.tipoDeTicker(null, null, null, C).k === "otro");
+}
+// el logo de 34 px: color por tipo (el ETF como el CEDEAR) y letra más chica si el ticker es largo
+ok("logo: CEDEAR y ETF azules", M.logoClase("cedear", "NVDA") === "ced" && M.logoClase("etf", "SPY") === "ced");
+ok("logo: acción verde, renta fija dorada, cripto violeta", M.logoClase("accion", "GGAL") === "acc" && M.logoClase("bono", "AL30") === "rf"
+   && M.logoClase("letra", "S30S5") === "rf l5" && M.logoClase("cripto", "BTC") === "cri");
+ok("logo: tipo desconocido en gris, ticker de 6 más chico", M.logoClase("zzz", "ABCDEF") === "otro l6" && M.logoClase(undefined, "") === "otro");
+
+// "Por tipo": los grupos de tipos-activo.js, el que más vale primero, con la misma cuenta que por broker
+{
+  const f = (ticker, k, dValor, dCosto, dHoy) => ({ ticker, k, dValor, dCosto, dHoy });
+  const filas = [
+    f("NVDA.BA", "cedear", 100, 80, 2), f("MU.BA", "cedear", null, 10, null), f("BTC-USD", "cripto", 60, 30, 3),
+    f("GGAL.BA", "accion", 50, 40, null), f("AL30", "bono", 30, 25, 1), f("S30S5", "letra", 20, 18, 0.5),
+    f("ZZZ", "zzz", null, 5, null), f("QQQ", "etf", null, 7, null),
+  ];
+  const total = 260;
+  const g = M.agruparPorTipo(filas, total, x => ({ k: x.k }));
+  ok("tipo: orden por valor y, a igual valor, el de GRUPOS_TIPO", g.map(x => x.k).join(",") === "cedear,cripto,accion,bono,letra,etf,otro", g.map(x => x.k));
+  ok("tipo: nombres de los grupos", g.map(x => x.nombre).join(",") === "CEDEARs,Cripto,Acciones,Bonos,Letras,ETFs,Otros", g.map(x => x.nombre));
+  const c = g[0];
+  ok("tipo: el grupo suma solo lo que tiene valor (el costo de la sin precio no entra)", c.filas.length === 2 && c.valor === 100 && c.costo === 80 && c.pl === 20 && cerca(c.plPct, 25), c);
+  ok("tipo: peso sobre el total y el hoy de las que lo traen", cerca(c.peso, 100 / 260 * 100) && c.hoy === 2 && c.hoyN === 1, c);
+  ok("tipo: un grupo sin hoy dice null, no cero", g[2].hoy === null && g[2].hoyN === 0, g[2]);
+  ok("tipo: sumar los grupos da el total", cerca(g.reduce((s, x) => s + x.valor, 0), total));
+  ok("tipo: un tipo que no está en GRUPOS_TIPO va a Otros", g[6].k === "otro" && g[6].filas[0].ticker === "ZZZ");
+  ok("tipo: sin filas, sin grupos", M.agruparPorTipo([], 0, x => x).length === 0 && M.agruparPorTipo(null, 0).length === 0);
+}
+
+// los cuatro tiles de la card de resumen, con calcular() de verdad
+{
+  const pos = [{ id: "a", ticker: "GGAL.BA", cantidad: 10, precioCompra: 100, moneda: "ARS" },
+               { id: "b", ticker: "MU.BA", cantidad: 1, precioCompra: 50, moneda: "ARS" }];
+  const r = M.calcular(pos, { "GGAL.BA": { precio: 120, moneda: "ARS", d: 20 } }, "ARS", { ccl: null, mep: null }, new Set(), null);
+  const k = M.kpisCartera(r, { n: 2, conPrecio: 1, hoySin: 0, cur: "ARS" });
+  const de = id => k.find(x => x.k === id);
+  ok("kpis: cuatro tiles en el orden del prototipo", k.map(x => x.l).join(" | ") === "Hoy | Resultado · no realizado | Invertido | Con precio", k.map(x => x.l));
+  ok("kpis: Hoy con $ y % (dos decimales)", de("hoy").v === "<span>+$200</span> <span>(+20,00%)</span>" && de("hoy").c === "mc-pos", de("hoy"));
+  ok("kpis: resultado no realizado con $ y %", de("pl").v === "<span>+$200</span> <span>(+20,0%)</span>" && de("pl").c === "mc-pos", de("pl"));
+  ok("kpis: invertido de las que tienen precio, y lo dice", de("inv").v === "$1.000" && de("inv").s === "sin contar la que no tiene precio", de("inv"));
+  ok("kpis: con precio k de n", de("con").v === "1 de 2" && de("con").s === "1 queda fuera del total hasta que llegue su precio", de("con"));
+  const k2 = M.kpisCartera({ ...r, hoyTot: null, hoyTotPct: null, plTot: -50, plTotPct: -5 }, { n: 3, conPrecio: 3, hoySin: 2, cur: "ARS" });
+  ok("kpis: sin variación del día, un guion (no un cero) y cuántas faltan", k2[0].v === "—" && k2[0].c === "" && k2[0].s === "2 posiciones sin variación del día", k2[0]);
+  ok("kpis: la pérdida en rojo con el menos tipográfico", k2[1].c === "mc-neg" && k2[1].v.startsWith("<span>−$50</span>"), k2[1]);
+  ok("kpis: todas con precio, sin aclaraciones", k2[2].s === "" && k2[3].s === "" && k2[3].v === "3 de 3", k2);
+  const k3 = M.kpisCartera(r, { n: 2, conPrecio: 1, cur: "CCL", sinDolar: true });
+  ok("kpis: sin dólar, guiones (la cuenta de activos queda)", k3[0].v === "—" && k3[1].v === "—" && k3[2].v === "—" && k3[3].v === "1 de 2", k3.map(x => x.v));
+}
+
+// el modal: el precio en la moneda en que se guarda, y Guardar "apagado" con la misma validación que al tocarlo
+ok("modal: placeholder del precio", M.placeholderPrecio("ARS") === "Precio ARS" && M.placeholderPrecio("USD") === "Precio USD" && M.placeholderPrecio() === "Precio USD");
+ok("guardar: sin símbolo, apagado", M.guardarListo("", "", [fila("10", "100")]) === false);
+ok("guardar: sin cantidad, apagado", M.guardarListo("NVDA", "", [fila("", "")]) === false && M.guardarListo("NVDA", "", [fila("0", "5")]) === false);
+ok("guardar: con un choque de mercado, apagado", M.guardarListo("NVDA", "NVDA no es una cripto", [fila("10", "1")]) === false);
+ok("guardar: una cantidad negativa (una venta), apagado", M.guardarListo("NVDA", "", [fila("-1", "")]) === false);
+ok("guardar: símbolo y cantidad, encendido (sin precio también)", M.guardarListo("NVDA", "", [fila("10", "")]) === true
+   && M.guardarListo("nvda", "", [fila("0,5", "1.234,5")]) === true);
+ok("guardar: dice lo mismo que validarCompras", [["", ""], ["X", ""], ["X", "10"], ["X", "abc"]].every(([s, c]) =>
+   M.guardarListo(s, "", [fila(c, "")]) === !M.validarCompras(s, "", [fila(c, "")]).error));
+
+// SPEC §0 / paleta vigente: IBM Plex Sans en todo, sin Plex Mono ni Playfair en Mi cartera
+{
+  const { readFileSync } = await import("node:fs");
+  const src = readFileSync(new URL("../mi-cartera.js", import.meta.url), "utf8");
+  const css = src.split("const STYLE = `")[1].split("`;")[0];
+  ok("piel: el CSS no usa Plex Mono ni monospace", !/Plex Mono|monospace/.test(css));
+  ok("piel: el CSS no usa Playfair", !/Playfair/.test(css));
+  ok("piel: ningún HTML de la pestaña pide Plex Mono o Playfair", !/font[^;"`]*(Plex Mono|Playfair)/.test(src.replace(/\/\*[\s\S]*?\*\//g, "")));
+  ok("piel: el dorado claro solo en el bloque oscuro (sobre azul)", !/#E8CE96/i.test(css.split('[data-theme="dark"] .mc-wrap')[0]));
+}
+
 // ── lo de siempre sigue exportado ──
 ok("exports: normalizarTicker", M.normalizarTicker("nvda", "byma") === "NVDA.BA" && M.normalizarTicker("btc", "cripto") === "BTC-USD");
 ok("exports: parseNum, agruparPorActivo, escrituraEn", ["parseNum", "agruparPorActivo", "escrituraEn", "sugerirCatalogo", "validarCompras", "resolverSimbolo", "brokerSelectHTML"].every(f => typeof M[f] === "function"));
@@ -462,7 +560,8 @@ r = M.resolverSimbolo("AXP", "cripto", C.buscarCatalogo);
 ok("resolverSimbolo: sin entrada en el mercado elegido, null", r.entrada === null, r.entrada);
 ok("exports: monedaMercado", M.monedaMercado("byma", "GGAL.BA") === "ARS" && M.monedaMercado("ext", "NVDA") === "USD" && M.monedaMercado("byma", "AL30D", bonos) === "USD");
 ["renderMiCartera", "calcular", "parseImport", "abrirFormulario", "abrirFila", "initMiCartera", "reiniciarMiCartera",
- "evolucionComparada", "completarPreciosDeRentaFija", "agruparPorActivo", "agruparPorBroker", "convertir", "monedaPosicion"].forEach(f =>
+ "evolucionComparada", "completarPreciosDeRentaFija", "agruparPorActivo", "agruparPorBroker", "convertir", "monedaPosicion",
+ "agruparPorTipo", "agruparElegido", "tipoTxt", "logoClase", "kpisCartera", "placeholderPrecio", "guardarListo", "tipoDeTicker"].forEach(f =>
   ok(`exports: ${f}`, typeof M[f] === "function"));
 
 console.log(mal ? `${mal} fallas de ${n}` : `OK ${n} casos`);
