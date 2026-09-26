@@ -24,30 +24,44 @@ import { renderAgenda } from './panel-agenda.js?v=1';
 import { renderCuenta } from './panel-cuenta.js?v=2';
 import { renderOperar } from './panel-operar.js?v=4';
 import { eventos } from './panel-eventos.js?v=1';
-import { renderMovimientos } from './panel-movimientos.js?v=1';
+import { renderMovimientos } from './panel-movimientos.js?v=2';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
   from './activos.js?v=7';
 // un solo criterio de "qué tipo de activo es" para Mi cartera, el Resumen y Movimientos
 import { tipoActivo, GRUPOS_TIPO } from './tipos-activo.js?v=1';
 
 /* ───────────────────────── estilos ───────────────────────── */
+// Valores del prototipo «Valtia Panel v3» del zip completo (24/09/2026) con la
+// paleta vigente del SPEC §0: IBM Plex Sans en todo (Playfair solo en el logo),
+// números con cifras tabulares y sin Plex Mono, fondo blanco, botones y
+// selectores con borde dorado sutil y radio 8, tarjetas de 10-12 px, etiquetas
+// de 6 px, y el dorado claro #E8CE96 solo sobre azul.
 const CSS = `
 body.fl-app-on nav:not(.portal-nav){display:none!important}
 body.fl-app-on #vnav-hot,body.fl-app-on #vnav-menu,body.fl-app-on #vnav-back{display:none!important}
-body.fl-app-on{background:var(--panel-bg)}
-/* Colores del prototipo Panel v3 como variables: los módulos de cada pestaña usan
-   ESTO y no hex sueltos, así el tema oscuro sigue funcionando.
-   --v3-navy es el azul de los bloques sólidos (con texto claro encima) y no cambia;
-   --v3-serie es el color de la línea de "tu cartera" (azul en claro, dorado en oscuro). */
-body.fl-app-on{--v3-bg:#fff;--v3-card:#fff;--v3-line:#E7E3DA;--v3-line2:#EEF0F3;--v3-track:#ECEEF1;--v3-track2:#F3F4F6;
-  --v3-ink:#101010;--v3-sub:#57534A;--v3-mut:#8B8375;--v3-navy:#0E1830;--v3-serie:#0E1830;--v3-area:rgba(14,24,48,.06);
-  --v3-gold:#B08A3E;--v3-gold2:#8A6A2F;--v3-goldL:#E8CE96;--v3-goldS:#E8CE96;--v3-goldBg:rgba(176,138,62,.10);--v3-goldTint:rgba(176,138,62,.07);
-  --v3-up:#1F7A4D;--v3-upBg:rgba(31,122,77,.12);--v3-dn:#B23A3A;--v3-dnBg:rgba(178,58,58,.1);
-  --v3-warn:#9A5A12;--v3-warnBg:rgba(200,120,30,.12);--v3-bench:#8B8375;--v3-cero:#8B8375;--v3-azul:#2B5FB0;
-  --v3-hover:#F7F8FA;--v3-hl:#F7F8FA;--v3-navyBg:rgba(14,24,48,.07);--v3-neutro:rgba(139,131,117,.12);
-  /* botón primario (navy, como el resto de los primarios) e ícono redondo del ticker */
-  --v3-btn:#0E1830;--v3-btnTx:#fff;--v3-ico:#ECEEF1;--v3-icoTx:#0E1830;
-  /* el CSS viejo (vp-*) usa --bg3/--bg2 de la home, que son crema: SOLO en el panel pasan a gris neutro */
+/* SPEC §0: los números alinean (cifras tabulares) en todo el panel. sitio.css lo
+   hace en el resto del sitio y deja afuera al panel, que se ocupa acá. El
+   !important es por lo mismo que allá: el atajo font: de cada regla vuelve
+   font-variant-numeric a normal */
+body.fl-app-on,body.fl-app-on *{font-variant-numeric:tabular-nums!important}
+body.fl-app-on{background:var(--v3-bg)}
+/* Colores del prototipo como variables: los módulos de cada pestaña usan ESTO y
+   no hex sueltos, así el tema oscuro sigue funcionando.
+   --v3-navy es el azul de los bloques sólidos (con texto claro encima);
+   --v3-serie es la línea de "tu cartera" (azul en claro, dorado en oscuro);
+   --v3-sel* son los botones y selectores de la regla §0 (borde dorado sutil; el
+   activo con borde dorado y relleno crema); --v3-skel, el gris cálido de los
+   esqueletos de carga (SPEC «Estados»: #F0EDE5). */
+body.fl-app-on{--v3-bg:#fff;--v3-card:#fff;--v3-line:#E7E3DA;--v3-line2:#F2EFE8;--v3-track:#F0EDE5;--v3-track2:#F6F3EC;
+  --v3-ink:#101010;--v3-sub:#57534A;--v3-mut:#8B8375;--v3-navy:#14213D;--v3-serie:#14213D;--v3-area:rgba(20,33,61,.07);
+  --v3-gold:#B08A3E;--v3-gold2:#8A6A2F;--v3-goldL:#E8CE96;--v3-goldS:#D9BE85;--v3-goldBg:rgba(176,138,62,.14);--v3-goldTint:rgba(176,138,62,.07);
+  --v3-up:#1F7A4D;--v3-upBg:rgba(31,122,77,.12);--v3-dn:#B23A3A;--v3-dnBg:rgba(178,58,58,.12);
+  --v3-warn:#B7791F;--v3-warnBg:rgba(183,121,31,.1);--v3-bench:#8A9BAD;--v3-cero:#C9C3B6;--v3-azul:#2B5FB0;
+  --v3-hover:#F6F7F9;--v3-hl:#FDFBF4;--v3-navyBg:rgba(20,33,61,.08);--v3-neutro:rgba(139,131,117,.12);
+  --v3-btn:#14213D;--v3-btnHover:#0E1830;--v3-btnTx:#fff;--v3-ico:#ECEEF1;--v3-icoTx:#14213D;
+  --v3-sel:rgba(176,138,62,.4);--v3-selOn:#B08A3E;--v3-selBg:#fff;--v3-selOnBg:#FBF5E8;--v3-selTx:#57534A;--v3-selOnTx:#101010;
+  --v3-skel:#F0EDE5;--v3-input:#fff;--v3-focus:#14213D;
+  /* el CSS viejo que usa --bg3/--bg2 de la home (crema): SOLO en el panel pasan a gris neutro */
   --bg3:#F3F4F6;--bg2:#F3F4F6}
 [data-theme="dark"] body.fl-app-on{--v3-bg:#0B1327;--v3-card:#121E3A;--v3-line:rgba(255,255,255,.12);--v3-line2:rgba(255,255,255,.07);
   --v3-track:rgba(255,255,255,.08);--v3-track2:rgba(255,255,255,.05);--v3-ink:#F4F1EA;--v3-sub:rgba(244,241,234,.74);--v3-mut:rgba(244,241,234,.58);
@@ -55,46 +69,56 @@ body.fl-app-on{--v3-bg:#fff;--v3-card:#fff;--v3-line:#E7E3DA;--v3-line2:#EEF0F3;
   --v3-goldBg:rgba(232,206,150,.14);--v3-goldTint:rgba(232,206,150,.08);--v3-up:#5FCB8E;--v3-upBg:rgba(95,203,142,.14);--v3-dn:#F08A8A;
   --v3-dnBg:rgba(240,138,138,.14);--v3-warn:#E0A93E;--v3-warnBg:rgba(224,169,62,.14);--v3-bench:#9FB0C2;--v3-cero:rgba(244,241,234,.3);
   --v3-hover:rgba(255,255,255,.04);--v3-hl:rgba(255,255,255,.04);--v3-navyBg:rgba(232,206,150,.1);--v3-neutro:rgba(244,241,234,.1);--v3-azul:#8FB3E8;
-  --v3-btn:#F4F1EA;--v3-btnTx:#0E1830;--v3-ico:rgba(255,255,255,.1);--v3-icoTx:#F4F1EA;
+  --v3-btn:#F4F1EA;--v3-btnHover:#fff;--v3-btnTx:#0E1830;--v3-ico:rgba(255,255,255,.1);--v3-icoTx:#F4F1EA;
+  --v3-sel:rgba(232,206,150,.3);--v3-selOn:#D9BE85;--v3-selBg:transparent;--v3-selOnBg:rgba(232,206,150,.12);--v3-selTx:rgba(244,241,234,.74);--v3-selOnTx:#F4F1EA;
+  --v3-skel:rgba(255,255,255,.07);--v3-input:rgba(255,255,255,.04);--v3-focus:#D9BE85;
   /* el bloque claro de arriba aplica también en oscuro (no está acotado por tema):
      sin pisar --bg2 acá, en oscuro quedaba el gris claro del bloque claro */
   --bg3:rgba(255,255,255,.05);--bg2:#0B1327}
 body.fl-app-on #portal-view{padding:0!important;margin:0!important}
-.fl-layout{display:flex;align-items:stretch;gap:0;min-height:calc(100vh - 34px);background:var(--panel-bg)}
-/* lateral (232px, navy): medidas y colores del prototipo */
+.fl-layout{display:flex;align-items:stretch;gap:0;min-height:100vh;background:var(--v3-bg)}
+/* ── lateral: 232 px, navy, pegado arriba y de alto completo ── */
 .fl-layout .portal-nav{display:flex;flex-direction:column;align-items:stretch;width:232px;flex:none;box-sizing:border-box;
-  height:100vh!important;gap:0!important;border:none!important;background:#0E1830!important;border-radius:0;
-  padding:18px 12px 14px!important;position:sticky;top:0;align-self:flex-start;max-height:100vh;overflow:auto}
+  height:100vh!important;gap:0!important;border:none!important;background:#14213D!important;border-radius:0;
+  padding:18px 12px 14px!important;position:sticky;top:0;align-self:flex-start;max-height:100vh;overflow:auto;scrollbar-width:none}
+.fl-layout .portal-nav::-webkit-scrollbar{display:none}
 .fl-layout .portal-nav a[data-tab]{display:flex!important;align-items:center;justify-content:space-between;gap:8px;
   padding:10px 12px!important;margin:0 0 2px!important;border-radius:8px;border-left:2px solid transparent;border-bottom:none!important;
   color:rgba(255,255,255,.62)!important;font:500 11px 'IBM Plex Sans',sans-serif!important;letter-spacing:.1em!important;
-  text-transform:uppercase;text-decoration:none;white-space:nowrap}
+  text-transform:uppercase;text-decoration:none;white-space:nowrap;transition:background .15s,color .15s}
 .fl-layout .portal-nav a[data-tab]:hover{background:rgba(255,255,255,.06);color:#fff!important}
 .fl-layout .portal-nav a[data-tab].active{background:rgba(176,138,62,.18);color:#E8CE96!important;border-left-color:#B08A3E;font-weight:600!important}
-.fl-layout .portal-nav a.vp-lat-ext{display:flex!important;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px!important;
-  margin:0 0 2px!important;border-radius:8px;border-left:2px solid transparent;border-bottom:none!important;color:rgba(255,255,255,.62)!important;
-  font:500 11px 'IBM Plex Sans',sans-serif!important;letter-spacing:.1em!important;text-transform:uppercase;text-decoration:none}
-.fl-layout .portal-nav a.vp-lat-ext:hover{background:rgba(255,255,255,.06);color:#fff!important}
-.vp-flecha{font-size:11px;letter-spacing:0;color:rgba(232,206,150,.7)}
-.vp-grp{font:600 8.5px 'IBM Plex Sans',sans-serif;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.5);padding:14px 12px 6px}
+.fl-layout .portal-nav a:focus-visible,.fl-layout .portal-nav button:focus-visible{outline:2px solid #E8CE96;outline-offset:1px}
+/* título de grupo (el prototipo lo pone en 8,5 px: sube a 10,5, el mínimo de etiquetas del SPEC §0) */
+.vp-grp{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.35);padding:14px 12px 6px}
+/* la pastilla de cada pestaña: cuánto hay detrás */
+.fl-layout .portal-nav a .vp-n{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:0;color:#E8CE96;background:rgba(232,206,150,.16);
+  padding:2px 6px;border-radius:6px;flex:none;text-transform:none}
+.fl-layout .portal-nav a.active .vp-n{color:#14213D;background:#E8CE96}
+/* el logo: cuadrado con borde dorado y VALTIA en Playfair con la T dorada, sin itálica */
+.fl-sbbrand{display:flex;align-items:center;gap:10px;padding:2px 10px 18px}
+.fl-sbbrand .lg{width:30px;height:30px;box-sizing:border-box;border:1.5px solid #B08A3E;border-radius:6px;display:flex;align-items:center;justify-content:center;flex:none}
+.fl-sbbrand .lg svg{display:block}
+.fl-sbbrand .nm{font:700 22px 'Playfair Display',Georgia,serif;letter-spacing:.06em;color:#fff;line-height:1}
+.fl-sbbrand .nm span{color:#E8CE96;font-style:normal}
+.fl-sbbrand .sb{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:3px}
+/* pie del lateral: nombre, plan, Mi cuenta y los links de salida */
 .vp-foot{margin-top:auto;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;gap:2px}
-.fl-layout .portal-nav #portal-user-name{display:block;color:rgba(255,255,255,.85);font:600 11px 'IBM Plex Sans',sans-serif;
+.fl-layout .portal-nav #portal-user-name{display:block;color:rgba(255,255,255,.85);font:600 12.5px 'IBM Plex Sans',sans-serif;
   padding:6px 12px 2px;margin:0!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .vp-plan-w{padding:0 12px 8px}
-.vp-plan{display:inline-block;font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;
-  color:#E8CE96;background:transparent;border:1px solid rgba(232,206,150,.45);border-radius:4px;padding:3px 7px}
-.vp-plan.pro{background:#E8CE96;color:#0E1830;border-color:#E8CE96}
+.vp-plan{display:inline-block;max-width:100%;box-sizing:border-box;font:600 10.5px/1.4 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;
+  color:#E8CE96;background:transparent;border:1px solid rgba(232,206,150,.45);border-radius:6px;padding:3px 7px}
+.vp-plan.pro{background:#B08A3E;color:#14213D;border-color:#B08A3E}
 .fl-layout .portal-nav a.vp-lat-l{display:block!important;padding:5px 12px!important;margin:0!important;border:none!important;border-radius:0;
-  font:500 10.5px 'IBM Plex Sans',sans-serif!important;letter-spacing:0!important;text-transform:none;color:rgba(255,255,255,.55)!important;text-decoration:none}
+  font:500 12px 'IBM Plex Sans',sans-serif!important;letter-spacing:0!important;text-transform:none;color:rgba(255,255,255,.5)!important;
+  text-decoration:none;transition:color .15s}
 .fl-layout .portal-nav a.vp-lat-l:hover{color:#fff!important}
-.fl-layout .portal-nav a.vp-lat-l[data-m]{color:#E8CE96!important}
-.fl-layout .portal-nav a.vp-lat-l[data-m]:hover{color:#fff!important}
-.fl-layout .portal-nav .vp-foot button{color:#B08A3E!important;text-align:left;padding:5px 12px 2px!important;font:600 10px 'IBM Plex Sans',sans-serif!important;
+.fl-layout .portal-nav a.vp-lat-l.on,.fl-layout .portal-nav a.vp-lat-l.vp-lat-ges{color:#E8CE96!important}
+.fl-layout .portal-nav a.vp-lat-l.vp-lat-ges:hover{color:#fff!important}
+.fl-layout .portal-nav .vp-foot button{color:#B08A3E!important;text-align:left;padding:5px 12px 2px!important;font:600 11.5px 'IBM Plex Sans',sans-serif!important;
   letter-spacing:.12em!important;background:none;border:none;cursor:pointer;text-transform:uppercase}
-.fl-sbbrand{display:flex;align-items:center;gap:10px;padding:2px 10px 18px}
-.fl-sbbrand .nm{font:700 20px 'Playfair Display',serif;letter-spacing:.06em;color:#fff;line-height:1.1}
-.fl-sbbrand .nm em{color:#E8CE96;font-style:italic}
-.fl-sbbrand .sb{font:400 9px 'IBM Plex Sans',sans-serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4)}
+.fl-layout .portal-nav .vp-foot button:hover{color:#E8CE96!important}
 /* dos modos del lateral: el del inversor y (solo admin) la gestión del fondo. Nunca los dos
    juntos. Van DESPUÉS de las reglas de los links y con su misma especificidad: si no, el
    display:flex de a[data-tab] les gana y se ven las dos listas a la vez */
@@ -104,193 +128,166 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 .fl-layout .portal-nav.modo-ges a.vp-lat-l[data-m="ges"]{display:block!important}
 .fl-layout .portal-nav.modo-ges div[data-m="ges"]{display:block!important}
 .fl-layout .portal-nav.modo-ges{background:#0B1327!important}
-/* columna principal: encabezado único + contenido */
+/* ── columna principal: barra de cotizaciones, barra del celular, encabezado y contenido ── */
 .fl-main{flex:1;min-width:0;display:flex;flex-direction:column}
+/* la barra de cotizaciones (#valtia-cot, cotizaciones.js + sitio.css) va arriba del
+   contenido, a la derecha del lateral: panel.js la muda acá al abrir el panel */
+.fl-main > #valtia-cot{flex:none;width:100%}
+/* un encabezado por pestaña: blanco, pegado arriba, con borde abajo */
 .vp-enc{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:22px 30px 16px;
-  border-bottom:1px solid var(--v3-line);background:var(--panel-bg);position:sticky;top:0;z-index:60}
-/* el único serif del panel: el título de la página (la marca del lateral y de la barra móvil es el logo) */
-.vp-enc h1{font:700 30px 'Playfair Display',serif;color:var(--text);line-height:1.1;margin:0;letter-spacing:.01em}
-.vp-enc .sub{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:6px;
-  display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap}
-/* cartelito de mercado abierto/cerrado: el verde y el gris son los del panel v3 */
-.vp-mkt{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;
-  text-transform:uppercase;padding:3px 8px;border-radius:5px;line-height:1.5}
+  border-bottom:1px solid var(--v3-line);background:var(--v3-bg);position:sticky;top:0;z-index:60}
+/* la izquierda cede ancho y la derecha no: el selector de moneda se queda en su lugar
+   y, si la línea de fecha y frescura no entra, baja a un segundo renglón (no se
+   corta: dice de cuándo son los precios) */
+.vp-enc .izq{flex:1 1 360px;min-width:0;max-width:100%}
+/* título de página (SPEC §0): IBM Plex Sans 700 28 px, negro sobre blanco */
+.vp-enc h1{font:700 28px/1.1 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:-.01em;color:var(--v3-ink);margin:0}
+.vp-enc .sub{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin-top:6px;min-width:0}
+.vp-enc .sub .txt{font:500 12px/1.5 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);
+  min-width:0;overflow-wrap:anywhere}
+/* cartelito de mercado abierto/cerrado */
+.vp-mkt{display:inline-flex;align-items:center;gap:6px;flex:none;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;
+  text-transform:uppercase;padding:3px 8px;border-radius:6px;line-height:1.5;white-space:nowrap}
 .vp-mkt i{width:6px;height:6px;border-radius:50%;background:currentColor;display:block;flex:none}
 .vp-mkt em{font-style:normal;opacity:.85}
-.vp-mkt.on{color:var(--v3-up,#1F7A4D);background:var(--v3-upBg,rgba(31,122,77,.12))}
-.vp-mkt.off{color:var(--v3-mut,#8B8375);background:var(--v3-neutro,rgba(139,131,117,.12))}
-.vp-enc .der{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.vp-enc-volver{display:inline-block;font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--link);text-decoration:none;margin-bottom:6px}
-.vp-enc-volver:hover{color:var(--text)}
-/* selectores: sin caja; la opción activa lleva un subrayado dorado de 2px */
-.vp-seg{display:inline-flex;gap:2px;align-items:center}
-.vp-seg button{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;padding:8px 10px;cursor:pointer;color:var(--muted);
-  background:none;border:none;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s}
-.vp-seg button:hover{color:var(--text)}
-.vp-seg button.on{color:var(--text);border-bottom-color:#B08A3E}
-.vp-agregar{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-btnTx);background:var(--v3-btn);
-  padding:9px 16px;border-radius:7px;white-space:nowrap;border:1px solid var(--v3-btn);cursor:pointer;transition:opacity .15s}
-.vp-agregar:hover{opacity:.9}
+.vp-mkt.on{color:var(--v3-up);background:var(--v3-upBg)}
+.vp-mkt.off{color:var(--v3-mut);background:var(--v3-neutro)}
+.vp-enc .der{display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:0 1 auto;max-width:100%}
+.vp-enc .der:empty{display:none}
+.vp-enc-volver{display:inline-block;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-sub);text-decoration:none;margin-bottom:8px}
+.vp-enc-volver:hover{color:var(--v3-gold2)}
+/* botones y selectores (SPEC §0): borde dorado sutil, radio 8, texto gris; el activo
+   con borde dorado, relleno crema y texto negro */
+.vp-seg{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}
+.vp-seg button{font:500 12px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;padding:7px 10px;cursor:pointer;color:var(--v3-selTx);
+  background:var(--v3-selBg);border:1px solid var(--v3-sel);border-radius:8px;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}
+.vp-seg button:hover{color:var(--v3-selOnTx)}
+.vp-seg button.on{color:var(--v3-selOnTx);border-color:var(--v3-selOn);background:var(--v3-selOnBg)}
+/* el de moneda del encabezado, más grande (SPEC «Selector de moneda»: 14 px 600, 10 px 18 px) */
+.vp-seg.mon button{font:600 14px 'IBM Plex Sans',sans-serif;letter-spacing:.04em;padding:10px 18px}
+.vp-seg button:focus-visible,.vp-agregar:focus-visible,.vp-btn:focus-visible{outline:2px solid var(--v3-focus);outline-offset:2px}
+.vp-agregar{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-btnTx);background:var(--v3-btn);
+  padding:11px 16px;border-radius:8px;white-space:nowrap;border:1px solid var(--v3-btn);cursor:pointer;transition:background .15s,border-color .15s}
+.vp-agregar:hover{background:var(--v3-btnHover);border-color:var(--v3-btnHover)}
 .fl-layout .portal-content > [id^="tab-"]{scroll-margin-top:160px}
 .fl-layout .portal-content{flex:1;min-width:0;padding:24px 34px 60px!important;box-sizing:border-box;width:100%;font-family:'IBM Plex Sans',system-ui,sans-serif}
-.fl-layout .portal-content .vp-num{font-variant-numeric:tabular-nums}
-/* celular: el lateral se esconde y las secciones pasan a un selector arriba */
-.vp-mbar{display:none;position:sticky;top:0;z-index:61;height:50px;align-items:center;justify-content:space-between;gap:12px;padding:0 14px;background:#0E1830}
-.vp-mbrand{font:700 18px 'Playfair Display',serif;letter-spacing:.06em;color:#fff;white-space:nowrap}
-.vp-mbrand em{color:#E8CE96;font-style:italic}
-.vp-mbar select{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#E8CE96;background:rgba(255,255,255,.06);
-  border:1px solid rgba(232,206,150,.35);border-radius:7px;padding:8px 10px;max-width:62vw;min-width:0}
-.vp-mder{display:flex;align-items:center;gap:8px;min-width:0}
-.vp-mbar select option,.vp-mbar select optgroup{color:#101010;background:#fff;text-transform:none}
+/* ── celular (<920 px): el lateral se esconde y queda una barra azul fija arriba con
+   todas las pestañas deslizables (más Mi cuenta y los links de salida) ── */
+.vp-mbar{display:none;position:sticky;top:0;z-index:70;height:44px;box-sizing:border-box;align-items:center;gap:4px;padding:0 10px;
+  background:#14213D;overflow-x:auto;overflow-y:hidden;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.vp-mbar::-webkit-scrollbar{display:none}
+.vp-mbrand{flex:none;font:700 15.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:#fff;padding-right:8px}
+.vp-mbrand span{color:#E8CE96;font-style:normal}
+.vp-mbar a,.vp-mbar button{flex:none;font:500 13.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.75);padding:6px 10px;border-radius:6px;
+  background:transparent;border:0;cursor:pointer;text-decoration:none;white-space:nowrap}
+.vp-mbar a:focus-visible,.vp-mbar button:focus-visible{outline:2px solid #E8CE96;outline-offset:-2px}
+.vp-mbar a.on{color:#14213D;background:#E8CE96}
+.vp-mbar a .vp-n{font:600 10.5px 'IBM Plex Sans',sans-serif;margin-left:5px;color:#E8CE96}
+.vp-mbar a.on .vp-n{color:#14213D}
+.vp-mbar .vp-mx{color:rgba(255,255,255,.5);font-size:12.5px}
+.vp-mbar .vp-mx.ges{color:#E8CE96}
+.vp-mbar .vp-msalir{color:#B08A3E;font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase}
+.vp-msep{flex:none;width:1px;height:20px;background:rgba(255,255,255,.15);margin:0 4px}
+.vp-mbar [data-m="ges"]{display:none}
+.vp-mbar.modo-ges [data-m="inv"]{display:none}
+.vp-mbar.modo-ges [data-m="ges"]{display:inline-block}
 @media (max-width:920px){
   .fl-layout{flex-direction:column;min-height:0}
   .fl-layout .portal-nav{display:none!important}
   .vp-mbar{display:flex}
-  .vp-enc{position:static;padding:16px 16px 12px}
-  .vp-enc h1{font-size:25px}
-  .fl-layout .portal-content{padding:18px 14px 50px!important}
+  /* el encabezado no queda pegado en el celular: con la barra azul fija ya se va
+     un buen pedazo de pantalla */
+  .vp-enc{position:static;padding:14px 16px 12px}
+  .vp-enc h1{font-size:24px}
+  .fl-layout .portal-content{padding:16px 14px 50px!important}
 }
-/* secciones del panel */
-.vp-sub{color:var(--sub);font-size:14px;line-height:1.7;max-width:720px;margin:-14px 0 22px}
-.vp-sec{display:flex;align-items:baseline;gap:12px;font:600 17px 'IBM Plex Sans',system-ui,sans-serif;color:var(--text);margin:32px 0 14px;line-height:1.2}
-.vp-sec::after{content:'';flex:1;height:1px;background:var(--v3-line);align-self:center;min-width:20px}
-.vp-sec small{font:400 12px 'IBM Plex Sans',system-ui,sans-serif;color:var(--muted)}
-.vp-cargando{color:var(--muted);font-size:13px}
-.vp-nota{font-size:12px;color:var(--muted);line-height:1.7;margin-top:10px;max-width:760px}
-.vp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
-.vp-card{background:var(--card);border:1px solid var(--v3-line);padding:16px 18px;position:relative}
-.vp-card h4{font:600 15.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--text);margin:0 0 7px;line-height:1.25}
-.vp-card p{font-size:13px;color:var(--sub);line-height:1.65;margin:0}
-.vp-card .l{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-a.vp-ir,.vp-card a.vp-ir{display:inline-block;margin-top:10px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--link);text-decoration:none}
-.vp-fila{display:flex;gap:10px;align-items:baseline;text-decoration:none;background:var(--v3-card);border:1px solid var(--v3-line);padding:11px 14px;margin-bottom:8px;color:var(--text);font-size:13px;line-height:1.5}
-.vp-fila b{color:var(--text)}
-.vp-chips{display:flex;gap:8px;flex-wrap:wrap;margin:-8px 0 20px}
-.vp-chip{font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid var(--v3-line);background:var(--v3-track2);color:var(--sub)}
-.vp-chip b{color:var(--text)}
-.vp-tag{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:2px;white-space:nowrap;display:inline-block}
-.vp-tag.infra{color:var(--green);background:rgba(31,122,77,.12)}.vp-tag.precio{color:var(--link);background:var(--v3-goldTint)}
-.vp-tag.cara{color:var(--red);background:rgba(178,58,58,.1)}.vp-tag.sin{color:var(--muted);background:rgba(120,130,140,.12)}
-/* "zona de compra": el dorado queda como borde fino, no como relleno */
-.vp-tag.zona{color:var(--v3-gold2);background:transparent;border:1px solid var(--v3-gold)}.vp-tag.tengo{color:var(--sub);background:transparent;border:1px solid var(--v3-line)}
-.vp-tag.pro{color:var(--link);border:1px solid var(--gold)}.vp-tag.gratis{color:var(--green);border:1px solid rgba(31,122,77,.5)}
-.vp-tblwrap{background:var(--card);border:1px solid var(--v3-line);overflow-x:auto;position:relative}
-.vp-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
-.vp-tbl th{font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:11px 12px;border-bottom:1px solid var(--v3-line);text-align:right;white-space:nowrap}
-.vp-tbl th.l,.vp-tbl td.l{text-align:left}
-.vp-tbl td{padding:10px 12px;border-bottom:1px solid var(--v3-line2);color:var(--text);text-align:right;font:500 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
-.vp-tbl td.l{font:400 13px 'IBM Plex Sans',system-ui,sans-serif}
-.vp-tbl tbody tr:hover td{background:var(--bg3)}
-.vp-tbl tr:last-child td{border-bottom:none}
-.vp-tbl .tk{font:600 12.5px 'IBM Plex Mono',monospace;color:var(--link);text-decoration:none}
-.vp-tbl .nm{display:block;font:400 11px 'IBM Plex Sans',system-ui,sans-serif;color:var(--muted);white-space:normal}
-.vp-tbl tr.vp-blur td{filter:blur(4px);pointer-events:none;user-select:none}
-.vp-lock{position:absolute;left:0;right:0;bottom:0;padding:22px;text-align:center;background:linear-gradient(to bottom,transparent,var(--card) 40%)}
-.vp-lock b{display:block;font:600 18px 'IBM Plex Sans',system-ui,sans-serif;color:var(--text)}
-.vp-lock p{font-size:12.5px;color:var(--sub);margin:4px 0 10px}
-/* botones: el primario es navy lleno; el secundario, transparente con borde gris (al pasar, borde tinta) */
-.vp-btn{font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-btnTx);
-  background:var(--v3-btn);border:1px solid var(--v3-btn);padding:10px 20px;cursor:pointer;text-decoration:none;display:inline-block;transition:opacity .15s,border-color .15s}
-.vp-btn:hover{opacity:.9}
-.vp-btn.sec{background:transparent;color:var(--v3-ink);border:1px solid var(--v3-line)}
-.vp-btn.sec:hover{opacity:1;border-color:var(--v3-ink)}
-.vp-btn.mini{padding:6px 12px;font-size:10px}
-.vp-btn[disabled]{opacity:.45;cursor:default}
-.vp-form{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-top:8px;padding:10px;border:1px dashed var(--v3-line);text-align:left}
-.vp-form label{display:block;font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
-.vp-form input,.vp-form select{padding:8px 10px;background:var(--bg);border:1px solid var(--v3-line);color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:13px;outline:none;min-width:90px}
-.vp-form input:focus,.vp-form select:focus{border-color:var(--gold)}
-.vp-msg{font-size:12.5px;margin-top:8px}
-.vp-pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:8px}
-.vp-paso{background:var(--card);border:1px solid var(--v3-line);padding:16px 18px;cursor:pointer}
-.vp-paso .n{font:600 22px 'IBM Plex Mono',monospace;color:var(--gold);line-height:1}
-.vp-paso.ok .n{color:var(--green)}
-.vp-paso b{display:block;font-size:14px;color:var(--text);margin:8px 0 4px}
-.vp-paso p{font-size:12.5px;color:var(--sub);line-height:1.6;margin:0}
-.vp-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#0E1830;color:#E8CE96;border:1px solid #B08A3E;padding:11px 18px;font-size:13px;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,.35)}
-.vp-bv{position:fixed;inset:0;z-index:1000;background:rgba(6,12,22,.72);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
-.vp-bv-caja{background:var(--card);border:1px solid var(--v3-line);border-radius:12px;max-width:560px;width:100%;padding:26px 28px 22px;box-shadow:0 20px 60px rgba(0,0,0,.45);margin:auto}
-.vp-bv-caja .k{font:700 10px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--link)}
-.vp-bv-caja h3{font:600 22px 'IBM Plex Sans',system-ui,sans-serif;color:var(--text);margin:8px 0 10px;line-height:1.15}
-.vp-bv-caja p{font-size:13.5px;color:var(--sub);line-height:1.7;margin:0 0 14px}
-.vp-bv-caja ul{list-style:none;padding:0;margin:0 0 16px}
-.vp-bv-caja li{font-size:13px;color:var(--sub);line-height:1.6;padding:9px 0;border-top:1px solid var(--v3-line);display:flex;gap:11px;align-items:flex-start}
-.vp-bv-caja li b{color:var(--text);font-weight:600}
-.vp-bv-caja li i{flex-shrink:0;font-style:normal;color:var(--link);font-weight:700;font-size:11px;letter-spacing:.06em;min-width:18px}
-.vp-bv-legal{font-size:11.5px;color:var(--muted);line-height:1.65;border-top:1px solid var(--v3-line);padding-top:12px;margin-bottom:16px}
-.vp-bv-legal a{color:var(--link);text-decoration:none}
-.vp-bv-pie{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-@media(max-width:560px){.vp-bv-caja{padding:22px 20px 18px}.vp-bv-caja h3{font-size:22px}}
-.vp-spark{width:100%;height:36px;display:block;margin:8px 0 4px}
-.vp-pos{color:var(--green)}.vp-neg{color:var(--red)}.vp-mut{color:var(--muted)}
-.vp-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px}
-/* acá los .pkpi van sueltos (no dentro del marco de .portal-kpis): cada uno es su propia tarjeta */
-.vp-kpis .pkpi{background:var(--v3-card);border:1px solid var(--v3-line);box-shadow:none}
-/* Resumen: cabecera, bloque de estado, composicion y avisos */
-.vp-hero{display:grid;gap:14px;margin-bottom:8px;align-items:stretch}
-.vp-estado{display:flex;flex-direction:column;gap:15px}
-.vp-est-top{display:flex;justify-content:space-between;gap:22px;flex-wrap:wrap}
-.vp-big{font:600 32px 'IBM Plex Mono',monospace;line-height:1.1;color:var(--text);
-  font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin:5px 0 8px}
-.vp-linea{font-size:13px;color:var(--sub);display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;line-height:1.5}
-.vp-linea b{font:600 18px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-/* verde y rojo SOLO para subas y bajas */
-.vp-pill{font:600 11.5px 'IBM Plex Mono',monospace;padding:2px 8px;border-radius:2px;white-space:nowrap}
-.vp-pill.pos{color:var(--v3-up);background:var(--v3-upBg)}
-.vp-pill.neg{color:var(--v3-dn);background:var(--v3-dnBg)}
-.vp-cob{text-align:right;flex:none;max-width:210px}
-.vp-cob .n{font:600 20px 'IBM Plex Mono',monospace;line-height:1.2;color:var(--text);font-variant-numeric:tabular-nums}
-.vp-cob .n small{font-size:12px;font-weight:500;color:var(--muted)}
-.vp-cob p{font-size:11.5px;color:var(--muted);margin:0;line-height:1.5}
-.vp-cob .vp-ir{margin-top:8px}
-@media(max-width:640px){.vp-cob{text-align:left;max-width:none}.vp-big{font-size:27px}}
-.vp-comp{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:20px;border-top:1px solid var(--v3-line);padding-top:14px}
-.vp-bar{display:flex;height:7px;border-radius:4px;overflow:hidden;background:var(--v3-track);margin:8px 0}
-.vp-bar i{display:block;height:100%}
-.vp-leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11.5px;color:var(--sub)}
-.vp-leg span{display:inline-flex;align-items:center;gap:5px}
-.vp-leg i{width:7px;height:7px;border-radius:2px;display:inline-block;flex:none}
-.vp-leg b{color:var(--text)}
-.vp-avisos{border-top:1px solid var(--v3-line);padding-top:12px;display:flex;flex-direction:column;gap:8px}
-.vp-aviso{font-size:12.5px;color:var(--sub);display:flex;gap:10px;align-items:baseline;line-height:1.55}
-.vp-aviso .vp-tag{flex:none}
-.vp-tag.warn{color:var(--v3-warn);background:var(--v3-warnBg)}
-/* dos columnas: lo que cambio a la izquierda, lo que hay para decidir a la derecha */
-.vp-cols{display:grid;gap:8px 30px;align-items:start}
-@media(min-width:980px){.vp-cols{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}}
-.vp-evg{font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
-.vp-evg:first-child{margin-top:0}
-.vp-ev{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:12px;align-items:baseline;text-decoration:none;
-  background:var(--card);border:1px solid var(--v3-line);padding:11px 14px;margin-bottom:7px;
-  color:var(--text);font-size:13px;line-height:1.5}
-.vp-ev:hover{border-color:var(--gold)}
-.vp-ev .d{font:600 10.5px 'IBM Plex Mono',monospace;color:var(--muted);white-space:nowrap}
-.vp-ev .a{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--link);white-space:nowrap}
-/* tarjetas compactas de la columna derecha */
-.vp-buy{display:block;background:var(--card);border:1px solid var(--v3-line);padding:13px 15px;margin-bottom:9px;text-decoration:none;color:var(--text)}
-a.vp-buy:hover{border-color:var(--gold)}
-.vp-buy .h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.vp-buy .tk{font:600 13px 'IBM Plex Mono',monospace;color:var(--link)}
-.vp-buy .nb{font-weight:600;color:var(--text);font-size:14px}
-.vp-buy .nm{font-size:12px;color:var(--muted)}
-.vp-buy .px{font:500 13px 'IBM Plex Mono',monospace;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
-.vp-buy .tg{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0 9px}
-.vp-buy .sc{font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.vp-rsi{display:flex;align-items:center;gap:9px}
-.vp-rsi .t{flex:1;height:4px;border-radius:3px;background:var(--v3-track);overflow:hidden}
-.vp-rsi .t i{display:block;height:100%}
-.vp-rsi .v{font:600 10px 'IBM Plex Mono',monospace;color:var(--muted);white-space:nowrap}
-/* forma del prototipo Panel v3: cards 12px, internas 10px, métricas 8px, pills 4px, botones 5-7px. Sin sombras */
-.vp-card,.vp-tblwrap,.vp-paso,.vp-form,.vp-kpis .pkpi,.vp-fila{border-radius:12px;box-shadow:none}
-.vp-ev,.vp-buy{border-radius:10px}
-.vp-tag,.vp-pill{border-radius:4px}
-.vp-btn{border-radius:6px}
-/* contadores del lateral (la pastilla del prototipo) */
-.fl-layout .portal-nav a .vp-n{font:600 9px 'IBM Plex Mono',monospace;letter-spacing:0;color:#E8CE96;background:rgba(232,206,150,.16);
-  padding:2px 6px;border-radius:4px;flex:none;text-transform:none}
-.fl-layout .portal-nav a.active .vp-n{color:#0E1830;background:#E8CE96}
-.vp-sub{margin:0 0 20px}
+/* ── piezas compartidas por las pestañas ── */
+.vp-sub{color:var(--v3-sub);font-size:14px;line-height:1.7;max-width:720px;margin:0 0 20px}
+.vp-sec{display:flex;align-items:baseline;gap:12px;font:600 17px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);margin:32px 0 14px;line-height:1.2}
 .vp-sec:first-child{margin-top:0}
+.vp-sec::after{content:'';flex:1;height:1px;background:var(--v3-line);align-self:center;min-width:20px}
+.vp-sec small{font:400 12.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut)}
+/* cargando (SPEC «Estados»): esqueletos en #F0EDE5 con la altura de lo que viene.
+   .vp-cargando convierte en esqueleto el "Cargando…" de las pestañas que todavía
+   lo escriben como texto; el texto queda para los lectores de pantalla */
+.vp-skel{display:block;background:var(--v3-skel);border-radius:12px;animation:vp-pulso 1.4s ease-in-out infinite}
+.vp-skel + .vp-skel,.vp-skel + .vp-skel-fila{margin-top:12px}
+.vp-skel-fila{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:12px;margin-bottom:14px}
+.vp-skel-fila .vp-skel + .vp-skel{margin-top:0}
+.vp-cargando{display:block;min-height:120px;margin:0;border-radius:12px;background:var(--v3-skel);color:transparent!important;
+  overflow:hidden;user-select:none;animation:vp-pulso 1.4s ease-in-out infinite}
+@keyframes vp-pulso{50%{opacity:.55}}
+@media (prefers-reduced-motion:reduce){.vp-skel,.vp-cargando{animation:none}}
+.vp-nota{font-size:13px;color:var(--v3-mut);line-height:1.7;margin-top:10px;max-width:760px}
+.vp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:14px}
+.vp-card{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;padding:18px 20px;position:relative;box-shadow:none}
+.vp-card h4{font:600 16px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);margin:0 0 7px;line-height:1.3}
+.vp-card p{font-size:14px;color:var(--v3-sub);line-height:1.6;margin:0}
+.vp-card .l{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut)}
+a.vp-ir,.vp-card a.vp-ir{display:inline-block;margin-top:10px;font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-gold);text-decoration:none}
+a.vp-ir:hover{color:var(--v3-gold2)}
+/* etiquetas (6 px): veredicto, zona de compra, "la tenés", plan */
+.vp-tag{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:6px;white-space:nowrap;display:inline-block}
+.vp-tag.infra{color:var(--v3-up);background:var(--v3-upBg)}.vp-tag.precio{color:var(--v3-gold2);background:var(--v3-goldBg)}
+.vp-tag.cara{color:var(--v3-dn);background:var(--v3-dnBg)}.vp-tag.sin{color:var(--v3-mut);background:var(--v3-neutro)}
+.vp-tag.zona{color:var(--v3-gold2);background:transparent;border:1px solid var(--v3-gold)}.vp-tag.tengo{color:var(--v3-sub);background:transparent;border:1px solid var(--v3-line)}
+.vp-tag.pro{color:var(--v3-gold2);border:1px solid var(--v3-gold)}.vp-tag.gratis{color:var(--v3-up);border:1px solid var(--v3-up)}
+.vp-tag.warn{color:var(--v3-warn);background:var(--v3-warnBg)}
+/* tablas: las del prototipo (encabezado 11 px en mayúsculas, filas de 14 px) */
+.vp-tblwrap{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;overflow-x:auto;position:relative}
+.vp-tbl{width:100%;border-collapse:collapse;font-size:14px;min-width:640px}
+.vp-tbl th{font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);padding:12px 14px 10px;border-bottom:1px solid var(--v3-line);text-align:right;white-space:nowrap}
+.vp-tbl th.l,.vp-tbl td.l{text-align:left}
+.vp-tbl td{padding:12px 14px;border-bottom:1px solid var(--v3-line2);color:var(--v3-ink);text-align:right;font:500 14px 'IBM Plex Sans',system-ui,sans-serif;white-space:nowrap}
+.vp-tbl td.l{font:400 14px 'IBM Plex Sans',system-ui,sans-serif}
+.vp-tbl tbody tr:hover td{background:var(--v3-hover)}
+.vp-tbl tr:last-child td{border-bottom:none}
+.vp-tbl .tk{font:700 14px 'IBM Plex Sans',sans-serif;color:var(--v3-gold);text-decoration:none}
+.vp-tbl .nm{display:block;font:400 12.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut);white-space:normal}
+/* botones: el primario es navy lleno (radio 8); el secundario, el de la regla §0 */
+.vp-btn{font:600 12px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-btnTx);
+  background:var(--v3-btn);border:1px solid var(--v3-btn);border-radius:8px;padding:10px 18px;cursor:pointer;text-decoration:none;display:inline-block;
+  transition:background .15s,border-color .15s,color .15s}
+.vp-btn:hover{background:var(--v3-btnHover);border-color:var(--v3-btnHover)}
+.vp-btn.sec{background:var(--v3-selBg);color:var(--v3-selTx);border-color:var(--v3-sel)}
+.vp-btn.sec:hover{color:var(--v3-selOnTx);border-color:var(--v3-selOn);background:var(--v3-selBg)}
+.vp-btn.mini{padding:7px 12px;font-size:11.5px}
+.vp-btn[disabled]{opacity:.45;cursor:default}
+/* "La compré": formulario en línea */
+.vp-form{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-top:8px;padding:12px;border:1px dashed var(--v3-line);border-radius:10px;text-align:left}
+.vp-form label{display:block;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-sub);margin-bottom:4px}
+.vp-form input,.vp-form select{padding:8px 10px;background:var(--v3-input);border:1px solid var(--v3-line);border-radius:8px;color:var(--v3-ink);
+  font:500 14px 'IBM Plex Sans',system-ui,sans-serif;outline:none;min-width:90px}
+.vp-form input:focus,.vp-form select:focus{border-color:var(--v3-focus)}
+.vp-msg{font-size:13px;margin-top:8px}
+/* avisos por mail del Resumen (alertasMail): texto de 14 px y selectores de la regla §0 */
+.vp-al{font-size:14px;color:var(--v3-ink);line-height:1.5}
+.vp-al label{cursor:pointer}
+.vp-al input[type="checkbox"]{accent-color:var(--v3-gold);width:15px;height:15px;margin:0 6px 0 0;vertical-align:-2px;cursor:pointer}
+.vp-al select{font:500 14px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);background:var(--v3-input);border:1px solid var(--v3-sel);border-radius:8px;
+  padding:6px 10px;margin-left:6px;cursor:pointer;max-width:100%}
+.vp-al select:focus-visible,.vp-al input:focus-visible{outline:2px solid var(--v3-focus);outline-offset:2px}
+.vp-al select option{color:#101010;background:#fff}
+.vp-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);max-width:calc(100vw - 32px);box-sizing:border-box;background:#14213D;color:#fff;
+  border:1px solid rgba(232,206,150,.35);border-radius:10px;padding:11px 18px;font:500 14px 'IBM Plex Sans',sans-serif;z-index:999;box-shadow:0 12px 32px rgba(14,24,48,.28)}
+/* bienvenida: el modal del prototipo (velo navy con desenfoque, caja de radio 14) */
+.vp-bv{position:fixed;inset:0;z-index:1000;background:rgba(14,24,48,.42);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+  display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.vp-bv-caja{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:14px;max-width:560px;width:100%;box-sizing:border-box;padding:26px 26px 22px;
+  box-shadow:0 24px 60px rgba(14,24,48,.25);margin:auto}
+.vp-bv-caja .k{font:600 11px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-gold2)}
+.vp-bv-caja h3{font:600 22px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);margin:8px 0 10px;line-height:1.2}
+.vp-bv-caja p{font-size:14px;color:var(--v3-sub);line-height:1.65;margin:0 0 14px}
+.vp-bv-caja ul{list-style:none;padding:0;margin:0 0 16px}
+.vp-bv-caja li{font-size:14px;color:var(--v3-sub);line-height:1.6;padding:10px 0;border-top:1px solid var(--v3-line2);display:flex;gap:11px;align-items:flex-start}
+.vp-bv-caja li b{color:var(--v3-ink);font-weight:600}
+.vp-bv-caja li i{flex-shrink:0;font:700 11.5px 'IBM Plex Sans',sans-serif;font-style:normal;color:var(--v3-gold);letter-spacing:.06em;min-width:18px;padding-top:2px}
+.vp-bv-legal{font-size:13px;color:var(--v3-mut);line-height:1.65;border-top:1px solid var(--v3-line2);padding-top:12px;margin-bottom:16px}
+.vp-bv-legal a{color:var(--v3-gold);text-decoration:none}
+.vp-bv-pie{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+@media(max-width:560px){.vp-bv-caja{padding:22px 20px 18px}}
+/* verde y rojo SOLO para subas y bajas */
+.vp-pos{color:var(--v3-up)}.vp-neg{color:var(--v3-dn)}.vp-mut{color:var(--v3-mut)}
 `;
 
 /* ───────────────────────── estado y utilidades ───────────────────────── */
@@ -539,10 +536,11 @@ async function precioHoy(sym) {
 }
 
 /* ───────────────────────── shell: lateral + encabezado + ruteo ───────────────────────── */
-// El lateral es el del handoff Panel v3: tres grupos. "Mis empresas" y
-// "Herramientas y datos" dejan de ser pestañas: la primera pasa (etapa 3) al
-// desplegable de cada fila de Mi cartera y la segunda es un link al sitio.
-// Mientras tanto se siguen abriendo desde Mi cartera (SUBVISTAS): no se pierde nada.
+// El lateral es el del prototipo Panel v3: tres grupos y, en el pie, el nombre,
+// el plan, Mi cuenta y los links de salida. "Mis empresas" y "Herramientas y
+// datos" no son pestañas: la primera vive en el desplegable de cada fila de Mi
+// cartera y la segunda es un link al sitio; las dos se siguen abriendo desde Mi
+// cartera (SUBVISTAS), así que no se pierde nada.
 const TABS = [
   { g: 'Tus inversiones', id: 'inicio', t: 'Resumen' },
   { g: 'Tus inversiones', id: 'micartera', t: 'Mi cartera' },
@@ -555,8 +553,9 @@ const TABS = [
   { g: 'Para decidir', id: 'carteras', t: 'Carteras Valtia' },
   { g: 'Para decidir', id: 'disciplina', t: 'Inversión mensual' },
   { g: 'Mercado', id: 'agenda', t: 'Agenda', tit: 'Agenda del mercado' },
-  // último grupo del lateral: el plan, los datos de la cuenta y los avisos por mail
-  { g: 'Tu cuenta', id: 'cuenta', t: 'Mi cuenta' },
+  // el plan, los datos de la cuenta y los avisos por mail: en el prototipo va en el
+  // pie del lateral (debajo del plan) y al final de la barra del celular
+  { g: 'Tu cuenta', id: 'cuenta', t: 'Mi cuenta', pie: true },
 ];
 const SUBVISTAS = {
   empresas: { t: 'Mis empresas', de: 'micartera' },
@@ -593,7 +592,10 @@ const _render = { inicio: enModulo(renderResumen, 'inicio'), comprar: enModulo(r
 const _hecho = {};
 
 function pintarPlan() {
-  ['vp-plan', 'vp-plan-m'].forEach(id => { const c = $(id); if (c) { c.textContent = etiquetaPlan(); c.classList.toggle('pro', S.pro); } });
+  const c = $('vp-plan'); if (!c) return;
+  c.textContent = etiquetaPlan();
+  // relleno dorado para los planes pagos (PRO, cliente, admin); borde para el gratis
+  c.classList.toggle('pro', S.pro);
 }
 function etiquetaPlan() {
   return S.isAdmin ? 'Admin' : S.cliente ? 'Cliente · a medida' : S.pro ? 'PRO' : S.verificado ? 'Gratis' : 'Gratis · verificá tu mail';
@@ -602,7 +604,8 @@ const nombreUsuario = () => (S.user && S.user.displayName) || String(S.email || 
 const primerNombre = () => String(nombreUsuario() || '').split(' ')[0];
 function hoyLargo() {
   try {
-    const s = new Date(hoyAR() + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+    // "Sábado 26 de septiembre", como el prototipo (sin la coma después del día)
+    const s = new Date(hoyAR() + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }).replace(',', '');
     return s.charAt(0).toUpperCase() + s.slice(1);
   } catch (e) { return ''; }
 }
@@ -617,20 +620,27 @@ function instalarShell() {
   // handoff saca el Fondo del panel); la ruta queda para el cliente del fondo
   if (S.cliente) _permitidos.add('fondocli');
   if (S.isAdmin) GESTION.forEach(x => _permitidos.add(x.id));
-  const link = (x, m) => `<a href="#panel/${x.id}" id="${x.id}-tab" data-tab="${x.id}" data-m="${m}" onclick="portalTab(event,'${x.id}')"><span>${x.t}</span></a>`;
-  const grupos = [...new Set(TABS.map(x => x.g))];
+  // fondo-live.js (admin) rebautiza "Posiciones" a todo link del lateral cuyo texto sea
+  // exactamente "Movimientos" (así nombraba antes su pestaña del fondo). La marca
+  // oculta hace que el de esta pestaña no coincida; no se ve ni se lee en voz alta
+  const marca = x => x.id === 'historial' ? '<i hidden>·</i>' : '';
+  const link = (x, m) => `<a href="#panel/${x.id}" id="${x.id}-tab" data-tab="${x.id}" data-m="${m}" onclick="portalTab(event,'${x.id}')"><span>${x.t}</span>${marca(x)}</a>`;
+  const enGrupo = TABS.filter(x => !x.pie);
+  const grupos = [...new Set(enGrupo.map(x => x.g))];
+  const cuenta = TABS.find(x => x.pie);
   nav.innerHTML = `<div class="fl-sbbrand">
-      <svg width="32" height="32" viewBox="0 0 34 34" fill="none" aria-hidden="true"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
-      <div><div class="nm">VAL<em>T</em>IA</div><div class="sb">Analytics</div></div></div>` +
-    grupos.map(g => `<div class="vp-grp" data-m="inv">${g}</div>` + TABS.filter(x => x.g === g).map(x => link(x, 'inv')).join('')).join('') +
+      <div class="lg" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M1 12 L5 6 L8 9 L12 3 L15 6" fill="none" stroke="#B08A3E" stroke-width="1.5"/></svg></div>
+      <div><div class="nm">VAL<span>T</span>IA</div><div class="sb">Analytics</div></div></div>` +
+    grupos.map(g => `<div class="vp-grp" data-m="inv">${g}</div>` + enGrupo.filter(x => x.g === g).map(x => link(x, 'inv')).join('')).join('') +
     (S.isAdmin ? `<div class="vp-grp" data-m="ges">Gestión del fondo</div>` + GESTION.map(x => link(x, 'ges')).join('') : '') +
     `<div class="vp-foot"><span id="portal-user-name">${esc(nombreUsuario())}</span>
       <div class="vp-plan-w"><span class="vp-plan${S.pro ? ' pro' : ''}" id="vp-plan">${etiquetaPlan()}</span></div>
-      ${S.isAdmin ? `<a href="#panel/dashboard" class="vp-lat-l" data-m="inv" onclick="portalTab(event,'dashboard')">Gestión del fondo →</a>
-      <a href="#panel/inicio" class="vp-lat-l" data-m="ges" onclick="portalTab(event,'inicio')">← Panel del inversor</a>` : ''}
+      ${cuenta ? `<a href="#panel/${cuenta.id}" class="vp-lat-l vp-lat-cuenta" data-m="inv" onclick="portalTab(event,'${cuenta.id}')">${cuenta.t}</a>` : ''}
+      ${S.isAdmin ? `<a href="#panel/dashboard" class="vp-lat-l vp-lat-ges" data-m="inv" onclick="portalTab(event,'dashboard')">Gestión del fondo →</a>
+      <a href="#panel/inicio" class="vp-lat-l vp-lat-ges" data-m="ges" onclick="portalTab(event,'inicio')">← Panel del inversor</a>` : ''}
       <a href="/herramientas" class="vp-lat-l">Herramientas y datos ↗</a>
       <a href="#" class="vp-lat-l" onclick="valtiaPanel.salir(event)">← Volver al sitio</a>
-      <button onclick="logout()">Cerrar sesión</button></div>`;
+      <button type="button" onclick="logout()">Cerrar sesión</button></div>`;
   if (!document.querySelector('.fl-layout')) {
     const wrap = document.createElement('div'); wrap.className = 'fl-layout';
     nav.parentElement.insertBefore(wrap, nav); wrap.appendChild(nav);
@@ -642,44 +652,80 @@ function instalarShell() {
   const main = document.querySelector('.fl-main');
   if (main && !$('vp-enc')) {
     const tb = main.querySelector('.fl-topbar'); if (tb) tb.remove();
-    main.insertAdjacentHTML('afterbegin', `<div class="vp-mbar"><span class="vp-mbrand">VAL<em>T</em>IA</span>
-      <span class="vp-mder"><span class="vp-plan" id="vp-plan-m"></span><select id="vp-msel" aria-label="Sección del panel"></select></span></div>
+    // la barra del celular es un div y no un <nav>: index.html le da a todo <nav> el
+    // aspecto del nav del sitio, y con el panel abierto los esconde (salvo el lateral)
+    main.insertAdjacentHTML('afterbegin', `<div class="vp-mbar" id="vp-mbar" role="navigation" aria-label="Secciones del panel"></div>
       <header class="vp-enc" id="vp-enc"></header>`);
   }
-  llenarSelectMovil();
+  llenarBarraMovil();
   pintarPlan();
   document.body.classList.add('fl-app-on');
+  ubicarBarraCot();
   const og = window.goPortal;
   window.goPortal = e => { if (og) og(e); document.body.classList.add('fl-app-on'); portalTab(_tab); };
+  // las fuentes las carga index.html; esto es por si el panel se monta en otra página.
+  // Sin IBM Plex Mono: los números van en Plex Sans con cifras tabulares (SPEC §0)
   if (!document.querySelector('link[href*="Playfair"]')) {
     const l = document.createElement('link'); l.rel = 'stylesheet';
-    l.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap';
+    l.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap';
     document.head.appendChild(l);
   }
 }
 
-/* en el celular el lateral se esconde: las mismas secciones, en un selector */
-function llenarSelectMovil() {
-  const sel = $('vp-msel'); if (!sel) return;
-  const opt = (v, x) => `<option value="${v}">${esc(x)}</option>`;
-  const grupos = [...new Set(TABS.map(x => x.g))];
-  sel.innerHTML = (S.cliente ? '<option value="fondocli" hidden>Tu posición en el fondo</option>' : '') + grupos.map(g => `<optgroup label="${g}">${TABS.filter(x => x.g === g).map(x => opt(x.id, x.t)).join('')}</optgroup>`).join('') +
-    `<optgroup label="Mi cartera en detalle">${Object.entries(SUBVISTAS).map(([id, s]) => opt(id, s.t)).join('')}</optgroup>` +
-    (S.isAdmin ? `<optgroup label="Gestión del fondo">${GESTION.map(x => opt(x.id, x.t)).join('')}</optgroup>` : '') +
-    `<optgroup label="Más">${opt('@herr', 'Herramientas y datos ↗')}${opt('@sitio', '← Volver al sitio')}${opt('@salir', 'Cerrar sesión')}</optgroup>`;
-  sel.value = _tab;
-  sel.onchange = () => {
-    const v = sel.value;
-    if (v.charAt(0) !== '@') { portalTab(v); window.scrollTo(0, 0); return; }
-    sel.value = _tab;
-    if (v === '@herr') location.href = '/herramientas';
-    else if (v === '@sitio') salir();
-    else if (v === '@salir' && window.logout) window.logout();
-  };
+/* ── la barra de cotizaciones arriba del contenido (SPEC §0 y prototipo) ──────────
+   #valtia-cot vive en index.html debajo del nav del sitio y la llena
+   cotizaciones.js, que la vuelve a buscar por id en cada refresco: moverla no le
+   corta nada. Con el panel abierto va al tope de la columna principal, a la
+   derecha del lateral; al volver al sitio, a su lugar de siempre. Se sigue la
+   clase fl-app-on del body y no cada botón de salida: así cubre "Volver al
+   sitio", el logo del sitio, "Mi Panel" y cualquier camino futuro. */
+let _cotOrigen = null;
+function ubicarBarraCot() {
+  const cot = $('valtia-cot'), main = document.querySelector('.fl-main');
+  if (!cot || !main) return;
+  const enPanel = document.body.classList.contains('fl-app-on');
+  // primera de la columna aunque después se le agreguen cosas arriba (la barra del
+  // celular y el encabezado entran con afterbegin)
+  if (enPanel && main.firstElementChild !== cot) {
+    if (!_cotOrigen && cot.parentElement !== main) _cotOrigen = { padre: cot.parentElement, sig: cot.nextElementSibling };
+    main.insertBefore(cot, main.firstChild);
+  } else if (!enPanel && _cotOrigen && cot.parentElement === main) {
+    const { padre, sig } = _cotOrigen;
+    padre.insertBefore(cot, sig && sig.parentElement === padre ? sig : null);
+  }
+}
+try { new MutationObserver(ubicarBarraCot).observe(document.body, { attributes: true, attributeFilter: ['class'] }); } catch (e) {}
+
+/* en el celular (<920 px) el lateral se esconde y queda una barra azul fija arriba
+   con todas las pestañas deslizables, Mi cuenta y los links de salida (el lateral
+   los tiene en su pie). Las pastillas son las mismas del lateral (contadorNav) */
+function llenarBarraMovil() {
+  const bar = $('vp-mbar'); if (!bar) return;
+  const item = (x, m) => `<a href="#panel/${x.id}" data-mt="${x.id}" data-m="${m}" onclick="portalTab(event,'${x.id}')">${esc(x.t)}</a>`;
+  bar.innerHTML = `<span class="vp-mbrand" aria-hidden="true">VAL<span>T</span>IA</span>` +
+    TABS.filter(x => !x.pie).map(x => item(x, 'inv')).join('') +
+    TABS.filter(x => x.pie).map(x => item(x, 'inv')).join('') +
+    (S.isAdmin
+      ? `<a href="#panel/dashboard" class="vp-mx ges" data-m="inv" onclick="portalTab(event,'dashboard')">Gestión del fondo →</a>` +
+        GESTION.map(x => item(x, 'ges')).join('') +
+        `<a href="#panel/inicio" class="vp-mx ges" data-m="ges" onclick="portalTab(event,'inicio')">← Panel del inversor</a>`
+      : '') +
+    `<i class="vp-msep" aria-hidden="true"></i>
+    <a href="/herramientas" class="vp-mx">Herramientas y datos ↗</a>
+    <a href="#" class="vp-mx" onclick="valtiaPanel.salir(event)">← Volver al sitio</a>
+    <button type="button" class="vp-mx vp-msalir" onclick="logout()">Cerrar sesión</button>`;
+}
+/* la pestaña activa queda a la vista en la barra del celular (solo se corre la barra,
+   nunca la página) */
+function centrarEnBarra() {
+  const bar = $('vp-mbar'); if (!bar || !bar.offsetParent) return;
+  const a = bar.querySelector('a.on'); if (!a) return;
+  const izq = a.offsetLeft - (bar.clientWidth - a.offsetWidth) / 2;
+  try { bar.scrollTo({ left: Math.max(0, izq), behavior: 'smooth' }); } catch (e) { bar.scrollLeft = Math.max(0, izq); }
 }
 
-/* un solo encabezado para todo el panel: título, fecha y frescura, y a la
-   derecha la moneda (y "+ Agregar" en Mi cartera) */
+/* un solo encabezado para todo el panel (prototipo): título, fecha y frescura, y
+   a la derecha la moneda (y "+ Agregar" en Mi cartera) */
 function pintarEncabezado() {
   const h = $('vp-enc'); if (!h) return;
   const tab = _tab, ges = ES_GESTION.has(tab), sub = SUBVISTAS[tab], ficha = TABS.find(x => x.id === tab);
@@ -696,11 +742,13 @@ function pintarEncabezado() {
   // el cartel del mercado va donde están los precios del usuario (las mismas
   // pestañas que muestran la frescura); en la gestión del fondo no aparece
   const mkt = !ges && conMon ? cartelMercado() : '';
+  const linea = partes.filter(Boolean).join(' · ');
+  // la derecha, sin espacios sueltos: vacía (Movimientos, Alertas…) no ocupa lugar
+  const der = (conMon ? `<div class="vp-seg mon" role="group" aria-label="Moneda">${['ARS', 'CCL', 'MEP'].map(c =>
+      `<button type="button" data-cur="${c}" class="${cur === c ? 'on' : ''}" aria-pressed="${cur === c}">${curEtq(c)}</button>`).join('')}</div>` : '')
+    + (tab === 'micartera' && S.verificado ? '<button type="button" class="vp-agregar" data-agregar>+ Agregar</button>' : '');
   h.innerHTML = `<div class="izq">${sub ? `<a href="#panel/${sub.de}" data-go="${sub.de}" class="vp-enc-volver">← Mi cartera</a>` : ''}
-      ${propio ? '' : `<h1>${esc(tit)}</h1>`}<div class="sub">${mkt}<span>${partes.filter(Boolean).map(esc).join(' \u00b7 ')}</span></div></div>
-    <div class="der">${conMon ? `<div class="vp-seg" role="group" aria-label="Moneda">${['ARS', 'CCL', 'MEP'].map(c =>
-        `<button type="button" data-cur="${c}" class="${cur === c ? 'on' : ''}" aria-pressed="${cur === c}">${curEtq(c)}</button>`).join('')}</div>` : ''}
-      ${tab === 'micartera' && S.verificado ? '<button type="button" class="vp-agregar" data-agregar>+ Agregar</button>' : ''}</div>`;
+      ${propio ? '' : `<h1>${esc(tit)}</h1>`}<div class="sub">${mkt}<span class="txt" title="${esc(linea)}">${esc(linea)}</span></div></div><div class="der">${der}</div>`;
 }
 
 /* contadores del lateral y frescura del encabezado: no dependen de que el
@@ -743,10 +791,26 @@ export function portalTab(e, tab) {
     a.classList.toggle('active', on);
     if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   });
+  // Mi cuenta va en el pie del lateral (un link, no una pestaña del grupo)
+  document.querySelectorAll('.portal-nav a.vp-lat-cuenta').forEach(a => {
+    const on = enLateral === 'cuenta';
+    a.classList.toggle('on', on);
+    if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  });
+  const ges = ES_GESTION.has(tab);
   const nav = document.querySelector('.portal-nav');
-  if (nav) nav.classList.toggle('modo-ges', ES_GESTION.has(tab));
+  if (nav) nav.classList.toggle('modo-ges', ges);
+  const bar = $('vp-mbar');
+  if (bar) {
+    bar.classList.toggle('modo-ges', ges);
+    bar.querySelectorAll('a[data-mt]').forEach(a => {
+      const on = a.dataset.mt === enLateral;
+      a.classList.toggle('on', on);
+      if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+  }
   _tab = tab;
-  const sel = $('vp-msel'); if (sel) sel.value = tab;
+  centrarEnBarra();
   try { sessionStorage.setItem('valtia-panel-tab', tab); sessionStorage.setItem('valtia-panel-user', S.email || ''); } catch (x) {}
   if (location.hash !== '#panel/' + tab) history.replaceState(null, '', '#panel/' + tab);
   pintarEncabezado();
@@ -815,7 +879,7 @@ function bienvenida() {
         precios y múltiplos, de carácter general y educativo. No es asesoramiento financiero ni una
         recomendación para tu caso.</div></li>
     </ul>
-    ${!S.verificado ? `<p style="color:var(--link)"><b>Te falta verificar tu mail.</b> Hasta que lo hagas,
+    ${!S.verificado ? `<p style="color:var(--v3-gold2)"><b>Te falta verificar tu mail.</b> Hasta que lo hagas,
       Mi cartera y la inversión mensual quedan bloqueadas. Te mandamos el enlace cuando creaste la cuenta.</p>` : ''}
     <div class="vp-bv-legal">Las alertas por mail vienen apagadas: las prendés vos desde el panel, y como
       máximo sale una por día. ¿Dudas o algo que no funciona? Escribinos a
@@ -1143,13 +1207,13 @@ async function alertasMail() {
   const tipos = (cfg && cfg.tipos) || {};
   const umbral = [3, 5, 8].includes(Number(cfg && cfg.umbralVar)) ? Number(cfg.umbralVar) : 5;
   const frec = cfg && cfg.frecuencia === 'semanal' ? 'semanal' : 'diaria';
-  box.innerHTML = `<div class="vp-card" style="margin-top:12px">
-      <label style="display:flex;gap:10px;align-items:center;cursor:pointer;font-size:13.5px;color:var(--text)">
-        <input type="checkbox" id="al-on"${on ? ' checked' : ''}> <b>Recibir estas novedades por mail</b> <span class="vp-mut" style="font-size:12px">(máximo uno por día)</span></label>
-      <div id="al-opc" style="display:${on ? 'block' : 'none'};margin-top:12px;font-size:12.5px;color:var(--text)">
+  box.innerHTML = `<div class="vp-card vp-al" style="margin-top:12px">
+      <label style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <input type="checkbox" id="al-on"${on ? ' checked' : ''}> <b>Recibir estas novedades por mail</b> <span class="vp-mut" style="font-size:13px">(máximo uno por día)</span></label>
+      <div id="al-opc" style="display:${on ? 'block' : 'none'};margin-top:12px">
         <div style="display:flex;flex-wrap:wrap;gap:8px 18px">${TIPOS_ALERTA.map(([k, t]) =>
-          `<label style="cursor:pointer"><input type="checkbox" data-al-tipo="${k}"${tipos[k] === false ? '' : ' checked'}> ${t}</label>`).join('')}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;align-items:center">
+          `<label><input type="checkbox" data-al-tipo="${k}"${tipos[k] === false ? '' : ' checked'}> ${t}</label>`).join('')}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:12px;align-items:center">
           <label>Frecuencia <select id="al-frec"><option value="diaria"${frec === 'diaria' ? ' selected' : ''}>diaria</option><option value="semanal"${frec === 'semanal' ? ' selected' : ''}>semanal (lunes)</option></select></label>
           <label>Movimiento desde <select id="al-umbral">${[3, 5, 8].map(u => `<option value="${u}"${u === umbral ? ' selected' : ''}>${u}%</option>`).join('')}</select></label>
         </div>
@@ -1185,13 +1249,15 @@ async function alertasMail() {
 }
 
 /* ── contadores del sidebar: cuanto hay detras de cada seccion ── */
+// la misma pastilla en el lateral y en la barra del celular
 function contadorNav(id, txt, tit) {
-  const a = document.querySelector(`.portal-nav a[data-tab="${id}"]`); if (!a) return;
-  let s = a.querySelector('.vp-n');
-  if (!txt) { if (s) s.remove(); return; }
-  if (!s) { s = document.createElement('span'); s.className = 'vp-n'; a.appendChild(s); }
-  s.textContent = txt;
-  if (tit) a.title = tit;
+  document.querySelectorAll(`.portal-nav a[data-tab="${id}"], #vp-mbar a[data-mt="${id}"]`).forEach(a => {
+    let s = a.querySelector('.vp-n');
+    if (!txt) { if (s) s.remove(); a.removeAttribute('title'); return; }
+    if (!s) { s = document.createElement('span'); s.className = 'vp-n'; a.appendChild(s); }
+    s.textContent = txt;
+    if (tit) a.title = tit;
+  });
 }
 // los precios que ya se evaluaron contra las alertas de precio (ver contadores). Es por
 // OBJETO: cartera() los cachea toda la sesión y devuelve el mismo objeto hasta que alguien
@@ -1363,9 +1429,15 @@ async function renderEmpresas() {
   cc.r.filas.forEach(f => {
     const rf = esRentaFija(f.ticker, bset);
     const k = rf ? base(f.ticker) : (tickerFicha(f.ticker) || base(f.ticker));
-    if (!grupos.has(k)) grupos.set(k, { k, rf, filas: [], valor: 0, pl: 0, tieneValor: false });
+    if (!grupos.has(k)) grupos.set(k, { k, rf, filas: [], valor: 0, pl: 0, tieneValor: false, conPl: false, sinCosto: false });
     const g = grupos.get(k); g.filas.push(f);
-    if (f.dValor != null) { g.valor += f.dValor; g.pl += f.dPl || 0; g.tieneValor = true; }
+    if (f.dValor != null) {
+      g.valor += f.dValor; g.tieneValor = true;
+      // sin precio de compra el "resultado" sería todo el valor: no entra (el mismo
+      // criterio que el gráfico de resultado por activo de Mi cartera)
+      if (f.dPl != null && Number(f.precioCompra) > 0) { g.pl += f.dPl; g.conPl = true; }
+      else g.sinCosto = true;
+    }
   });
   const porTicker = {}; (inf || []).forEach(d => { if (d.ticker) (porTicker[String(d.ticker).toUpperCase()] = porTicker[String(d.ticker).toUpperCase()] || []).push(d); });
   const cards = [...grupos.values()].sort((a, b) => b.valor - a.valor).map(g => {
@@ -1399,14 +1471,16 @@ async function renderEmpresas() {
       // el precio de publicación está en dólares (el ADR): comparar contra el
       // precio en dólares de hoy, NUNCA contra el de una posición en pesos
       const pxUsd = f && pi[f] && pi[f].p != null ? pi[f].p : null;
-      if (docs.length) extra = `<p>📄 <a href="/activo?t=${f}#informe" style="color:var(--link)">${esc(docs[0].titulo)}</a> · ${fmtF(docs[0].fecha)}${docs[0].precio_pub && pxUsd ? ` · ${pct((pxUsd / docs[0].precio_pub - 1) * 100, 1)} desde su publicación` : ''}</p>`;
-      else if (emp && emp.slug) extra = `<p>📄 Informe Valtia disponible con PRO · <a href="/activo?t=${f}#informe" style="color:var(--link)">ver la ficha</a></p>`;
-      else if (f) extra = `<p class="vp-mut">Sin informe Valtia todavía · <a href="mailto:soporte@valtia.tech?subject=Análisis de ${f}" style="color:var(--link)">pedir este análisis</a></p>`;
+      if (docs.length) extra = `<p>📄 <a href="/activo?t=${f}#informe" style="color:var(--v3-gold)">${esc(docs[0].titulo)}</a> · ${fmtF(docs[0].fecha)}${docs[0].precio_pub && pxUsd ? ` · ${pct((pxUsd / docs[0].precio_pub - 1) * 100, 1)} desde su publicación` : ''}</p>`;
+      else if (emp && emp.slug) extra = `<p>📄 Informe Valtia disponible con PRO · <a href="/activo?t=${f}#informe" style="color:var(--v3-gold)">ver la ficha</a></p>`;
+      else if (f) extra = `<p class="vp-mut">Sin informe Valtia todavía · <a href="mailto:soporte@valtia.tech?subject=Análisis de ${f}" style="color:var(--v3-gold)">pedir este análisis</a></p>`;
       else extra = `<p class="vp-mut">Sin ficha en Valtia para este ticker.</p>`;
     }
     return `<div class="vp-card" data-emp="${esc(g.k)}"><div class="l">${esc(g.k)}${ver ? ` · <span class="vp-tag ${verCls(ver)}" style="padding:1px 6px">${esc(ver)}</span>` : ''}</div>
       <h4>${link ? `<a href="${link}" style="color:inherit;text-decoration:none">${esc(nombre)}</a>` : esc(nombre)}</h4>
-      <p>${cant.toLocaleString('es-AR')} ${g.rf ? 'VN' : 'unid.'}${g.tieneValor ? ` · <b>${money(g.valor, m)}</b> · <span class="${cls(g.pl)}">${moneyS(g.pl, m)}</span>` : ' · esperando precio'}</p>
+      <p>${cant.toLocaleString('es-AR')} ${g.rf ? 'VN' : 'unid.'}${g.tieneValor ? ` · <b>${money(g.valor, m)}</b> · ${g.conPl
+        ? `<span class="${cls(g.pl)}">${moneyS(g.pl, m)}</span>${g.sinCosto ? ' <span class="vp-mut">(sin las compras que no tienen precio de compra)</span>' : ''}`
+        : '<span class="vp-mut" title="Sin precio de compra no se puede calcular el resultado">resultado —</span>'}` : ' · esperando precio'}</p>
       ${(() => {
         // variación del PRECIO por período (no es el resultado de la persona)
         if (g.rf) return '';
@@ -1434,7 +1508,7 @@ async function noticiasDeMisEmpresas(el) {
     if (!emp || !emp.claves) return;
     const hits = ns.filter(n => { const t = (String(n.titulo) + ' ' + String(n.resumen || '')).toLowerCase(); return emp.claves.some(k => t.includes(k)); }).slice(0, 3);
     if (!hits.length) return;
-    b.innerHTML = `<div style="margin-top:8px;font-size:12.5px;line-height:1.6">${hits.map(n => `📰 <a href="/nota?n=${esc(n.id)}" style="color:var(--text);text-decoration:none">${esc(n.titulo)}</a> <span class="vp-mut">· ${fmtF(n.fecha)}</span>`).join('<br>')}</div>`;
+    b.innerHTML = `<div style="margin-top:8px;font-size:12.5px;line-height:1.6">${hits.map(n => `📰 <a href="/nota?n=${esc(n.id)}" style="color:var(--v3-ink);text-decoration:none">${esc(n.titulo)}</a> <span class="vp-mut">· ${fmtF(n.fecha)}</span>`).join('<br>')}</div>`;
   });
 }
 
@@ -1471,12 +1545,12 @@ async function renderHerramientas() {
         <td>${ra.valorScore ?? '—'}</td>`; })() : `<td>${px.rsi != null ? num(px.rsi, 0) : '—'}</td>`}
       </tr>`;
     };
-    datos = `<p class="vp-sub">Lo que el sync sabe de cada uno de tus activos${S.pro ? '' : ' · ratios completos con PRO'}. El mapa de calor, el radar, los bonos y el dólar histórico están en <a href="/herramientas" style="color:var(--link)">Herramientas y datos ↗</a>.</p>
+    datos = `<p class="vp-sub">Lo que el sync sabe de cada uno de tus activos${S.pro ? '' : ' · ratios completos con PRO'}. El mapa de calor, el radar, los bonos y el dólar histórico están en <a href="/herramientas" style="color:var(--v3-gold)">Herramientas y datos ↗</a>.</p>
       <div class="vp-tblwrap"><table class="vp-tbl"><thead><tr><th class="l">Activo</th><th>Precio</th><th class="l">Lectura</th>${rd.pro ? '<th>PER / TIR</th><th>P/Libro / MD</th><th>ROE / paridad</th><th>Deuda/EBITDA</th><th>Beta</th><th>Valor</th>' : '<th>RSI</th>'}</tr></thead>
       <tbody>${filas.map(fila).join('') || '<tr><td colspan="9" class="l vp-mut">Tus posiciones todavía no tienen datos del sync (9:00).</td></tr>'}</tbody></table></div>
-      ${!rd.pro ? `<p class="vp-nota">Con PRO ves PER, P/Libro, ROE, deuda sobre EBITDA y beta de tus acciones, y TIR, duration y paridad de tus bonos. <a href="/planes" style="color:var(--link)">Ver planes →</a></p>` : `<p class="vp-nota">Múltiplos de yfinance al último cierre; para renta fija, la matemática propia del panel de bonos (cada 15 min en rueda).</p>`}`;
+      ${!rd.pro ? `<p class="vp-nota">Con PRO ves PER, P/Libro, ROE, deuda sobre EBITDA y beta de tus acciones, y TIR, duration y paridad de tus bonos. <a href="/planes" style="color:var(--v3-gold)">Ver planes →</a></p>` : `<p class="vp-nota">Múltiplos de yfinance al último cierre; para renta fija, la matemática propia del panel de bonos (cada 15 min en rueda).</p>`}`;
   }
-  el.innerHTML = datos || `<div class="vp-card" style="max-width:560px"><h4>Todavía no cargaste posiciones</h4><p>Cuando cargues tu cartera, acá vas a ver el precio, la lectura y los ratios de cada activo. Las herramientas del sitio están en <a href="/herramientas" style="color:var(--link)">Herramientas y datos ↗</a>.</p><a class="vp-ir" href="#panel/micartera" data-go="micartera">Ir a Mi cartera →</a></div>`;
+  el.innerHTML = datos || `<div class="vp-card" style="max-width:560px"><h4>Todavía no cargaste posiciones</h4><p>Cuando cargues tu cartera, acá vas a ver el precio, la lectura y los ratios de cada activo. Las herramientas del sitio están en <a href="/herramientas" style="color:var(--v3-gold)">Herramientas y datos ↗</a>.</p><a class="vp-ir" href="#panel/micartera" data-go="micartera">Ir a Mi cartera →</a></div>`;
 }
 
 /* ── Contexto para los módulos de cada pestaña (panel-*.js) ────────────────────
@@ -1490,6 +1564,18 @@ const ctx = {
   toast, invalidar, refrescar, portalTab,
   radarDoc, radar, teaser, calendario, flujos, panelBonos, preciosInf, desglosePer, bonosSet, vencMapa, vencimientoDe,
   fx, carteraCalc, ventas, ajustes, disciplina, informes, noticias, seguidas, posicionesCartera, precioHoy,
+  // la cartera tal cual está guardada, sin calcular nada: { pos: [docs de
+  // inversores/{email}/cartera con su id], precios: { TICKER: precios/{TICKER} } }.
+  // Es la misma lectura cacheada que usa carteraCalc() (null si la lectura falló).
+  // Movimientos la usa para listar las compras en la moneda en que se hicieron.
+  cartera,
+  // esqueleto de carga (SPEC «Estados»: bloques #F0EDE5 con la altura de lo que viene).
+  //   ctx.skel(96, [64, 64, 64, 64], 300) → una fila de 96 px, una fila de cuatro
+  //   bloques de 64 px y un bloque de 300 px. Lleva role="status" y un texto para
+  //   los lectores de pantalla.
+  skel: (...alturas) => `<div class="vp-skel-w" role="status" aria-label="Cargando">${alturas.map(a => Array.isArray(a)
+    ? `<div class="vp-skel-fila">${a.map(h => `<span class="vp-skel" style="height:${Number(h) || 60}px"></span>`).join('')}</div>`
+    : `<span class="vp-skel" style="height:${Number(a) || 60}px"></span>`).join('')}</div>`,
   // lo que se movió la cartera HOY. NO es una cuenta nueva: suma el dHoy que
   // calcular() (mi-cartera.js) ya dejó en cada fila, que es exactamente lo que
   // pinta la columna "Hoy" de la tabla de Mi cartera. Está documentado arriba
