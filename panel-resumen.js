@@ -1,185 +1,215 @@
 // panel-resumen.js — la pestaña Resumen del panel del inversor (Panel v3).
-// La estructura es la del prototipo de Lauti (.claude/handoff-panel-v3, líneas
-// 76-217): tarjeta principal con el valor y dos tortas, la evolución comparada
-// adentro de esa misma tarjeta, la fila "Atención", hasta cuatro tarjetas de
-// "hoy" y dos columnas (agenda de tus activos · research). Los colores y la
-// tipografía son los de Noticias: todo sale de las variables --v3-* que define
-// panel.js (así funciona el tema oscuro), títulos en Playfair 700 y cifras en
-// IBM Plex Mono.
+// Estructura y valores: «Pestaña 1 · Resumen» del SPEC y el prototipo
+// «Valtia Panel v3» del zip completo (24/09/2026): tarjeta principal con el
+// valor y dos donas (por broker y por tipo), la evolución comparada adentro de
+// esa misma tarjeta, la fila "Atención", hasta cuatro tarjetas de "hoy", dos
+// columnas (lo que viene en tus activos · research), la primera vez con tres
+// pasos y, abajo, los avisos por mail (alertasMail de panel.js).
+// Piel vigente del SPEC §0: IBM Plex Sans en todo, números con cifras tabulares
+// (sin Plex Mono ni Playfair), tarjetas de 10-12 px, etiquetas de 6 px, botones
+// y selectores con borde dorado sutil y radio 8, y el dorado claro solo sobre
+// azul. Los colores salen de las variables --v3-* de panel.js (así funciona el
+// tema oscuro); los pocos propios de las donas se redefinen para el oscuro acá.
 //
 // Nada inventado: cada número sale del ctx o de una cuenta sobre él. Sin dato,
 // una frase corta que lo dice. No hay línea de "Invertido" en la evolución: el
 // panel no sabe cuánto aportaste cada mes.
 //
 // No importa panel.js (sería circular): todo llega por ctx.
-import { base, mercadoDe } from './activos.js?v=7';
+import { base } from './activos.js?v=7';
 import { eventos, TIPOS, TIPO_RESUMEN } from './panel-eventos.js?v=1';
 import { evolucionComparada, convertir } from './mi-cartera.js?v=45';
 import { nombreBench, benchsDisponibles } from './evolucion.js?v=3';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
+// un solo criterio de "qué tipo de activo es" para Mi cartera, el Resumen y Movimientos
+import { tipoActivo, CLASE_TIPO } from './tipos-activo.js?v=1';
 
 /* ───────────────────────── estilos ───────────────────────── */
+// Valores del prototipo (estilos inline de la pestaña Resumen) pasados a variables.
+// Las donas usan la paleta del prototipo: por broker #14213D · #B08A3E · #D9BE85 y
+// los neutros #8FB8A2 · #3D5A80 · #C9C3B6; por tipo, acciones en verde, renta fija
+// en #8FB8A2 y cripto en #D9BE85. En el oscuro --v3-serie, --v3-gold y --v3-goldS
+// son casi el mismo dorado: ahí algunos tramos se reemplazan para que se distingan.
 const CSS_ID = 'v3-css-resumen';
 const CSS = `
-.rs{color:var(--v3-ink);font-family:'IBM Plex Sans',system-ui,sans-serif;
-  --rs-c0:var(--v3-serie);--rs-c1:var(--v3-gold);--rs-c2:var(--v3-goldL);--rs-c3:var(--v3-up);--rs-c4:var(--v3-azul);--rs-c5:var(--v3-mut)}
-[data-theme="dark"] .rs{--rs-c1:var(--v3-azul);--rs-c2:var(--v3-up);--rs-c3:var(--v3-mut);--rs-c4:var(--v3-goldS);--rs-c5:var(--v3-dn)}
+.rs{color:var(--v3-ink);font-family:'IBM Plex Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums;
+  --rs-b0:var(--v3-serie);--rs-b1:var(--v3-gold);--rs-b2:var(--v3-goldS);--rs-b3:#8FB8A2;--rs-b4:#3D5A80;--rs-b5:var(--v3-cero);
+  --rs-rv:var(--v3-up);--rs-rf:#8FB8A2;--rs-cr:var(--v3-goldS);--rs-ot:var(--v3-cero)}
+[data-theme="dark"] .rs{--rs-b0:var(--v3-ink);--rs-b2:var(--v3-azul);--rs-b4:#B08A3E;--rs-rf:var(--v3-azul);--rs-cr:#D9BE85}
+.rs button{font-family:inherit}
 .rs a{text-decoration:none}
 .rs .rs-lnk{color:var(--v3-gold)}
 .rs .rs-lnk:hover{color:var(--v3-gold2)}
+.rs a:focus-visible,.rs button:focus-visible{outline:2px solid var(--v3-focus);outline-offset:2px}
 .rs-min0{min-width:0}
-.rs-num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-size:.95em}
+.rs-num{font-variant-numeric:tabular-nums}
 .rs-up{color:var(--v3-up)}.rs-dn{color:var(--v3-dn)}.rs-mu{color:var(--v3-mut)}
+/* ── tarjeta principal ── */
 .rs-card{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;padding:22px 24px;margin-bottom:18px;box-sizing:border-box}
 .rs-top{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:30px;align-items:start}
-.rs-k{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut)}
-.rs-k.sm{font-size:9px;margin-bottom:10px}
-.rs-total{font:600 38px 'IBM Plex Mono',monospace;color:var(--v3-ink);line-height:1.05;margin-top:6px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;letter-spacing:-.02em}
+.rs-k{font:600 11px/1.4 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut)}
+.rs-k.sm{font-size:10.5px;margin-bottom:10px}
+.rs-total{font:600 42px/1.05 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin-top:6px;overflow-wrap:anywhere}
 .rs-pl{display:flex;align-items:baseline;gap:10px;margin-top:8px;flex-wrap:wrap}
-.rs-pl .v{font:600 18px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
-.rs-pl .s{font-size:12px;color:var(--v3-mut)}
-.rs-pl .s .rs-num{color:var(--v3-sub)}
-/* el día: abajo del resultado total y más chico que él (38 · 18 · 15) */
-.rs-dia{display:flex;align-items:baseline;gap:6px 10px;margin-top:11px;flex-wrap:wrap}
-.rs-dia .k{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut)}
-.rs-dia .v{font:600 15px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
-.rs-dia .s{font-size:12px;color:var(--v3-mut);line-height:1.5}
-.rs-dia .rs-pill{font-size:11.5px;padding:2px 7px}
-.rs-pill{font:600 12.5px 'IBM Plex Mono',monospace;padding:3px 8px;border-radius:5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.rs-pl .v{font:600 18px 'IBM Plex Sans',sans-serif;white-space:nowrap}
+.rs-pl .s{font-size:13.5px;color:var(--v3-mut);line-height:1.5}
+.rs-pill{font:600 14px 'IBM Plex Sans',sans-serif;padding:3px 8px;border-radius:6px;white-space:nowrap}
 .rs-pill.up{color:var(--v3-up);background:var(--v3-upBg)}
 .rs-pill.dn{color:var(--v3-dn);background:var(--v3-dnBg)}
-.rs .rs-rz{display:inline-block;margin-top:9px;font-size:12px;color:var(--v3-sub);line-height:1.5}
+/* el día: abajo del resultado total y más chico que él (42 · 18 · 15) */
+.rs-dia{display:flex;align-items:baseline;gap:6px 10px;margin-top:11px;flex-wrap:wrap}
+.rs-dia .k{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut)}
+.rs-dia .v{font:600 15px 'IBM Plex Sans',sans-serif;white-space:nowrap}
+.rs-dia .s{font-size:13px;color:var(--v3-mut);line-height:1.5}
+.rs-dia .rs-pill{font-size:12.5px;padding:2px 7px}
+.rs .rs-rz{display:inline-block;margin-top:9px;font-size:13.5px;color:var(--v3-sub);line-height:1.5}
 .rs .rs-rz:hover{color:var(--v3-ink)}
-.rs-rz b{font:600 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
-.rs-info{display:flex;gap:16px;margin-top:16px;font-size:12px;color:var(--v3-sub);flex-wrap:wrap}
-.rs-info b{color:var(--v3-ink);font:600 12px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
-.rs-info b .de{font-family:'IBM Plex Sans',sans-serif}
+.rs-rz b{font-weight:600}
+.rs-info{display:flex;gap:6px 16px;margin-top:16px;font-size:13.5px;color:var(--v3-sub);flex-wrap:wrap}
+.rs-info b{color:var(--v3-ink)}
+/* donas: circle r38 stroke 14 en 96 px, leyenda al lado */
 .rs-dona{display:flex;align-items:center;gap:16px}
 .rs-dona-c{position:relative;width:96px;height:96px;flex:none}
 .rs-dona-c svg{width:96px;height:96px;display:block}
-.rs-dona-m{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
-.rs-dona-m b{font:600 15px 'IBM Plex Mono',monospace;color:var(--v3-ink);line-height:1;font-variant-numeric:tabular-nums}
-.rs-dona-m span{font:600 7.5px 'IBM Plex Sans',sans-serif;color:var(--v3-mut);letter-spacing:.08em;margin-top:3px;text-align:center;max-width:62px;line-height:1.25}
+.rs-dona-m{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;text-align:center}
+.rs-dona-m b{font:600 16.5px/1 'IBM Plex Sans',sans-serif;color:var(--v3-ink)}
+/* el prototipo lo pone en 7,5 px: sube a 10,5 (el mínimo de etiquetas del SPEC §0) y,
+   si no entra en el agujero de la dona, baja a dos renglones */
+.rs-dona-m span{font:600 10.5px/1.15 'IBM Plex Sans',sans-serif;color:var(--v3-mut);letter-spacing:.04em;margin-top:3px;max-width:60px}
 .rs-leg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0}
-.rs-leg div{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--v3-sub)}
+.rs-leg div{display:flex;align-items:center;gap:7px;font-size:13.5px;color:var(--v3-sub)}
 .rs-leg i{width:8px;height:8px;border-radius:2px;display:block;flex:none}
 .rs-leg span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rs-leg b{color:var(--v3-ink);font:600 12px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+.rs-leg b{color:var(--v3-ink)}
+/* ── evolución comparada ── */
 .rs-evo{margin-top:20px;padding-top:18px;border-top:1px solid var(--v3-track)}
-.rs-evo-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px 12px;flex-wrap:wrap}
-.rs-segs{display:flex;align-items:center;gap:4px 14px;flex-wrap:wrap}
+.rs-evo-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px 12px;flex-wrap:wrap}
+.rs-segs{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap}
+/* selectores de la regla §0: borde dorado sutil, radio 8; el activo con borde dorado y relleno crema */
 .rs-seg{display:inline-flex;gap:2px;align-items:center;flex-wrap:wrap}
-.rs-seg button{font:500 10px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;padding:6px 10px;cursor:pointer;color:var(--v3-mut);background:none;border:none;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s;border-radius:0}
-.rs-seg button:hover{color:var(--v3-ink)}
-.rs-seg button.on{color:var(--v3-ink);border-bottom-color:var(--v3-gold)}
-.rs-seg.chico button{font-size:9.5px;padding:4px 7px;letter-spacing:.04em}
-.rs-evo-leg{display:flex;gap:6px 18px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--v3-sub);align-items:baseline}
+.rs-seg button{font:500 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;padding:6px 10px;cursor:pointer;color:var(--v3-selTx);
+  background:var(--v3-selBg);border:1px solid var(--v3-sel);border-radius:8px;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}
+.rs-seg button:hover{color:var(--v3-selOnTx)}
+.rs-seg button.on{color:var(--v3-selOnTx);border-color:var(--v3-selOn);background:var(--v3-selOnBg)}
+.rs-evo-leg{display:flex;gap:6px 18px;flex-wrap:wrap;margin-top:12px;font-size:13.5px;color:var(--v3-sub);align-items:baseline}
 .rs-evo-leg > span{white-space:nowrap}
 .rs-evo-leg i{display:inline-block;width:14px;height:0;vertical-align:middle;margin-right:6px}
-.rs-evo-leg b{font:600 12px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
 .rs-evo-leg .dif{margin-left:auto;font-weight:600;white-space:normal}
 .rs-evo-g{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;margin-top:12px}
-.rs-evo-y{display:flex;flex-direction:column;justify-content:space-between;font:500 10px 'IBM Plex Mono',monospace;color:var(--v3-mut);text-align:right;padding:2px 0;font-variant-numeric:tabular-nums}
+.rs-evo-y{display:flex;flex-direction:column;justify-content:space-between;font:500 11.5px 'IBM Plex Sans',sans-serif;color:var(--v3-mut);text-align:right;padding:2px 0}
 .rs-evo-p{position:relative;min-width:0}
 .rs-evo-p svg{width:100%;height:clamp(160px,16vw,260px);display:block;overflow:visible}
 .rs-evo-dot{position:absolute;width:5px;height:5px;box-sizing:content-box;border-radius:50%;background:var(--v3-card);border:2px solid var(--v3-serie);transform:translate(-50%,-50%);pointer-events:none}
-.rs-evo-x{grid-column:2;display:flex;justify-content:space-between;gap:6px;font:500 10px 'IBM Plex Mono',monospace;color:var(--v3-mut);white-space:nowrap}
-.rs-evo-x.abs{display:block;position:relative;height:14px}
+.rs-evo-x{grid-column:2;display:flex;justify-content:space-between;gap:6px;font:500 11.5px 'IBM Plex Sans',sans-serif;color:var(--v3-mut);white-space:nowrap}
+.rs-evo-x.abs{display:block;position:relative;height:16px}
 .rs-evo-x.abs span{position:absolute;top:0}
-.rs-evo-msg{font-size:12.5px;color:var(--v3-sub);margin:14px 0 0;line-height:1.6}
-.rs-evo-notas{margin-top:10px;font-size:11px;color:var(--v3-mut);line-height:1.6}
+.rs-evo-msg{font-size:14px;color:var(--v3-sub);margin:14px 0 0;line-height:1.6}
+.rs-evo-notas{margin-top:10px;font-size:12.5px;color:var(--v3-mut);line-height:1.6}
 .rs-evo-notas p{margin:0 0 2px}
-.rs-mini{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-gold);background:none;border:1px solid var(--v3-line);border-radius:5px;padding:4px 9px;cursor:pointer;margin-left:6px}
-.rs-mini:hover{border-color:var(--v3-gold)}
+.rs-mini{font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-selTx);background:var(--v3-selBg);
+  border:1px solid var(--v3-sel);border-radius:8px;padding:5px 10px;cursor:pointer;margin-left:8px;transition:color .15s,border-color .15s}
+.rs-mini:hover{color:var(--v3-selOnTx);border-color:var(--v3-selOn)}
+/* ── fila "Atención" ── */
 .rs-avisos{margin-top:16px;padding-top:14px;border-top:1px solid var(--v3-track);display:flex;flex-direction:column;gap:8px}
-.rs-at{display:flex;gap:9px;align-items:flex-start;font-size:12px;color:var(--v3-sub);line-height:1.55}
+.rs-at{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;color:var(--v3-sub);line-height:1.55}
 .rs-at b{color:var(--v3-ink)}
-.rs-tag{font:700 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:4px;white-space:nowrap;flex:none}
+.rs-tag{font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:6px;white-space:nowrap;flex:none}
 .rs-tag.warn{color:var(--v3-warn);background:var(--v3-warnBg)}
 .rs-tag.nota{color:var(--v3-mut);background:var(--v3-neutro)}
+/* ── tarjetas de hoy ── */
 .rs-hoy{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:12px;margin-bottom:26px}
 .rs a.rs-h{display:block;background:var(--v3-card);border:1px solid var(--v3-line);border-radius:10px;padding:16px 18px;color:var(--v3-ink);transition:border-color .15s;min-width:0}
-.rs a.rs-h.dest{background:var(--v3-hl);border-color:var(--v3-goldL)}
 .rs a.rs-h:hover{border-color:var(--v3-gold);color:var(--v3-ink)}
 .rs-h-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.rs-h-k{font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase}
-.rs-h-cta{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-gold);white-space:nowrap}
-.rs-h-t{font:600 15px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin-top:9px;line-height:1.3;overflow-wrap:anywhere}
-.rs-h-p{font-size:12.5px;color:var(--v3-sub);line-height:1.55;margin-top:4px}
+.rs-h-k{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase}
+.rs-h-cta{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-gold);white-space:nowrap}
+.rs-h-t{font:600 16.5px/1.3 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin-top:9px;overflow-wrap:anywhere}
+.rs-h-p{font-size:14px;color:var(--v3-sub);line-height:1.55;margin-top:4px}
+/* ── dos columnas: lo que viene · research ── */
 .rs-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr));gap:26px;align-items:start}
-.rs-col-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
-.rs-col-h h3{font:700 22px 'Playfair Display',serif;color:var(--v3-ink);margin:0;line-height:1.2}
-.rs-col-h a{font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.rs-col-h{display:flex;align-items:baseline;justify-content:space-between;gap:6px 12px;margin-bottom:12px;flex-wrap:wrap}
+.rs-col-h h3{font:400 22px/1.2 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin:0}
+.rs-col-h a{font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
 .rs-ag{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:10px;overflow:hidden}
 .rs .rs-ev{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--v3-line2);color:var(--v3-ink)}
 .rs .rs-ev:last-child{border-bottom:none}
 .rs a.rs-ev:hover{background:var(--v3-hover);color:var(--v3-ink)}
 .rs-ev-d{text-align:center}
-.rs-ev-d b{display:block;font:600 16px 'IBM Plex Mono',monospace;color:var(--v3-ink);line-height:1;font-variant-numeric:tabular-nums}
-.rs-ev-d span{display:block;font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--v3-mut);margin-top:3px}
-.rs-ev-t{font-size:13.5px;color:var(--v3-ink);line-height:1.45;overflow-wrap:anywhere}
-.rs-ev-s{font-size:11.5px;color:var(--v3-mut);margin-top:2px;overflow-wrap:anywhere}
-.rs-ev-tipo{font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:4px;white-space:nowrap}
-.rs-ag-k{font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);padding:12px 16px 4px;border-top:1px solid var(--v3-line2)}
-.rs-vac{margin:0;padding:14px 16px;font-size:13px;color:var(--v3-sub);line-height:1.6}
+.rs-ev-d b{display:block;font:600 17.5px/1 'IBM Plex Sans',sans-serif;color:var(--v3-ink)}
+.rs-ev-d span{display:block;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--v3-mut);margin-top:3px}
+.rs-ev-t{font-size:15px;color:var(--v3-ink);line-height:1.45;overflow-wrap:anywhere}
+.rs-ev-s{font-size:13px;color:var(--v3-mut);margin-top:2px;overflow-wrap:anywhere}
+.rs-ev-tipo{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.rs-ag-k{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);padding:12px 16px 4px;border-top:1px solid var(--v3-line2)}
+.rs-vac{margin:0;padding:14px 16px;font-size:14px;color:var(--v3-sub);line-height:1.6}
 .rs-rs{display:flex;flex-direction:column;gap:10px}
 .rs a.rs-r{display:block;background:var(--v3-card);border:1px solid var(--v3-line);border-radius:10px;padding:14px 16px;color:var(--v3-ink);transition:border-color .15s}
 .rs a.rs-r:hover{border-color:var(--v3-gold);color:var(--v3-ink)}
-.rs-r-k{display:flex;align-items:center;gap:8px;font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--v3-gold2)}
+.rs-r-k{display:flex;align-items:center;gap:8px;font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--v3-gold2)}
 .rs-r-k i{width:3px;height:3px;border-radius:50%;background:var(--v3-mut);display:block;flex:none}
-.rs-r-k .f{color:var(--v3-mut);font-family:'IBM Plex Mono',monospace;letter-spacing:.02em}
-.rs-r-k .tuyo{margin-left:auto;color:#0E1830;background:var(--v3-goldL);padding:2px 7px;border-radius:4px;letter-spacing:.08em;white-space:nowrap}
-.rs-r-t{font:700 14.5px 'Playfair Display',serif;color:var(--v3-ink);margin-top:7px;line-height:1.35;overflow-wrap:anywhere}
+.rs-r-k .f{color:var(--v3-mut)}
+/* "la tenés": etiqueta navy con texto blanco (en el oscuro, la clara del botón primario) */
+.rs-r-k .tuyo{margin-left:auto;color:var(--v3-btnTx);background:var(--v3-btn);padding:2px 7px;border-radius:6px;letter-spacing:.08em;white-space:nowrap}
+.rs-r-t{font:600 16px/1.35 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin-top:7px;overflow-wrap:anywhere}
 .rs-vac-card{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:10px}
-.rs-vacio-t{font:700 22px 'Playfair Display',serif;color:var(--v3-ink);margin:8px 0 0;line-height:1.2}
-.rs-vacio-p{font-size:13.5px;color:var(--v3-sub);line-height:1.65;margin:8px 0 0;max-width:640px}
-.rs-btn-oro{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#0E1830;background:var(--v3-goldL);padding:9px 16px;border-radius:7px;border:none;cursor:pointer;margin-top:14px;white-space:nowrap;transition:background .15s}
-.rs-btn-oro:hover{background:var(--v3-gold)}
-.rs-nota{font-size:12px;color:var(--v3-mut);line-height:1.65;margin:12px 0 0}
-/* la primera vez: bloque navy con la barra de avance, tres pasos y "Mientras tanto".
-   --v3-navy es oscuro en los dos temas, así que el texto de arriba va claro fijo. */
-.rs-hero{background:var(--v3-navy);border-radius:12px;padding:26px 28px;margin-bottom:16px;box-sizing:border-box}
-.rs-hero .k{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--v3-goldL)}
-.rs-hero h2{font:700 26px 'Playfair Display',serif;color:#F4F1EA;margin:10px 0 6px;line-height:1.2;overflow-wrap:anywhere}
-.rs-hero p{font-size:13.5px;line-height:1.65;color:rgba(244,241,234,.74);margin:0;max-width:62ch}
+/* ── estados: error, vacío ── */
+.rs-vacio-t{font:600 20px/1.25 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin:0}
+.rs-vacio-p{font-size:14px;color:var(--v3-sub);line-height:1.65;margin:8px 0 0;max-width:640px}
+/* botón primario: navy lleno, radio 8 (el mismo de .vp-btn de panel.js) */
+.rs-btn{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-btnTx);background:var(--v3-btn);
+  border:1px solid var(--v3-btn);padding:9px 14px;border-radius:8px;cursor:pointer;margin-top:14px;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+.rs-btn:hover{background:var(--v3-btnHover);border-color:var(--v3-btnHover)}
+.rs-btn[disabled]{opacity:.5;cursor:not-allowed}
+.rs-btn[disabled]:hover{background:var(--v3-btn);border-color:var(--v3-btn)}
+.rs-nota{font-size:13px;color:var(--v3-mut);line-height:1.65;margin:12px 0 0}
+/* ── la primera vez: bloque navy con la barra de avance, tres pasos y "Mientras tanto".
+   --v3-navy es oscuro en los dos temas, así que el texto de arriba va claro fijo
+   (y el dorado claro de la barra va sobre azul, como pide la regla §0) ── */
+.rs-pv{max-width:1100px}
+.rs-hero{background:var(--v3-navy);border-radius:12px;padding:26px 28px;margin-bottom:16px;box-sizing:border-box;color:#fff}
+.rs-hero .k{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:rgba(232,206,150,.85)}
+.rs-hero h2{font:600 26px/1.2 'IBM Plex Sans',sans-serif;color:#fff;margin:10px 0 6px;overflow-wrap:anywhere}
+.rs-hero p{font-size:15px;line-height:1.65;color:rgba(255,255,255,.72);margin:0;max-width:62ch;text-align:justify;hyphens:auto}
 .rs-barra{display:flex;gap:4px;margin-top:16px;max-width:360px}
-.rs-barra i{flex:1;height:5px;border-radius:3px;background:rgba(244,241,234,.18);display:block}
-.rs-barra i.ok{background:var(--v3-goldL)}
-.rs-pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:12px;margin-bottom:26px}
+.rs-barra i{flex:1;height:5px;border-radius:6px;background:rgba(255,255,255,.18);display:block}
+.rs-barra i.ok{background:#E8CE96}
+.rs-pasos{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:12px;margin-bottom:22px}
 .rs-paso{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:8px;min-width:0}
 .rs-paso.ok{border-color:var(--v3-up)}
 .rs-paso .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.rs-paso .n{font:600 26px 'IBM Plex Mono',monospace;color:var(--v3-serie);line-height:1;font-variant-numeric:tabular-nums}
+.rs-paso .n{font:400 30px/1 'IBM Plex Sans',sans-serif;color:var(--v3-serie)}
 .rs-paso.ok .n{color:var(--v3-up)}
-.rs-paso .est{font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);background:var(--v3-neutro);padding:3px 8px;border-radius:4px;white-space:nowrap}
+.rs-paso .est{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);background:var(--v3-line2);padding:3px 8px;border-radius:6px;white-space:nowrap}
 .rs-paso.ok .est{color:var(--v3-up);background:var(--v3-upBg)}
-.rs-paso b{font:600 16px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);line-height:1.3}
-.rs-paso p{font-size:12.5px;color:var(--v3-sub);line-height:1.6;margin:0;flex:1}
-.rs-paso .rs-btn-oro{align-self:flex-start;margin-top:4px}
-.rs-paso.ok .rs-btn-oro{color:var(--v3-gold);background:none;border:1px solid var(--v3-line)}
-.rs-paso.ok .rs-btn-oro:hover{background:none;border-color:var(--v3-gold)}
-.rs-btn-oro[disabled]{opacity:.5;cursor:not-allowed}
-.rs-btn-oro[disabled]:hover{background:var(--v3-goldL)}
-.rs-pv-pie{margin-top:14px}
-.rs-mt-k{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);margin:26px 0 10px}
-.rs-mt{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:12px;margin-bottom:26px}
+.rs-paso b{font:600 17.5px/1.3 'IBM Plex Sans',sans-serif;color:var(--v3-ink)}
+.rs-paso p{font-size:14px;color:var(--v3-sub);line-height:1.6;margin:0;flex:1}
+.rs-paso .rs-btn{align-self:flex-start;margin-top:4px}
+/* paso hecho: el botón pasa a contorno navy (sigue llevando a su pestaña) */
+.rs-paso.ok .rs-btn{color:var(--v3-btn);background:transparent;border-color:var(--v3-btn)}
+.rs-paso.ok .rs-btn:hover{background:var(--v3-hover)}
+.rs-pv-pie{margin:-6px 0 18px}
+.rs-mt-k{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);margin:0 0 10px}
+.rs-mt{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:12px;margin-bottom:26px}
 .rs a.rs-mt-c{display:block;background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;padding:18px 20px;color:var(--v3-ink);transition:border-color .15s;min-width:0}
-.rs a.rs-mt-c:hover{border-color:var(--v3-gold);color:var(--v3-ink)}
-.rs-mt-c .k{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut)}
-.rs-mt-c .t{font:700 18px 'Playfair Display',serif;color:var(--v3-ink);margin:8px 0 4px;line-height:1.3;overflow-wrap:anywhere}
-.rs-mt-c .d{font-size:12.5px;color:var(--v3-sub);line-height:1.55;overflow-wrap:anywhere}
+.rs a.rs-mt-c:hover{border-color:var(--v3-btn);color:var(--v3-ink)}
+.rs-mt-c .k{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut)}
+.rs-mt-c .t{font:600 18px/1.3 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin:8px 0 4px;overflow-wrap:anywhere}
+.rs-mt-c .d{font-size:14px;color:var(--v3-sub);line-height:1.55;overflow-wrap:anywhere}
+.rs-mt-c .d b{font-weight:600}
 .rs-alertas{margin-top:30px}
-.rs-sk{background:var(--v3-track);border-radius:6px;animation:rs-pulso 1.4s ease-in-out infinite}
+/* cargando (SPEC «Estados»): esqueletos en #F0EDE5 con la altura de lo que viene */
+.rs-sk{background:var(--v3-skel);border-radius:6px;animation:rs-pulso 1.4s ease-in-out infinite}
 @keyframes rs-pulso{0%,100%{opacity:1}50%{opacity:.55}}
 @media (prefers-reduced-motion:reduce){.rs-sk{animation:none}}
 @media (max-width:640px){
   .rs-card{padding:18px 16px}
-  .rs-total{font-size:30px}
+  .rs-total{font-size:34px}
   .rs-col-h h3{font-size:20px}
   .rs-evo-leg .dif{margin-left:0;flex-basis:100%}
   .rs-hero{padding:20px 16px}
   .rs-hero h2{font-size:22px}
-  .rs-paso{padding:16px 16px}
+  .rs-hero p{text-align:left}
+  .rs-paso{padding:16px}
   .rs a.rs-mt-c{padding:16px}
 }
 @media (max-width:520px){
@@ -196,13 +226,25 @@ function asegurarCss() {
 }
 
 /* ───────────────────────── utilidades ───────────────────────── */
-// tramos de la torta por broker: la paleta de la spec, en este orden (--rs-c0…5 del CSS;
-// en el tema oscuro --v3-serie, --v3-gold y --v3-goldL son casi el mismo dorado, así
-// que ahí queda un solo dorado claro y el resto se reemplaza para que los tramos se distingan)
-const PALETA = [0, 1, 2, 3, 4, 5].map(i => `var(--rs-c${i})`);
-// por tipo, cada tipo con su color fijo (acciones en verde, como el prototipo)
-const TIPO_N = { acc: ['Acciones y CEDEARs', 'ACCIONES'], rf: ['Renta fija', 'RENTA FIJA'], cripto: ['Cripto', 'CRIPTO'] };
-const TIPO_COL = { acc: 'var(--v3-up)', rf: 'var(--v3-azul)', cripto: 'var(--v3-goldL)' };
+// tramos de la dona por broker: la paleta del prototipo, en este orden (--rs-b0…5)
+const PALETA = [0, 1, 2, 3, 4, 5].map(i => `var(--rs-b${i})`);
+// por tipo: la clase gruesa de tipos-activo.js (CLASE_TIPO: renta variable, renta
+// fija, cripto) con su color fijo del prototipo. "otro" (un .BA sin ficha ni
+// catálogo) NO se suma a las acciones: tipos-activo.js no afirma qué es, y acá tampoco
+const CLASE_N = { rf: ['Renta fija', 'RENTA FIJA'], cripto: ['Cripto', 'CRIPTO'], otro: ['Otros', 'OTROS'] };
+const CLASE_COL = { rv: 'var(--rs-rv)', rf: 'var(--rs-rf)', cripto: 'var(--rs-cr)', otro: 'var(--rs-ot)' };
+const RV_N = { accion: 'Acciones', cedear: 'CEDEARs', etf: 'ETFs' };
+// el nombre de la renta variable según lo que haya adentro: "Acciones y CEDEARs"
+// (el del prototipo), "CEDEARs" solo, "Acciones, CEDEARs y ETFs"...
+// El corto va en el agujero de la dona (62 px): "RENTA VARIABLE" partía en dos y
+// "VARIABLE" se montaba sobre el aro, así que con ETFs mezclados va "RENTA VAR.".
+function nombreRV(ks) {
+  const l = ['accion', 'cedear', 'etf'].filter(k => ks.has(k));
+  const n = l.map(k => RV_N[k]);
+  const largo = n.length > 1 ? n.slice(0, -1).join(', ') + ' y ' + n[n.length - 1] : (n[0] || 'Acciones');
+  const corto = l.length === 1 ? RV_N[l[0]].toUpperCase() : l.includes('etf') ? 'RENTA VAR.' : 'ACCIONES';
+  return [largo, corto];
+}
 const MES_C = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 const RANGOS = [[91, '3M', 3], [182, '6M', 6], [365, '1A', 12]];
 const ROT_BENCH = { SPY: 'S&P 500', MERV: 'Merval', CCL: 'Dólar', INF: 'Inflación' };
@@ -235,23 +277,44 @@ const seguro = async (f, def) => {
 // dd/mm si es de este año; dd/mm/aa si no (escapada: si la fecha no se puede leer, fmtC la devuelve tal cual)
 const fechaCorta = (ctx, iso) => ctx.esc(String(iso || '').slice(0, 4) === ctx.hoyAR().slice(0, 4) ? ctx.fmtC(iso) : ctx.fmtF(iso));
 
+/* el catálogo grande (catalogo-activos.js, 99 KB) solo hace falta para decir qué es
+   un .BA que no tiene ficha: se pide con import() la primera vez que aparece uno,
+   con la MISMA URL que usa mi-cartera.js (así el navegador lo baja una sola vez).
+   NUNCA traba el Resumen: la tarjeta se pinta enseguida con ese activo en "Otros"
+   y, cuando el catálogo llega, se redibuja solo la dona "Por tipo" (como hace
+   mi-cartera.js, que tampoco espera el catálogo para el primer pintado). */
+let _catMod = null, _catProm = null;
+function cargarCatalogo() {
+  if (_catMod) return Promise.resolve(_catMod);
+  if (!_catProm) _catProm = import('./catalogo-activos.js?v=2')
+    .then(m => { _catMod = m; return m; })
+    .catch(() => { _catProm = null; return null; });   // una falla no queda cacheada
+  return _catProm;
+}
+const buscadorCatalogo = cat => cat && typeof cat.buscarCatalogo === 'function' ? s => cat.buscarCatalogo(s, 'byma') : null;
+// ¿hay un .BA con valor que sin el catálogo no se puede clasificar?
+const faltaCatalogo = (filas, bset, bp) => !_catMod && (filas || []).some(f => {
+  if (!f || f.dValor == null || !isFinite(f.dValor) || !String(f.ticker || '').toUpperCase().endsWith('.BA')) return false;
+  try { return tipoActivo(f.ticker, { bonos: bset, panel: bp }).k === 'otro'; } catch (e) { return false; }
+});
+
 /* ───────────────────────── estado del módulo ───────────────────────── */
 let _seq = 0;
 let _st = { ctx: null, el: null, vivo: () => false };
 let _evoSeq = 0;
 
-const ESQ_HOY = '<div class="rs-sk" style="height:104px;border-radius:10px"></div>'.repeat(3);
+const ESQ_HOY = '<div class="rs-sk" style="height:112px;border-radius:10px"></div>'.repeat(3);
 const ESQ_COL = '<div class="rs-sk" style="height:220px;border-radius:10px"></div>';
-const ESQUELETO = `<div class="rs" aria-busy="true"><div class="rs-card"><div class="rs-top">
-    <div><div class="rs-sk" style="width:130px;height:10px"></div><div class="rs-sk" style="width:72%;height:40px;margin-top:10px"></div>
-      <div class="rs-sk" style="width:58%;height:16px;margin-top:12px"></div><div class="rs-sk" style="width:64%;height:12px;margin-top:18px"></div></div>
-    <div class="rs-sk" style="height:96px"></div><div class="rs-sk" style="height:96px"></div></div>
-    <div class="rs-sk" style="height:190px;margin-top:22px"></div></div>
+const ESQUELETO = `<div class="rs" aria-busy="true" role="status" aria-label="Cargando tu resumen"><div class="rs-card"><div class="rs-top">
+    <div><div class="rs-sk" style="width:150px;height:12px"></div><div class="rs-sk" style="width:72%;height:44px;margin-top:10px"></div>
+      <div class="rs-sk" style="width:58%;height:18px;margin-top:12px"></div><div class="rs-sk" style="width:64%;height:14px;margin-top:18px"></div></div>
+    <div class="rs-sk" style="height:96px;margin-top:22px"></div><div class="rs-sk" style="height:96px;margin-top:22px"></div></div>
+    <div class="rs-sk" style="height:200px;margin-top:22px"></div></div>
   <div class="rs-hoy">${ESQ_HOY}</div></div>`;
 
 const tarjetaError = (tit, txt) => `<div class="rs"><div class="rs-card" style="max-width:560px">
-    <h2 class="rs-vacio-t" style="margin-top:0">${tit}</h2><p class="rs-vacio-p">${txt}</p>
-    <button type="button" class="rs-btn-oro" data-rs-retry>Reintentar</button></div></div>`;
+    <h2 class="rs-vacio-t">${tit}</h2><p class="rs-vacio-p">${txt}</p>
+    <button type="button" class="rs-btn" data-rs-retry>Reintentar</button></div></div>`;
 
 /* ───────────────────────── entrada ───────────────────────── */
 export async function renderResumen(el, ctx) {
@@ -270,9 +333,9 @@ export async function renderResumen(el, ctx) {
     // Nunca el de OTRA cuenta: si cambió el mail, esqueleto.
     if (!el.querySelector('.rs') || el.__rsEmail !== email) el.innerHTML = ESQUELETO;
     el.__rsEmail = email;
-    const [cc, disc, bset, vs] = await Promise.all([
+    const [cc, disc, bset, vs, bp] = await Promise.all([
       seguro(ctx.carteraCalc, null), seguro(ctx.disciplina, { config: null, log: [] }),
-      seguro(ctx.bonosSet, new Set()), seguro(ctx.ventas, [])]);
+      seguro(ctx.bonosSet, new Set()), seguro(ctx.ventas, []), seguro(ctx.panelBonos, null)]);
     if (!vivo()) return;
     if (!cc || cc.fallo || !cc.r) {
       el.innerHTML = tarjetaError('No pudimos leer tu cartera', 'Puede ser la conexión. Tus posiciones siguen guardadas: probá de nuevo en un momento.');
@@ -293,8 +356,11 @@ export async function renderResumen(el, ctx) {
     const hoy = ctx.hoyAR();
     // una sola lectura de la agenda para las tarjetas de hoy y para la columna
     const evP = eventos(ctx, { desde: hoy, hasta: sumarDias(hoy, 30) }).catch(() => []);
+    // la dona por tipo: si hay un .BA que sin el catálogo no se puede clasificar, se
+    // pinta igual (ese activo en "Otros") y se completa cuando llega (abajo)
+    const falta = tiene && faltaCatalogo(cc.r.filas, bset, bp);
     el.innerHTML = `<div class="rs">
-      ${tiene ? tarjetaPrincipal(cc, bset, vs, ctx, dia) : primeraVez(cc, disc, vs, ctx, prim)}
+      ${tiene ? tarjetaPrincipal(cc, bset, vs, ctx, dia, bp, _catMod) : primeraVez(cc, disc, vs, ctx, prim)}
       ${tiene ? `<div class="rs-hoy" data-rs="hoy">${ESQ_HOY}</div>` : ''}
       <div class="rs-cols">
         <section class="rs-min0"><div class="rs-col-h"><h3>${tiene ? 'Lo que viene en tus activos' : 'Lo que viene en el mercado'}</h3>
@@ -307,6 +373,14 @@ export async function renderResumen(el, ctx) {
       ${tiene ? '<section class="rs-alertas"><div class="rs-col-h"><h3>Alertas por mail</h3></div><div id="vp-alertas"></div></section>' : ''}
     </div>`;
     const q = s => el.querySelector(`[data-rs="${s}"]`);
+    if (falta) {
+      cargarCatalogo().then(m => {
+        const box = q('tipo');
+        if (!m || !vivo() || !box) return;
+        const d = donaTipo(cc.r.filas, bset, bp, m, ctx);
+        if (d) box.outerHTML = d;
+      }).catch(() => {});
+    }
     if (tiene && q('evo')) pintarEvo(q('evo'), ctx, vivo, 0);
     // sin posiciones no hay tira de "hoy": esas dos tarjetas (radar y Carteras
     // Valtia) son justo lo que ahora muestra "Mientras tanto", y repetirlas sobra
@@ -343,7 +417,10 @@ function clicResumen(e) {
 }
 
 /* ───────────────────────── tarjeta principal ───────────────────────── */
-function dona(titulo, tramos, big, bigL, ctx) {
+/* dona del prototipo: un círculo de fondo y un círculo por tramo (r38, trazo 14,
+   stroke-dasharray por tramo, arranca arriba), el número grande en el centro y la
+   leyenda al lado */
+function dona(titulo, tramos, big, bigL, ctx, attr = '') {
   const C = 2 * Math.PI * 38;
   let acc = 0;
   const arcos = tramos.map(t => {
@@ -353,10 +430,10 @@ function dona(titulo, tramos, big, bigL, ctx) {
     return s;
   }).join('');
   const aria = `${titulo}: ${tramos.map(t => `${t.n} ${fmtP(t.p)}`).join(', ')}`;
-  return `<div class="rs-min0"><div class="rs-k sm">${titulo}</div>
+  return `<div class="rs-min0"${attr}><div class="rs-k sm">${titulo}</div>
     <div class="rs-dona"><div class="rs-dona-c">
       <svg viewBox="0 0 96 96" role="img" aria-label="${ctx.esc(aria)}"><circle cx="48" cy="48" r="38" fill="none" stroke-width="14" style="stroke:var(--v3-track)"></circle>${arcos}</svg>
-      <div class="rs-dona-m"><b>${big}</b><span>${ctx.esc(bigL)}</span></div></div>
+      <div class="rs-dona-m" aria-hidden="true"><b>${big}</b><span>${ctx.esc(bigL)}</span></div></div>
       <div class="rs-leg">${tramos.map(t => `<div><i style="background:${t.c}"></i><span title="${ctx.esc(t.n)}">${ctx.esc(t.n)}</span><b>${fmtP(t.p)}</b></div>`).join('')}</div>
     </div></div>`;
 }
@@ -404,7 +481,37 @@ function lineaDia(dia, m, ctx) {
     ${nota ? `<span class="s">${nota}</span>` : ''}</div>`;
 }
 
-function tarjetaPrincipal(cc, bset, vs, ctx, dia) {
+/* la dona "Por tipo": cada fila con valor va a su clase según tipos-activo.js
+   (el criterio único del panel, el mismo de Movimientos). El centro es el % del
+   tipo mayor. OJO: la tabla de Mi cartera todavía agrupa "Por tipo" con
+   mercadoDe (mi-cartera.js, agruparPorTipo), que suma a las acciones un .BA
+   que no sabe qué es; acá ese activo va a "Otros". */
+function tramosPorTipo(conValor, tot, bset, bp, cat) {
+  const catalogo = buscadorCatalogo(cat);
+  const cl = { rv: 0, rf: 0, cripto: 0, otro: 0 }, ksRV = new Set();
+  conValor.forEach(f => {
+    let k = 'otro';
+    try { k = (tipoActivo(f.ticker, { bonos: bset, panel: bp, catalogo }) || {}).k || 'otro'; } catch (e) {}
+    const c = k === 'otro' ? 'otro' : (CLASE_TIPO[k] || 'otro');
+    cl[c] += f.dValor;
+    if (c === 'rv') ksRV.add(k);
+  });
+  const nombres = { ...CLASE_N, rv: nombreRV(ksRV) };
+  return Object.entries(cl).filter(([, v]) => v > 0)
+    .map(([k, v]) => ({ n: nombres[k][0], corto: nombres[k][1], v, p: v / tot * 100, c: CLASE_COL[k] }))
+    .sort((a, b) => b.v - a.v);
+}
+// la dona "Por tipo" entera (con data-rs="tipo" para poder redibujarla sola cuando
+// llega el catálogo); '' si no hay nada con valor en la moneda del encabezado
+function donaTipo(filas, bset, bp, cat, ctx) {
+  const conValor = (filas || []).filter(f => f.dValor != null && isFinite(f.dValor));
+  const tot = conValor.reduce((s, f) => s + f.dValor, 0);
+  if (!(tot > 0)) return '';
+  const tt = tramosPorTipo(conValor, tot, bset, bp, cat);
+  return tt.length ? dona('Por tipo', tt, fmtP(tt[0].p), tt[0].corto, ctx, ' data-rs="tipo"') : '';
+}
+
+function tarjetaPrincipal(cc, bset, vs, ctx, dia, bp, cat) {
   const esc = ctx.esc, r = cc.r, m = ctx.curMoneda(cc.cur);
   const filas = r.filas || [], n = filas.length;
   const conValor = filas.filter(f => f.dValor != null && isFinite(f.dValor));
@@ -412,7 +519,8 @@ function tarjetaPrincipal(cc, bset, vs, ctx, dia) {
   const nb = new Set(filas.map(f => String(f.broker || '').trim()).filter(Boolean)).size;
   const tot = conValor.reduce((s, f) => s + f.dValor, 0);
 
-  // tortas: solo cuentan las filas con valor en la moneda del encabezado
+  // donas: solo cuentan las filas con valor en la moneda del encabezado
+  // (sin precio o sin dólar quedan fuera del total y de las donas: SPEC «Estados»)
   let donas = '';
   if (tot > 0) {
     const porB = new Map();
@@ -423,19 +531,10 @@ function tarjetaPrincipal(cc, bset, vs, ctx, dia) {
       tb = [...tb.slice(0, PALETA.length - 1), { n: 'Otros', v: resto }];
     }
     tb = tb.map((x, i) => ({ ...x, p: x.v / tot * 100, c: PALETA[i] }));
-    const porT = { acc: 0, rf: 0, cripto: 0 };
-    conValor.forEach(f => {
-      let mk = 'ext';
-      try { mk = mercadoDe(f.ticker, bset); } catch (e) {}
-      porT[mk === 'rf' ? 'rf' : mk === 'cripto' ? 'cripto' : 'acc'] += f.dValor;
-    });
-    const tt = Object.entries(porT).filter(([, v]) => v > 0)
-      .map(([k, v]) => ({ n: TIPO_N[k][0], corto: TIPO_N[k][1], v, p: v / tot * 100, c: TIPO_COL[k] }))
-      .sort((a, b) => b.v - a.v);
     // el centro cuenta brokers de verdad: "Sin broker" es un tramo, no un broker
     const nbT = [...porB.keys()].filter(k => k !== 'Sin broker').length;
     if (tb.length) donas += dona('Por broker', tb, nbT ? String(nbT) : '—', nbT === 1 ? 'BROKER' : 'BROKERS', ctx);
-    if (tt.length) donas += dona('Por tipo', tt, fmtP(tt[0].p), tt[0].corto, ctx);
+    donas += donaTipo(filas, bset, bp, cat, ctx);
   }
 
   // avisos: sin precio del sync, sin dólar para convertir, y qué significa ver en dólares
@@ -468,7 +567,7 @@ function tarjetaPrincipal(cc, bset, vs, ctx, dia) {
         ${valor}
         ${tot > 0 ? lineaDia(dia, m, ctx) : ''}
         ${lineaRealizado(cc, vs, ctx, false)}
-        <div class="rs-info"><span><b>${n}</b> ${n === 1 ? 'posición' : 'posiciones'}</span>${nb ? `<span><b>${nb}</b> ${nb === 1 ? 'broker' : 'brokers'}</span>` : ''}<span><b>${conPx}<span class="de"> de </span>${n}</b> con precio</span></div>
+        <div class="rs-info"><span><b>${n}</b> ${n === 1 ? 'posición' : 'posiciones'}</span>${nb ? `<span><b>${nb}</b> ${nb === 1 ? 'broker' : 'brokers'}</span>` : ''}<span><b>${conPx} de ${n}</b> con precio</span></div>
       </div>
       ${donas}
     </div>
@@ -602,7 +701,7 @@ function primeraVez(cc, disc, vs, ctx, prim) {
   const pie = lineaRealizado(cc, vs, ctx, true)
     + (!verif ? '<p class="rs-nota">Verificá tu email para activar Mi cartera y tu inversión mensual (te mandamos el link al registrarte).</p>' : '');
 
-  return `<div class="rs-hero">
+  return `<div class="rs-pv"><div class="rs-hero">
       <div class="k">Primeros pasos · ${N(hechos)} de ${N(3)}</div>
       <h2>Tu panel está vacío. Arranquemos por acá.</h2>
       <p>Con tres cosas el panel empieza a trabajar solo: sabe qué tenés, qué cartera te sirve de referencia y cuánto querés poner por mes.</p>
@@ -611,10 +710,10 @@ function primeraVez(cc, disc, vs, ctx, prim) {
     <div class="rs-pasos">${pasos.map((s, i) => `<div class="rs-paso${s.ok ? ' ok' : ''}">
       <div class="top"><span class="n">${i + 1}</span><span class="est">${s.ok ? 'Hecho' : 'Pendiente'}</span></div>
       <b>${s.t}</b><p>${s.p}</p>
-      <button type="button" class="rs-btn-oro" ${s.attr}${s.gate ? gate : ''}>${s.cta}</button>
+      <button type="button" class="rs-btn" ${s.attr}${s.gate ? gate : ''}>${s.cta}</button>
     </div>`).join('')}</div>
     ${pie ? `<div class="rs-pv-pie">${pie}</div>` : ''}
-    ${abierta || radar ? `<div class="rs-mt-k">Mientras tanto</div><div class="rs-mt">${abierta}${radar}</div>` : ''}`;
+    ${abierta || radar ? `<div class="rs-mt-k">Mientras tanto</div><div class="rs-mt">${abierta}${radar}</div>` : ''}</div>`;
 }
 
 /* ───────────────────────── evolución comparada ───────────────────────── */
@@ -641,7 +740,7 @@ function cabEvo(titulo, disp, bench, dias) {
     <div class="rs-segs">
       <div class="rs-seg" role="group" aria-label="Comparar contra">${disp.map(k =>
         `<button type="button" data-rs-bench="${k}" class="${k === bench ? 'on' : ''}" aria-pressed="${k === bench}">${ROT_BENCH[k] || k}</button>`).join('')}</div>
-      <div class="rs-seg chico" role="group" aria-label="Período">${RANGOS.map(([d, l]) =>
+      <div class="rs-seg" role="group" aria-label="Período">${RANGOS.map(([d, l]) =>
         `<button type="button" data-rs-rango="${d}" class="${d === dias ? 'on' : ''}" aria-pressed="${d === dias}">${l}</button>`).join('')}</div>
     </div></div>`;
 }
@@ -783,7 +882,9 @@ function graficoEvo(P, res, nombre, r, dias) {
     </div>`;
 }
 
-/* ───────────────────────── tarjetas de hoy ───────────────────────── */
+/* ───────────────────────── tarjetas de hoy ─────────────────────────
+   Hasta cuatro, en el orden de prioridad del SPEC: zona de compra que no tiene >
+   rotación de una cartera que sigue > plan del mes pendiente > aviso de su cartera. */
 async function pintarHoy(box, ctx, vivo, cc, disc, bset, evP) {
   if (!box) return;
   try {
@@ -823,7 +924,7 @@ async function pintarHoy(box, ctx, vivo, cc, disc, bset, evP) {
         p = Math.abs(d) < 0.05 ? `Va igual que ${bench}${desde}.`
           : d > 0 ? `Le gana a ${bench} por ${N(puntos(d))} ${uu}${desde}.` : `Va ${N(puntos(d))} ${uu} abajo de ${bench}${desde}.`;
       } else if (rot.retorno != null && isFinite(rot.retorno)) p = `${cap(desde.trim())}: ${N(pctS(rot.retorno, 2))}.`;
-      cards.push({ k: 'Carteras Valtia', c: 'var(--v3-gold)', dest: true,
+      cards.push({ k: 'Carteras Valtia', c: 'var(--v3-gold)',
         t: abierta && u.ticker ? `${esc(rot.nombre)} rotó: ${mov}` : `${esc(rot.nombre)} rotó el ${esc(ctx.fmtC(u.fecha))}`,
         p: (seg && seg[rot.id] ? 'La seguís. ' : '') + p, cta: 'Carteras', go: 'carteras' });
     }
@@ -879,7 +980,7 @@ async function pintarHoy(box, ctx, vivo, cc, disc, bset, evP) {
     if (!cards.length) { box.remove(); return; }
     box.innerHTML = cards.slice(0, 4).map(h => {
       const dest = h.ver != null ? `href="#panel/micartera" data-rs-ver="${esc(h.ver)}"` : `href="#panel/${h.go}" data-go="${h.go}"`;
-      return `<a class="rs-h${h.dest ? ' dest' : ''}" ${dest}>
+      return `<a class="rs-h" ${dest}>
         <div class="rs-h-top"><span class="rs-h-k" style="color:${h.c}">${h.k}</span><span class="rs-h-cta">${h.cta} →</span></div>
         <div class="rs-h-t">${h.t}</div><div class="rs-h-p">${h.p}</div></a>`;
     }).join('');

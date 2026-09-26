@@ -12,7 +12,7 @@ import { calcular, agruparPorBroker, agruparPorActivo, normalizarTicker, reinici
 import { fxMercado, registrarImplicito, etiquetaFx } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
-import { renderResumen } from './panel-resumen.js?v=6';
+import { renderResumen } from './panel-resumen.js?v=7';
 import { renderComprar as renderComprarV3 } from './panel-comprar.js?v=1';
 import { renderCarteras as renderCarterasV3 } from './panel-carteras.js?v=2';
 import { renderMensual } from './panel-mensual.js?v=1';
