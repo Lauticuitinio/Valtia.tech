@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Política de Privacidad — Valtia Analytics</title>
+<title>Política de privacidad — Valtia Analytics</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="/favicon-180.png">
@@ -12,9 +12,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Privacidad — reglas globales del rediseño (sitio.css): título negro
-     sobre blanco y texto legal justificado en una columna de 760px, alineada
-     con el título. Solo claro. ── */
+/* ── Términos y Privacidad (SPEC §10, prototipos "Valtia Terminos" y "Valtia
+     Privacidad"): una sola plantilla —terminos.html y privacidad.html comparten
+     este bloque y el script del pie tal cual— con dos pestañas, cada una en su
+     URL, e índice lateral fijo que marca la sección visible. En celular el
+     índice se oculta y las pestañas quedan arriba del texto. El texto legal es
+     el vigente: el del prototipo espera la revisión de un abogado. Solo claro. ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --navy:#0E1830;--navy2:#0B1327;
@@ -23,28 +26,67 @@
   --text:#101010;--sub:#57534A;--muted:#8B8375;
   --border:#E7E3DA;--card:#fff;
   --ink:#101010;--mut:#8B8375;--line:#E7E3DA;--marfil:#F6F3EC;
+  --cuerpo:#4A453B;
 }
 html{scroll-behavior:smooth}
-body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);min-height:100vh;--v-ancho:760px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+/* 1100 como la grilla del prototipo; el título usa el mismo ancho, así el
+   índice y el título arrancan en el mismo borde */
+body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);min-height:100vh;--v-ancho:1100px}
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
 
-/* texto legal: una sola columna de 760px con los bordes del título; el margen
-   lateral (52px / 20px) es --v-gutter de sitio.css. Justificado con guiones:
-   es texto corrido ancho. */
-main{max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto;padding:18px var(--v-gutter) 20px}
-main h2{font:700 22px/1.25 'IBM Plex Sans',sans-serif;color:var(--ink);margin:34px 0 10px;padding-top:26px;border-top:1px solid var(--line);text-wrap:pretty}
-main p,main li{font-size:15px;color:var(--sub);line-height:1.75;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
-main p+p,main ul+p{margin-top:12px}
-main ul{padding-left:20px;display:flex;flex-direction:column;gap:6px;margin-top:6px}
-main b{color:var(--ink);font-weight:600}
-main a{color:var(--gold2);text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
+/* grilla: índice de 220px + texto, separados 48px (prototipo) */
+.lg-body{max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto;padding:36px var(--v-gutter) 70px}
+.lg-grid{display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px;align-items:start}
 
-/* footer (el de Noticias); el mail flotante es el de sitio.css */
-footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:40px}
-.footer-copy{font:400 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
+/* índice lateral fijo: queda debajo del nav + la barra de cotizaciones */
+.lg-toc{position:sticky;top:calc(var(--v-top) + 26px);max-height:calc(100vh - var(--v-top) - 40px);overflow-y:auto;scrollbar-width:none}
+.lg-toc::-webkit-scrollbar{display:none}
+/* el índice recorta lo que sale de su caja (overflow): el foco de teclado va
+   por dentro, si no el borde izquierdo y el de arriba quedaban cortados */
+.lg-toc a:focus-visible{outline:2px solid var(--gold2);outline-offset:-2px}
+.lg-docs{display:inline-flex;gap:2px;margin-bottom:18px}
+.lg-docs .v-chip{display:inline-block;padding:6px 10px;text-decoration:none}
+.lg-toc-t{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin-bottom:10px}
+.lg-idx{display:flex;flex-direction:column;gap:2px}
+.lg-idx a{display:block;font-size:14px;line-height:1.45;color:var(--sub);padding:5px 0 5px 10px;border-left:2px solid var(--line);transition:color .15s,border-color .15s}
+.lg-idx a:hover{color:var(--ink);border-color:var(--navy)}
+/* la sección que se está leyendo: rail dorado, como el activo de los selectores */
+.lg-idx a.on{color:var(--ink);border-color:var(--gold);font-weight:500}
+
+/* texto legal: 72ch, justificado con guiones (texto corrido ancho, SPEC §0) */
+.lg-txt{max-width:72ch}
+.lg-intro{font-size:17px;line-height:1.7;color:var(--ink);margin:0 0 30px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+.lg-sec{margin-bottom:28px}
+.lg-sec h2{font:700 20px/1.3 'IBM Plex Sans',sans-serif;color:var(--ink);margin:0 0 8px;text-wrap:pretty}
+.lg-sec h2 .n{color:var(--gold2);margin-right:8px}
+.lg-sec p,.lg-sec li{font-size:15.5px;line-height:1.75;color:var(--cuerpo);text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+.lg-sec p{margin:0 0 10px}
+.lg-sec ul{padding-left:20px;margin:0 0 10px;display:flex;flex-direction:column;gap:6px}
+.lg-sec b{color:var(--ink);font-weight:600}
+/* enlaces del texto en el dorado oscuro y subrayados: el dorado claro no llega a AA sobre blanco */
+.lg-sec a,.lg-pie a{color:var(--gold2);text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
+.lg-sec a:hover,.lg-pie a:hover{color:var(--ink)}
+.lg-pie{border-top:1px solid var(--line);padding-top:18px;font-size:14.5px;line-height:1.7;color:var(--sub)}
+
+@media(max-width:880px){
+  .lg-body{padding-top:22px}
+  .lg-grid{grid-template-columns:1fr;gap:0}
+  .lg-toc{position:static;max-height:none;overflow:visible}
+  .lg-toc-t,.lg-idx{display:none}
+  .lg-docs{margin-bottom:24px}
+}
+
+/* pie del prototipo; el mail flotante es el de sitio.css */
+footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:0}
+.footer-copy{font:400 12.5px 'IBM Plex Sans',sans-serif;line-height:1.6;color:rgba(255,255,255,.35)}
 .footer-links{display:flex;gap:20px;flex-wrap:wrap}
 .footer-links a{font:500 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase}
+.footer-links a:hover{color:#E8CE96}
+/* en celular el mail flotante (48px a 28px del borde) tapaba "Inicio" del pie
+   al llegar al final: se le deja lugar abajo, como en Planes */
+@media(max-width:880px){footer{padding-bottom:92px}}
 </style>
 <link rel="stylesheet" href="sitio.css?v=1">
 </head>
@@ -74,69 +116,102 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
 <!-- título de la página: negro sobre blanco, con la vigencia como bajada -->
 <header class="v-tit"><div class="v-tit-in">
   <button class="volver" onclick="volver()">← Volver</button>
-  <h1>Política de Privacidad</h1>
+  <h1>Política de privacidad</h1>
   <p class="v-baj">Vigente desde el 1 de septiembre de 2026</p>
 </div></header>
 
-<main>
-  <p>Guardamos lo mínimo necesario para que el sitio funcione, no vendemos tus datos y no mostramos publicidad.
-  Acá está el detalle completo.</p>
+<div class="lg-body">
+  <div class="lg-grid">
+    <aside class="lg-toc">
+      <nav class="lg-docs" aria-label="Documentos legales">
+        <a class="v-chip" href="/terminos">Términos</a>
+        <a class="v-chip on" href="/privacidad" aria-current="page">Privacidad</a>
+      </nav>
+      <div class="lg-toc-t" id="lg-toc-t">Contenido</div>
+      <nav class="lg-idx" aria-labelledby="lg-toc-t">
+        <a href="#privacidad-1">1. Responsable</a>
+        <a href="#privacidad-2">2. Qué datos guardamos</a>
+        <a href="#privacidad-3">3. Para qué los usamos</a>
+        <a href="#privacidad-4">4. Dónde se almacenan</a>
+        <a href="#privacidad-5">5. Tus derechos (Ley 25.326)</a>
+        <a href="#privacidad-6">6. Cambios</a>
+      </nav>
+    </aside>
 
-  <h2>1. Responsable</h2>
-  <p>Valtia Analytics (Lautaro Cuitiño), Córdoba, Argentina.
-  Contacto: <a href="mailto:soporte@valtia.tech">soporte@valtia.tech</a>.</p>
+    <main class="lg-txt">
+      <p class="lg-intro">Guardamos lo mínimo necesario para que el sitio funcione, no vendemos tus datos y no mostramos publicidad.
+      Acá está el detalle completo.</p>
 
-  <h2>2. Qué datos guardamos</h2>
-  <ul>
-    <li><b>Cuenta:</b> tu email (y nombre, si ingresás con Google), para autenticarte.</li>
-    <li><b>Newsletter y lista de espera PRO:</b> el email que dejás voluntariamente.</li>
-    <li><b>Mi Cartera e Inversión mensual:</b> las posiciones y el plan que cargás vos. Son privados: las reglas de acceso
-    hacen que solo tu cuenta (y la administración del sitio) puedan leerlos.</li>
-    <li><b>Alertas por mail:</b> si las activás en tu panel, guardamos qué avisos querés recibir y de qué ya te
-    avisamos, para no repetirlos. Los mails no incluyen cantidades ni montos de tu cartera.</li>
-    <li><b>Preferencias locales:</b> algunas cosas se guardan en tu propio navegador (localStorage) y no llegan a nuestros
-    servidores: el tema claro/oscuro, la moneda en la que mirás Mi Cartera y los números que cargás en
-    <a href="/inversion-mensual">Inversión mensual</a> (ingresos y gastos). Ese último dato lo borramos de tu
-    navegador cuando cerrás sesión, y no lo subimos: de esa página solo se guarda en tu cuenta el aporte mensual que
-    elegís, porque es el que necesita el plan de compras.</li>
-  </ul>
-  <p>No pedimos ni almacenamos datos financieros sensibles como tarjetas, claves de tu broker o cuentas bancarias.</p>
+      <section class="lg-sec" id="privacidad-1">
+        <h2><span class="n">1.</span>Responsable</h2>
+        <p>Valtia Analytics (Lautaro Cuitiño), Córdoba, Argentina.
+        Contacto: <a href="mailto:soporte@valtia.tech">soporte@valtia.tech</a>.</p>
+      </section>
 
-  <h2>3. Para qué los usamos</h2>
-  <ul>
-    <li>Autenticarte y mostrarte tus propios datos.</li>
-    <li>Enviarte el newsletter si te suscribiste — cada mail incluye la baja en un click.</li>
-    <li>Avisarte por mail sobre los activos que tenés cargados, si activaste las alertas: como máximo un mail por
-    día, y cada uno trae la baja en un click (también las apagás desde tu panel).</li>
-    <li>Avisarte del lanzamiento de las suscripciones si te anotaste en la lista de espera.</li>
-  </ul>
-  <p>No vendemos, alquilamos ni compartimos tus datos con terceros con fines comerciales, y el sitio no usa
-  publicidad ni rastreadores de terceros.</p>
+      <section class="lg-sec" id="privacidad-2">
+        <h2><span class="n">2.</span>Qué datos guardamos</h2>
+        <ul>
+          <li><b>Cuenta:</b> tu email (y nombre, si ingresás con Google), para autenticarte.</li>
+          <li><b>Newsletter y lista de espera PRO:</b> el email que dejás voluntariamente.</li>
+          <li><b>Mi Cartera e Inversión mensual:</b> las posiciones y el plan que cargás vos. Son privados: las reglas de acceso
+          hacen que solo tu cuenta (y la administración del sitio) puedan leerlos.</li>
+          <li><b>Alertas por mail:</b> si las activás en tu panel, guardamos qué avisos querés recibir y de qué ya te
+          avisamos, para no repetirlos. Los mails no incluyen cantidades ni montos de tu cartera.</li>
+          <li><b>Preferencias locales:</b> algunas cosas se guardan en tu propio navegador (localStorage) y no llegan a nuestros
+          servidores: el tema claro/oscuro, la moneda en la que mirás Mi Cartera y los números que cargás en
+          <a href="/inversion-mensual">Inversión mensual</a> (ingresos y gastos). Ese último dato lo borramos de tu
+          navegador cuando cerrás sesión, y no lo subimos: de esa página solo se guarda en tu cuenta el aporte mensual que
+          elegís, porque es el que necesita el plan de compras.</li>
+        </ul>
+        <p>No pedimos ni almacenamos datos financieros sensibles como tarjetas, claves de tu broker o cuentas bancarias.</p>
+      </section>
 
-  <h2>4. Dónde se almacenan</h2>
-  <p>La autenticación y la base de datos funcionan sobre <b>Firebase (Google Cloud)</b>, que procesa los datos como
-  encargado según sus propios términos y estándares de seguridad. La conexión con el sitio está cifrada (HTTPS).</p>
+      <section class="lg-sec" id="privacidad-3">
+        <h2><span class="n">3.</span>Para qué los usamos</h2>
+        <ul>
+          <li>Autenticarte y mostrarte tus propios datos.</li>
+          <li>Enviarte el newsletter si te suscribiste — cada mail incluye la baja en un click.</li>
+          <li>Avisarte por mail sobre los activos que tenés cargados, si activaste las alertas: como máximo un mail por
+          día, y cada uno trae la baja en un click (también las apagás desde tu panel).</li>
+          <li>Avisarte del lanzamiento de las suscripciones si te anotaste en la lista de espera.</li>
+        </ul>
+        <p>No vendemos, alquilamos ni compartimos tus datos con terceros con fines comerciales, y el sitio no usa
+        publicidad ni rastreadores de terceros.</p>
+      </section>
 
-  <h2>5. Tus derechos (Ley 25.326)</h2>
-  <p>Podés ejercer en cualquier momento tus derechos de <b>acceso, rectificación y supresión</b>: escribinos y lo
-  resolvemos. Además, mucho es autoservicio: tus posiciones las borrás vos desde Mi Cartera, y la baja del newsletter
-  está en cada mail. La Agencia de Acceso a la Información Pública (AAIP), en su carácter de órgano de control de la
-  Ley 25.326, tiene la atribución de atender denuncias y reclamos por incumplimiento de las normas de protección de
-  datos personales.</p>
+      <section class="lg-sec" id="privacidad-4">
+        <h2><span class="n">4.</span>Dónde se almacenan</h2>
+        <p>La autenticación y la base de datos funcionan sobre <b>Firebase (Google Cloud)</b>, que procesa los datos como
+        encargado según sus propios términos y estándares de seguridad. La conexión con el sitio está cifrada (HTTPS).</p>
+      </section>
 
-  <h2>6. Cambios</h2>
-  <p>Si esta política cambia, actualizamos la fecha de vigencia y comunicamos los cambios relevantes en el sitio.</p>
-</main>
+      <section class="lg-sec" id="privacidad-5">
+        <h2><span class="n">5.</span>Tus derechos (Ley 25.326)</h2>
+        <p>Podés ejercer en cualquier momento tus derechos de <b>acceso, rectificación y supresión</b>: escribinos y lo
+        resolvemos. Además, mucho es autoservicio: tus posiciones las borrás vos desde Mi Cartera, y la baja del newsletter
+        está en cada mail. La Agencia de Acceso a la Información Pública (AAIP), en su carácter de órgano de control de la
+        Ley 25.326, tiene la atribución de atender denuncias y reclamos por incumplimiento de las normas de protección de
+        datos personales.</p>
+      </section>
+
+      <section class="lg-sec" id="privacidad-6">
+        <h2><span class="n">6.</span>Cambios</h2>
+        <p>Si esta política cambia, actualizamos la fecha de vigencia y comunicamos los cambios relevantes en el sitio.</p>
+      </section>
+
+      <div class="lg-pie">Dudas sobre este documento: <a href="mailto:soporte@valtia.tech">soporte@valtia.tech</a>. Valtia Analytics · Córdoba, Argentina.</div>
+    </main>
+  </div>
+</div>
 
 <a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
 <footer>
-  <div class="footer-copy">Valtia Analytics · Córdoba, Argentina · <a href="/terminos" style="color:inherit;text-decoration:underline">Términos y Condiciones</a></div>
+  <div class="footer-copy">© 2026 Valtia Analytics — Análisis de carácter general y educativo. No constituye asesoramiento financiero.</div>
   <div class="footer-links">
-    <a href="/">Inicio</a><a href="/cartera">Carteras</a><a href="/informes">Informes</a><a href="/herramientas">Herramientas</a>
+    <a href="/">Inicio</a><a href="/terminos">Términos</a><a href="/privacidad">Privacidad</a>
   </div>
 </footer>
-
 <script>
 function volver() {
   try {
@@ -147,6 +222,63 @@ function volver() {
   } catch (e) {}
   location.href = '/';
 }
+
+// Índice: marca la sección que se está leyendo. La línea de lectura es la
+// misma que usan los anclas (scroll-padding-top de sitio.css: nav + barra);
+// cerca del final baja hacia el pie de la pantalla, así las últimas secciones
+// —que nunca llegan arriba— también se marcan. Un clic en el índice deja
+// marcada esa sección hasta que la persona vuelva a mover la página.
+(function () {
+  var links = [].slice.call(document.querySelectorAll('.lg-idx a[href^="#"]'));
+  var secs = links.map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); });
+  if (!links.length || secs.indexOf(null) > -1) return;
+  var actual = -1, fijo = -1, pedido = false;
+
+  function marcar(i) {
+    if (i === actual) return;
+    actual = i;
+    links.forEach(function (a, j) {
+      a.classList.toggle('on', j === i);
+      if (j === i) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current');
+    });
+  }
+  function medir() {
+    pedido = false;
+    var alto = window.innerHeight;
+    if (fijo > -1) {
+      var r = secs[fijo].getBoundingClientRect();
+      // mientras el scroll suave viaja hacia ella, el marcador acompaña; al
+      // llegar, queda la elegida aunque no toque la línea de lectura
+      if (r.top < alto && r.bottom > 0) { marcar(fijo); return; }
+    }
+    var linea = (parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 120) + 8;
+    var resto = document.documentElement.scrollHeight - alto - window.scrollY;
+    var tramo = alto * 0.5;
+    if (resto < tramo) linea += Math.max(0, alto - 80 - linea) * (1 - Math.max(0, resto) / tramo);
+    var i = 0;
+    for (var j = 0; j < secs.length; j++) if (secs[j].getBoundingClientRect().top <= linea) i = j;
+    marcar(i);
+  }
+  function pedir() { if (!pedido) { pedido = true; requestAnimationFrame(medir); } }
+
+  links.forEach(function (a, j) { a.addEventListener('click', function () { fijo = j; marcar(j); }); });
+  ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach(function (ev) {
+    window.addEventListener(ev, function () { fijo = -1; }, { passive: true });
+  });
+  window.addEventListener('scroll', pedir, { passive: true });
+  window.addEventListener('resize', pedir);
+  // si se entra con un ancla (/terminos#terminos-3), esa sección queda marcada
+  var h = location.hash.slice(1);
+  secs.forEach(function (s, j) { if (s.id === h) fijo = j; });
+  window.addEventListener('hashchange', function () {
+    var id = location.hash.slice(1);
+    secs.forEach(function (s, j) { if (s.id === id) fijo = j; });
+    pedir();
+  });
+  // con ancla, el navegador todavía no saltó: se marca la pedida y se mide
+  // recién con el primer scroll
+  if (fijo > -1) marcar(fijo); else medir();
+})();
 </script>
 <script type="module" src="nav-auth.js?v=10"></script>
 <script type="module" src="cotizaciones.js?v=3"></script>

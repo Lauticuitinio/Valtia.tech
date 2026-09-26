@@ -12,104 +12,183 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Ficha de activo: todo lo del activo en un solo lugar. Reglas globales
-     del rediseño (sitio.css): Plex Sans en todo, esquinas redondeadas
-     (tarjetas 12, botones 8, etiquetas 6), selectores con borde dorado sutil
-     y contenido de 1340px. La cabecera nueva de la ficha es su etapa. ── */
+/* ── Ficha de activo — etapa 8 del rediseño: el prototipo "Valtia Activo"
+     sección por sección (encabezado blanco, franja "Lectura de Valtia",
+     Precio, Los números, Lo que escribimos y la columna de la derecha), con
+     los valores literales del prototipo. Las reglas globales (nav, barra de
+     cotizaciones, Plex Sans con números tabulares, botón de mail, ancho de
+     1340) vienen de sitio.css. ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--ink:#101010;--sub:#57534A;--mut:#8B8375;--navy:#0E1830;--gold:#B08A3E;--gold2:#8A6A2F;--line:#E7E3DA;--marfil:#F6F3EC;--up:#1F7A4D;--dn:#B23A3A}
+:root{--ink:#101010;--sub:#57534A;--mut:#8B8375;--navy:#0E1830;--navy3:#14213D;--gold:#B08A3E;--gold2:#8A6A2F;--line:#E7E3DA;--marfil:#F6F3EC;--up:#1F7A4D;--dn:#B23A3A;--amb:#B7791F;
+  --va-borde:#E6E8EC;--va-div:#F0F1F4}
 html{scroll-behavior:smooth}
 body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink)}
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
 img{max-width:100%}
-
-
-.wrap{max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto;padding:26px var(--v-gutter) 60px}
-
-/* barra superior: volver + buscador de activos */
-.top-row{display:flex;gap:16px;align-items:center;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--line)}
-.volver{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);white-space:nowrap;cursor:pointer}
-.volver:hover{color:var(--gold)}
-.bx{position:relative;flex:1;max-width:430px}
-.bx input{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:8px;background:#fff;font:400 14px 'IBM Plex Sans',sans-serif;color:var(--ink);outline:none}
-.bx input:focus{border-color:var(--gold)}
-.bx-panel{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 14px 40px rgba(16,16,16,.12);max-height:380px;overflow-y:auto;z-index:150;display:none}
-.bx-panel.open{display:block}
-.bx-g{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);padding:10px 14px 5px;background:var(--marfil)}
-.bx-it{display:flex;justify-content:space-between;gap:10px;padding:9px 14px;cursor:pointer;font:400 13px 'IBM Plex Sans',sans-serif}
-.bx-it:hover{background:var(--marfil)}
-.bx-it .tk{font:600 11px 'IBM Plex Sans',sans-serif;color:var(--mut)}
-
-/* cabecera del activo */
-.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:24px}
-.head .sec{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:8px}
-.head h1{font:700 clamp(28px,3vw,36px) 'IBM Plex Sans',sans-serif;line-height:1.1}
-.head h1 span{font:600 18px 'IBM Plex Sans',sans-serif;color:var(--mut);margin-left:12px}
-.head .px{text-align:right}
-.head .px .p{font:600 34px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums}
-.head .px .d{font:600 15px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums}
-.head .px .h{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--mut);margin-top:3px}
 .up{color:var(--up)}.dn{color:var(--dn)}
 
-/* ── ficha v2: estado, dos columnas, puntuación, rendimientos ── */
-.head-meta{font:400 11.5px 'IBM Plex Sans',sans-serif;color:var(--mut);margin-top:8px}
-.head .px .p{font-size:40px;line-height:1}
-.head .px .d{display:inline-block;margin-top:6px;padding:3px 9px;border-radius:6px;font-size:14px}
-.head .px .d.up{background:#E4F3EA}.head .px .d.dn{background:#F8E5E5}
-.estado{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:22px}
-.estado .et{background:#fff;padding:14px 18px;min-width:0;position:relative;overflow:hidden}
-.estado .l{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
-.estado .v{font:600 15px 'IBM Plex Sans',sans-serif;margin-top:7px;font-variant-numeric:tabular-nums}
-.estado .s{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--sub);margin-top:5px;line-height:1.5}
-.barra{position:relative;height:6px;background:var(--marfil);border-radius:3px;margin:11px 0 6px}
-.barra i{position:absolute;top:0;bottom:0;left:0;border-radius:3px;background:linear-gradient(90deg,#B23A3A,#B08A3E 50%,#1F7A4D)}
-.barra i.neutra{background:linear-gradient(90deg,#E7E3DA,#B08A3E)}
-.barra b{position:absolute;top:-4px;width:3px;height:14px;background:var(--navy);transform:translateX(-50%);border-radius:1px}
-.barra-l{display:flex;justify-content:space-between;gap:6px;font:500 10.5px 'IBM Plex Sans',sans-serif;color:var(--mut)}
-.ficha-grid{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,1fr);gap:22px;margin-top:22px;align-items:start}
-.col-main>.card-w+.card-w,.col-side>.card-w+.card-w{margin-top:22px}
-.rend{display:grid;grid-template-columns:repeat(8,1fr);border-top:1px solid var(--line)}
-.rend .r{padding:10px 6px;text-align:center;border-right:1px solid var(--line);min-width:0}
-.rend .r:last-child{border-right:none}
-.rend .rl{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
-.rend .rv{font:600 13px 'IBM Plex Sans',sans-serif;margin-top:4px;font-variant-numeric:tabular-nums}
-.rend-nota{padding:8px 18px 12px;font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--mut);line-height:1.5;border-top:1px solid var(--line)}
-.punt{padding:4px 18px 8px;position:relative}
-.punt .pr{display:grid;grid-template-columns:1fr 84px;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
-.punt .lock .pr:last-child{border-bottom:none}
-.punt .pl{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
-.punt .pv{font:600 15px 'IBM Plex Sans',sans-serif;margin-top:3px}
-.punt .ps{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--sub);margin-top:2px;line-height:1.45}
-.gauge{width:84px;height:50px;display:block}
-.stg{border-top:1px solid var(--line)}
-.stg:first-child{border-top:none}
-.stg-t{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);padding:12px 18px 8px}
-.lock{position:relative}
-@media(max-width:960px){.ficha-grid{grid-template-columns:minmax(0,1fr)}.rend{grid-template-columns:repeat(4,1fr)}.rend .r:nth-child(4){border-right:none}.estado{grid-template-columns:1fr 1fr}}
+/* ── encabezado blanco (prototipo: #va-mh) ── */
+.va-mh{background:#fff;padding:24px var(--v-gutter) 6px}
+.va-in{max-width:var(--v-ancho);margin:0 auto}
+.va-top{display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap}
+.va-back{font:500 12px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#8A6A2F}
+.va-back:hover{color:#101010}
+.va-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px 40px;align-items:end;margin-top:14px}
+.va-id{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.va-tk{font:700 13.5px 'IBM Plex Sans',sans-serif;color:#fff;background:#0E1830;padding:4px 10px;border-radius:99px}
+.va-meta{font:500 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8B8375}
+.va-head h1{font:700 clamp(28px,3vw,36px)/1.1 'IBM Plex Sans',sans-serif;color:#101010;margin:10px 0 0}
+.va-px{text-align:right}
+.va-px .p{font:600 34px/1 'IBM Plex Sans',sans-serif;color:#101010}
+.va-px .d{display:flex;gap:6px 14px;justify-content:flex-end;flex-wrap:wrap;margin-top:8px;font:500 13.5px 'IBM Plex Sans',sans-serif}
+.va-px .d .c{color:#8B8375}
 
-/* ── ficha v3: sub-navegación, rango del día, velas, salud, sentimiento, lo que importa ── */
-.subnav{display:flex;gap:2px;margin:-6px 0 22px;border-bottom:1px solid var(--line);overflow:auto hidden;scrollbar-width:none}
-.subnav a{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);padding:10px 14px;white-space:nowrap;border-bottom:2px solid transparent}
-.subnav a:hover{color:var(--gold)}
-.subnav a.on{color:var(--navy);border-bottom-color:var(--gold)}
-/* los saltos a #general, #grafico, #informe… no quedan debajo del nav y la
-   barra de cotizaciones: lo resuelve sitio.css con scroll-padding-top en html
-   (un scroll-margin acá se sumaría y dejaría el doble de aire) */
-.head .acc{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;justify-content:flex-end}
-/* botones: el secundario con la regla del sitio (borde dorado sutil, radio 8);
-   el primario, navy */
-.btn-acc{display:inline-block;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:9px 16px;border:1px solid rgba(176,138,62,.4);border-radius:8px;color:#57534A;text-decoration:none;cursor:pointer;background:#fff}
-.btn-acc:hover{border-color:#B08A3E;background:#FBF5E8;color:#101010}
-.btn-acc.prim{background:var(--navy);border-color:var(--navy);color:#fff}
-.btn-acc.prim:hover{background:var(--gold);border-color:var(--gold);color:#fff}
-.estado .s b{color:var(--ink);font-weight:600}
-.card-h .der{display:flex;align-items:center;flex-wrap:wrap;gap:6px;justify-content:flex-end}
-.rangos.tipo{margin-right:8px;padding-right:10px;border-right:1px solid var(--line)}
-.salud{display:flex;gap:3px;margin:6px 0 5px;max-width:150px}
-.salud i{flex:1;height:7px;background:var(--marfil);border-radius:2px}
+/* buscador de otros activos (el de la ficha anterior, en la línea de volver) */
+.bx{position:relative;flex:0 1 340px;min-width:0}
+.bx input{width:100%;padding:8px 12px;border:1px solid var(--va-borde);border-radius:8px;background:#fff;font:400 14px 'IBM Plex Sans',sans-serif;color:var(--ink);outline:none}
+.bx input:focus{border-color:var(--gold)}
+.bx-panel{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--va-borde);border-radius:10px;box-shadow:0 14px 40px rgba(16,16,16,.12);max-height:380px;overflow-y:auto;z-index:150;display:none}
+.bx-panel.open{display:block}
+.bx-g{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);padding:10px 14px 5px;background:var(--marfil)}
+.bx-it{display:flex;justify-content:space-between;gap:10px;padding:9px 14px;cursor:pointer;font:400 14px 'IBM Plex Sans',sans-serif}
+.bx-it:hover{background:var(--marfil)}
+.bx-it .tk{font:600 12px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+
+/* ── cuerpo (prototipo: #va-body) ── */
+.va-body{background:#fff;padding:18px var(--v-gutter) 70px}
+.va-card{background:#fff;border:1px solid var(--va-borde);border-radius:10px;padding:20px 22px;min-width:0}
+.va-card[hidden]{display:none}
+.va-h{font:600 17.5px 'IBM Plex Sans',sans-serif;color:#101010;margin-bottom:10px}
+.va-sub{font-size:14px;line-height:1.55;color:#57534A;margin:-6px 0 14px}
+.va-vacio{font-size:14px;line-height:1.55;color:#8B8375;padding:6px 0}
+.va-link{display:inline-block;font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase}
+.va-mas{margin-top:10px}
+
+/* franja "Lectura de Valtia" */
+.va-lect{background:#fff;border:1px solid var(--va-borde);border-radius:10px;padding:18px 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-bottom:14px}
+.va-lect>div{min-width:0}
+.va-lect .l{font-size:12.5px;color:#57534A}
+.va-lect .v{font:600 17px 'IBM Plex Sans',sans-serif;color:#101010;margin-top:6px}
+.va-lect .v .de{font-size:13.5px;font-weight:400;color:#8B8375}
+.va-lect .s{font-size:13.5px;line-height:1.45;color:#8B8375;margin-top:4px}
+.va-ver{display:flex;align-items:center;gap:8px;margin-top:6px}
+.va-ver .v{margin-top:0}
+.va-dot{width:10px;height:10px;border-radius:50%;display:block;flex:none}
+.va-bar{height:4px;background:#EEF0F3;border-radius:2px;margin-top:8px}
+.va-bar i{display:block;height:4px;background:#14213D;border-radius:2px}
+.va-cta{display:flex;flex-direction:column;justify-content:center;gap:8px}
+.va-btn{display:block;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:#14213D;padding:11px 16px;border-radius:8px;text-align:center;text-wrap:balance}
+.va-btn:hover{background:#0E1830;color:#fff}
+.va-cta .s{font-size:12.5px;color:#8B8375;text-align:center;margin:0;min-height:1.45em}
+
+/* tu posición (solo con sesión y tenencia en dólares) */
+.mi-pos{background:var(--marfil);border:1px solid var(--va-borde);border-left:3px solid var(--gold);border-radius:10px;padding:15px 20px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:10px 36px;align-items:baseline}
+.mi-pos .tt{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);width:100%}
+.mi-pos .l{font-size:12.5px;color:var(--sub)}
+.mi-pos .v{font:600 17px 'IBM Plex Sans',sans-serif;margin-top:3px}
+.mi-pos .s{font-size:12.5px;color:var(--mut);margin-top:2px}
+
+/* dos columnas (prototipo: #va-grid) */
+.va-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr);gap:14px;align-items:start}
+.va-col{display:flex;flex-direction:column;gap:14px;min-width:0}
+
+/* Precio: selector de rango con la regla de botones del sitio, gráfico,
+   leyenda y variación por período */
+.va-ch-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.va-ch-top .va-h{margin:0}
+.va-sel{display:inline-flex;gap:2px;align-items:center;flex-wrap:wrap}
+.va-sel button{font:500 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;padding:6px 10px;cursor:pointer;color:#57534A;border:1px solid rgba(176,138,62,.4);border-radius:8px;background:#fff;white-space:nowrap;transition:color .15s,border-color .15s,background .15s}
+.va-sel button:hover{color:#101010}
+.va-sel button.on{color:#101010;border-color:#B08A3E;background:#FBF5E8}
+.va-sep{width:1px;height:20px;background:var(--va-borde);margin:0 8px}
+.va-chart{position:relative;height:clamp(220px,28vw,300px)}
+.va-leg{display:flex;gap:8px 16px;flex-wrap:wrap;align-items:center;margin-top:12px;font-size:13px;color:#57534A}
+.va-leg>span{display:flex;align-items:center;gap:6px}
+.va-leg i{width:12px;display:block;flex:none}
+.va-leg .per{margin-left:auto;color:#8B8375}
+.va-rend{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));margin-top:14px;border-top:1px solid var(--va-div)}
+.va-rend .r{padding:10px 4px 0;text-align:center;min-width:0}
+.va-rend .rl{font-size:12px;color:#8B8375;white-space:nowrap}
+.va-rend .rv{font:600 14px 'IBM Plex Sans',sans-serif;margin-top:3px}
+.va-rend-nota{font-size:12.5px;line-height:1.5;color:#8B8375;margin-top:10px}
+
+/* Los números */
+.va-nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.va-num{border:1px solid var(--va-borde);border-radius:8px;padding:11px 13px;min-width:0}
+.va-num .l{font-size:12.5px;color:#57534A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.va-num .v{font:600 17px 'IBM Plex Sans',sans-serif;color:#101010;margin-top:5px}
+.va-num .s{font-size:12.5px;line-height:1.4;color:#8B8375;margin-top:3px}
+.va-num .s.b{color:#1F7A4D}.va-num .s.a{color:#B7791F}
+.va-mas-num{margin-top:12px}
+.va-mas-num summary{cursor:pointer;font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);list-style:none}
+.va-mas-num summary::-webkit-details-marker{display:none}
+.va-mas-num summary::after{content:' ↓'}
+.va-mas-num[open] summary::after{content:' ↑'}
+.va-mas-num .va-nums{margin-top:12px}
+.va-nota-num{font-size:12.5px;line-height:1.55;color:#8B8375;margin-top:12px}
+.salud{display:flex;gap:3px;margin:7px 0 2px;max-width:130px}
+.salud i{flex:1;height:6px;background:#EEF0F3;border-radius:2px}
 .salud i.on{background:var(--up)}.salud.n1 i.on,.salud.n2 i.on{background:var(--dn)}.salud.n3 i.on{background:var(--gold)}
-.sent{display:flex;gap:8px;margin-top:8px}
+/* candado PRO: tarjetas de muestra sin datos, desenfocadas */
+.lock{position:relative;margin-top:10px}
+.preview-blur{filter:blur(5px);pointer-events:none;user-select:none}
+.lock .preview-blur{max-height:212px;overflow:hidden}
+.pro-overlay{position:absolute;inset:0;background:rgba(255,255,255,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:5;text-align:center;padding:10px}
+.pro-overlay h4{font:600 15px 'IBM Plex Sans',sans-serif;color:#101010}
+.pro-overlay p{font-size:13px;color:var(--sub);max-width:360px;line-height:1.5}
+.pro-overlay .btn{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:#14213D;color:#fff;padding:9px 18px;border-radius:8px}
+.pro-overlay .btn:hover{background:#0E1830;color:#fff}
+/* lecturas automáticas (las de "Lo que importa" de la ficha anterior) */
+.va-tips-t{font:600 14px 'IBM Plex Sans',sans-serif;color:#101010;margin:18px 0 4px}
+.tip{display:grid;grid-template-columns:8px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--va-div);font-size:14px;line-height:1.55;color:#2E2A24}
+.tip:last-child{border-bottom:none}
+.tip i{width:8px;height:8px;border-radius:50%;margin-top:7px;background:var(--mut)}
+.tip.b i{background:var(--up)}.tip.m i{background:var(--dn)}.tip.n i{background:var(--gold)}
+.tip b{color:var(--ink);font-weight:600}
+
+/* Lo que escribimos */
+.va-esc-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.va-esc-top .va-h{margin:0}
+.va-dest{display:grid;grid-template-columns:120px minmax(0,1fr);gap:16px;padding:14px;border:1px solid var(--va-borde);border-left:3px solid #14213D;border-radius:8px;margin-bottom:12px}
+.va-dest .img{aspect-ratio:4/3;background:#0E1830 center/cover no-repeat;border-radius:6px}
+.va-dest .eb{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#8A6A2F}
+.va-dest .tt{font:600 18px/1.25 'IBM Plex Sans',sans-serif;color:#101010;margin:6px 0}
+.va-dest p{font-size:14.5px;line-height:1.6;color:#57534A;margin:0 0 8px}
+.va-dest .pie{display:flex;gap:8px 16px;align-items:center;flex-wrap:wrap}
+.va-dest .pp{font:500 13px 'IBM Plex Sans',sans-serif;color:#57534A}
+.va-dest .pp b{color:#101010}
+.va-dest .pp b.up{color:var(--up)}.va-dest .pp b.dn{color:var(--dn)}
+.va-nota{display:grid;grid-template-columns:86px minmax(0,1fr);gap:14px;padding:11px 0;border-bottom:1px solid var(--va-div);align-items:baseline;color:inherit}
+.va-nota .f{font:500 12.5px 'IBM Plex Sans',sans-serif;color:#8B8375}
+.va-nota .t{font:600 15px 'IBM Plex Sans',sans-serif;color:#101010}
+a.va-nota:hover .t{text-decoration:underline}
+.va-nota .s{font-size:13.5px;line-height:1.5;color:#8B8375;margin-top:2px}
+
+/* columna derecha */
+.va-cart{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--va-div);color:inherit}
+.va-cart .cod{font:700 11.5px 'IBM Plex Sans',sans-serif;color:#fff;padding:3px 6px;border-radius:99px;min-width:52px;text-align:center;display:inline-block}
+.va-cart .n{font:600 14.5px 'IBM Plex Sans',sans-serif;color:#101010}
+a.va-cart:hover .n{text-decoration:underline}
+.va-cart .e{font-size:12.5px;color:#8B8375}
+.va-cart .w{font:600 14px 'IBM Plex Sans',sans-serif;color:#101010}
+.va-ev{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;padding:9px 0;border-bottom:1px solid var(--va-div);align-items:start}
+.va-ev .d{font:600 20px/1 'IBM Plex Sans',sans-serif;color:#101010}
+.va-ev .m{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8A6A2F}
+.va-ev .t{font-size:14.5px;color:#101010}
+.va-ev .s{font-size:13px;color:#8B8375;margin-top:2px}
+.va-nw{display:block;padding:9px 0;border-bottom:1px solid var(--va-div);color:inherit}
+.va-nw .f{font:500 11.5px 'IBM Plex Sans',sans-serif;color:#8B8375}
+.va-nw .t{font:600 14.5px/1.4 'IBM Plex Sans',sans-serif;color:#101010;margin-top:3px}
+a.va-nw:hover .t{text-decoration:underline}
+.va-kv{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--va-div);font-size:14px}
+.va-kv span{color:#57534A}
+.va-kv b{font:600 14px 'IBM Plex Sans',sans-serif;color:#101010;text-align:right}
+.va-fuente{font-size:12.5px;line-height:1.5;color:#8B8375;margin-top:10px}
+/* sentimiento de la comunidad: un voto por persona */
+.va-sent-v{font:600 17px 'IBM Plex Sans',sans-serif;color:#101010}
+.va-sent-v small{font:400 13px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+.sent{display:flex;gap:8px;margin-top:10px}
 .sent button{flex:1;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;padding:8px 6px;border:1px solid rgba(176,138,62,.4);border-radius:8px;background:#fff;cursor:pointer;color:#57534A}
 .sent button.alc.on{background:#E4F3EA;border-color:var(--up);color:var(--up)}
 .sent button.baj.on{background:#F8E5E5;border-color:var(--dn);color:var(--dn)}
@@ -117,95 +196,25 @@ img{max-width:100%}
 .sent button:disabled{opacity:.5;cursor:wait}
 .sent-bar{display:flex;height:7px;margin-top:8px;border-radius:3px;overflow:hidden;background:var(--marfil)}
 .sent-bar i{display:block;height:100%}
-.tips{padding:4px 18px 8px}
-.tip{display:grid;grid-template-columns:8px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font:400 12.5px 'IBM Plex Sans',sans-serif;line-height:1.5;color:#2E2A24}
-.tip:last-child{border-bottom:none}
-.tip i{width:8px;height:8px;border-radius:50%;margin-top:6px;background:var(--mut)}
-.tip.b i{background:var(--up)}.tip.m i{background:var(--dn)}.tip.n i{background:var(--gold)}
-.tip b{color:var(--ink);font-weight:600}
-@media(max-width:600px){.estado{grid-template-columns:1fr}.head .acc{justify-content:flex-start}.card-h{flex-wrap:wrap}.card-h .der{justify-content:flex-start}.rangos{flex-wrap:wrap}.rangos button{padding:5px 8px}.rangos.tipo{margin-right:2px;padding-right:6px}}
+.va-sent-s{font-size:13px;line-height:1.55;color:#8B8375;margin-top:8px}
 
-/* tu posición (solo cliente logueado con tenencia) */
-.mi-pos{background:var(--marfil);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:12px;padding:15px 20px;margin-bottom:22px;display:flex;flex-wrap:wrap;gap:10px 36px;align-items:baseline}
-.mi-pos .tt{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);width:100%}
-.mi-pos .l{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
-.mi-pos .v{font:600 17px 'IBM Plex Sans',sans-serif;margin-top:3px;font-variant-numeric:tabular-nums}
-.mi-pos .s{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--sub);margin-top:2px}
-
-/* tarjetas */
-.card-w{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--line)}
-.card-h .t{font:700 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase}
-.card-h .s{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--mut)}
-
-/* gráfico */
-.chart-box{height:330px;position:relative;padding:16px}
-.rangos{display:flex;gap:6px}
-/* selector de rango y de tipo de gráfico: la regla de botones del sitio */
-.rangos button{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;cursor:pointer;padding:5px 12px;border:1px solid rgba(176,138,62,.4);border-radius:8px;background:#fff;color:#57534A;transition:color .15s,border-color .15s,background .15s}
-.rangos button:hover{color:#101010}
-.rangos button.on{background:#FBF5E8;border-color:#B08A3E;color:#101010}
-
-/* grilla radar + informe */
-.dos{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
-/* Acá vivían los .dp-* del desglose por período. Quedaron muertos cuando el
-   desglose pasó a pintarse con .rend / .rend-nota: ningún nodo de la página los
-   usa. Además eran de la piel vieja (--card, --border y --muted no existen en
-   esta página, y 'Cormorant Garamond' no se carga), así que se borran. */
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line)}
-.stats .st{background:#fff;padding:14px 16px}
-.stats .l{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
-.stats .v{font:600 16px 'IBM Plex Sans',sans-serif;margin-top:5px;font-variant-numeric:tabular-nums}
-.stats .z{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--sub);margin-top:2px}
-.veredicto{position:relative;border-top:1px solid var(--line)}
-.veredicto .inner{padding:18px}
-.ver-tag{display:inline-block;font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:7px 14px;border-radius:6px;color:#fff;background:var(--gold2)}
-.ver-tag.infra{background:var(--up)}.ver-tag.cara{background:var(--dn)}
-.scores{display:flex;gap:22px;margin-top:14px}
-.scores .sc{flex:1}
-.scores .n{font:600 20px 'IBM Plex Sans',sans-serif}
-.scores .e{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--mut);letter-spacing:.08em;text-transform:uppercase}
-.entrada{margin-top:12px;font:600 12px 'IBM Plex Sans',sans-serif;color:var(--up)}
-.preview-blur{filter:blur(6px);pointer-events:none;user-select:none}
-.pro-overlay{position:absolute;inset:0;background:rgba(246,243,236,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:5}
-.pro-overlay h4{font:400 19px 'IBM Plex Sans',sans-serif}
-.pro-overlay p{font-size:12px;color:var(--sub);max-width:250px;text-align:center;line-height:1.5}
-.pro-overlay .btn{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:var(--gold);color:#fff;padding:9px 20px;border-radius:8px}
-
-/* informe */
-.inf-cover{display:block}
-.inf-cover img{width:100%;display:block}
-.inf-body{padding:16px 18px}
-.inf-body h3{font:700 19px 'IBM Plex Sans',sans-serif;line-height:1.25;margin-bottom:8px}
-.inf-body p{font:400 12.5px 'IBM Plex Sans',sans-serif;color:var(--sub);line-height:1.65;margin-bottom:12px}
-.inf-meta{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:12px}
-.inf-desde{font:600 13px 'IBM Plex Sans',sans-serif;margin-bottom:14px;font-variant-numeric:tabular-nums}
-.btn-leer{display:inline-block;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:#0E1830;color:#fff;padding:11px 22px;border-radius:8px}
-.btn-leer:hover{background:var(--gold);color:#fff}
-.badge{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:4px 9px;border-radius:6px}
-.b-free{background:#E4F3EA;color:var(--up)}.b-cli{background:#0E1830;color:#E8CE96}
-
-/* noticias del activo */
-.act-news{margin-top:22px}
-.act-news a{display:grid;grid-template-columns:88px 1fr;gap:14px;padding:13px 18px;border-bottom:1px solid var(--line);color:var(--ink);align-items:center}
-.act-news a:last-child{border-bottom:none}
-.act-news .im{aspect-ratio:16/10;background:linear-gradient(135deg,#14213D,#B08A3E);background-size:cover;background-position:center;border-radius:8px}
-.act-news .tt{font:600 14px 'IBM Plex Sans',sans-serif;line-height:1.4}
-.act-news a:hover .tt{text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
-.act-news .f{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-top:3px}
-.vacio{padding:22px 18px;font:400 12.5px 'IBM Plex Sans',sans-serif;color:var(--mut)}
-
-.empty-state{padding:80px 52px;text-align:center;font:400 15px 'IBM Plex Sans',sans-serif;color:var(--sub)}
-
-/* ── ficha de un activo del radar que todavía no tiene informe propio ── */
-.aviso-nf{background:var(--marfil);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:12px;padding:14px 20px;margin-bottom:22px;font:400 12.5px 'IBM Plex Sans',sans-serif;line-height:1.65;color:#2E2A24}
+/* widgets de TradingView (ficha de un activo del radar sin informe): la
+   caja de tv.js con el borde y la esquina de las tarjetas del prototipo.
+   La atribución a TradingView queda siempre a la vista. */
+.va-col .vtv{border-color:var(--va-borde);border-radius:10px;margin:0}
+.aviso-nf{background:var(--marfil);border:1px solid var(--va-borde);border-left:3px solid var(--gold);border-radius:10px;padding:14px 20px;margin-bottom:14px;font-size:14px;line-height:1.65;color:#2E2A24}
 .aviso-nf b{display:block;margin-bottom:5px;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2)}
+#tv-nota{margin-top:14px}
+
+.va-disc{font-size:13px;color:#8B8375;line-height:1.7;margin:22px 0 0;max-width:820px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+.empty-state{padding:80px 52px;text-align:center;font:400 15px 'IBM Plex Sans',sans-serif;color:var(--sub)}
 
 /* ── estilos del lector de informes (compartidos con informes.html) ── */
 .fsr-badge{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;background:var(--gold);color:#fff;padding:4px 10px;border-radius:6px;text-transform:uppercase}
 .fsr-tag{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;border:1px solid var(--line);border-radius:6px;padding:3px 8px;color:var(--sub);text-transform:uppercase}
 .fsr-state{border:1px dashed var(--line);border-radius:12px;text-align:center;padding:44px 20px;color:var(--sub);line-height:1.9;font-size:14px}
-/* lector de registros (research completo) — clases usadas por el módulo */
+.inf-meta{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:12px}
+#informe-full{margin-top:26px}
 .fsr-crumb{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin-bottom:22px}
 .fsr-crumb a{color:var(--sub)}
 .fsr-crumb a:hover{color:var(--gold)}
@@ -267,13 +276,24 @@ img{max-width:100%}
 .fsr-foda li{font-size:12.5px;line-height:1.65;color:#2E2A24;margin:6px 0}
 @media(max-width:700px){.fsr-foda{grid-template-columns:1fr}}
 
-footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:46px}
+footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
 .footer-copy{font:400 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
 .footer-links{display:flex;gap:20px;flex-wrap:wrap}
 .footer-links a{font:500 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase}
 
-@media(max-width:960px){.dos{grid-template-columns:1fr}}
-@media(max-width:600px){.head .px{text-align:left}.stats{grid-template-columns:1fr 1fr}}
+/* responsive: las medidas del prototipo (1080 una columna, 880 encabezado apilado) */
+@media(max-width:1080px){.va-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:880px){.va-head{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:700px){.va-rend{grid-template-columns:repeat(4,minmax(0,1fr))}.va-rend .r:nth-child(n+5){padding-top:12px}.va-leg .per{margin-left:0;width:100%}}
+@media(max-width:560px){
+  .va-card{padding:18px 16px}
+  .va-lect{padding:16px}
+  .bx{flex:1 1 100%}
+  .va-sep{display:none}
+  .va-ch-top>.va-sel{gap:6px}
+  .va-dest{grid-template-columns:84px minmax(0,1fr);gap:12px;padding:12px}
+  .va-nota{grid-template-columns:74px minmax(0,1fr);gap:10px}
+}
 </style>
 <link rel="stylesheet" href="sitio.css?v=1">
 </head>
@@ -301,9 +321,9 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
 <!-- cotizaciones en vivo (módulo único del sitio) -->
 <div id="valtia-cot"></div>
 
-<div class="wrap" id="ficha">
+<main id="ficha">
   <div class="empty-state">Cargando la ficha…</div>
-</div>
+</main>
 
 <footer>
   <div class="footer-copy">© 2026 Valtia Analytics — Análisis de carácter general y educativo. No constituye asesoramiento financiero. · <a href="/terminos" style="color:inherit;text-decoration:underline">Términos</a> · <a href="/privacidad" style="color:inherit;text-decoration:underline">Privacidad</a></div>
@@ -318,7 +338,27 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
 <script type="module" src="cotizaciones.js?v=3"></script>
 
 <script type="module">
-/* ── Ficha de activo: precio + gráfico + radar + informe + noticias ── */
+/* ══ Ficha de activo ═════════════════════════════════════════════════════
+   De dónde sale cada cosa (nada se completa a mano):
+   · preciosInformes/latest      precio, variación y rango del día, 52 semanas,
+                                 medias de 50 y 200 ruedas (sync cada 15 min)
+   · historialInformes/{T}       2 años de filas [fecha, cierre ajustado,
+                                 apertura, máximo, mínimo, volumen, cierre real]
+   · historialInformes/SPY o QQQ el índice de referencia del gráfico
+   · radar/latest (+ radarPro/latest si la sesión es PRO)  lectura, puntaje,
+                                 RSI, múltiplos; la mediana del sector se calcula
+                                 acá con los activos de la misma familia del radar
+   · informes/{slug} y los informes que la sesión puede leer
+   · noticias publicadas que nombran a la empresa (empresas.js: claves)
+   · la variación por período se calcula acá con los cierres reales del
+     histórico (desglosePeriodos usa el ajustado: suma dividendos)
+   · calendario/latest           próximos resultados
+   · carterasModelo (+ posiciones e historial) que la sesión puede leer;
+     carterasTeaser/latest solo para nombrar las PRO que no se pueden leer
+   · inversores/{email}/cartera  "Ya la tenés" y "Tu posición" (con sesión)
+   · catalogo-activos.js         CEDEAR y ratio oficial de BYMA (solo lectura)
+   · precios/{S}.BA o preciosCatalogo/latest  precio en pesos (con sesión)
+   · fx.js (dolarapi)            el CCL de la equivalencia                   ══ */
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, where, getCountFromServer, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
@@ -339,6 +379,8 @@ const ficha = document.getElementById("ficha");
 
 const nf = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const n1 = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const n0 = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
+const nCant = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 4 });
 const compacto = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 });
 const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 // se redondea antes de formatear: -0,04 no puede verse como "-0,0%" en rojo
@@ -347,25 +389,62 @@ const signo = v => { v = r1(v); return (v > 0 ? "+" : "") + n1.format(v) + "%"; 
 const clase = v => r1(v) > 0 ? "up" : r1(v) < 0 ? "dn" : "";
 const venc = v => v ? `${String(v).slice(8, 10)}/${String(v).slice(5, 7)}/${String(v).slice(2, 4)}` : "";
 const fdate = v => v && v.toDate ? v.toDate().toISOString().slice(0, 10) : String(v || "").slice(0, 10);
+const MES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const esISO = s => /^\d{4}-\d{2}-\d{2}$/.test(s);
+const fLarga = v => { const s = fdate(v); return esISO(s) ? `${+s.slice(8, 10)} ${MES[+s.slice(5, 7) - 1]} ${s.slice(0, 4)}` : s; };
+const fDM = v => { const s = fdate(v); return esISO(s) ? `${+s.slice(8, 10)} ${MES[+s.slice(5, 7) - 1]}` : s; };
+// precios con centavos (US$224,01); usd0 redondea de 100 para arriba, para
+// rangos y ejes (US$237 / US$164), como el prototipo
+const usd = v => "US$" + nf.format(v);
+const usd0 = v => "US$" + (Math.abs(v) >= 100 ? n0 : nf).format(v);
+const diaAR = d => new Date(d.getTime() - 3 * 3600e3).toISOString().slice(0, 10);
+const hoyAR = diaAR(new Date());
+const haceDias = n => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
+const recorte = (s, n) => { s = String(s ?? "").trim(); return s.length > n ? s.slice(0, n).replace(/\s+\S*$/, "") + "…" : s; };
+const mismoDia = f => { const d = Math.round((Date.parse(f) - Date.parse(hoyAR)) / 864e5); return d === 0 ? "hoy" : d === 1 ? "mañana" : `en ${d} días`; };
 
-// ── barra de arriba: volver + buscador ──────────────────────────────────────
-// La usan las DOS fichas: la completa (empresas.js) y la de un activo del
-// radar que todavía no tiene informe. Antes vivía suelta adentro de la ficha
-// completa; se sacó afuera para no escribirla dos veces y que no se separen.
-const TOP_ROW = `<div class="top-row">
-    <span class="volver" id="volver">← Volver</span>
+// ── estado compartido por las dos fichas (la completa y la del radar) ──
+const S = { tk: t, ra: null, radar: [], precioUsd: null, user: null, pro: false,
+            carteras: null, ocultas: [], tenencia: null, inf: null, otrosInf: [], claves: [] };
+
+// Bolsa de cada símbolo, para el encabezado y para el símbolo de TradingView
+// ("NASDAQ:AMD"). Si un ticker no está acá va sin prefijo: TradingView elige
+// la plaza, que es peor que decírselo pero mejor que dejar el hueco vacío.
+const BOLSA = {
+  AAPL: "NASDAQ", AMD: "NASDAQ", AMZN: "NASDAQ", ASML: "NASDAQ", AVGO: "NASDAQ", CME: "NASDAQ",
+  CRWD: "NASDAQ", DDOG: "NASDAQ", GGAL: "NASDAQ", GOOGL: "NASDAQ", INTC: "NASDAQ", KLAC: "NASDAQ",
+  LRCX: "NASDAQ", MELI: "NASDAQ", META: "NASDAQ", MSFT: "NASDAQ", MU: "NASDAQ", NFLX: "NASDAQ",
+  NVDA: "NASDAQ", PLTR: "NASDAQ", QQQ: "NASDAQ", SOUN: "NASDAQ", TSLA: "NASDAQ",
+  AI: "NYSE", BMA: "NYSE", "BRK-B": "NYSE", CEPU: "NYSE", JNJ: "NYSE", JPM: "NYSE", KO: "NYSE",
+  LLY: "NYSE", MA: "NYSE", MCD: "NYSE", NKE: "NYSE", NOW: "NYSE", PAM: "NYSE", SNOW: "NYSE",
+  TGS: "NYSE", TSM: "NYSE", V: "NYSE", VIST: "NYSE", WMT: "NYSE", YPF: "NYSE",
+  SPY: "AMEX", XLV: "AMEX",
+};
+const BOLSA_NOM = { NASDAQ: "Nasdaq", NYSE: "NYSE", AMEX: "NYSE Arca" };
+// TradingView escribe las clases de acción con punto: BRK-B es BRK.B.
+const simboloTV = tk => {
+  const k = String(tk || "").toUpperCase();
+  const s = k.replace(/-/g, ".");
+  return BOLSA[k] ? BOLSA[k] + ":" + s : s;
+};
+// la familia del radar tal como se lee (el radar la guarda abreviada y sin tildes)
+const SECTOR_RADAR = { Semis: "Semiconductores", Tecnologia: "Tecnología", eCommerce: "Comercio electrónico",
+  "Bancos AR": "Bancos argentinos", "Energia AR": "Energía argentina", "ETF Salud": "ETF de salud" };
+const sectorTxt = s => SECTOR_RADAR[s] || s || "";
+// el mismo activo escrito de otra forma (NVDA.BA, BTC-USD, PAMP, GGAL.BA)
+const idActivo = x => tickerFicha(x) || radarSym(x);
+const mismo = x => !!x && idActivo(x) === idActivo(S.tk);
+
+// ── búsqueda de otro activo (la de la ficha anterior, en la línea de volver) ──
+const TOP_ROW = `<div class="va-top">
+    <a class="va-back" href="/informes">← Empresas que seguimos</a>
     <div class="bx">
-      <input id="bx-input" type="search" placeholder="Buscar activo — NVDA, Apple, Bitcoin…" autocomplete="off">
+      <input id="bx-input" type="search" placeholder="Buscar otro activo — NVDA, Apple, AL30…" autocomplete="off" aria-label="Buscar otro activo">
       <div class="bx-panel" id="bx-panel"></div>
     </div>
   </div>`;
 
 function montarTopRow() {
-  const volver = document.getElementById("volver");
-  if (volver) volver.addEventListener("click", () => {
-    if (document.referrer && document.referrer.startsWith(location.origin) && history.length > 1) history.back();
-    else location.href = "/informes";
-  });
   const bxInput = document.getElementById("bx-input");
   const bxPanel = document.getElementById("bx-panel");
   if (!bxInput || !bxPanel) return;
@@ -423,178 +502,575 @@ function montarTopRow() {
   bxInput.addEventListener("keydown", ev => {
     if (ev.key === "Enter") {
       const it = bxPanel.querySelector(".bx-it[data-t], .bx-it[data-b]");
-      if (it) location.href = it.dataset.t ? "activo.html?t=" + it.dataset.t : "bono.html?e=" + it.dataset.b;
+      if (it) location.href = it.dataset.t ? "/activo?t=" + it.dataset.t : "/bono?e=" + it.dataset.b;
     }
     if (ev.key === "Escape") bxPanel.classList.remove("open");
   });
 }
 
+// ── encabezado blanco: ← Empresas que seguimos, ticker, tipo · sector ·
+// mercado, nombre; a la derecha precio, variación de hoy y hora ──
+const cabecera = o => `<header class="va-mh"><div class="va-in">
+    ${TOP_ROW}
+    <div class="va-head">
+      <div>
+        <div class="va-id"><span class="va-tk">${esc(o.tk)}</span>${o.meta ? `<span class="va-meta">${esc(o.meta)}</span>` : ""}</div>
+        <h1>${esc(o.nombre)}</h1>
+      </div>
+      <div class="va-px">
+        <div class="p">${o.precio}</div>
+        <div class="d">${o.d != null ? `<span class="${clase(o.d)}">${signo(o.d)} hoy</span>` : ""}${o.hora ? `<span class="c">${esc(o.hora)}</span>` : ""}</div>
+      </div>
+    </div>
+  </div></header>`;
+const metaDe = partes => partes.filter((x, i, a) => x && a.findIndex(y => String(y).toLowerCase() === String(x).toLowerCase()) === i).join(" · ");
+// hora del último precio (la del sync, en la hora de Buenos Aires)
+const horaPrecio = ts => {
+  if (!ts || !ts.toDate) return "";
+  const d = ts.toDate();
+  const hh = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "America/Argentina/Buenos_Aires" });
+  return diaAR(d) === hoyAR ? `Actualizado hoy · ${hh} hs` : `Último precio · ${fDM(diaAR(d))}, ${hh} hs`;
+};
+
+// ── franja "Lectura de Valtia": veredicto, puntaje, RSI, zona y el botón ──
+const VER = { Infravalorada: ["#1F7A4D", "Barata frente a su familia sectorial"],
+              Estirada: ["#B23A3A", "Cara frente a su familia sectorial"],
+              "En precio": ["#B7791F", "En línea con su familia sectorial"] };
+// mismas zonas que el radar (35 / 50 / 65) para que la ficha no se contradiga
+const rsiLect = r => r == null || !isFinite(r) ? ["#101010", "Sin dato del radar"]
+  : r < 35 ? ["#1F7A4D", "Sobrevendida: cayó mucho en pocas ruedas"]
+  : r > 65 ? ["#B23A3A", "Sobrecomprada: subió mucho en pocas ruedas"]
+  : r >= 45 && r <= 55 ? ["#B7791F", "Ni sobrecomprada ni castigada"]
+  : r < 50 ? ["#B7791F", "Débil: viene perdiendo fuerza"] : ["#B7791F", "Firme: viene ganando fuerza"];
+function lecturaHtml(ra, rsiLocal) {
+  const fund = !!(ra && ra.veredicto && ra.veredicto !== "Sin cobertura");
+  const [vc, vs] = fund ? (VER[ra.veredicto] || ["#8A6A2F", "Lectura automática del radar"])
+    : ["#8B8375", ra ? "Sin balance que valuar: es un ETF o una cripto" : "Todavía no lo sigue el radar de valuación"];
+  const vTxt = fund ? ra.veredicto : ra ? "Sin cobertura" : "Fuera del radar";
+  const score = fund && ra.score != null && isFinite(ra.score) ? Math.round(Math.max(0, Math.min(100, ra.score))) : null;
+  const rsi = ra && ra.rsi != null ? Number(ra.rsi) : rsiLocal;
+  const [rc, rt] = rsiLect(rsi);
+  let zv = "No aplica", zs = "Hace falta un puntaje de valor", zc = "";
+  if (fund && ra.entrada) { zv = "Adentro"; zs = "Puntaje de 60 o más y RSI debajo de 45"; zc = "#1F7A4D"; }
+  else if (fund) {
+    const falta = [];
+    if (score == null || score < 60) falta.push("puntaje de 60 o más");
+    if (rsi == null || rsi >= 45) falta.push("RSI debajo de 45");
+    zv = "Afuera"; zs = falta.length ? "Le falta " + falta.join(" y ") : "Todavía no cumple las condiciones del radar";
+  }
+  return `<section class="va-lect" id="general" aria-label="Lectura de Valtia">
+    <div><div class="l">Lectura de Valtia</div>
+      <div class="va-ver"><span class="va-dot" style="background:${vc}"></span><span class="v" style="color:${vc}">${esc(vTxt)}</span></div>
+      <div class="s">${vs}${ra && ra.pierdePlata ? ' · <span style="color:#B7791F" title="El puntaje mide qué tan barata cotiza, no si gana dinero">no gana plata</span>' : ""}</div></div>
+    <div><div class="l">Puntaje de valor</div>
+      <div class="v">${score != null ? `${score} <span class="de">/ 100</span>` : "—"}</div>
+      ${score != null ? `<div class="va-bar"><i style="width:${score}%"></i></div>` : `<div class="s">${fund ? "Sin puntaje publicado" : "No aplica"}</div>`}</div>
+    <div><div class="l">Momento (RSI 14)</div>
+      <div class="v" style="color:${rc}">${rsi != null && isFinite(rsi) ? Math.round(rsi) : "—"}</div>
+      <div class="s">${rt}${rsi != null && !(ra && ra.rsi != null) ? " · calculado con el histórico" : ""}</div></div>
+    <div><div class="l">Zona de entrada</div>
+      <div class="v"${zc ? ` style="color:${zc}"` : ""}>${zv}</div>
+      <div class="s">${zs}</div></div>
+    <div class="va-cta" id="va-cta">${ctaHtml()}</div>
+  </section>`;
+}
+// el botón: "Ya la tenés · n" con sesión y tenencia; si no, "Agregar a Mi cartera"
+function ctaHtml() {
+  const btn = S.tenencia
+    ? `<a class="va-btn" href="/#panel/micartera">Ya la tenés · ${esc(S.tenencia)}</a>`
+    : `<a class="va-btn" href="/?agregar=${encodeURIComponent(S.tk)}#panel/micartera">Agregar a Mi cartera</a>`;
+  let txt = "";
+  if (S.carteras) {
+    const n = S.carteras.filter(c => c.pos).length;
+    const soloAbiertas = !S.pro && S.ocultas.length;
+    txt = n ? `Está en ${n} ${n === 1 ? "cartera" : "carteras"} ${soloAbiertas ? (n === 1 ? "abierta de Valtia" : "abiertas de Valtia") : "Valtia"}`
+            : soloAbiertas ? "No está en las carteras abiertas" : "No está en las carteras Valtia";
+  }
+  return btn + `<div class="s">${txt}</div>`;
+}
+const pintarCta = () => { const el = document.getElementById("va-cta"); if (el) el.innerHTML = ctaHtml(); };
+
+// ── columna derecha: los cascarones; cada caja se llena cuando llega su dato ──
+const columnaDerecha = () => `
+    <section class="va-card" id="en-carteras"><h2 class="va-h">En las carteras Valtia</h2><div id="carteras-box"><div class="va-vacio">Buscando en las carteras…</div></div></section>
+    <section class="va-card" id="viene"><h2 class="va-h">Lo que viene</h2><div id="viene-box"></div><a class="va-link va-mas" href="/calendario">Agenda completa →</a></section>
+    <section class="va-card" id="noticias"><h2 class="va-h">Noticias</h2><div id="act-news-list"><div class="va-vacio">Buscando noticias…</div></div><a class="va-link va-mas" href="/noticias">Más noticias →</a></section>
+    <section class="va-card" id="como" hidden><h2 class="va-h">Cómo comprarlo desde Argentina</h2><div id="como-box"></div></section>
+    <section class="va-card" id="sent-card"><h2 class="va-h">Sentimiento de la comunidad</h2><div id="sentimiento"></div></section>`;
+const DISCLAIMER = `<p class="va-disc">La lectura y el puntaje son análisis general de Valtia, no una recomendación para tu caso. Los precios se sincronizan en rueda; los fundamentales, con cada balance.</p>`;
+
+// En las carteras Valtia: código, entrada y peso, solo de las carteras que la
+// sesión puede leer (las reglas no dejan leer las posiciones de las PRO)
+const COD_ID = { ia: "IA", semiconductores: "SEMI" };
+const COLOR_COD = { SP10: "#14213D", IA: "#2B5FB0", SEMI: "#5B3FA8", PAS: "#1F7A4D", CONS: "#0E7C86", AGR: "#B23A3A" };
+const colorDe = cod => COLOR_COD[String(cod || "").toUpperCase()] || "#14213D";
+const pesoTxt = p => { const v = (Number(p) || 0) * 100; return (Math.abs(v - Math.round(v)) < 0.05 ? String(Math.round(v)) : n1.format(v)) + "%"; };
+let cartSeq = 0;
+async function llenarCarteras(pro) {
+  const mio = ++cartSeq;
+  let lista = null, ocultas = [];
+  try {
+    // PRO: públicas + de suscriptores (la regla exige el filtro). Si la sesión
+    // todavía no llegó a Firestore y la consulta rebota, quedan las públicas.
+    const publicas = () => getDocs(query(collection(db, "carterasModelo"), where("visibilidad", "==", "publico")));
+    const snap = pro ? await getDocs(query(collection(db, "carterasModelo"), where("visibilidad", "in", ["publico", "clientes"]))).catch(() => { pro = false; return publicas(); })
+                     : await publicas();
+    lista = await Promise.all(snap.docs.filter(d => d.data().estado === "activa").map(async d => {
+      const c = d.data();
+      const [ps, hs] = await Promise.all([
+        getDocs(collection(db, "carterasModelo", d.id, "posiciones")).catch(() => null),
+        getDocs(collection(db, "carterasModelo", d.id, "historial")).catch(() => null)]);
+      const pos = ps ? ps.docs.map(x => x.data()).find(p => p.estado === "activa" && mismo(p.ticker)) || null : null;
+      const hist = hs ? hs.docs.map(x => x.data()).filter(h => mismo(h.ticker)) : [];
+      const codigo = c.codigo || COD_ID[d.id] || c.slug || d.id;
+      return { id: d.id, nombre: c.nombre || d.id, codigo, color: colorDe(codigo), vis: c.visibilidad, pos, hist };
+    }));
+  } catch (e) { lista = null; }
+  // las PRO que esta sesión no puede leer: solo se nombran (carterasTeaser es público)
+  if (!pro) {
+    try {
+      const s = await getDoc(doc(db, "carterasTeaser", "latest"));
+      const tz = s.exists() ? (JSON.parse(s.data().json || "{}").carteras || []) : [];
+      ocultas = tz.filter(x => x && x.id && x.visibilidad !== "publico" && !(lista || []).some(c => c.id === x.id)).map(x => x.nombre || x.id);
+    } catch (e) {}
+  }
+  if (mio !== cartSeq) return;
+  S.carteras = lista || []; S.ocultas = ocultas;
+  const box = document.getElementById("carteras-box");
+  if (box) {
+    const con = S.carteras.filter(c => c.pos);
+    box.innerHTML = (lista == null ? '<div class="va-vacio">No pudimos leer las carteras ahora.</div>'
+      : con.length ? con.map(c => `<a class="va-cart" href="/cartera?c=${encodeURIComponent(c.id)}">
+          <span class="cod" style="background:${c.color}">${esc(c.codigo)}</span>
+          <div style="min-width:0"><div class="n">${esc(c.nombre)}</div><div class="e">${c.pos.fechaIncorporacion ? "entró " + esc(fLarga(c.pos.fechaIncorporacion)) : "posición activa"}${Number(c.pos.precioEntrada) > 0 ? " a " + usdExacto(c.pos.precioEntrada) : ""}</div></div>
+          <span class="w">${pesoTxt(c.pos.pesoObjetivo)}</span></a>`).join("")
+      : `<div class="va-vacio">No está en ninguna cartera ${S.pro || !ocultas.length ? "Valtia" : "abierta"} hoy.</div>`)
+      + (ocultas.length ? `<div class="va-fuente">${esc(ocultas.join(" y "))}: qué tienen y cuánto pesa cada posición se ve con <a href="/planes">Valtia PRO</a>.</div>` : "");
+  }
+  pintarCta();
+  pintarEscribimos();
+}
+// precio de entrada: las lecaps valuadas en dólares son centavos, más decimales
+const usdExacto = v => "US$" + Number(v).toLocaleString("es-AR", { maximumFractionDigits: Math.abs(Number(v)) < 1 ? 4 : 2 });
+
+// Lo que viene: los resultados que publica la empresa (calendario/latest)
+function llenarViene(cal, tk) {
+  const box = document.getElementById("viene-box");
+  if (!box) return;
+  const ev = (cal || []).filter(e => (String(e.ficha || "").toUpperCase() === tk || String(e.sym || "").toUpperCase() === radarSym(tk))
+                                  && esISO(String(e.fecha)) && String(e.fecha) >= hoyAR)
+    .sort((a, b) => String(a.fecha).localeCompare(String(b.fecha))).slice(0, 3);
+  box.innerHTML = ev.length ? ev.map(e => `<div class="va-ev">
+      <div><div class="d">${+String(e.fecha).slice(8, 10)}</div><div class="m">${MES[+String(e.fecha).slice(5, 7) - 1]}</div></div>
+      <div style="min-width:0"><div class="t">Presenta resultados del trimestre</div><div class="s">${mismoDia(e.fecha)} · fecha estimada por la empresa</div></div>
+    </div>`).join("")
+    : `<div class="va-vacio">Sin eventos agendados para ${esc(tk)} por ahora.</div>`;
+}
+
+// Noticias: las publicadas que nombran al activo. Las empresas del catálogo
+// se buscan por sus claves (empresas.js); un activo del radar sin informe, por
+// su nombre o por el ticker escrito tal cual (AMD, PLTR), en mayúsculas.
+function llenarNoticias(notSnap, claves, rxTk) {
+  const lista = document.getElementById("act-news-list");
+  if (!lista) return;
+  const notas = notSnap ? notSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .filter(nn => {
+      const crudo = String(nn.titulo) + " " + String(nn.resumen);
+      const txt = crudo.toLowerCase();
+      return claves.some(k => txt.includes(k)) || (!!rxTk && rxTk.test(crudo));
+    })
+    .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 4) : [];
+  lista.innerHTML = notas.length ? notas.map(nn => `
+    <a class="va-nw" href="/nota?n=${encodeURIComponent(nn.id)}">
+      <div class="f">${esc(fDM(nn.fecha))}${nn.fuente ? " · " + esc(nn.fuente) : ""}</div>
+      <div class="t">${esc(nn.titulo)}</div>
+    </a>`).join("")
+    : notSnap ? '<div class="va-vacio">Sin noticias recientes que la nombren. El bot publica a toda hora: volvé pronto.</div>'
+    : '<div class="va-vacio">No pudimos leer las noticias ahora.</div>';
+}
+
+// Cómo comprarlo desde Argentina: CEDEAR y ratio oficial de BYMA (catálogo),
+// precio en pesos (solo con sesión: precios/{S}.BA o preciosCatalogo/latest)
+// y la equivalencia con el CCL. Sin dato, la fila no va.
+const ratioTxt = r => r >= 1 ? `${nCant.format(r)} : 1` : `1 : ${nCant.format(Math.round(1 / r))}`;
+let comoSeq = 0;
+async function llenarComo(user) {
+  const mio = ++comoSeq;
+  const card = document.getElementById("como"), box = document.getElementById("como-box");
+  if (!card || !box) return;
+  const cat = await import("./catalogo-activos.js?v=2").catch(() => null);
+  if (!cat || typeof cat.entradasCatalogo !== "function") return;
+  const tk = S.tk;
+  // el CEDEAR tiene que ser DE este activo: si la nómina dice que su
+  // subyacente es otro símbolo (u) no es el mismo papel, y si cotiza en otra
+  // bolsa (b: B3, Xetra, Londres) el ratio no es contra este precio en dólares
+  const ced = cat.entradasCatalogo(tk).find(e => e.m === "byma" && e.t === "cedear" && !e.b && (!e.u || idActivo(e.u) === idActivo(tk))) || null;
+  const loc = ced ? null : cat.entradasCatalogo(radarSym(tk)).find(e => e.m === "byma" && e.t === "accion_ar") || null;
+  const cri = ced || loc ? null : cat.entradasCatalogo(tk).find(e => e.m === "cripto") || null;
+  if (!ced && !loc && !cri) return;
+  const r = ced && Number(ced.r) > 0 ? Number(ced.r) : null;
+  const clave = ced ? ced.s + ".BA" : loc ? loc.s + ".BA" : null;
+  // precio en pesos: precios/{S}.BA (lo refresca el intradía) o el catálogo
+  let pesos = null;
+  if (user && clave) {
+    try {
+      const s = await getDoc(doc(db, "precios", clave));
+      const d = s.exists() ? s.data() : null;
+      if (d && Number(d.precio) > 0 && d.moneda === "ARS")
+        pesos = { p: Number(d.precio), cuando: d.actualizado_utc && d.actualizado_utc.toDate ? fDM(diaAR(d.actualizado_utc.toDate())) : "" };
+    } catch (e) {}
+    if (!pesos) {
+      try {
+        const s = await getDoc(doc(db, "preciosCatalogo", "latest"));
+        const fila = s.exists() ? (JSON.parse(s.data().json || "{}") || {})[clave] : null;
+        if (Array.isArray(fila) && Number(fila[0]) > 0 && fila[2] === "ARS")
+          pesos = { p: Number(fila[0]), cuando: esISO(String(fila[3] || "")) ? fDM(fila[3]) : "" };
+      } catch (e) {}
+    }
+  }
+  const fxm = await import("./fx.js?v=1").then(m => m.fxMercado()).catch(() => null);
+  const ccl = fxm && Number(fxm.ccl) > 0 ? Number(fxm.ccl) : null;
+  if (mio !== comoSeq) return;
+  const px = S.precioUsd;
+  const filas = [];
+  const pesoTxt2 = p => "$" + (p >= 100 ? n0 : nf).format(p);
+  if (ced) {
+    filas.push(["CEDEAR en BYMA", esc(ced.s)]);
+    if (r) filas.push(["Ratio de conversión", ratioTxt(r)]);
+    if (pesos) filas.push([`Precio en pesos${pesos.cuando ? " (" + esc(pesos.cuando) + ")" : ""}`, pesoTxt2(pesos.p)]);
+    if (r && px > 0 && ccl) filas.push(["Equivale a", `${usd(px)} × CCL $${n0.format(ccl)} ${r >= 1 ? "÷ " + nCant.format(r) : "× " + nCant.format(Math.round(1 / r))}`]);
+    if (r && px > 0 && pesos) filas.push(["CCL implícito", "$" + n0.format(pesos.p * r / px)]);
+    else if (r && px > 0 && ccl) filas.push(["Precio teórico en pesos", "≈ " + pesoTxt2(px * ccl / r)]);
+    if (r && px > 0) filas.push(["Cada CEDEAR, en dólares", "≈ " + usd(px / r)]);
+  } else if (loc) {
+    filas.push(["Acción en BYMA, en pesos", esc(loc.s)]);
+    if (BOLSA[tk]) filas.push([`ADR en ${BOLSA_NOM[BOLSA[tk]] || BOLSA[tk]}, en dólares`, esc(tk)]);
+    if (pesos) filas.push([`Precio en pesos${pesos.cuando ? " (" + esc(pesos.cuando) + ")" : ""}`, pesoTxt2(pesos.p)]);
+  } else {
+    filas.push(["CEDEAR en BYMA", "No tiene"]);
+    filas.push(["Dónde se opera", "Exchanges de cripto"]);
+  }
+  const notas = [];
+  if (ced && r) notas.push(`Ratio oficial de la nómina de CEDEARs de BYMA: ${r >= 1 ? `${nCant.format(r)} CEDEARs equivalen a una acción` : `un CEDEAR equivale a ${nCant.format(Math.round(1 / r))} acciones`}.`);
+  if (ccl && ced && r && px > 0) notas.push(`CCL de dolarapi (el de la barra de cotizaciones).`);
+  if (!user && clave) notas.push(`<a href="/?login=1">Ingresá</a> para ver el precio en pesos de BYMA.`);
+  box.innerHTML = filas.map(([l, v]) => `<div class="va-kv"><span>${l}</span><b>${v}</b></div>`).join("")
+    + (notas.length ? `<div class="va-fuente">${notas.join(" ")}</div>` : "");
+  card.hidden = false;
+}
+
+// "Ya la tenés" y "Tu posición": solo con sesión, de inversores/{email}/cartera
+async function llenarTenencia(user, conPosicion) {
+  let lotes = [];
+  if (user && user.email) {
+    try {
+      const snap = await getDocs(collection(db, "inversores", user.email, "cartera"));
+      lotes = snap.docs.map(x => x.data()).filter(p => mismo(p.ticker) && Number(p.cantidad) > 0);
+    } catch (e) { lotes = []; }
+  }
+  const esBA = p => /\.BA$/i.test(String(p.ticker || ""));
+  const suma = l => l.reduce((a, p) => a + (Number(p.cantidad) || 0), 0);
+  const ba = lotes.filter(esBA), ext = lotes.filter(p => !esBA(p));
+  S.tenencia = !lotes.length ? null
+    : ba.length && ext.length ? `${lotes.length} posiciones`
+    : ba.length ? `${nCant.format(suma(ba))} ${emp && emp.sector === "arg" ? "acciones" : "CEDEARs"}`
+    : `${nCant.format(suma(ext))} ${/^(BTC|ETH)$/.test(S.tk) ? S.tk : "u."}`;
+  pintarCta();
+  const cont = document.getElementById("mi-pos");
+  if (!conPosicion || !cont) return;
+  // los .BA cotizan en pesos y no se valúan con el precio en dólares
+  const px = S.precioUsd;
+  if (!ext.length) { cont.innerHTML = ""; return; }
+  const cant = suma(ext);
+  const conCosto = ext.filter(p => Number(p.precioCompra) > 0);
+  const cantCosto = conCosto.reduce((a, p) => a + Number(p.cantidad), 0);
+  const costo = conCosto.reduce((a, p) => a + Number(p.cantidad) * Number(p.precioCompra), 0);
+  const ppc = cantCosto ? costo / cantCosto : null;
+  const valor = px ? cant * px : null;
+  const pnlPct = ppc && px ? (px / ppc - 1) * 100 : null;
+  const pnlUsd = ppc && px ? (px - ppc) * cantCosto : null;
+  const item = (l, v, s) => `<div><div class="l">${l}</div><div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`;
+  cont.innerHTML = `<div class="mi-pos">
+    <div class="tt">Tu posición en ${esc(S.nombre || S.tk)}</div>
+    ${item("Tenencia", nCant.format(cant) + " u.", "")}
+    ${valor != null ? item("Valor hoy", "US$" + nf.format(valor), "al último precio") : ""}
+    ${ppc != null ? item("Precio promedio", "US$" + nf.format(ppc), cantCosto < cant ? "sobre los lotes con costo cargado" : "") : ""}
+    ${pnlPct != null ? item("Resultado", `<span class="${clase(pnlPct)}">${signo(pnlPct)}</span>`,
+      (pnlUsd >= 0 ? "+" : "−") + "US$" + nf.format(Math.abs(pnlUsd))) : ""}
+  </div>`;
+}
+
+// ── Lo que escribimos sobre X: el último informe destacado y, debajo, los
+// otros informes y los registros de las carteras que lo nombran ──
+let pintarDestacado = () => "";   // la ficha completa la reemplaza (necesita el precio y el histórico)
+function pintarEscribimos() {
+  const box = document.getElementById("escribimos-box");
+  if (!box) return;
+  const notas = [];
+  (S.otrosInf || []).forEach(d => notas.push({ f: fdate(d.fecha), t: d.titulo || "Informe",
+    s: [d.tipo, d.categorias].filter(Boolean).join(" · "), href: d._href }));
+  (S.carteras || []).forEach(c => c.hist.forEach(h => {
+    const a = String(h.accion || "").toLowerCase();
+    const que = /añad|compr|entr/.test(a) ? "entró" : /elimin|vend|venta|sal/.test(a) ? "salió" : /ajust|peso/.test(a) ? "cambió de peso" : (h.accion || "movimiento");
+    const pre = Number(h.precio) > 0 ? ` a ${usdExacto(h.precio)}` : "";
+    notas.push({ f: fdate(h.fecha), t: `Registro de ${c.nombre}: ${S.tk} ${que}${pre}`,
+      s: recorte(h.razonamiento || "", 160), href: `/cartera?c=${encodeURIComponent(c.id)}` });
+  }));
+  notas.sort((a, b) => String(b.f).localeCompare(String(a.f)));
+  box.innerHTML = pintarDestacado() + notas.slice(0, 5).map(n => `<a class="va-nota" href="${n.href}">
+      <span class="f">${esc(fLarga(n.f))}</span>
+      <div style="min-width:0"><div class="t">${esc(n.t)}</div>${n.s ? `<div class="s">${esc(n.s)}</div>` : ""}</div></a>`).join("");
+}
+// informes que lo nombran (fuera del suyo): los que la sesión puede leer
+const empDeInforme = d => EMPRESAS.find(e => e.slug && e.slug === (d.slug || d.id)) || (d.ticker ? EMPRESAS.find(e => e.ticker === String(d.ticker).toUpperCase()) : null);
+async function llenarOtrosInformes(pro, slugPropio) {
+  let docs = [];
+  try {
+    const s = pro ? await getDocs(collection(db, "informes")).catch(() => null) : null;
+    const snap = s || await getDocs(query(collection(db, "informes"), where("visibilidad", "==", "publico")));
+    docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) { docs = []; }
+  const tk = S.tk;
+  S.otrosInf = docs.filter(d => (d.slug || d.id) !== slugPropio).filter(d => {
+    if (String(d.ticker || "").toUpperCase() === tk) return true;
+    const txt = [d.titulo, d.resumen, d.categorias].join(" ").toLowerCase();
+    return S.claves.some(k => txt.includes(k));
+  }).map(d => {
+    const e = empDeInforme(d);
+    d._href = e && e.slug ? `/activo?t=${encodeURIComponent(e.ticker)}#informe` : `/informes?i=${encodeURIComponent(d.slug || d.id)}`;
+    return d;
+  });
+  pintarEscribimos();
+}
+
+// ── sentimiento de la comunidad: un voto por persona y activo ──
+// Se guarda en sentimiento/{ticker}/votos/{uid} (reglas: lee cualquier
+// usuario logueado, escribe solo el dueño con email verificado).
+const pintarSentimiento = async user => {
+  const box = document.getElementById("sentimiento");
+  if (!box) return;
+  const tk = S.tk;
+  if (!user) {
+    box.innerHTML = `<div class="va-sent-v">¿Alcista o bajista?</div>
+      <div class="va-sent-s"><a href="/?login=1">Ingresá</a> para votar y ver cómo lo ve la comunidad Valtia.</div>`;
+    return;
+  }
+  // se cuenta con agregaciones (1 lectura cada 1.000 votos) y se lee solo el voto propio
+  const col = collection(db, "sentimiento", tk, "votos");
+  let mio = null, alc = 0, baj = 0;
+  try {
+    const [m, a, b] = await Promise.all([
+      getDoc(doc(col, user.uid)),
+      getCountFromServer(query(col, where("voto", "==", "alcista"))),
+      getCountFromServer(query(col, where("voto", "==", "bajista"))),
+    ]);
+    mio = m.exists() ? m.data() : null;
+    alc = a.data().count; baj = b.data().count;
+  } catch (e) {
+    box.innerHTML = `<div class="va-sent-s">No se pudo leer la votación ahora.</div>`;
+    return;
+  }
+  const MIN = 10, tot = alc + baj, pa = tot ? Math.round(alc / tot * 100) : 50;
+  const cuando = mio && mio.fecha && mio.fecha.toMillis ? mio.fecha.toMillis() : 0;
+  const espera = cuando ? Math.max(0, Math.ceil((cuando + 3600e3 - Date.now()) / 60000)) : 0;
+  const votoDe = v => mio && mio.voto === v ? " on" : "";
+  box.innerHTML = `<div class="va-sent-v">${tot >= MIN ? `${pa}% alcista <small>· ${tot} votos</small>` : tot ? `${tot} ${tot === 1 ? "voto" : "votos"} por ahora` : "Todavía nadie votó"}</div>
+    ${tot >= MIN ? `<div class="sent-bar"><i style="width:${pa}%;background:var(--up)"></i><i style="width:${100 - pa}%;background:var(--dn)"></i></div>` : ""}
+    <div class="sent"><button class="alc${votoDe("alcista")}" data-voto="alcista">▲ Alcista${tot >= MIN ? " · " + alc : ""}</button><button class="baj${votoDe("bajista")}" data-voto="bajista">▼ Bajista${tot >= MIN ? " · " + baj : ""}</button></div>
+    <div class="va-sent-s" data-sent-msg>${mio ? `Votaste ${mio.voto === "alcista" ? "alcista" : "bajista"}.${espera ? ` Podés cambiarlo en ${espera} min.` : " Podés cambiarlo una vez por hora."}` : "¿Cómo lo ves para las próximas semanas? Un voto por persona."}${tot && tot < MIN ? ` El porcentaje se muestra desde ${MIN} votos.` : ""} Es la opinión de usuarios registrados, no un dato de mercado.</div>`;
+  box.querySelectorAll("[data-voto]").forEach(btn => btn.onclick = async () => {
+    const msg = box.querySelector("[data-sent-msg]");
+    if (mio && mio.voto === btn.dataset.voto) return;
+    if (!user.emailVerified) { msg.innerHTML = `<span class="dn">Verificá tu email para votar.</span>`; return; }
+    if (espera) { msg.innerHTML = `<span class="dn">Votaste hace poco: podés cambiar el voto en ${espera} min.</span>`; return; }
+    box.querySelectorAll("[data-voto]").forEach(x => x.disabled = true);
+    try {
+      await setDoc(doc(col, user.uid), { voto: btn.dataset.voto, fecha: serverTimestamp() });
+      await pintarSentimiento(user);
+    } catch (e) {
+      box.querySelectorAll("[data-voto]").forEach(x => x.disabled = false);
+      if (msg && msg.isConnected) msg.innerHTML = `<span class="dn">No se pudo guardar el voto. Probá de nuevo en un rato.</span>`;
+    }
+  });
+};
+
+// ── Los números: tarjetas ratio / valor / comparación con la mediana de su
+// familia en el radar (verde si está mejor, ámbar si pide atención) ──
+const mediana = xs => {
+  const v = xs.filter(x => x != null && isFinite(x)).sort((a, b) => a - b);
+  if (v.length < 3) return null;   // con menos de tres pares no hay mediana que diga algo
+  const m = v.length >> 1;
+  return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
+};
+// la mediana de sus PARES: el propio activo no entra (si no, en una familia
+// chica la "mediana del sector" podía ser su mismo número, como en AMD)
+const medSector = (campo, soloPositivos) => {
+  const ra = S.ra;
+  if (!ra || !ra.sector) return null;
+  return mediana(S.radar.filter(a => a.sector === ra.sector && a.sym !== ra.sym && a[campo] != null)
+    .map(a => Number(a[campo])).filter(v => !soloPositivos || v > 0));
+};
+// dir < 0: cuanto más bajo, mejor (múltiplos, deuda); dir > 0: cuanto más alto
+const frente = (v, med, dir, fmt, pal) => {
+  if (med == null) return { s: "", c: "" };
+  if (dir < 0 && v <= 0) return { s: `Negativo: no se compara · sector ${fmt(med)}`, c: "a" };
+  const rel = (v - med) / Math.abs(med || 1);
+  if (Math.abs(rel) < 0.05) return { s: `Sector ${fmt(med)} · en línea`, c: "" };
+  const mejor = dir < 0 ? v < med : v > med;
+  return { s: `Sector ${fmt(med)} · ${mejor ? pal[0] : pal[1]}`, c: mejor ? "b" : "a" };
+};
+const tarjeta = n => `<div class="va-num"><div class="l" title="${esc(n.l)}">${esc(n.l)}</div><div class="v">${n.v}</div>${n.s ? `<div class="s${n.c ? " " + n.c : ""}">${n.s}</div>` : ""}</div>`;
+const SALUD = [null, "Entre las más bajas", "Por debajo del medio", "En el medio", "Por encima del medio", "Entre las más altas"];
+const saludHtml = n => n ? `<div class="salud n${n}">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= n ? "on" : ""}"></i>`).join("")}</div>` : "";
+const RECO = { strong_buy: "Compra fuerte", buy: "Compra", hold: "Mantener", sell: "Venta", strong_sell: "Venta fuerte" };
+const dy = v => (v > 0 && v < 1 ? nf : n1).format(v) + "%";
+const usdM = v => "US$" + n0.format(v / 1e6) + " M";
+// las que salen del radar público: capitalización, dividendo, calidad y consenso
+function numerosPublicos(ra, add) {
+  if (!ra) return;
+  if (Number(ra.mktcap) > 0) {
+    const med = medSector("mktcap", true);
+    add("Capitalización", usdM(ra.mktcap), med ? `Mediana del sector ${usdM(med)}` : "", "");
+  }
+  if (ra.divYield != null && isFinite(ra.divYield)) {
+    const med = medSector("divYield");
+    const f = med == null ? { s: ra.divYield > 0 ? "Dividendo anual sobre el precio" : "No paga dividendos", c: "" }
+      : { s: `Sector ${dy(med)}${ra.divYield > med * 1.05 ? " · paga más" : ra.divYield < med * 0.95 ? " · paga menos" : " · en línea"}`, c: ra.divYield > med * 1.05 ? "b" : "" };
+    add("Rendimiento por dividendo", dy(ra.divYield), f.s, f.c);
+  }
+  const nivel = ra.calidadNivel >= 1 && ra.calidadNivel <= 5 ? Math.round(ra.calidadNivel) : null;
+  if (nivel) add("Calidad relativa", `${SALUD[nivel]}${saludHtml(nivel)}`,
+    `Deuda, crecimiento y margen frente al radar${S.pro && ra.calidadScore != null ? ` · ${Math.round(ra.calidadScore)}/100` : ""}`,
+    nivel >= 4 ? "b" : nivel <= 2 ? "a" : "");
+  if (RECO[ra.reco]) add("Consenso de analistas", RECO[ra.reco],
+    S.pro && ra.nAnalistas && ra.target ? `${ra.nAnalistas} analistas · objetivo US$${nf.format(ra.target)} (${signo(ra.upside)})`
+      : "Promedio de analistas de terceros, no de Valtia", "");
+}
+
+// ── gráfico: una línea vertical dorada en la fecha del último informe ──
+const lineaInforme = {
+  id: "vaLineaInforme",
+  afterDatasetsDraw(ch) {
+    const i = ch.$vaInforme;
+    if (i == null || i < 0) return;
+    const x = ch.scales.x.getPixelForValue(i);
+    const { top, bottom } = ch.chartArea;
+    const g = ch.ctx;
+    g.save(); g.strokeStyle = "#B08A3E"; g.lineWidth = 1; g.setLineDash([3, 3]);
+    g.beginPath(); g.moveTo(x, top); g.lineTo(x, bottom); g.stroke(); g.restore();
+  },
+};
+if (typeof Chart !== "undefined") {
+  Chart.defaults.font.family = "'IBM Plex Sans', system-ui, sans-serif";
+  Chart.defaults.color = "#8B8375";
+}
+
 // ── activos del radar sin informe propio ────────────────────────────────────
 // El radar sigue más activos que empresas.js (AMD, PLTR, LLY, XLV, BRK-B…).
-// Todos esos caían en informes.html, y por eso las fechas de resultados del
-// calendario y de la Agenda del panel no llevaban a ningún lado. Ahora muestran
-// ficha con lo que sí sabemos —puntaje de valor, veredicto, RSI, calidad,
-// sector y próximos resultados— y para el precio, el gráfico, los fundamentos
-// y el técnico se usan los widgets oficiales de TradingView (tv.js).
-
-// Bolsa de cada símbolo, para armar el símbolo de TradingView ("NASDAQ:AMD").
-// Si un ticker no está acá va sin prefijo: TradingView elige la plaza, que es
-// peor que decírselo pero muchísimo mejor que dejar el hueco vacío.
-const BOLSA = {
-  AAPL: "NASDAQ", AMD: "NASDAQ", AMZN: "NASDAQ", ASML: "NASDAQ", AVGO: "NASDAQ", CME: "NASDAQ",
-  CRWD: "NASDAQ", DDOG: "NASDAQ", GGAL: "NASDAQ", GOOGL: "NASDAQ", INTC: "NASDAQ", KLAC: "NASDAQ",
-  LRCX: "NASDAQ", MELI: "NASDAQ", META: "NASDAQ", MSFT: "NASDAQ", MU: "NASDAQ", NFLX: "NASDAQ",
-  NVDA: "NASDAQ", PLTR: "NASDAQ", QQQ: "NASDAQ", SOUN: "NASDAQ", TSLA: "NASDAQ",
-  AI: "NYSE", BMA: "NYSE", "BRK-B": "NYSE", CEPU: "NYSE", JNJ: "NYSE", JPM: "NYSE", KO: "NYSE",
-  LLY: "NYSE", MA: "NYSE", MCD: "NYSE", NKE: "NYSE", NOW: "NYSE", PAM: "NYSE", SNOW: "NYSE",
-  TGS: "NYSE", TSM: "NYSE", V: "NYSE", VIST: "NYSE", WMT: "NYSE", YPF: "NYSE",
-  SPY: "AMEX", XLV: "AMEX",
-};
-// TradingView escribe las clases de acción con punto: BRK-B es BRK.B.
-const simboloTV = tk => {
-  const k = String(tk || "").toUpperCase();
-  const s = k.replace(/-/g, ".");
-  return BOLSA[k] ? BOLSA[k] + ":" + s : s;
-};
-
+// Tienen ficha con lo que sí sabemos —puntaje de valor, veredicto, RSI,
+// calidad, sector y próximos resultados— y para el precio, el gráfico, los
+// fundamentos y el técnico se usan los widgets oficiales de TradingView (tv.js).
 async function fichaDelRadar(tk) {
-  let rd = null, ra = null, cal = [];
+  let rd = null, ra = null, cal = [], notSnap = null;
   try {
-    const [rs, cs] = await Promise.all([
+    const [rs, cs, ns] = await Promise.all([
       getDoc(doc(db, "radar", "latest")).catch(() => null),
       getDoc(doc(db, "calendario", "latest")).catch(() => null),
+      getDocs(query(collection(db, "noticias"), where("estado", "==", "publicado"))).catch(() => null),
     ]);
     if (!rs || !rs.exists()) return false;
     rd = JSON.parse(rs.data().json || "{}");
     ra = (rd.activos || []).find(a => String(a.sym || "").toUpperCase() === radarSym(tk)) || null;
     if (!ra) return false;
     try { cal = cs && cs.exists() ? (JSON.parse(cs.data().json || "{}").earnings || []) : []; } catch (e) { cal = []; }
+    notSnap = ns;
   } catch (e) { return false; }
 
   const nomb = ra.nombre || tk;
-  const sec = ra.sector || "";
   const sym = simboloTV(tk);
   // ETF y cripto están en el radar (precio, RSI) pero no tienen balance:
   // sin veredicto no se muestran ni fundamentos ni puntaje de valor.
   const fundOk = !!(ra.veredicto && ra.veredicto !== "Sin cobertura");
   document.title = `${nomb} (${tk}) — Valtia Analytics`;
-
-  const hoyAR = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
-  const prox = cal.find(e => (String(e.ficha || "").toUpperCase() === tk || String(e.sym || "").toUpperCase() === radarSym(tk))
-                             && String(e.fecha) >= hoyAR) || null;
-  const cuando = f => { const d = Math.round((Date.parse(f) - Date.parse(hoyAR)) / 864e5);
-                        return d === 0 ? "hoy" : d === 1 ? "mañana" : `en ${d} días`; };
-  const fechaRadar = (() => { try { return rd.actualizado ? new Date(rd.actualizado).toLocaleDateString("es-AR") : ""; } catch (e) { return ""; } })();
-  const delRadar = fechaRadar ? " del " + fechaRadar : "";
+  S.tk = tk; S.ra = ra; S.radar = rd.activos || []; S.nombre = nomb;
+  S.claves = String(nomb).length >= 5 ? [String(nomb).toLowerCase()] : [];
   const precio = Number(ra.precio) > 0 ? Number(ra.precio) : null;
-  const verClase = ra.veredicto === "Infravalorada" ? " infra" : ra.veredicto === "Estirada" ? " cara" : "";
-  const zonaRsi = ra.rsiZona === "Debil" ? "Débil" : (ra.rsiZona || "");
-  // posición relativa dentro del radar (quintiles), no un diagnóstico
-  const SALUD = [null, "Entre las más bajas", "Por debajo del medio", "En el medio", "Por encima del medio", "Entre las más altas"];
-  const nivel = ra.calidadNivel >= 1 && ra.calidadNivel <= 5 ? Math.round(ra.calidadNivel) : null;
-  const saludHtml = n => n ? `<div class="salud n${n}">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= n ? "on" : ""}"></i>`).join("")}</div>` : "";
-  const tope = v => Math.max(0, Math.min(100, Number(v))).toFixed(1);
+  S.precioUsd = precio;
+  const fechaRadar = (() => { try { return rd.actualizado ? fDM(diaAR(new Date(rd.actualizado))) : ""; } catch (e) { return ""; } })();
+  const esEtf = /^ETF/.test(String(ra.sector || ""));
+  const tipo = esEtf ? "ETF" : ra.sector === "Cripto" ? "Cripto" : "Acción";
 
-  ficha.innerHTML = `
-  ${TOP_ROW}
-  <div class="head">
-    <div>
-      <div class="sec">${esc(sec)}</div>
-      <h1>${esc(nomb)}<span>${esc(tk)}</span></h1>
-      <div class="head-meta">Cotiza en dólares · en el radar de valuación · todavía sin informe Valtia</div>
-    </div>
-    <div class="px">
-      <div class="p">${precio ? "US$" + nf.format(precio) : "—"}</div>
-      <div class="h">${precio ? `Cierre del radar${delRadar} · el precio en vivo está en el recuadro de TradingView` : "El radar todavía no publicó el precio de este activo"}</div>
-      <div class="acc"><a class="btn-acc prim" href="/?agregar=${encodeURIComponent(tk)}#panel/micartera">+ Agregar a Mi cartera</a></div>
-    </div>
-  </div>
+  const nums = [];
+  numerosPublicos(ra, (l, v, s, c) => nums.push({ l, v, s, c }));
 
-  <div class="aviso-nf"><b>Todavía sin informe de Valtia</b>
-    ${esc(nomb)} está en el radar${fundOk
-      ? ", así que tenés la lectura Valtia —puntaje de valor, veredicto, RSI y calidad relativa—, pero todavía no escribimos su informe"
-      : ", pero sin balance que valuar (es un ETF o una cripto) no hay puntaje ni veredicto, y tampoco tiene informe propio"}.
-    El precio, el gráfico${fundOk ? ", los fundamentos" : ""} y el análisis técnico de acá abajo los muestra TradingView:
-    no son cálculos de Valtia.
-  </div>
-
-  <div class="subnav" id="subnav"><a href="#general" class="on">General</a><a href="#grafico">Gráfico</a>${fundOk ? '<a href="#fundamentos">Fundamentos</a>' : ""}<a href="#tecnico">Técnico</a></div>
-
-  <div id="general"><div class="estado">
-    <div class="et"><div class="l">Valor razonable · Lectura Valtia</div>
-      ${fundOk
-        ? `<div class="v"><span class="ver-tag${verClase}">${esc(ra.veredicto)}</span>${ra.entrada ? '<span class="entrada" style="margin:0 0 0 10px" title="Puntaje de valor de 60 o más y RSI debajo de 45. Lectura automática, no una recomendación.">● barata y con RSI bajo</span>' : ""}</div>
-          <div class="barra"><i style="width:100%"></i>${ra.score != null ? `<b style="left:${tope(ra.score)}%"></b>` : ""}</div>
-          <div class="barra-l"><span>estirada</span><span>puntaje ${ra.score != null ? Math.round(ra.score) : "—"}/100</span><span>barata</span></div>
-          <div class="s">Qué tan barata cotiza frente a su familia sectorial, según el modelo de Valtia. Lectura automática, no una recomendación.</div>`
-        : `<div class="v">Sin cobertura</div><div class="s">No aplica: es un ETF o una cripto, sin balance que valuar.</div>`}
+  ficha.innerHTML = cabecera({ tk, nombre: nomb, meta: metaDe([tipo, sectorTxt(ra.sector), BOLSA_NOM[BOLSA[tk]]]),
+      precio: precio ? usd(precio) : "—", d: null,
+      hora: precio ? `Cierre del radar${fechaRadar ? " · " + fechaRadar : ""}` : "El radar todavía no publicó su precio" }) + `
+  <div class="va-body"><div class="va-in">
+    ${lecturaHtml(ra, null)}
+    <div id="mi-pos"></div>
+    <div class="aviso-nf"><b>Todavía sin informe de Valtia</b>
+      ${esc(nomb)} está en el radar${fundOk
+        ? ", así que tenés la lectura Valtia —puntaje de valor, veredicto, RSI y calidad relativa—, pero todavía no escribimos su informe"
+        : ", pero sin balance que valuar (es un ETF o una cripto) no hay puntaje ni veredicto, y tampoco tiene informe propio"}.
+      El precio en vivo, el gráfico${fundOk ? ", los fundamentos" : ""} y el análisis técnico los muestra TradingView:
+      no son cálculos de Valtia.
     </div>
-    <div class="et"><div class="l">RSI (14)</div>
-      ${ra.rsi != null
-        ? `<div class="v">${n1.format(ra.rsi)}${zonaRsi ? ` <span style="font-weight:400;color:var(--sub)">${esc(zonaRsi)}</span>` : ""}</div>
-          <div class="barra"><i class="neutra" style="width:100%"></i><b style="left:${tope(ra.rsi)}%"></b></div>
-          <div class="barra-l"><span>sobrevendido</span><span>50</span><span>sobrecomprado</span></div>
-          <div class="s">Fuerza relativa de las últimas 14 ruedas. Describe cómo se movió el precio; no dice qué hacer.</div>`
-        : `<div class="v">—</div><div class="s">El radar todavía no publicó el RSI de este activo.</div>`}
-    </div>
-    <div class="et"><div class="l">Calidad relativa</div>
-      ${nivel
-        ? `<div class="v">${SALUD[nivel]}</div>${saludHtml(nivel)}
-          <div class="s">Deuda frente a su familia; crecimiento y margen frente al resto del radar. Es una posición relativa, no un diagnóstico de la empresa.</div>`
-        : `<div class="v">—</div><div class="s">${fundOk ? "Faltan datos: hacen falta 2 de 3 entre deuda, crecimiento y margen." : "No aplica: sin balance no hay calidad que comparar."}</div>`}
-    </div>
-    <div class="et"><div class="l">Próximos resultados</div>
-      ${prox
-        ? `<div class="v">${venc(prox.fecha)}</div>
-          <div class="s">${cuando(prox.fecha)} · fecha estimada por la empresa. <a href="/calendario">Ver la agenda completa</a></div>`
-        : `<div class="v">—</div><div class="s">Sin fecha publicada para este activo. <a href="/calendario">Ver la agenda completa</a></div>`}
-    </div>
-  </div></div>
-
-  <div class="ficha-grid">
-    <div class="col-main">
-      <div id="tv-precio" class="vtv-host"></div>
-      <div id="grafico" class="vtv-host"></div>
-      ${fundOk ? '<div id="fundamentos" class="vtv-host"></div>' : ""}
-    </div>
-    <div class="col-side">
-      <div class="card-w">
-        <div class="card-h"><span class="t">Lectura Valtia</span><span class="s">Radar diario · no es una recomendación</span></div>
-        <div class="punt">
-          <div class="pr" style="grid-template-columns:minmax(0,1fr)"><div>
-            <div class="pl">Puntaje de valor</div>
-            <div class="pv">${fundOk && ra.score != null ? Math.round(ra.score) + "/100" : "—"}</div>
-            <div class="ps">${fundOk ? "Qué tan barata cotiza frente a su familia sectorial: múltiplos y caja libre." : "Sin valuación: es un ETF o una cripto, no hay balance que comparar."}</div>
-          </div></div>
-          <div class="pr" style="grid-template-columns:minmax(0,1fr)"><div>
-            <div class="pl">Veredicto</div>
-            <div class="pv">${fundOk ? esc(ra.veredicto) : "Sin cobertura"}</div>
-            <div class="ps">${ra.entrada ? "En zona de compra: puntaje de valor de 60 o más y RSI debajo de 45." : `Lectura automática del radar${delRadar}.`}</div>
-          </div></div>
-          <div class="pr" style="grid-template-columns:minmax(0,1fr);border-bottom:none"><div>
-            <div class="pl">Sector</div>
-            <div class="pv">${esc(sec || "—")}</div>
-            <div class="ps">La familia con la que el radar lo compara.</div>
-          </div></div>
-        </div>
+    <div class="va-grid">
+      <div class="va-col">
+        <div id="tv-precio" class="vtv-host"></div>
+        <div id="grafico" class="vtv-host"></div>
+        ${nums.length ? `<section class="va-card" id="numeros"><h2 class="va-h">Los números</h2>
+          <p class="va-sub">Lo que publica el radar de Valtia, con la mediana de su familia al lado cuando hay con quién comparar.</p>
+          <div class="va-nums">${nums.map(tarjeta).join("")}</div></section>` : ""}
+        ${fundOk ? '<div id="fundamentos" class="vtv-host"></div>' : ""}
+        <section class="va-card" id="escribimos">
+          <div class="va-esc-top"><h2 class="va-h">Lo que escribimos sobre ${esc(tk)}</h2><a class="va-link" href="/informes">Todos los informes →</a></div>
+          <div id="escribimos-box"></div>
+        </section>
       </div>
-      <div id="tecnico" class="vtv-host"></div>
-      <div class="card-w">
-        <div class="card-h"><span class="t">Informe Valtia</span><span class="badge" style="background:var(--marfil);color:var(--mut)">Próximamente</span></div>
-        <div class="inf-body">
-          <h3>Todavía no publicamos el informe de ${esc(nomb)}</h3>
-          <p>El equipo va sumando análisis fundamentales a pedido de los clientes: tesis, KPIs, valuación por año, FODA y riesgos. Si querés que ${esc(nomb)} sea el próximo, decínoslo.</p>
-          <a class="btn-leer" href="mailto:soporte@valtia.tech?subject=Quiero%20el%20informe%20de%20${encodeURIComponent(nomb)}">Pedir este análisis →</a>
-          <a class="btn-leer" href="/informes" style="background:#fff;color:var(--ink);border:1px solid var(--line);margin-left:8px">Ver los publicados</a>
-        </div>
-      </div>
+      <aside class="va-col" aria-label="Más sobre ${esc(tk)}">
+        ${columnaDerecha()}
+        <div id="tecnico" class="vtv-host"></div>
+      </aside>
     </div>
-  </div>
-  <div id="tv-nota"></div>`;
+    <div id="tv-nota"></div>
+    ${DISCLAIMER}
+  </div></div>`;
 
+  pintarDestacado = () => `<div class="va-dest">
+      <div class="img" style="background-image:linear-gradient(135deg,#14213D,#B08A3E)" aria-hidden="true"></div>
+      <div style="min-width:0">
+        <div class="eb">Informe Valtia · próximamente</div>
+        <div class="tt">Todavía no publicamos el informe de ${esc(nomb)}</div>
+        <p>Vamos sumando análisis fundamentales a pedido de los clientes: tesis, KPIs, valuación por año, FODA y riesgos. Si querés que ${esc(nomb)} sea el próximo, decínoslo.</p>
+        <div class="pie"><a class="va-link" href="mailto:soporte@valtia.tech?subject=Quiero%20el%20informe%20de%20${encodeURIComponent(nomb)}">Pedir este análisis →</a></div>
+      </div></div>`;
   montarTopRow();
-  document.querySelectorAll("#subnav a").forEach(a => a.addEventListener("click", () =>
-    document.querySelectorAll("#subnav a").forEach(x => x.classList.toggle("on", x === a))));
+  pintarEscribimos();
+  llenarViene(cal, tk);
+  llenarNoticias(notSnap, S.claves, tk.length >= 3 ? new RegExp("\\b" + tk.replace(/[^A-Z0-9]/g, "") + "\\b") : null);
+  llenarCarteras(false);
+  llenarComo(null);
+  llenarOtrosInformes(false, null);
+  let primera = true;
+  onAuthStateChanged(getAuth(app), async user => {
+    S.user = user;
+    pintarSentimiento(user);
+    if (!user && primera) { primera = false; return; }
+    primera = false;
+    let pro = false;
+    if (user) {
+      const esperar = ms => new Promise(r => setTimeout(r, ms));
+      for (let i = 0; i < 20 && !window.valtiaEsPro; i++) await esperar(150);
+      try { pro = !!(window.valtiaEsPro && await window.valtiaEsPro(user)); } catch (e) { pro = false; }
+    }
+    S.pro = pro;
+    llenarCarteras(pro);
+    llenarComo(user);
+    llenarTenencia(user, false);
+    if (pro) llenarOtrosInformes(true, null);
+  });
 
   // Los widgets van al final y con import dinámico: tv.js se baja solo en las
   // fichas que lo necesitan. Si no carga, la ficha ya está en pantalla.
@@ -620,15 +1096,13 @@ async function fichaDelRadar(tk) {
 }
 
 if (!emp) {
-  // Sin ficha de empresa. Antes TODO caía en informes.html, también un bono:
-  // activo.html?t=AL30 era un callejón sin salida aunque AL30 tiene su propia
-  // ficha. Ahora se prueban cuatro salidas, en orden:
+  // Sin ficha de empresa. Se prueban cuatro salidas, en orden:
   //   1. el mismo activo escrito de otra forma (PAMP -> PAM, GGAL.BA -> GGAL);
-  //   2. renta fija -> bono.html. Soberanos, Bopreal y letras se reconocen por
-  //      el ticker; los CER y dólar linked (TX26, DICP…) no tienen patrón, así
-  //      que ahí se consulta el panel;
+  //   2. renta fija -> la ficha de bono. Soberanos, Bopreal y letras se
+  //      reconocen por el ticker; los CER y dólar linked (TX26, DICP…) no
+  //      tienen patrón, así que ahí se consulta el panel;
   //   3. está en el radar pero sin informe -> ficha con lo que sabemos + TradingView;
-  //   4. no lo conocemos -> informes.html, como antes.
+  //   4. no lo conocemos -> Informes, como antes.
   // Es el camino raro: no demora la carga de ninguna ficha normal.
   const otra = tickerFicha(t);
   if (otra && otra !== t) {
@@ -642,13 +1116,13 @@ if (!emp) {
       const s = await getDoc(doc(db, "bonosPanel", "latest"));
       if (s.exists()) bonos = new Set(Object.keys(JSON.parse(s.data().json || "{}").todos || {}));
     }
-    if (esRentaFija(t, bonos)) destino = "bono.html?e=" + encodeURIComponent(especieBono(canon(t, bonos), bonos));
+    if (esRentaFija(t, bonos)) destino = "/bono?e=" + encodeURIComponent(especieBono(canon(t, bonos), bonos));
   } catch (e) {}
   if (!destino) {
     let hecha = false;
     try { hecha = await fichaDelRadar(t); } catch (e) { hecha = false; }
     if (hecha) await new Promise(() => {});   // la ficha del radar ya está pintada
-    destino = "informes.html";
+    destino = "/informes";
   }
   location.replace(destino);
   await new Promise(() => {});   // nada de lo que sigue aplica: la página se va
@@ -656,26 +1130,32 @@ if (!emp) {
 
 document.title = `${emp.nombre} (${t}) — Valtia Analytics`;
 const sectorN = (SECTORES.find(s => s.k === emp.sector) || {}).n || "";
+S.nombre = emp.nombre;
+S.claves = emp.claves || [];
+// el índice de referencia del gráfico: Nasdaq 100 para tecnología, S&P 500
+// para el resto (los dos tienen histórico propio en historialInformes)
+const BENCH = t === "SPY" ? "QQQ" : t === "QQQ" ? "SPY" : t === "ETH" ? "BTC" : emp.sector === "tech" ? "QQQ" : "SPY";
+const BENCH_NOM = { SPY: "S&P 500 (SPY)", QQQ: "Nasdaq 100 (QQQ)", BTC: "Bitcoin" }[BENCH];
 
 try {
-  const [pxSnap, histSnap, radarSnap, radarProSnap, infSnap, notSnap, desgSnap, calSnap] = await Promise.all([
+  const [pxSnap, histSnap, radarSnap, radarProSnap, infSnap, notSnap, calSnap, benchSnap] = await Promise.all([
     getDoc(doc(db, "preciosInformes", "latest")).catch(() => null),
     getDoc(doc(db, "historialInformes", t)).catch(() => null),
     getDoc(doc(db, "radar", "latest")).catch(() => null),
     getDoc(doc(db, "radarPro", "latest")).catch(() => null),   // 403 si no es cliente
     emp.slug ? getDoc(doc(db, "informes", emp.slug)).catch(() => null) : Promise.resolve(null),
     getDocs(query(collection(db, "noticias"), where("estado", "==", "publicado"))).catch(() => null),
-    getDoc(doc(db, "desglosePeriodos", "latest")).catch(() => null),
     getDoc(doc(db, "calendario", "latest")).catch(() => null),
+    getDoc(doc(db, "historialInformes", BENCH)).catch(() => null),
   ]);
 
-  // precio en vivo: p y d, y desde la ficha v3 también apertura (o), rango
-  // del día (h/l), cierre anterior (pc), volumen (v), volumen promedio 3M
-  // (vp), 52 semanas (h52/l52) y medias de 50 y 200 ruedas (s50/s200)
+  // precio en vivo: p y d, apertura (o), rango del día (h/l), cierre anterior
+  // (pc), volumen (v), volumen promedio 3M (vp), 52 semanas (h52/l52) y
+  // medias de 50 y 200 ruedas (s50/s200)
   const precios = pxSnap && pxSnap.exists() ? JSON.parse(pxSnap.data().json || "{}") : {};
   const px = precios[t] || {};
   const ts = pxSnap && pxSnap.exists() ? pxSnap.data().actualizado_utc : null;
-  const hora = ts && ts.toDate ? ts.toDate().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false }) : "";
+  S.precioUsd = Number(px.p) > 0 ? Number(px.p) : null;
 
   // radar: lo público (veredicto, precio, RSI, recomendación, salud) más lo
   // PRO (múltiplos, fundamentos, objetivo, precio justo) cuando las reglas
@@ -688,65 +1168,82 @@ try {
   const armarRadar = () => {
     const _m = mergeRadar(radarPub, radarProDoc);
     conRatios = _m.pro;
-    ra = (_m.activos || []).find(a => a.sym === radarSym(t)) || null;
+    S.radar = _m.activos || [];
+    ra = S.radar.find(a => a.sym === radarSym(t)) || null;
+    S.ra = ra;
   };
   armarRadar();
+  if (conRatios) S.pro = true;
 
-  // informe (si las reglas lo dejan leer; si no, tarjeta genérica bloqueada)
+  // informe (si las reglas lo dejan leer; si no, la tarjeta bloqueada)
   const inf = infSnap && infSnap.exists() ? infSnap.data() : null;
+  S.inf = inf;
   const cover = `img/${emp.slug}.svg`;
 
-  // histórico (2 años): cada fila es [fecha, cierre, apertura, máximo,
-  // mínimo, volumen]; los docs viejos traen solo [fecha, cierre]
+  // histórico (2 años): cada fila es [fecha, cierre ajustado, apertura,
+  // máximo, mínimo, volumen, cierre real]. Los índices 1 a 4 vienen ajustados
+  // por dividendos; el 6 es el cierre tal como se operó. Todo lo que se
+  // compara con el precio de hoy (que es sin ajustar) usa el cierre real:
+  // con el ajustado, cada dividendo pagado se sumaba a la variación (en KO,
+  // más de 5 % en dos años). Las velas pasan a precios reales con el mismo
+  // factor del día. Los docs viejos traen solo [fecha, cierre]: ahí el
+  // índice 1 ya es el cierre real.
   const serie = histSnap && histSnap.exists() ? JSON.parse(histSnap.data().json || "[]") : [];
-  // la vela de HOY: el histórico se baja una vez por día (con el cierre de
-  // ayer). Si el precio en vivo es de hoy, se suma la vela de la rueda en curso.
+  const filaReal = p => {
+    const c = Number(p.length > 6 && p[6] != null ? p[6] : p[1]);
+    const f = Number(p[1]) > 0 ? c / Number(p[1]) : 1;
+    const ok = p.length >= 5 && p[2] > 0 && p[3] > 0 && p[4] > 0;
+    return { f: String(p[0]), c, o: ok ? p[2] * f : c, h: ok ? p[3] * f : c, l: ok ? p[4] * f : c, v: Number(p[5]) || 0, ohlc: ok };
+  };
+  const filas = serie.map(filaReal).filter(r => esISO(r.f) && isFinite(r.c) && r.c > 0);
+  // la vela del último precio: el histórico se baja una vez por día. Si el
+  // precio en vivo es de un día posterior a la última fila (la rueda de hoy,
+  // o la del viernes mirada un sábado), se suma esa vela.
   (() => {
-    const diaAr = d => new Date(d.getTime() - 3 * 3600e3).toISOString().slice(0, 10);
-    const tsDia = ts && ts.toDate ? diaAr(ts.toDate()) : null;
-    const ultFila = serie.length ? serie[serie.length - 1] : null;
-    if (tsDia && ultFila && ultFila.length >= 5 && tsDia === diaAr(new Date()) && String(ultFila[0]) < tsDia
-        && px.p > 0 && px.o > 0 && px.h > 0 && px.l > 0)
-      serie.push([tsDia, px.p, px.o, Math.max(px.h, px.p, px.o), Math.min(px.l, px.p, px.o), px.v || 0]);
+    const tsDia = ts && ts.toDate ? diaAR(ts.toDate()) : null;
+    const ult = filas.length ? filas[filas.length - 1] : null;
+    if (tsDia && ult && tsDia > ult.f && px.p > 0 && px.o > 0 && px.h > 0 && px.l > 0)
+      filas.push({ f: tsDia, c: px.p, o: px.o, h: Math.max(px.h, px.p, px.o), l: Math.min(px.l, px.p, px.o), v: px.v || 0, ohlc: true });
   })();
-  const haceDias = n => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
-  const ult52 = serie.filter(p => String(p[0]) >= haceDias(365)).map(p => Number(p[1])).filter(v => isFinite(v) && v > 0);
+  const cierres = filas.map(r => r.c);
+  const ult52 = filas.filter(r => r.f >= haceDias(365)).map(r => r.c);
   // 52 semanas: del precio en vivo (incluye el intradía) si el sync ya lo
-  // publica; si no, de los cierres del histórico
+  // publica; si no, de los cierres reales del histórico
   const r52 = (() => {
     const min = Number(px.l52) || (ult52.length >= 20 ? Math.min(...ult52) : 0);
     const max = Number(px.h52) || (ult52.length >= 20 ? Math.max(...ult52) : 0);
     if (!(min > 0 && max >= min)) return null;
-    return { min, max, pos: px.p && max > min ? Math.max(0, Math.min(100, (px.p - min) / (max - min) * 100)) : null };
+    return { min, max };
   })();
-  const cierre = i => serie.length > i ? Number(serie[serie.length - 1 - i][1]) : null;
-  const seisM = (() => {
+  // variación desde el último cierre real anterior (o igual) a una fecha de
+  // corte hasta el último precio; sin histórico que llegue tan atrás, null
+  const varDesde = corte => {
     let ancla = null;
-    for (const p of serie) { if (String(p[0]) <= haceDias(182)) ancla = Number(p[1]); else break; }
-    return ancla && cierre(0) ? (cierre(0) / ancla - 1) * 100 : null;
-  })();
+    for (const r of filas) { if (r.f <= corte) ancla = r.c; else break; }
+    const ultC = cierres.length ? cierres[cierres.length - 1] : null;
+    return ancla && ultC ? (ultC / ancla - 1) * 100 : null;
+  };
+  const seisM = varDesde(haceDias(182));
+  // cierre real del día del informe (o el último anterior, si salió sin rueda)
+  const cierreEn = fecha => { let v = null; for (const r of filas) { if (r.f > fecha) break; v = r.c; } return v; };
 
   // ── rango del día, medias móviles y análisis técnico ──
-  // El rango, la apertura, el cierre anterior y el volumen vienen del mismo
-  // fast_info que el precio (cero costo). Las medias y el MACD se calculan
-  // acá con el histórico público: no hay nada que ocultar.
   // la cripto publica el rango de la rueda UTC pero el precio corre las 24 h:
   // si el precio se escapó del rango, el rango se estira hasta el precio
   const dia = px.h > 0 && px.l > 0 && px.h >= px.l ? (() => {
     const min = px.p > 0 ? Math.min(px.l, px.p) : px.l, max = px.p > 0 ? Math.max(px.h, px.p) : px.h;
-    return { min, max, pos: px.p > 0 && max > min ? (px.p - min) / (max - min) * 100 : 50 };
+    return { min, max };
   })() : null;
   const esCripto = /^(BTC|ETH)$/.test(t);
   const volTxt = v => (esCripto ? "US$" : "") + compacto.format(v);
   // ETF y cripto están en el radar (precio, RSI) pero no tienen balance:
-  // sin veredicto no se muestran filas de fundamentos vacías
+  // sin veredicto no se muestran números de fundamentos vacíos
   const fundOk = !!(ra && ra.veredicto && ra.veredicto !== "Sin cobertura");
-  const cierres = serie.map(p => Number(p[1])).filter(v => isFinite(v) && v > 0);
   const sma = n => cierres.length >= n ? cierres.slice(-n).reduce((a, b) => a + b, 0) / n : null;
   const s20 = sma(20), s50 = Number(px.s50) || sma(50), s200 = Number(px.s200) || sma(200);
   const tec = (() => {
     if (cierres.length < 60) return null;
-    // las medias se comparan contra el precio en vivo, igual que en Estadísticas
+    // las medias se comparan contra el precio en vivo
     const ult = px.p > 0 ? px.p : cierres[cierres.length - 1];
     let rsi = ra && ra.rsi != null ? Number(ra.rsi) : null;
     if (rsi == null) {
@@ -764,18 +1261,17 @@ try {
     const arriba = medias.filter(([, m]) => ult > m).map(([n]) => n), abajo = medias.filter(([, m]) => ult <= m).map(([n]) => n);
     if (arriba.length) sig.push({ v: arriba.length, t: `sobre la media de ${arriba.join(", ")} ruedas` });
     if (abajo.length) sig.push({ v: -abajo.length, t: `bajo la media de ${abajo.join(", ")} ruedas` });
-    // mismas zonas que el radar (35 / 50 / 65) para que la ficha no se
-    // contradiga. Los extremos no suman ni restan (pueden seguir o revertir)
-    // y entre 45 y 55 el RSI no dice nada.
+    // mismas zonas que el radar (35 / 50 / 65). Los extremos no suman ni
+    // restan (pueden seguir o revertir) y entre 45 y 55 el RSI no dice nada.
     const zr = rsi < 35 ? "sobrevendido" : rsi < 50 ? "débil" : rsi <= 65 ? "firme" : "sobrecomprado";
     sig.push({ v: rsi >= 55 && rsi <= 65 ? 1 : rsi >= 35 && rsi <= 45 ? -1 : 0, t: `RSI ${Math.round(rsi)} ${zr}` });
     sig.push(histo >= 0 ? { v: 1, t: "MACD positivo" } : { v: -1, t: "MACD negativo" });
     const score = sig.reduce((a, s) => a + s.v, 0);        // -5 … 5
     // tendencia, no orden: el resumen describe los indicadores, no dice qué hacer
     const label = score >= 3 ? "Señales mayormente alcistas" : score >= 1 ? "Sesgo alcista" : score <= -3 ? "Señales mayormente bajistas" : score <= -1 ? "Sesgo bajista" : "Señales mixtas";
-    return { score, label, rsi, detalle: sig.map(s => s.t).join(" · "), gauge: (score + 5) / 10 * 100 };
+    return { score, label, rsi, detalle: sig.map(s => s.t).join(" · ") };
   })();
-  const RECO = { strong_buy: "Compra fuerte", buy: "Compra", hold: "Mantener", sell: "Venta", strong_sell: "Venta fuerte" };
+  const recoTxt = () => ra && RECO[ra.reco] ? RECO[ra.reco] : null;
   // por qué no hay precio justo (lo decide el pipeline, radar_core.radar_calcular)
   const MOTIVO = {
     moneda: ["balance en otra moneda", "El balance está en otra moneda que la cotización: los múltiplos mezclarían monedas y el número engañaría."],
@@ -787,164 +1283,97 @@ try {
   };
   const motivoCorto = m => (MOTIVO[m] || ["sin precio justo publicado"])[0];
   const motivoLargo = m => (MOTIVO[m] || [null, "No hay precio justo publicado para este activo."])[1];
-  const zona = z => z === "Debil" ? "Débil" : (z || "");
-  const dy = v => (v > 0 && v < 1 ? nf : n1).format(v) + "%";
-  // valor razonable en el medidor: -60 % a la izquierda, 0 al centro, +150 % a la derecha
-  const gaugeJusto = up => up == null ? null : up < 0 ? 50 + Math.max(-60, up) / 60 * 50 : 50 + Math.min(150, up) / 150 * 50;
-  const RECO_G = { strong_buy: 92, buy: 72, hold: 50, sell: 30, strong_sell: 8 };
-  const recoTxt = () => ra && RECO[ra.reco] ? RECO[ra.reco] : null;
-  // posición relativa dentro del radar (quintiles), no un diagnóstico de la empresa
-  const SALUD = [null, "Entre las más bajas", "Por debajo del medio", "En el medio", "Por encima del medio", "Entre las más altas"];
   const nivel = () => ra && ra.calidadNivel >= 1 && ra.calidadNivel <= 5 ? Math.round(ra.calidadNivel) : null;
-  const saludHtml = n => n ? `<div class="salud n${n}">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= n ? "on" : ""}"></i>`).join("")}</div>` : "";
-  const usdC = v => v == null || !isFinite(v) ? "—" : (v < 0 ? "−" : "") + "US$" + compacto.format(Math.abs(v));
-  const numC = v => v == null || !isFinite(v) ? "—" : compacto.format(v);
+  const usdC = v => v == null || !isFinite(v) ? null : (v < 0 ? "−" : "") + "US$" + compacto.format(Math.abs(v));
   const cal = (() => { try { return calSnap && calSnap.exists() ? (JSON.parse(calSnap.data().json || "{}").earnings || []) : []; } catch (e) { return []; } })();
-  // días calendario de Argentina: "hoy" solo el mismo día y nunca una fecha pasada
-  const hoyAR = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
-  const proxRes = cal.find(e => (e.ficha === t || e.sym === radarSym(t) || e.sym === t) && String(e.fecha) >= hoyAR) || null;
-  const enDias = f => Math.round((Date.parse(f) - Date.parse(hoyAR)) / 864e5);
-
-  // estadísticas, agrupadas como se leen: mercado (gratis), y con PRO la
-  // valuación, la rentabilidad y la solidez. Sin PRO esos números NO
-  // viajaron al navegador: se explica el límite, no se tapa con blur.
-  const fila = (l, v, z) => `<div class="st"><div class="l">${l}</div><div class="v">${v}</div>${z ? `<div class="z">${z}</div>` : ""}</div>`;
-  const grupo = (tit, filas) => filas.length ? `<div class="stg"><div class="stg-t">${tit}</div><div class="stats">${filas.join("")}</div></div>` : "";
-  const pct1 = v => v == null ? "—" : signo(v);
-  const desdeMedia = m => m && px.p ? `precio ${signo((px.p / m - 1) * 100)} respecto de la media` : "";
-  // sin acceso PRO los múltiplos NO están en la página: no hay blur que
-  // sacar con devtools ni JSON que pedir por REST — el dato no viajó
-  const proHtml = `<div class="stg" style="text-align:center;padding:22px 18px">
-      <div style="font:400 20px 'IBM Plex Sans',sans-serif;color:var(--ink)">Los números detrás de la lectura son PRO</div>
-      <p style="font-size:12.5px;color:var(--sub);max-width:420px;margin:6px auto 12px;line-height:1.6">
-        El precio, el rango, el volumen, la lectura, la calidad relativa y el consenso de los analistas son gratis. Con PRO ves
-        PER, P/Libro, EV/EBITDA, FCF yield, ROE, ROA, ingresos, ganancia, BPA, deuda, beta, el precio justo y el objetivo de los analistas.</p>
-      <a class="btn" href="/planes" style="display:inline-block;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;background:var(--gold);color:#fff;padding:10px 22px;text-decoration:none;border-radius:4px">Ver planes</a>
-    </div>`;
-  // beta: SIEMPRE con su R2 al lado. Una beta que explica el 3% de la
-  // variación no dice nada, y sin el R2 se lee como si dijera todo.
-  const filaBeta = () => fila("Beta (2 años)",
-    ra.beta != null && ra.betaR2 != null && ra.betaR2 >= 0.10 ? n1.format(ra.beta) : "—",
-    ra.beta == null ? "" : ra.betaR2 < 0.10
-      ? "no sigue al S&P (explica " + Math.round(ra.betaR2 * 100) + "%)"
-      : "el S&P explica el " + Math.round(ra.betaR2 * 100) + "%");
-  const filaVol = () => fila("Volatilidad", ra.volAnual != null ? n1.format(ra.volAnual) + "%" : "—", "anualizada, 2 años");
-  const statsHtml = () => !ra ? '<div class="vacio">Este activo todavía no está en el radar de valuación.</div>' : grupo("Precio y mercado", [
-      fila("Último precio", px.p ? "US$" + nf.format(px.p) : "—", hora ? "actualizado " + hora + " hs" : ""),
-      fila("Hoy", px.d != null ? `<span class="${clase(px.d)}">${signo(px.d)}</span>` : "—", "contra el cierre anterior"),
-      fila("Cierre anterior", px.pc ? "US$" + nf.format(px.pc) : "—", ""),
-      fila("Apertura", px.o ? "US$" + nf.format(px.o) : "—", ""),
-      fila("Rango del día", dia ? `${nf.format(dia.min)} – ${nf.format(dia.max)}` : "—", "mínimo y máximo de la rueda"),
-      fila("52 semanas", r52 ? `${nf.format(r52.min)} – ${nf.format(r52.max)}` : "—", "mínimo y máximo, en dólares"),
-      fila("Volumen", px.v ? volTxt(px.v) : "—", esCripto ? "en dólares, en el día (UTC)" : "acumulado de la rueda"),
-      fila("Vol. promedio 3M", px.vp ? volTxt(px.vp) : "—", px.v && px.vp ? `hoy lleva ${Math.round(px.v / px.vp * 100)}% de un día promedio` : "por día"),
-      fila("Market cap", ra.mktcap ? "US$" + compacto.format(ra.mktcap) : "—", ""),
-      fila("Div. yield", ra.divYield != null ? dy(ra.divYield) : "—", ra.divYield > 0 ? "dividendo anual / precio" : ""),
-      fila("RSI (14)", ra.rsi != null ? n1.format(ra.rsi) : "—", esc(zona(ra.rsiZona))),
-      fila("Media 50 ruedas", s50 ? "US$" + nf.format(s50) : "—", desdeMedia(s50)),
-      fila("Media 200 ruedas", s200 ? "US$" + nf.format(s200) : "—", desdeMedia(s200)),
-      ...(fundOk ? [fila("Próximos resultados", proxRes ? venc(proxRes.fecha) : "—", proxRes ? (enDias(proxRes.fecha) === 0 ? "hoy" : enDias(proxRes.fecha) === 1 ? "mañana" : `en ${enDias(proxRes.fecha)} días`) : "sin fecha publicada")] : []),
-    ]) + (conRatios && !fundOk ? grupo("Riesgo", [filaBeta(), filaVol()])
-      + `<div class="stg"><div class="vacio">${esc(emp.nombre)} no tiene balance que valuar (es un ETF o una cripto): no hay múltiplos, precio justo ni calidad relativa.</div></div>`
-    : conRatios ? grupo("Valuación", [
-      fila("P/E", ra.per != null ? n1.format(ra.per) + "x" : "—", "precio / ganancias"),
-      fila("P/Libro", ra.pb != null ? n1.format(ra.pb) + "x" : "—", ""),
-      fila("P/Ventas", ra.ps != null ? n1.format(ra.ps) + "x" : "—", ""),
-      fila("EV/EBITDA", ra.evebitda != null ? n1.format(ra.evebitda) + "x" : "—", "valor empresa / EBITDA"),
-      fila("FCF yield", ra.fcfy != null ? n1.format(ra.fcfy) + "%" : "—", "caja libre / market cap"),
-      fila("Precio justo", ra.justo ? "US$" + nf.format(ra.justo) : "—", ra.justo ? `${signo(ra.justoUpside)} · entre ${nf.format(ra.justoMin)} y ${nf.format(ra.justoMax)} según el múltiplo` : motivoCorto(ra.justoMotivo)),
-    ]) + grupo("Rentabilidad y crecimiento", [
-      fila("ROE", ra.roe != null ? n1.format(ra.roe) + "%" : "—", "ganancia / patrimonio"),
-      fila("ROA", ra.roa != null ? n1.format(ra.roa) + "%" : "—", "ganancia / activos"),
-      fila("Margen operativo", ra.margen != null ? n1.format(ra.margen) + "%" : "—", ""),
-      fila("Margen neto", ra.margenNeto != null ? n1.format(ra.margenNeto) + "%" : "—", ""),
-      fila("Crec. ingresos", pct1(ra.growth), "interanual"),
-      fila("Ingresos", usdC(ra.ingresos), "últimos 12 meses"),
-      fila("Ganancia neta", usdC(ra.gananciaNeta), "últimos 12 meses"),
-      fila("EBITDA", usdC(ra.ebitda), "últimos 12 meses"),
-      fila("BPA", ra.eps != null ? "US$" + nf.format(ra.eps) : "—", "ganancia por acción, 12 meses"),
-      fila("Calidad", ra.calidadScore != null ? Math.round(ra.calidadScore) + "/100" : "—", "deuda, crecimiento y margen"),
-    ]) + grupo("Solidez y riesgo", [
-      fila("Deuda / EBITDA", ra.deudaEbitda != null ? n1.format(ra.deudaEbitda) + "x" : "—", "años de EBITDA para cancelar la deuda"),
-      fila("Liquidez", ra.liquidez != null ? n1.format(ra.liquidez) + "x" : "—", "activo corriente / pasivo corriente"),
-      filaBeta(),
-      filaVol(),
-      fila("Acciones en circulación", numC(ra.acciones), ""),
-      fila("Dividendo en alza", ra.divAnios ? ra.divAnios + (ra.divAnios === 1 ? " año" : " años") : ra.divYield > 0 && ra.divAnios === 0 ? "no" : "—",
-        ra.divAnios || ra.divYield > 0 ? "años seguidos subiendo el dividendo anual" : "no paga dividendos o no hay datos"),
-      fila("Consenso", pct1(ra.upside), ra.nAnalistas && ra.target ? `objetivo US$${nf.format(ra.target)} de ${ra.nAnalistas} analistas${ra.targetBajo && ra.targetAlto ? ` (${nf.format(ra.targetBajo)} – ${nf.format(ra.targetAlto)})` : ""}` : ra.nAnalistas ? "objetivo de " + ra.nAnalistas + " analistas" : ""),
-    ]) + (ra.monedaBalance === "ARS" ? `<div class="stg"><div class="vacio">Balance en pesos: P/Ventas, EV/EBITDA, ingresos, ganancia y crecimiento no se publican porque mezclarían un precio en dólares con números en pesos.</div></div>` : "")
-    : fundOk ? proHtml : "");
-
-  const verClase = () => ra && ra.veredicto === "Infravalorada" ? " infra" : ra && ra.veredicto === "Estirada" ? " cara" : "";
   const conVer = () => !!(ra && ra.veredicto && ra.veredicto !== "Sin cobertura");
 
-  // medidor de medio arco: el punto marca dónde cae el valor entre 0 y 100
-  const gauge = v => {
-    const arco = `<path d="M8 50 A42 42 0 0 1 92 50" fill="none" stroke-width="7" stroke-linecap="round"`;
-    if (v == null || !isFinite(v)) return `<svg class="gauge" viewBox="0 0 100 56">${arco} stroke="#E7E3DA"/></svg>`;
-    const p = Math.max(0, Math.min(1, v / 100)), a = Math.PI * (1 - p);
-    const x = 50 + 42 * Math.cos(a), y = 50 - 42 * Math.sin(a);
-    return `<svg class="gauge" viewBox="0 0 100 56"><defs><linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="#B23A3A"/><stop offset=".5" stop-color="#B08A3E"/><stop offset="1" stop-color="#1F7A4D"/></linearGradient></defs>
-      ${arco} stroke="url(#gg)" opacity=".4"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.5" fill="#0E1830" stroke="#fff" stroke-width="2"/></svg>`;
+  // ── Los números ──
+  // Arriba, lo que se lee para decidir; el resto, en "Más números". Sin PRO
+  // los múltiplos NO viajaron al navegador: la muestra desenfocada no tiene
+  // datos, solo los nombres de lo que se desbloquea.
+  const fx1 = v => n1.format(v) + "×";
+  const fpc = v => n1.format(v) + "%";
+  const numerosHtml = () => {
+    const vis = [], mas = [];
+    const add = (l, v, s, c, extra) => { if (v == null || v === "—" || v === "") return; (extra ? mas : vis).push({ l, v, s: s || "", c: c || "" }); };
+    const mult = (campo, l, fmt, dir, pal, sinMed, extra) => {
+      if (ra[campo] == null || !isFinite(ra[campo])) return;
+      const v = Number(ra[campo]);
+      const f = frente(v, medSector(campo, dir < 0), dir, fmt, pal);
+      add(l, fmt(v), f.s || sinMed || "", f.c, extra);
+    };
+    const MULT = ["más barata", "más cara"], MEJOR = ["mejor que el sector", "debajo del sector"];
+    if (conRatios && fundOk) {
+      mult("per", "P/E últimos 12 meses", fx1, -1, MULT, "Precio sobre ganancias");
+      mult("pb", "Precio / Valor libro", fx1, -1, MULT);
+      mult("evebitda", "EV / EBITDA", fx1, -1, MULT, "Valor de la empresa sobre EBITDA");
+      mult("fcfy", "Flujo libre / precio", fpc, 1, MEJOR, "Caja libre sobre capitalización");
+      mult("deudaEbitda", "Deuda / EBITDA", fx1, -1, ["menos deuda", "más deuda"], ra.deudaEbitda < 1 ? "Baja" : ra.deudaEbitda > 3 ? "Alta" : "Manejable");
+      mult("margen", "Margen operativo", fpc, 1, MEJOR);
+      mult("growth", "Ventas vs. año anterior", v => (v > 0 ? "+" : "") + n1.format(v) + "%", 1, MEJOR, "Interanual");
+      mult("roe", "ROE", fpc, 1, MEJOR, "Ganancia sobre patrimonio");
+      add("Precio justo", ra.justo ? "US$" + nf.format(ra.justo) : null,
+        ra.justo ? `${signo(ra.justoUpside)} · entre ${nf.format(ra.justoMin)} y ${nf.format(ra.justoMax)} según el múltiplo` : "",
+        ra.justo ? (ra.justoUpside >= 15 ? "b" : ra.justoUpside <= -15 ? "a" : "") : "");
+      if (!ra.justo && ra.justoMotivo) add("Precio justo", "Sin número", motivoCorto(ra.justoMotivo), "", true);
+    }
+    if (r52) {
+      const pos = px.p > 0 ? px.p / r52.max * 100 : null;
+      add("Máx / mín 52 semanas", `${usd0(r52.max)} / ${usd0(r52.min)}`, pos != null ? `Está al ${Math.round(pos)}% del máximo` : "",
+        pos != null && pos >= 95 ? "a" : "");
+    }
+    numerosPublicos(ra, (l, v, s, c) => add(l, v, s, c));
+    if (tec) add("Análisis técnico", tec.label, tec.detalle, tec.score >= 1 ? "b" : tec.score <= -1 ? "a" : "");
+    if (s200 && px.p) add("Media de 200 ruedas", signo((px.p / s200 - 1) * 100), `El precio frente a la media (${usd(s200)})`, "");
+    if (dia) add("Rango del día", `${usd(dia.min)} – ${usd(dia.max)}`,
+      [px.o ? `abrió en ${usd(px.o)}` : "", px.pc ? `cierre anterior ${usd(px.pc)}` : ""].filter(Boolean).join(" · ").replace(/^./, m => m.toUpperCase()), "", true);
+    if (px.v) add("Volumen de hoy", volTxt(px.v), px.vp ? `${Math.round(px.v / px.vp * 100)}% de un día promedio (${volTxt(px.vp)})` : "", "", true);
+    if (s50 && px.p) add("Media de 50 ruedas", signo((px.p / s50 - 1) * 100), `El precio frente a la media (${usd(s50)})`, "", true);
+    if (conRatios && fundOk) {
+      mult("ps", "Precio / Ventas", fx1, -1, MULT, "", true);
+      mult("margenNeto", "Margen neto", fpc, 1, MEJOR, "", true);
+      mult("roa", "ROA", fpc, 1, MEJOR, "Ganancia sobre activos", true);
+      if (ra.liquidez != null) add("Liquidez", fx1(ra.liquidez), "Activo corriente / pasivo corriente", "", true);
+      add("Ingresos", usdC(ra.ingresos), "Últimos 12 meses", "", true);
+      add("Ganancia neta", usdC(ra.gananciaNeta), "Últimos 12 meses", "", true);
+      add("EBITDA", usdC(ra.ebitda), "Últimos 12 meses", "", true);
+      if (ra.eps != null) add("Ganancia por acción", "US$" + nf.format(ra.eps), "Últimos 12 meses", "", true);
+      if (ra.acciones) add("Acciones en circulación", compacto.format(ra.acciones), "", "", true);
+      if (ra.divAnios || (ra.divYield > 0 && ra.divAnios === 0)) add("Dividendo en alza", ra.divAnios ? ra.divAnios + (ra.divAnios === 1 ? " año" : " años") : "No",
+        "Años seguidos subiendo el dividendo anual", "", true);
+      if (ra.nAnalistas && ra.target) add("Objetivo de analistas", "US$" + nf.format(ra.target),
+        `${signo(ra.upside)} · ${ra.nAnalistas} analistas${ra.targetBajo && ra.targetAlto ? ` · entre ${nf.format(ra.targetBajo)} y ${nf.format(ra.targetAlto)}` : ""}`, "", true);
+    }
+    // beta: SIEMPRE con su R2 al lado. Una beta que explica el 3% de la
+    // variación no dice nada, y sin el R2 se lee como si dijera todo.
+    if (conRatios && ra && ra.beta != null) add("Beta (2 años)", ra.betaR2 != null && ra.betaR2 >= 0.10 ? n1.format(ra.beta) : "—",
+      ra.betaR2 < 0.10 ? `No sigue al S&P (explica ${Math.round(ra.betaR2 * 100)}%)` : `El S&P explica el ${Math.round(ra.betaR2 * 100)}%`, "", true);
+    if (conRatios && ra && ra.volAnual != null) add("Volatilidad", n1.format(ra.volAnual) + "%", "Anualizada, 2 años", "", true);
+
+    const lock = !conRatios && fundOk ? `<div class="lock">
+        <div class="preview-blur va-nums" aria-hidden="true">${["P/E últimos 12 meses", "Precio / Valor libro", "EV / EBITDA", "Flujo libre / precio",
+          "Deuda / EBITDA", "Margen operativo", "Ventas vs. año anterior", "Precio justo"]
+          .map(l => tarjeta({ l, v: "··,·", s: "Sector ··,·", c: "" })).join("")}</div>
+        <div class="pro-overlay">${S.pro
+          // sesión PRO pero el radar PRO no se pudo leer: no se le ofrece el plan que ya tiene
+          ? `<h4>No pudimos leer los múltiplos ahora</h4>
+          <p>Tu plan los incluye: probá recargar la página en un rato.</p>`
+          : `<h4>Los múltiplos con la mediana del sector son PRO</h4>
+          <p>P/E, EV/EBITDA, flujo libre, deuda, márgenes, crecimiento y el precio justo, cada uno frente a su familia.</p>
+          <a href="/planes" class="btn">Ver planes</a>`}</div></div>` : "";
+    const notaArs = conRatios && ra && ra.monedaBalance === "ARS"
+      ? `<p class="va-nota-num">Balance en pesos: P/Ventas, EV/EBITDA, ingresos, ganancia y crecimiento no se publican porque mezclarían un precio en dólares con números en pesos.</p>` : "";
+    const sinRadar = !ra ? `<p class="va-nota-num">Este activo todavía no está en el radar de valuación: por ahora van los números del precio.</p>` : "";
+    return (vis.length ? `<div class="va-nums">${vis.map(tarjeta).join("")}</div>` : "")
+      + lock
+      + (mas.length ? `<details class="va-mas-num"><summary>Más números (${mas.length})</summary><div class="va-nums">${mas.map(tarjeta).join("")}</div></details>` : "")
+      + notaArs + sinRadar
+      + `<div class="va-tips-t">Lecturas automáticas</div><div class="tips">${tipsHtml()}</div>`;
   };
 
-  // ── estado: valor razonable, rango del día, 52 semanas y consenso ──
-  const estadoHtml = () => `<div class="estado">
-    <div class="et"><div class="l">Valor razonable · Lectura Valtia</div>
-      ${conVer() ? `<div class="v"><span class="ver-tag${verClase()}">${esc(ra.veredicto)}</span>${ra.entrada ? '<span class="entrada" style="margin:0 0 0 10px" title="Puntaje de valor de 60 o más y RSI debajo de 45. Lectura automática, no una recomendación.">● barata y con RSI bajo</span>' : ""}${ra.pierdePlata ? ' <span class="ver-tag" style="background:rgba(224,169,62,.15);color:#E0A93E;margin-left:6px" title="El puntaje mide qué tan barata cotiza, no si gana dinero">no gana plata</span>' : ""}</div>
-        <div class="barra"><i style="width:100%"></i>${ra.score != null ? `<b style="left:${Math.max(0, Math.min(100, ra.score))}%"></b>` : ""}</div>
-        <div class="barra-l"><span>estirada</span><span>puntaje ${ra.score != null ? Math.round(ra.score) : "—"}/100</span><span>barata</span></div>
-        <div class="s">${conRatios
-          ? (ra.justo ? `Precio justo <b>US$${nf.format(ra.justo)}</b> (<span class="${clase(ra.justoUpside)}">${signo(ra.justoUpside)}</span>): lo que valdría a los múltiplos medianos de su familia. Entre ${nf.format(ra.justoMin)} y ${nf.format(ra.justoMax)} según el múltiplo.`
-                      : `Sin precio justo. ${motivoLargo(ra.justoMotivo)}`) + " Lectura automática, no una recomendación."
-          : `Qué tan barata cotiza frente a su familia sectorial, según el modelo de Valtia. Lectura automática, no una recomendación. El precio justo por múltiplos es <a href="/planes">PRO</a>.`}</div>`
-      : `<div class="v">Sin cobertura</div><div class="s">${ra ? "No aplica: es un ETF o una cripto, sin balance que valuar." : "Este activo todavía no está en el radar de valuación de Valtia."}</div>`}
-    </div>
-    <div class="et"><div class="l">Rango del día</div>
-      ${dia ? `<div class="v">US$${nf.format(dia.min)} – US$${nf.format(dia.max)}</div>
-        <div class="barra"><i class="neutra" style="width:100%"></i><b style="left:${dia.pos.toFixed(1)}%"></b></div>
-        <div class="barra-l"><span>mínimo</span><span>${px.p ? "hoy US$" + nf.format(px.p) : ""}</span><span>máximo</span></div>
-        <div class="s">${px.o ? `Abrió en US$${nf.format(px.o)}` : ""}${px.pc ? `${px.o ? " · " : ""}cierre anterior US$${nf.format(px.pc)}` : ""}${px.v ? ` · volumen ${volTxt(px.v)}${px.vp ? ` (prom. 3M ${volTxt(px.vp)})` : ""}` : ""}</div>`
-      : `<div class="v">—</div><div class="s">El rango de la rueda se completa con la próxima actualización de precios (cada 15 min en rueda).</div>`}
-    </div>
-    <div class="et"><div class="l">Rango de 52 semanas</div>
-      ${r52 ? `<div class="v">US$${nf.format(r52.min)} – US$${nf.format(r52.max)}</div>
-        <div class="barra"><i class="neutra" style="width:100%"></i>${r52.pos != null ? `<b style="left:${r52.pos.toFixed(1)}%"></b>` : ""}</div>
-        <div class="barra-l"><span>mínimo</span><span>${px.p ? "hoy US$" + nf.format(px.p) : ""}</span><span>máximo</span></div>
-        <div class="s">${px.p ? `${signo((px.p / r52.min - 1) * 100)} desde el mínimo · ${signo((px.p / r52.max - 1) * 100)} desde el máximo` : "Cierres diarios de los últimos 12 meses."}</div>`
-      : `<div class="v">—</div><div class="s">El histórico de precios se está generando.</div>`}
-    </div>
-    <div class="et"><div class="l">Consenso de analistas</div>
-      ${recoTxt() ? `<div class="v"><span class="ver-tag${/buy/.test(ra.reco) ? " infra" : /sell/.test(ra.reco) ? " cara" : ""}">${recoTxt()}</span></div>` : `<div class="v">${ra ? "Sin consenso publicado" : "—"}</div>`}
-      ${conRatios
-        ? `<div class="s">${ra && ra.nAnalistas && ra.target ? `Objetivo promedio <b>US$${nf.format(ra.target)}</b> (<span class="${clase(ra.upside)}">${signo(ra.upside)}</span>) de ${ra.nAnalistas} analistas${ra.targetBajo && ra.targetAlto ? `, entre ${nf.format(ra.targetBajo)} y ${nf.format(ra.targetAlto)}` : ""}.`
-            : ra && ra.nAnalistas && ra.upside != null ? `${signo(ra.upside)} al objetivo promedio de ${ra.nAnalistas} analistas.`
-            : recoTxt() ? "Recomendación promedio de los analistas que cubren la acción." : fundOk ? "Ningún consenso publicado para este activo." : "No aplica: este activo no tiene cobertura de analistas."}</div>`
-        : !fundOk ? `<div class="s">${recoTxt() ? "Promedio de las recomendaciones de analistas de terceros." : "No aplica: este activo no tiene cobertura de analistas."}</div>`
-        : `<div class="lock" style="margin-top:6px"><div class="preview-blur"><div class="s">Objetivo promedio US$ ··· (+··%) de ·· analistas, entre ··· y ···.</div></div>
-           <div class="pro-overlay" style="background:transparent"><a href="/planes" class="btn" style="padding:6px 14px">Objetivo: PRO</a></div></div>`}
-    </div>
-  </div>`;
-
-  // ── puntuación: cada lectura con su medidor ──
-  const filaP = (l, v, z, g) => `<div class="pr"><div><div class="pl">${l}</div><div class="pv">${v}</div>${z ? `<div class="ps">${z}</div>` : ""}</div>${g}</div>`;
-  const puntHtml = () => !ra ? '<div class="vacio">Este activo todavía no está en el radar de valuación.</div>' : `<div class="punt">
-      ${fundOk
-        ? filaP("Puntaje Valtia", ra.score != null ? Math.round(ra.score) + "/100" : "—", "qué tan barata cotiza frente a su familia sectorial: múltiplos y caja libre", gauge(ra.score))
-          + filaP("Calidad relativa", nivel() ? SALUD[nivel()] : "—", nivel() ? saludHtml(nivel()) + (conRatios && ra.calidadScore != null ? `calidad ${Math.round(ra.calidadScore)}/100 · ` : "") + "deuda frente a su familia; crecimiento y margen frente al radar. Es una posición relativa, no un diagnóstico" : "faltan datos: hacen falta 2 de 3 entre deuda, crecimiento y margen", gauge(!nivel() ? null : conRatios && ra.calidadScore != null ? ra.calidadScore : nivel() * 20 - 10))
-        : filaP("Puntaje Valtia", "—", "sin valuación: es un ETF o una cripto, no hay balance que comparar", gauge(null))}
-      ${filaP("Análisis técnico", tec ? tec.label : "—", tec ? tec.detalle + " · resumen automático de indicadores, no es una recomendación" : "hacen falta 60 ruedas de histórico", gauge(tec ? tec.gauge : null))}
-      ${fundOk || recoTxt() ? filaP("Opinión de analistas", recoTxt() || "—", conRatios && ra.nAnalistas && ra.target ? `promedio de ${ra.nAnalistas} analistas de terceros · objetivo US$${nf.format(ra.target)} (${signo(ra.upside)})` : recoTxt() ? `promedio de los analistas que la cubren · el objetivo es <a href="/planes">PRO</a>` : "sin consenso publicado", gauge(ra.reco ? RECO_G[ra.reco] : null)) : ""}
-      ${!fundOk ? "" : `<div class="lock">${conRatios
-        ? filaP("Valor razonable", ra.justo ? "US$" + nf.format(ra.justo) : "—", ra.justo ? `${signo(ra.justoUpside)} al precio de hoy · múltiplos medianos de su familia · entre ${nf.format(ra.justoMin)} y ${nf.format(ra.justoMax)}` : motivoLargo(ra.justoMotivo), gauge(gaugeJusto(ra.justoUpside)))
-        : `<div class="preview-blur">${filaP("Valor razonable", "US$ · ·", "precio justo por múltiplos frente a su familia", gauge(null))}</div>
-           <div class="pro-overlay" style="background:rgba(246,243,236,.35)"><a href="/planes" class="btn">Precio justo: PRO</a></div>`}
-      </div>`}
-    </div>`;
-
-  // ── lo que importa: lecturas automáticas en una frase, con los datos de la
-  // ficha. Lo gratis se arma con lo público; con PRO se suman las de valor.
+  // ── lecturas automáticas en una frase, con los datos de la ficha. Lo gratis
+  // se arma con lo público; con PRO se suman las de valor. ──
   const tipsHtml = () => {
     const tips = [];
     const tip = (c, h) => tips.push(`<div class="tip ${c}"><i></i><div>${h}</div></div>`);
@@ -969,130 +1398,126 @@ try {
       if (ra.fcfy != null) tip(ra.fcfy >= 5 ? "b" : ra.fcfy < 0 ? "m" : "n", `<b>${ra.fcfy < 0 ? "Quema caja" : ra.fcfy >= 5 ? "Genera mucha caja" : "Genera caja"}.</b> FCF yield ${n1.format(ra.fcfy)}%: caja libre sobre lo que vale en bolsa.`);
       if (ra.roe != null) tip(ra.roe >= 20 ? "b" : ra.roe < 5 ? "m" : "n", `<b>ROE ${n1.format(ra.roe)}%.</b> ${ra.roe >= 20 ? "Rentabilidad alta" : ra.roe < 5 ? "Rentabilidad baja" : "Rentabilidad razonable"} sobre el patrimonio.`);
       if (ra.growth != null) tip(ra.growth >= 15 ? "b" : ra.growth < 0 ? "m" : "n", `<b>Ingresos ${ra.growth >= 0 ? "crecen" : "caen"} ${signo(ra.growth)}</b> interanual.`);
-    } else if (fundOk) {
+    } else if (fundOk && !S.pro) {
       tip("n", `<b>Con PRO</b> se suman las lecturas de precio justo, deuda, caja libre, ROE y crecimiento. <a href="/planes">Ver planes →</a>`);
     }
-    return tips.length ? tips.join("") : '<div class="vacio">Sin lecturas todavía: faltan datos del radar para este activo.</div>';
+    return tips.length ? tips.join("") : '<div class="va-vacio">Sin lecturas todavía: faltan datos del radar para este activo.</div>';
   };
 
-  ficha.innerHTML = `
-  ${TOP_ROW}
-  <div class="head">
-    <div>
-      <div class="sec">${esc(sectorN)}</div>
-      <h1>${esc(emp.nombre)}<span>${t}</span></h1>
-      <div class="head-meta">Cotiza en dólares${emp.slug ? " · con informe Valtia" : ""}${conVer() ? " · en el radar de valuación" : ""}</div>
-    </div>
-    <div class="px">
-      <div class="p">${px.p ? "US$" + nf.format(px.p) : "—"}</div>
-      ${px.d != null ? `<div class="d ${clase(px.d)}">${signo(px.d)} hoy</div>` : ""}
-      ${hora ? `<div class="h">Actualizado ${hora} hs · cada 15 min en rueda</div>` : ""}
-      <div class="acc"><a class="btn-acc prim" href="/?agregar=${encodeURIComponent(t)}#panel/micartera">+ Agregar a Mi cartera</a></div>
-    </div>
-  </div>
-  <div class="subnav" id="subnav"><a href="#general" class="on">General</a><a href="#grafico">Gráfico</a><a href="#tecnico">Técnico</a><a href="#estadisticas">Estadísticas</a>${emp.slug ? '<a href="#informe">Informe</a>' : ""}<a href="#noticias">Noticias</a></div>
+  // ── el último informe, destacado: portada, fecha, título, resumen, precio
+  // en el informe y variación desde entonces ──
+  pintarDestacado = () => {
+    const d = S.inf;
+    if (!emp.slug) return `<div class="va-dest">
+        <div class="img" style="background-image:linear-gradient(135deg,#14213D,#B08A3E)" aria-hidden="true"></div>
+        <div style="min-width:0"><div class="eb">Informe Valtia · próximamente</div>
+          <div class="tt">Todavía no publicamos el informe de ${esc(emp.nombre)}</div>
+          <p>Vamos sumando análisis fundamentales a pedido de los clientes: tesis, KPIs, valuación por año, FODA y riesgos. Si querés que ${esc(emp.nombre)} sea el próximo, decínoslo.</p>
+          <div class="pie"><a class="va-link" href="mailto:soporte@valtia.tech?subject=Quiero%20el%20informe%20de%20${encodeURIComponent(emp.nombre)}">Pedir este análisis →</a><a class="va-link" href="/informes">Ver los publicados →</a></div>
+        </div></div>`;
+    const img = d && d.imagen ? String(d.imagen) : cover;
+    if (!d) return `<div class="va-dest">
+        <div class="img" style="background-image:url('${esc(cover)}')" aria-hidden="true"></div>
+        <div style="min-width:0"><div class="eb">Informe Valtia · PRO</div>
+          <div class="tt">Análisis fundamental de ${esc(emp.nombre)}</div>
+          <p>Tesis, KPIs, valuación por año, FODA y riesgos. El informe completo es para clientes de Valtia.</p>
+          <div class="pie">${S.user ? "" : `<a class="va-link" href="/?login=1">Ingresá con tu cuenta →</a>`}<a class="va-link" href="/planes">Ver planes →</a></div>
+        </div></div>`;
+    const f = fdate(d.fecha);
+    const pp = Number(d.precio_pub) > 0 ? Number(d.precio_pub) : (esISO(f) ? cierreEn(f) : null);
+    const dsd = pp && px.p ? (px.p / pp - 1) * 100 : null;
+    return `<div class="va-dest">
+        <a class="img" href="#informe" style="background-image:url('${esc(img)}')" aria-label="Leer el informe"></a>
+        <div style="min-width:0">
+          <div class="eb">Último informe · ${esc(fLarga(f))}${d.visibilidad === "publico" ? " · gratis" : ""}</div>
+          <div class="tt">${esc(d.titulo)}</div>
+          ${d.resumen ? `<p>${esc(d.resumen)}</p>` : ""}
+          <div class="pie">${pp ? `<span class="pp">Precio en el informe <b>${usd(pp)}</b>${dsd != null ? ` · desde entonces <b class="${clase(dsd)}">${signo(dsd)}</b>` : ""}</span>` : ""}<a class="va-link" href="#informe">Leer informe →</a></div>
+        </div></div>`;
+  };
 
-  <div id="mi-pos"></div>
-  <div id="general">${estadoHtml()}</div>
-
-  <div class="ficha-grid">
-  <div class="col-main">
-    <div class="card-w" id="grafico">
-      <div class="card-h"><span class="t">Evolución del precio</span>
-        <div class="der">
-          <div class="rangos tipo" id="tipo"><button data-t="velas" class="on">Velas</button><button data-t="linea">Línea</button></div>
-          <div class="rangos" id="rangos">
-            <button data-d="7">1S</button><button data-d="30">1M</button><button data-d="91" class="on">3M</button><button data-d="182">6M</button><button data-d="365">1A</button><button data-d="0">2A</button>
-          </div>
-        </div>
+  // ── Precio: rangos, línea del activo, índice punteado y la fecha del informe ──
+  const conVelas = filas.filter(r => r.ohlc).length >= 30;
+  const anios = filas.length > 1 ? (Date.parse(filas[filas.length - 1].f) - Date.parse(filas[0].f)) / 864e5 / 365.25 : 0;
+  // el histórico es de dos años: el último rango dice lo que de verdad cubre
+  // (con "2A" se corta a 730 días si el histórico llega: misma base que "2
+  // años" de la tabla de abajo; si no llega, va entero)
+  const aniosR = Math.floor(anios + 0.1);
+  const RANGOS = [["1M", 30], ["3M", 91], ["6M", 182], ["1A", 365],
+    anios >= 4.5 ? ["5A", 1826] : anios >= 1.9 ? [aniosR + "A", filas[0].f <= haceDias(aniosR * 365) ? aniosR * 365 : 0] : ["Todo", 0]];
+  const precioCard = `<section class="va-card" id="grafico">
+      <div class="va-ch-top"><h2 class="va-h">Precio</h2>
+        ${filas.length ? `<div class="va-sel">${conVelas ? `<span class="va-sel" id="tipo"><button type="button" data-t="linea" class="on" aria-pressed="true">Línea</button><button type="button" data-t="velas" aria-pressed="false">Velas</button></span><span class="va-sep" aria-hidden="true"></span>` : ""}
+          <span class="va-sel" id="rangos">${RANGOS.map(([l, d]) => `<button type="button" data-d="${d}"${l === "6M" ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"'}>${l}</button>`).join("")}</span></div>` : ""}
       </div>
-      <div class="chart-box"><canvas id="chart"></canvas></div>
+      <div class="va-chart"><canvas id="chart" role="img" aria-label="Precio de ${esc(emp.nombre)} contra ${esc(BENCH_NOM)}"></canvas></div>
+      <div class="va-leg" id="va-leg"></div>
       <div id="desglose-periodos"></div>
-    </div>
-    <div class="card-w" id="estadisticas">
-      <div class="card-h"><span class="t">Estadísticas clave</span><span class="s">Precio en vivo · radar Valtia diario</span></div>
-      <div id="stats-box">${statsHtml()}</div>
-    </div>
-  </div>
-  <div class="col-side">
-    <div class="card-w" id="tecnico">
-      <div class="card-h"><span class="t">Puntuación</span><span class="s">Lecturas automáticas · no son recomendaciones</span></div>
-      <div id="punt-box">${puntHtml()}</div>
-      <div class="punt" id="sentimiento" style="border-top:1px solid var(--line)"></div>
-    </div>
-    <div class="card-w" id="importa">
-      <div class="card-h"><span class="t">Lo que importa</span><span class="s">Lecturas automáticas</span></div>
-      <div class="tips" id="tips-box">${tipsHtml()}</div>
-    </div>
-    <div class="card-w">
-      <div class="card-h"><span class="t">Informe Valtia</span>
-        ${!emp.slug ? '<span class="badge" style="background:var(--marfil);color:var(--mut)">Próximamente</span>'
-          : inf ? (inf.visibilidad === "publico" ? '<span class="badge b-free">Gratis</span>' : '<span class="badge b-cli">Clientes</span>')
-          : '<span class="badge b-cli">Clientes</span>'}
-      </div>
-      ${emp.slug ? `<a class="inf-cover" href="#informe"><img src="${cover}" alt="${esc(emp.nombre)}" onerror="this.remove()"></a>` : ""}
-      <div class="inf-body" id="inf-card-body">
-        ${!emp.slug ? `
-          <h3>Todavía no publicamos el informe de ${esc(emp.nombre)}</h3>
-          <p>El equipo va sumando análisis fundamentales a pedido de los clientes: tesis, KPIs, valuación por año, FODA y riesgos. Si querés que ${esc(emp.nombre)} sea el próximo, decínoslo.</p>
-          <a class="btn-leer" href="mailto:soporte@valtia.tech?subject=Quiero%20el%20informe%20de%20${encodeURIComponent(emp.nombre)}">Pedir este análisis →</a>
-          <a class="btn-leer" href="/informes" style="background:#fff;color:var(--ink);border:1px solid var(--line);margin-left:8px">Ver los publicados</a>
-        ` : `
-          <h3>Análisis fundamental de ${esc(emp.nombre)}</h3>
-          <p>Tesis, KPIs, valuación por año, FODA y riesgos — el informe completo es exclusivo para clientes de Valtia.</p>
-          <a class="btn-leer" href="#informe">Leer más abajo ↓</a>
-        `}
-      </div>
-    </div>
-  </div></div>
+    </section>`;
 
-  <div id="informe-full"></div>
+  const meta = metaDe([{ etf: "ETF", cripto: "Cripto", arg: "Acción argentina" }[emp.sector] || "Acción",
+    (ra && sectorTxt(ra.sector)) || sectorN,
+    emp.sector === "cripto" ? "Se opera las 24 h" : [BOLSA_NOM[BOLSA[t]], emp.sector === "arg" ? "BYMA" : ""].filter(Boolean).join(" y ")]);
 
-  <div class="card-w act-news" id="noticias">
-    <div class="card-h"><span class="t">Noticias de ${esc(emp.nombre)}</span><a class="s" href="/noticias">Ver todas →</a></div>
-    <div id="act-news-list"><div class="vacio">Buscando noticias…</div></div>
-  </div>`;
+  ficha.innerHTML = cabecera({ tk: t, nombre: emp.nombre, meta, precio: px.p ? usd(px.p) : "—", d: px.d != null ? px.d : null, hora: horaPrecio(ts) }) + `
+  <div class="va-body"><div class="va-in">
+    ${lecturaHtml(ra, !ra && tec ? tec.rsi : null)}
+    <div id="mi-pos"></div>
+    <div class="va-grid">
+      <div class="va-col">
+        ${precioCard}
+        <section class="va-card" id="numeros">
+          <h2 class="va-h" id="estadisticas">Los números</h2>
+          <p class="va-sub">Lo que miro antes de decidir, con la mediana de su familia en el radar al lado cuando hay con quién comparar.</p>
+          <div id="numeros-box">${numerosHtml()}</div>
+        </section>
+        <section class="va-card" id="escribimos">
+          <div class="va-esc-top"><h2 class="va-h">Lo que escribimos sobre ${esc(t)}</h2><a class="va-link" href="/informes">Todos los informes →</a></div>
+          <div id="escribimos-box"></div>
+        </section>
+      </div>
+      <aside class="va-col" aria-label="Más sobre ${esc(t)}">
+        ${columnaDerecha()}
+      </aside>
+    </div>
+    <div id="informe-full"></div>
+    ${DISCLAIMER}
+  </div></div>`;
 
   // las partes que cambian cuando aparece el doc PRO (ver onAuthStateChanged)
   const repintarPro = () => {
-    for (const [id, fn] of [["general", estadoHtml], ["punt-box", puntHtml], ["stats-box", statsHtml], ["tips-box", tipsHtml]]) {
-      const el = document.getElementById(id);
-      if (el) el.innerHTML = fn();
-    }
+    const el = document.getElementById("numeros-box");
+    if (el) el.innerHTML = numerosHtml();
   };
-  document.querySelectorAll("#subnav a").forEach(a => a.addEventListener("click", () =>
-    document.querySelectorAll("#subnav a").forEach(x => x.classList.toggle("on", x === a))));
 
   // ── cuánto rindió, por período (debajo del gráfico) ──
   // Es la variación del PRECIO, no "lo que ganaste": eso depende de cuándo
-  // compraste y va en "Tu posición". El día sale del precio en vivo y los 6
-  // meses del histórico; el resto lo calcula el sync a diario.
+  // compraste y va en "Tu posición". El día sale del precio en vivo y el resto
+  // de los cierres REALES del histórico, con la misma base que los rangos del
+  // gráfico (el último cierre anterior al corte). desglosePeriodos ya no se
+  // usa: lo calcula el sync con el cierre ajustado, que suma los dividendos
+  // pagados (en KO, "1 año" daba +37 % contra +33 % del precio).
   (() => {
     const box = document.getElementById("desglose-periodos");
-    const dp = desgSnap && desgSnap.exists() ? JSON.parse(desgSnap.data().json || "{}") : {};
-    const d = dp[t] || {};
     if (!box) return;
-    const P = [["dia", "1 día", px.d], ["semana", "1 semana", d.semana], ["mes", "1 mes", d.mes], ["tresM", "3 meses", d.tresM],
-               ["seisM", "6 meses", seisM], ["ytd", "En el año", d.ytd], ["anio", "1 año", d.anio], ["dosA", "2 años", d.dosA]];
-    if (!P.some(([, , v]) => v != null)) return;
-    box.innerHTML = `<div class="rend">${P.map(([k, l, v]) => `<div class="r"><div class="rl">${l}</div>
+    const anioAR = +hoyAR.slice(0, 4);
+    const P = [["1 día", px.d], ["1 semana", varDesde(haceDias(7))], ["1 mes", varDesde(haceDias(30))], ["3 meses", varDesde(haceDias(91))],
+               ["6 meses", seisM], ["En el año", varDesde(`${anioAR - 1}-12-31`)], ["1 año", varDesde(haceDias(365))], ["2 años", varDesde(haceDias(730))]];
+    if (!P.some(([, v]) => v != null)) return;
+    box.innerHTML = `<div class="va-rend">${P.map(([l, v]) => `<div class="r"><div class="rl">${l}</div>
         <div class="rv ${v == null ? "" : clase(v)}">${v == null ? "—" : signo(v)}</div></div>`).join("")}</div>
-      <div class="rend-nota">Variación del precio en dólares${d.desde ? `, con datos desde el ${String(d.desde).split("-").reverse().join("/")}` : ""}.
+      <div class="va-rend-nota">Variación del precio en dólares, con los cierres tal como se operaron (sin sumar dividendos)${filas.length ? `, con datos desde el ${filas[0].f.split("-").reverse().join("/")}` : ""}.
         Si lo tenés en pesos (CEDEAR o acción local), el porcentaje de tu posición es otro: lo ves en Mi cartera.</div>`;
   })();
 
-  // ── informe embebido en la ficha (una sola página por activo) ──
+  // ── informe embebido en la ficha (una sola página por activo): /activo?t=X#informe ──
   const renderInforme = d => {
     const full = document.getElementById("informe-full");
     if (!full || !d) return;
-    const dsd = d.precio_pub && px.p ? (px.p / d.precio_pub - 1) * 100 : null;
-    document.getElementById("inf-card-body").innerHTML = `
-      <h3>${esc(d.titulo)}</h3>
-      <div class="inf-meta">${venc(fdate(d.fecha))} · Valtia Research</div>
-      <p>${esc(d.resumen || "")}</p>
-      ${dsd != null ? `<div class="inf-desde ${clase(dsd)}">${signo(dsd)} desde la publicación <span style="color:var(--mut);font-weight:400">(salió a US$${nf.format(d.precio_pub)})</span></div>` : ""}
-      <a class="btn-leer" href="#informe">Leer el informe completo ↓</a>`;
-    full.innerHTML = `<div class="fsr-reader" id="informe" style="margin-top:26px">
+    S.inf = d;
+    pintarEscribimos();
+    if (typeof S.redibujar === "function") S.redibujar();
+    full.innerHTML = `<div class="fsr-reader" id="informe">
       <div class="fsr-rhead">
         <div style="display:flex;gap:9px;margin-bottom:12px;flex-wrap:wrap"><span class="fsr-badge">${esc(d.tipo || "Informe")}</span>${d.categorias ? `<span class="fsr-tag">${esc(d.categorias)}</span>` : ""}</div>
         <h1>${esc(d.titulo)}</h1>
@@ -1102,209 +1527,182 @@ try {
     </div>`;
     if (location.hash === "#informe") full.scrollIntoView();
   };
+  // informe vedado: sin sesión se invita a ingresar; con sesión (y sin PRO)
+  // solo a los planes, porque ingresar ya no lo destapa
+  const pintarVedado = () => {
+    const full = document.getElementById("informe-full");
+    if (!full || S.inf) return;
+    full.innerHTML = `<div class="fsr-state" id="informe">El informe completo de ${esc(emp.nombre)} es exclusivo para clientes de Valtia.<br>
+       ${S.user ? `Con tu plan actual no se puede leer: conocé los <a href="/planes">planes</a>.`
+                : `<a href="/?login=1">Ingresá con tu cuenta</a> para leerlo — o conocé los <a href="/planes">planes</a>.`}</div>`;
+  };
   if (inf) renderInforme(inf);
-  else if (emp.slug) document.getElementById("informe-full").innerHTML =
-    `<div class="fsr-state" id="informe" style="margin-top:26px">El informe completo de ${esc(emp.nombre)} es exclusivo para clientes de Valtia.<br>
-     <a href="/?login=1">Ingresá con tu cuenta</a> para leerlo — o conocé los <a href="/planes">planes</a>.</div>`;
-
-  // ── volver + buscador de activos (los mismos de la ficha del radar) ──
-  montarTopRow();
-
-  // noticias del activo
-  const lista = document.getElementById("act-news-list");
-  const notas = notSnap ? notSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-    .filter(nn => {
-      const txt = (String(nn.titulo) + " " + String(nn.resumen)).toLowerCase();
-      return emp.claves.some(k => txt.includes(k));
-    })
-    .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha))).slice(0, 5) : [];
-  lista.innerHTML = notas.length ? notas.map(nn => `
-    <a href="/nota?n=${encodeURIComponent(nn.id)}">
-      <div class="im" style="${nn.imagen ? `background-image:url('${esc(nn.imagen)}'),url('img/noticias/${(nn.categorias || [])[0] === "wall" || (nn.categorias || [])[0] === "cripto" || (nn.categorias || [])[0] === "bonos" ? nn.categorias[0] : "local"}-1.svg')` : ""}"></div>
-      <div><div class="tt">${esc(nn.titulo)}</div>
-      <div class="f">${venc(String(nn.fecha))}</div></div>
-    </a>`).join("")
-    : '<div class="vacio">Sin noticias recientes de esta empresa. El bot publica a toda hora — volvé pronto.</div>';
-
-  // ── gráfico: velas con volumen (o línea), de 1 semana a 2 años ──
-  // Cada fila del histórico es [fecha, cierre, apertura, máximo, mínimo,
-  // volumen]; si el doc todavía es de cierres solos, se queda en la línea.
-  const canvas = document.getElementById("chart");
-  if (serie.length && typeof Chart !== "undefined") {
-    let chart = null;
-    const conVelas = serie.filter(p => p.length >= 5 && p[2] > 0 && p[3] > 0 && p[4] > 0).length >= 30;
-    let tipo = conVelas ? "velas" : "linea", dias = 91;
-    if (!conVelas) { const bt = document.getElementById("tipo"); if (bt) bt.style.display = "none"; }
-    const dibujar = () => {
-      // los rangos se cortan por FECHA: la cripto cotiza todos los días y 126 filas no son 6 meses
-      const datos = dias ? serie.filter(p => String(p[0]) >= haceDias(dias)) : serie;
-      const labels = datos.map(p => p[0]);
-      const vol = datos.map(p => Number(p[5]) || 0);
-      const hayVol = vol.some(v => v > 0);
-      const ohlc = p => p.length >= 5 && p[2] > 0 && p[3] > 0 && p[4] > 0 ? p : [p[0], p[1], p[1], p[1], p[1]];
-      const sube = p => { const q = ohlc(p); return q[1] >= q[2]; };
-      if (chart) chart.destroy();
-      const escalas = {
-        x: { grid: { display: false }, ticks: { color: "#8B8375", maxTicksLimit: 7, maxRotation: 0,
-             callback: function (v) { return venc(this.getLabelForValue(v)); }, font: { size: 10 } } },
-        y: { position: "right", beginAtZero: false, grace: "4%", grid: { color: "#EFECE4" }, ticks: { color: "#8B8375", font: { size: 10 },
-             callback: v => "US$" + compacto.format(v) } },
-      };
-      const extra = [];
-      if (hayVol) {
-        // el volumen va en su propio eje (oculto), aplastado al cuarto inferior
-        escalas.y2 = { display: false, min: 0, max: Math.max(...vol) * 4 };
-        extra.push({ type: "bar", yAxisID: "y2", order: 3, data: vol, grouped: false, barPercentage: 0.8, categoryPercentage: 1,
-          backgroundColor: datos.map(p => sube(p) ? "rgba(31,122,77,.16)" : "rgba(178,58,58,.16)") });
-      }
-      const base = { responsive: true, maintainAspectRatio: false, animation: false,
-        interaction: { mode: "index", intersect: false }, scales: escalas };
-      if (tipo === "velas") {
-        const colores = datos.map(p => sube(p) ? "#1F7A4D" : "#B23A3A");
-        chart = new Chart(canvas, { type: "bar",
-          data: { labels, datasets: [
-            { data: datos.map(p => { const q = ohlc(p); return [q[4], q[3]]; }), backgroundColor: colores, grouped: false, order: 2, barPercentage: 0.16, categoryPercentage: 1, borderWidth: 0 },
-            { data: datos.map(p => { const q = ohlc(p); return [Math.min(q[1], q[2]), Math.max(q[1], q[2])]; }), backgroundColor: colores, grouped: false, order: 1, barPercentage: 0.72, categoryPercentage: 1, minBarLength: 1, borderWidth: 0 },
-            ...extra ] },
-          options: { ...base, plugins: { legend: { display: false }, tooltip: { filter: it => it.datasetIndex === 1, callbacks: {
-            title: items => venc(items[0].label),
-            label: ctx => { const p = datos[ctx.dataIndex], q = ohlc(p);
-              return [`Apertura US$${nf.format(q[2])}`, `Máximo US$${nf.format(q[3])}`, `Mínimo US$${nf.format(q[4])}`, `Cierre US$${nf.format(q[1])}`]
-                .concat(p[5] ? [`Volumen ${compacto.format(p[5])}`] : []); } } } } } });
-      } else {
-        chart = new Chart(canvas, { type: "line",
-          data: { labels, datasets: [{ data: datos.map(p => p[1]), borderColor: "#B08A3E", borderWidth: 1.8, pointRadius: 0, pointHitRadius: 8,
-            fill: true, backgroundColor: "rgba(176,138,62,.07)", tension: 0.15, order: 1 }, ...extra] },
-          options: { ...base, plugins: { legend: { display: false }, tooltip: { filter: it => it.datasetIndex === 0, callbacks: {
-            title: items => venc(items[0].label), label: ctx => "US$" + nf.format(ctx.raw) } } } } });
-      }
-    };
-    dibujar();
-    document.querySelectorAll("#rangos button").forEach(b => b.addEventListener("click", () => {
-      document.querySelectorAll("#rangos button").forEach(x => x.classList.toggle("on", x === b));
-      dias = Number(b.dataset.d); dibujar();
-    }));
-    document.querySelectorAll("#tipo button").forEach(b => b.addEventListener("click", () => {
-      document.querySelectorAll("#tipo button").forEach(x => x.classList.toggle("on", x === b));
-      tipo = b.dataset.t; dibujar();
-    }));
-  } else if (canvas) {
-    canvas.parentElement.innerHTML = '<div class="vacio">El histórico de precios se está generando — volvé en unos minutos.</div>';
+  else if (emp.slug) {
+    pintarVedado();
+    if (location.hash === "#informe") document.getElementById("informe").scrollIntoView();
+  }
+  // Con #informe la página baja al informe apenas se pinta, pero las cajas que
+  // llegan después (carteras, cómo comprarlo, noticias) lo empujan hacia abajo:
+  // mientras la persona no toque nada, se lo vuelve a buscar cada vez que la
+  // ficha cambia de alto (como mucho 10 segundos).
+  if (location.hash === "#informe" && "ResizeObserver" in window) {
+    let movio = false;
+    const hasta = Date.now() + 10000;
+    ["wheel", "touchstart", "keydown", "mousedown"].forEach(ev => addEventListener(ev, () => { movio = true; }, { once: true, passive: true }));
+    const ro = new ResizeObserver(() => {
+      if (movio || Date.now() > hasta) { ro.disconnect(); return; }
+      const el = document.getElementById("informe");
+      if (el) el.scrollIntoView();
+    });
+    ro.observe(ficha);
   }
 
-  // ── sentimiento de la comunidad: un voto por persona y activo ──
-  // Se guarda en sentimiento/{ticker}/votos/{uid} (reglas: lee cualquier
-  // usuario logueado, escribe solo el dueño con email verificado).
-  const pintarSentimiento = async user => {
-    const box = document.getElementById("sentimiento");
-    if (!box) return;
-    const cab = `<div class="pl">Sentimiento de la comunidad</div>`;
-    if (!user) {
-      box.innerHTML = `<div class="pr" style="grid-template-columns:1fr;border-bottom:none"><div>${cab}<div class="pv">¿Alcista o bajista?</div>
-        <div class="ps"><a href="/?login=1">Ingresá</a> para votar y ver cómo lo ve la comunidad Valtia.</div></div></div>`;
-      return;
-    }
-    // se cuenta con agregaciones (1 lectura cada 1.000 votos) y se lee solo el voto propio
-    const col = collection(db, "sentimiento", t, "votos");
-    let mio = null, alc = 0, baj = 0;
-    try {
-      const [m, a, b] = await Promise.all([
-        getDoc(doc(col, user.uid)),
-        getCountFromServer(query(col, where("voto", "==", "alcista"))),
-        getCountFromServer(query(col, where("voto", "==", "bajista"))),
-      ]);
-      mio = m.exists() ? m.data() : null;
-      alc = a.data().count; baj = b.data().count;
-    } catch (e) {
-      box.innerHTML = `<div class="pr" style="grid-template-columns:1fr;border-bottom:none"><div>${cab}<div class="ps">No se pudo leer la votación ahora.</div></div></div>`;
-      return;
-    }
-    const MIN = 10, tot = alc + baj, pa = tot ? Math.round(alc / tot * 100) : 50;
-    const cuando = mio && mio.fecha && mio.fecha.toMillis ? mio.fecha.toMillis() : 0;
-    const espera = cuando ? Math.max(0, Math.ceil((cuando + 3600e3 - Date.now()) / 60000)) : 0;
-    const votoDe = v => mio && mio.voto === v ? " on" : "";
-    box.innerHTML = `<div class="pr" style="grid-template-columns:1fr;border-bottom:none"><div>${cab}
-      <div class="pv">${tot >= MIN ? `${pa}% alcista <small style="font:400 11px 'IBM Plex Sans',sans-serif;color:var(--mut)">· ${tot} votos</small>` : tot ? `${tot} ${tot === 1 ? "voto" : "votos"} por ahora` : "Todavía nadie votó"}</div>
-      ${tot >= MIN ? `<div class="sent-bar"><i style="width:${pa}%;background:var(--up)"></i><i style="width:${100 - pa}%;background:var(--dn)"></i></div>` : ""}
-      <div class="sent"><button class="alc${votoDe("alcista")}" data-voto="alcista">▲ Alcista${tot >= MIN ? " · " + alc : ""}</button><button class="baj${votoDe("bajista")}" data-voto="bajista">▼ Bajista${tot >= MIN ? " · " + baj : ""}</button></div>
-      <div class="ps" data-sent-msg>${mio ? `Votaste ${mio.voto === "alcista" ? "alcista" : "bajista"}.${espera ? ` Podés cambiarlo en ${espera} min.` : " Podés cambiarlo una vez por hora."}` : "¿Cómo lo ves para las próximas semanas? Un voto por persona."}${tot && tot < MIN ? ` El porcentaje se muestra desde ${MIN} votos.` : ""} Es la opinión de usuarios registrados, no un dato de mercado.</div></div></div>`;
-    box.querySelectorAll("[data-voto]").forEach(btn => btn.onclick = async () => {
-      const msg = box.querySelector("[data-sent-msg]");
-      if (mio && mio.voto === btn.dataset.voto) return;
-      if (!user.emailVerified) { msg.innerHTML = `<span class="dn">Verificá tu email para votar.</span>`; return; }
-      if (espera) { msg.innerHTML = `<span class="dn">Votaste hace poco: podés cambiar el voto en ${espera} min.</span>`; return; }
-      box.querySelectorAll("[data-voto]").forEach(x => x.disabled = true);
-      try {
-        await setDoc(doc(col, user.uid), { voto: btn.dataset.voto, fecha: serverTimestamp() });
-        await pintarSentimiento(user);
-      } catch (e) {
-        box.querySelectorAll("[data-voto]").forEach(x => x.disabled = false);
-        if (msg && msg.isConnected) msg.innerHTML = `<span class="dn">No se pudo guardar el voto. Probá de nuevo en un rato.</span>`;
-      }
-    });
-  };
+  montarTopRow();
+  pintarEscribimos();
+  llenarViene(cal, t);
+  llenarNoticias(notSnap, S.claves, null);
+  llenarCarteras(conRatios);
+  llenarComo(null);
+  llenarOtrosInformes(conRatios, emp.slug || null);
 
-  // ── sesión: destape PRO, sentimiento y tu posición ──
+  // ── gráfico: línea del precio (cierres reales) contra el índice de
+  // referencia rebasado al mismo punto de partida, o velas con volumen ──
+  const canvas = document.getElementById("chart");
+  if (filas.length > 1 && typeof Chart !== "undefined") {
+    let chart = null, tipo = "linea", dias = 182;
+    const bench = (() => {
+      const b = benchSnap && benchSnap.exists() ? JSON.parse(benchSnap.data().json || "[]") : [];
+      return b.map(p => [String(p[0]), Number(p.length > 6 && p[6] != null ? p[6] : p[1])]).filter(([f, v]) => esISO(f) && v > 0);
+    })();
+    // el índice en las fechas del activo (la cripto opera también el fin de semana: se arrastra el último cierre)
+    const benchEn = datos => { const out = []; let j = 0, ult = null; for (const r of datos) { while (j < bench.length && bench[j][0] <= r.f) { ult = bench[j][1]; j++; } out.push(ult); } return out; };
+    const fmtX = (f, d) => !esISO(f) ? f : d && d <= 91 ? fDM(f) : d && d <= 365 ? MES[+f.slice(5, 7) - 1] : `${MES[+f.slice(5, 7) - 1]} ${f.slice(2, 4)}`;
+    const fmtY = usd0;
+    const dibujar = () => {
+      // los rangos se cortan por FECHA: la cripto cotiza todos los días y 126
+      // filas no son 6 meses. Arranca en el último cierre anterior al corte,
+      // la misma base que "6 meses" de la tabla de abajo.
+      const desde = dias ? haceDias(dias) : "";
+      const i0 = desde ? Math.max(0, filas.findIndex(r => r.f > desde) - 1) : 0;
+      const datos = desde && filas[filas.length - 1].f <= desde ? filas.slice(-2) : filas.slice(i0);
+      if (datos.length < 2) return;
+      const labels = datos.map(r => r.f);
+      const fInf = S.inf ? fdate(S.inf.fecha) : "";
+      // un informe de hoy (o de un día sin rueda después del último cierre) va
+      // en el último punto; uno anterior al rango no se dibuja
+      const iInf = !esISO(fInf) || fInf < datos[0].f ? -1
+        : fInf > datos[datos.length - 1].f ? datos.length - 1 : datos.findIndex(r => r.f >= fInf);
+      if (chart) chart.destroy();
+      const escalas = {
+        x: { grid: { display: false }, border: { color: "#D9DCE1" },
+             ticks: { color: "#8B8375", maxTicksLimit: 5, maxRotation: 0, autoSkipPadding: 18, font: { size: 12 },
+                      callback: function (v) { return fmtX(this.getLabelForValue(v), dias); } } },
+        y: { position: "left", beginAtZero: false, grace: "4%", grid: { color: "#F0F1F4" }, border: { display: false },
+             ticks: { color: "#8B8375", maxTicksLimit: 5, font: { size: 12 }, callback: fmtY } },
+      };
+      const base = { responsive: true, maintainAspectRatio: false, animation: false,
+        interaction: { mode: "index", intersect: false }, scales: escalas };
+      const tooltip = { backgroundColor: "#0E1830", titleColor: "#E8CE96", bodyColor: "#fff", padding: 10, cornerRadius: 8,
+                        titleFont: { weight: "600" }, displayColors: false };
+      const c0 = datos[0].c, cN = datos[datos.length - 1].c;
+      let bLinea = null, bAl = null, b0 = null;
+      if (tipo === "linea") {
+        bAl = benchEn(datos); b0 = bAl.find(v => v != null) || null;
+        bLinea = b0 ? bAl.map(v => v == null ? null : v / b0 * c0) : null;
+        chart = new Chart(canvas, { type: "line", plugins: [lineaInforme],
+          data: { labels, datasets: [
+            { data: datos.map(r => r.c), borderColor: "#14213D", borderWidth: 2.5, pointRadius: 0, pointHitRadius: 8,
+              fill: "start", backgroundColor: "rgba(20,33,61,.06)", tension: 0, order: 1 },
+            ...(bLinea ? [{ data: bLinea, borderColor: "#B9BEC8", borderWidth: 1.5, borderDash: [5, 4], pointRadius: 0,
+              pointHitRadius: 0, fill: false, tension: 0, order: 2, spanGaps: true }] : []) ] },
+          options: { ...base, plugins: { legend: { display: false }, tooltip: { ...tooltip,
+            filter: it => it.datasetIndex === 0 || (!!bAl && bAl[it.dataIndex] != null), callbacks: {
+            title: items => fLarga(items[0].label),
+            label: ctx => ctx.datasetIndex === 0
+              ? `${t} ${usd(ctx.raw)} (${signo((ctx.raw / c0 - 1) * 100)})`
+              : bAl[ctx.dataIndex] != null ? `${BENCH_NOM} ${signo((bAl[ctx.dataIndex] / b0 - 1) * 100)}` : "" } } } } });
+      } else {
+        const vol = datos.map(r => r.v);
+        const hayVol = vol.some(v => v > 0);
+        const colores = datos.map(r => r.c >= r.o ? "#1F7A4D" : "#B23A3A");
+        if (hayVol) escalas.y2 = { display: false, min: 0, max: Math.max(...vol) * 4 };
+        chart = new Chart(canvas, { type: "bar", plugins: [lineaInforme],
+          data: { labels, datasets: [
+            { data: datos.map(r => [r.l, r.h]), backgroundColor: colores, grouped: false, order: 2, barPercentage: 0.16, categoryPercentage: 1, borderWidth: 0 },
+            { data: datos.map(r => [Math.min(r.c, r.o), Math.max(r.c, r.o)]), backgroundColor: colores, grouped: false, order: 1, barPercentage: 0.72, categoryPercentage: 1, minBarLength: 1, borderWidth: 0 },
+            ...(hayVol ? [{ type: "bar", yAxisID: "y2", order: 3, data: vol, grouped: false, barPercentage: 0.8, categoryPercentage: 1,
+              backgroundColor: datos.map(r => r.c >= r.o ? "rgba(31,122,77,.16)" : "rgba(178,58,58,.16)") }] : []) ] },
+          options: { ...base, plugins: { legend: { display: false }, tooltip: { ...tooltip, filter: it => it.datasetIndex === 1, callbacks: {
+            title: items => fLarga(items[0].label),
+            label: ctx => { const r = datos[ctx.dataIndex];
+              return [`Apertura ${usd(r.o)}`, `Máximo ${usd(r.h)}`, `Mínimo ${usd(r.l)}`, `Cierre ${usd(r.c)}`]
+                .concat(r.v ? [`Volumen ${compacto.format(r.v)}`] : []); } } } } } });
+      }
+      chart.$vaInforme = iInf;
+      chart.update("none");
+      // leyenda: activo, índice (en línea), fecha del informe y la variación del período
+      const leg = document.getElementById("va-leg");
+      if (leg) {
+        const bN = bAl ? [...bAl].reverse().find(v => v != null) : null;
+        leg.innerHTML = `<span><i style="height:2px;background:#14213D"></i>${esc(t)}</span>`
+          + (bLinea ? `<span><i style="height:0;border-top:2px dashed #B9BEC8"></i>${esc(BENCH_NOM)}</span>` : "")
+          + (iInf >= 0 ? `<span><i style="height:0;border-top:1px dashed #B08A3E"></i>Último informe de Valtia · ${esc(fLarga(fInf))}</span>`
+             : esISO(fInf) ? `<span style="color:#8B8375">El último informe (${esc(fLarga(fInf))}) es anterior a este rango</span>` : "")
+          + `<span class="per">En el período: <b class="${clase((cN / c0 - 1) * 100)}">${esc(t)} ${signo((cN / c0 - 1) * 100)}</b>${bLinea && b0 && bN ? ` · ${esc(BENCH.replace(/-.*/, ""))} ${signo((bN / b0 - 1) * 100)}` : ""}</span>`;
+      }
+    };
+    S.redibujar = dibujar;
+    dibujar();
+    const marcar = (sel, b) => document.querySelectorAll(sel + " button").forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", String(x === b)); });
+    document.querySelectorAll("#rangos button").forEach(b => b.addEventListener("click", () => { marcar("#rangos", b); dias = Number(b.dataset.d); dibujar(); }));
+    document.querySelectorAll("#tipo button").forEach(b => b.addEventListener("click", () => { marcar("#tipo", b); tipo = b.dataset.t; dibujar(); }));
+  } else if (canvas) {
+    canvas.parentElement.innerHTML = '<div class="va-vacio">El histórico de precios se está generando — volvé en unos minutos.</div>';
+  }
+
+  // ── sesión: destape PRO, carteras PRO, informe, sentimiento y tu posición ──
+  let primera = true;
   onAuthStateChanged(getAuth(app), async user => {
+    S.user = user;
     pintarSentimiento(user);
-    // destape PRO: los candados de esta ficha se crean DESPUÉS de que
-    // nav-auth pinta (los datos llegan async), así que acá se re-aplica
+    if (!user && primera) { primera = false; return; }   // sin sesión ya está todo pintado
+    primera = false;
+    let pro = false;
     if (user) {
+      // destape PRO: los candados de esta ficha se crean DESPUÉS de que
+      // nav-auth pinta (los datos llegan async), así que acá se re-aplica
       const esperar = ms => new Promise(r => setTimeout(r, ms));
       for (let i = 0; i < 20 && !window.valtiaEsPro; i++) await esperar(150);
-      try {
-        if (window.valtiaEsPro && await window.valtiaEsPro(user)) {
-          // el primer getDoc de radarPro pudo correr antes de que Firestore
-          // conociera la sesión: se vuelve a pedir y se repintan las partes PRO
-          if (!conRatios) {
-            try {
-              const s = await getDoc(doc(db, "radarPro", "latest"));
-              if (s.exists()) { radarProDoc = JSON.parse(s.data().json || "{}"); armarRadar(); }
-            } catch (e) {}
-            if (conRatios) repintarPro();
-          }
-          document.querySelectorAll(".pro-overlay").forEach(o => o.style.display = "none");
-          document.querySelectorAll(".preview-blur").forEach(b => {
-            b.style.filter = "none"; b.style.pointerEvents = ""; b.style.userSelect = "";
-          });
-        }
-      } catch (e) {}
-      // el getDoc inicial corre sin sesión: si el informe estaba vedado,
-      // reintentar ahora que Firestore conoce al usuario
-      if (emp.slug && !inf && !document.querySelector("#informe-full .fsr-reader")) {
+      try { pro = !!(window.valtiaEsPro && await window.valtiaEsPro(user)); } catch (e) { pro = false; }
+    }
+    S.pro = pro;
+    if (pro) {
+      // el primer getDoc de radarPro pudo correr antes de que Firestore
+      // conociera la sesión: se vuelve a pedir y se repintan las partes PRO
+      if (!conRatios) {
         try {
-          const s2 = await getDoc(doc(db, "informes", emp.slug));
-          if (s2.exists()) renderInforme(s2.data());
+          const s = await getDoc(doc(db, "radarPro", "latest"));
+          if (s.exists()) { radarProDoc = JSON.parse(s.data().json || "{}"); armarRadar(); }
         } catch (e) {}
       }
+      // con los múltiplos leídos el candado desaparece solo; si no se pudieron
+      // leer, queda la muestra desenfocada con el aviso (sin destaparla: son
+      // tarjetas de muestra, no datos)
+      repintarPro();
     }
-    const cont = document.getElementById("mi-pos");
-    if (!user || !user.email || !cont) return;
-    try {
-      const snap = await getDocs(collection(db, "inversores", user.email, "cartera"));
-      // lotes de este activo en cualquier forma (BTC / BTC-USD, PAM / PAMP);
-      // los .BA cotizan en pesos y no se valúan con el precio en dólares
-      const lotes = snap.docs.map(x => x.data())
-        .filter(p => tickerFicha(p.ticker) === t && !String(p.ticker || "").toUpperCase().endsWith(".BA"));
-      if (!lotes.length) return;
-      const cant = lotes.reduce((a, p) => a + (Number(p.cantidad) || 0), 0);
-      const conCosto = lotes.filter(p => Number(p.precioCompra) > 0);
-      const cantCosto = conCosto.reduce((a, p) => a + Number(p.cantidad), 0);
-      const costo = conCosto.reduce((a, p) => a + Number(p.cantidad) * Number(p.precioCompra), 0);
-      const ppc = cantCosto ? costo / cantCosto : null;
-      const valor = px.p ? cant * px.p : null;
-      const pnlPct = ppc && px.p ? (px.p / ppc - 1) * 100 : null;
-      const pnlUsd = ppc && px.p ? (px.p - ppc) * cantCosto : null;
-      const item = (l, v, s) => `<div><div class="l">${l}</div><div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`;
-      cont.innerHTML = `<div class="mi-pos">
-        <div class="tt">Tu posición en ${esc(emp.nombre)}</div>
-        ${item("Tenencia", nf.format(cant) + " u.", "")}
-        ${valor != null ? item("Valor hoy", "US$" + nf.format(valor), "al último precio") : ""}
-        ${ppc != null ? item("Precio promedio", "US$" + nf.format(ppc), cantCosto < cant ? "sobre los lotes con costo cargado" : "") : ""}
-        ${pnlPct != null ? item("Resultado", `<span class="${clase(pnlPct)}">${signo(pnlPct)}</span>`,
-          (pnlUsd >= 0 ? "+" : "−") + "US$" + nf.format(Math.abs(pnlUsd))) : ""}
-      </div>`;
-    } catch (e) {}
+    // el getDoc inicial corre sin sesión: si el informe estaba vedado,
+    // reintentar ahora que Firestore conoce al usuario
+    if (user && emp.slug && !S.inf) {
+      try {
+        const s2 = await getDoc(doc(db, "informes", emp.slug));
+        if (s2.exists()) renderInforme(s2.data());
+      } catch (e) {}
+      if (!S.inf) { pintarVedado(); pintarEscribimos(); }
+    }
+    llenarCarteras(pro);
+    llenarComo(user);
+    llenarTenencia(user, true);
+    if (pro) llenarOtrosInformes(true, emp.slug || null);
   });
 } catch (e) {
   ficha.innerHTML = '<div class="empty-state">No pudimos cargar la ficha. <a href="/informes">Volver a Informes</a></div>';

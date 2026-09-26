@@ -12,99 +12,141 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Ficha de bono — mismo lenguaje que la ficha de activo, con las reglas
-     globales del rediseño (sitio.css): página blanca, Plex Sans en todo
-     (números tabulares), nav navy, esquinas redondeadas. ── */
+/* ── Ficha de bono — la misma plantilla que la ficha de activo (etapa 8,
+     prototipo "Valtia Activo"): encabezado blanco, franja de datos clave,
+     dos columnas de 1340 y la columna de la derecha. "Los números" son los
+     del bono: TIR, paridad, duration, próximo cupón y flujo. Las reglas
+     globales (nav, barra de cotizaciones, Plex Sans con números tabulares,
+     botón de mail) vienen de sitio.css. ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --navy:#0E1830;--navy2:#0B1327;--navy3:#14213D;
-  --gold:#B08A3E;--gold2:#8A6A2F;--gold-claro:#E8CE96;
-  --bg:#fff;--bg2:#F6F3EC;--bg3:#F6F3EC;
-  --text:#101010;--sub:#57534A;--muted:#8B8375;
-  --border:#E7E3DA;--card:#fff;
-  --ink:#101010;--mut:#8B8375;--line:#E7E3DA;--marfil:#F6F3EC;
-  --up:#1F7A4D;--dn:#B23A3A;--greenTx:#1F7A4D;--redTx:#B23A3A;
-}
+:root{--ink:#101010;--sub:#57534A;--mut:#8B8375;--navy:#0E1830;--navy3:#14213D;--gold:#B08A3E;--gold2:#8A6A2F;--line:#E7E3DA;--marfil:#F6F3EC;--up:#1F7A4D;--dn:#B23A3A;
+  --va-borde:#E6E8EC;--va-div:#F0F1F4}
 html{scroll-behavior:smooth}
-body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);min-height:100vh;display:flex;flex-direction:column}
+body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink)}
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
+.pos,.up{color:var(--up)!important}.neg,.dn{color:var(--dn)!important}.mut{color:var(--mut)!important}
 
+/* encabezado blanco (prototipo: #va-mh) */
+.va-mh{background:#fff;padding:24px var(--v-gutter) 6px}
+.va-in{max-width:var(--v-ancho);margin:0 auto}
+.va-top{display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap}
+.va-back{font:500 12px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#8A6A2F}
+.va-back:hover{color:#101010}
+.va-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px 40px;align-items:end;margin-top:14px}
+.va-id{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.va-tk{font:700 13.5px 'IBM Plex Sans',sans-serif;color:#fff;background:#0E1830;padding:4px 10px;border-radius:99px}
+.va-meta{font:500 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8B8375}
+.va-head h1{font:700 clamp(28px,3vw,36px)/1.1 'IBM Plex Sans',sans-serif;color:#101010;margin:10px 0 0}
+.va-px{text-align:right}
+.va-px .p{font:600 34px/1 'IBM Plex Sans',sans-serif;color:#101010}
+.va-px .d{display:flex;gap:6px 14px;justify-content:flex-end;flex-wrap:wrap;margin-top:8px;font:500 13.5px 'IBM Plex Sans',sans-serif}
+.va-px .d .c{color:#8B8375}
 
+/* cuerpo (prototipo: #va-body) */
+.va-body{background:#fff;padding:18px var(--v-gutter) 70px}
+.va-card{background:#fff;border:1px solid var(--va-borde);border-radius:10px;padding:20px 22px;min-width:0}
+.va-h{font:600 17.5px 'IBM Plex Sans',sans-serif;color:#101010;margin-bottom:10px}
+.va-sub{font-size:14px;line-height:1.55;color:#57534A;margin:-6px 0 14px}
+.va-vacio{font-size:14px;line-height:1.55;color:#8B8375;padding:6px 0}
+.va-link{display:inline-block;font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase}
+.va-mas{margin-top:10px}
+.va-fuente{font-size:12.5px;line-height:1.55;color:#8B8375;margin-top:10px}
 
-/* barra superior: volver + acceso al panel (misma columna de 980px que el contenido) */
-.top-volver{width:100%;max-width:1084px;margin:0 auto;padding:22px 52px 16px;display:flex;gap:16px;align-items:center;position:relative}
-.top-volver::after{content:'';position:absolute;left:52px;right:52px;bottom:0;height:1px;background:var(--line)}
-.top-volver a{font-weight:600;margin-left:auto;text-align:right}
-.top-volver a:hover{color:var(--gold)!important}
-.volver{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);background:none;border:none;border-radius:0;padding:0;white-space:nowrap;cursor:pointer}
-.volver:hover{color:var(--gold)}
+/* franja de datos clave (la "Lectura de Valtia" de las acciones) */
+.va-lect{background:#fff;border:1px solid var(--va-borde);border-radius:10px;padding:18px 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-bottom:14px}
+.va-lect>div{min-width:0}
+.va-lect .l{font-size:12.5px;color:#57534A}
+.va-lect .v{font:600 17px 'IBM Plex Sans',sans-serif;color:#101010;margin-top:6px}
+.va-lect .v .de{font-size:13.5px;font-weight:400;color:#8B8375}
+.va-lect .s{font-size:13.5px;line-height:1.45;color:#8B8375;margin-top:4px}
+.va-bar{height:4px;background:#EEF0F3;border-radius:2px;margin-top:8px}
+.va-bar i{display:block;height:4px;background:#14213D;border-radius:2px}
+.va-cta{display:flex;flex-direction:column;justify-content:center;gap:8px}
+.va-btn{display:block;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:#14213D;padding:11px 16px;border-radius:8px;text-align:center;text-wrap:balance}
+.va-btn:hover{background:#0E1830;color:#fff}
+.va-lect .va-cta .s{font-size:12.5px;text-align:center;margin:0;min-height:1.45em}
 
-/* columna de contenido de 980px; el footer (que pinta el JS dentro de <main>) va a sangre */
-main{flex:1 0 auto;display:grid;grid-template-columns:minmax(52px,1fr) minmax(0,980px) minmax(52px,1fr);grid-template-rows:repeat(12,auto) 1fr;padding-top:24px}
-main>*{grid-column:2;min-width:0}
+.va-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr);gap:14px;align-items:start}
+.va-col{display:flex;flex-direction:column;gap:14px;min-width:0}
 
-/* cabecera del bono (como .head de la ficha de activo) */
-.eye{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:8px}
-.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:24px}
-h1{font:700 clamp(28px,3vw,36px) 'IBM Plex Sans',sans-serif;font-variant-numeric:lining-nums;line-height:1.1;letter-spacing:.01em;color:var(--ink)}
-.ley{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line);border-radius:6px;padding:4px 8px;color:var(--sub);vertical-align:middle;margin-left:12px;white-space:nowrap}
-.ley.ny{color:var(--gold2);border-color:var(--gold)}
-.px{text-align:right}
-.px .v{font:600 clamp(22px,2.6vw,30px) 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;line-height:1;color:var(--ink)}
-.px .s{font:400 11.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--sub);margin-top:7px;line-height:1.5}
-.px .s span{font-weight:600}
-.pos{color:var(--up)!important}.neg{color:var(--dn)!important}.mut{color:var(--mut)!important}
-
-/* tiles de métricas: tarjeta con borde fino, esquinas de 10px y acento dorado arriba */
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
-.tile{background:#fff;border:1px solid var(--line);border-radius:10px;padding:15px 16px 14px;position:relative;min-width:0}
-.tile::before{content:'';position:absolute;top:-1px;left:16px;width:22px;height:2px;background:var(--gold)}
-.tile .l{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:8px}
-.tile .v{font:600 clamp(15px,1.5vw,18px) 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;line-height:1.1;color:var(--ink)}
-.tile .s{font:400 10.5px 'IBM Plex Sans',sans-serif;color:var(--sub);margin-top:6px;line-height:1.45}
-
-/* título de sección: patrón .sec-h de Informes (texto + hairline que se estira) */
-.sec{display:flex;align-items:center;gap:14px;margin:34px 0 18px;font:700 17px 'IBM Plex Sans',sans-serif;line-height:1.25;color:var(--ink)}
-.sec::after{content:'';flex:1;height:1px;background:var(--line)}
-.dos{display:grid;grid-template-columns:1.4fr 1fr;gap:22px;align-items:start}
-.dos>*{min-width:0}
-@media(max-width:760px){.dos{grid-template-columns:1fr}}
-
-/* tabla de flujos */
-.panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+/* flujo de fondos: barras por fecha de pago, tabla y calculadora */
+.bn-bars{display:flex;align-items:flex-end;gap:3px;height:150px;padding-top:18px;border-bottom:1px solid #D9DCE1}
+.bn-bar{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative}
+.bn-bar i{display:block;width:100%;max-width:46px;background:#14213D;border-radius:3px 3px 0 0;min-height:2px}
+.bn-bar.prox i{background:#B08A3E}
+.bn-bar span{position:absolute;bottom:calc(100% - 2px);font:500 11px 'IBM Plex Sans',sans-serif;color:#57534A;white-space:nowrap}
+.bn-ejes{display:flex;gap:3px;margin-top:6px}
+.bn-ejes span{flex:1;min-width:0;text-align:center;font:500 11.5px 'IBM Plex Sans',sans-serif;color:#8B8375;white-space:nowrap;overflow:visible}
+.bn-leg{display:flex;gap:8px 16px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:#57534A}
+.bn-leg span{display:flex;align-items:center;gap:6px}
+.bn-leg i{width:12px;height:8px;border-radius:2px;display:block}
+.bn-dos{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:14px;margin-top:18px;align-items:start}
+.bn-tabla{border:1px solid var(--va-borde);border-radius:8px;overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:12px 16px;border-bottom:1px solid var(--ink);white-space:nowrap}
-td{padding:10px 16px;border-bottom:1px solid var(--line);font:500 12.5px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+th{text-align:left;font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);padding:10px 14px;border-bottom:1px solid #D9DCE1;white-space:nowrap}
+td{padding:9px 14px;border-bottom:1px solid var(--va-div);font:500 13.5px 'IBM Plex Sans',sans-serif;color:var(--ink);white-space:nowrap}
 tr:last-child td{border-bottom:none}
-tbody tr:hover td{background:var(--marfil)}
+tbody tr:hover td{background:#FBF9F3}
 .num{text-align:right}
-
-/* calculadora: bloque destacado marfil con filete dorado */
-.calc{background:var(--marfil);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:12px;padding:18px 20px}
-.calc label{display:block;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-bottom:9px;line-height:1.5}
-.calc input{width:100%;max-width:180px;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:8px;color:var(--ink);font:500 14px 'IBM Plex Sans',sans-serif;outline:none}
+.calc{background:#FBF9F3;border:1px solid var(--va-borde);border-left:3px solid var(--gold);border-radius:8px;padding:16px 18px}
+.calc label{display:block;font:600 12.5px 'IBM Plex Sans',sans-serif;color:#101010;margin-bottom:9px;line-height:1.5}
+.calc input{width:100%;max-width:180px;padding:9px 12px;background:#fff;border:1px solid var(--va-borde);border-radius:8px;color:var(--ink);font:500 14px 'IBM Plex Sans',sans-serif;outline:none}
 .calc input:focus{border-color:var(--gold)}
-.calc .out{margin-top:14px;font-size:13.5px;color:var(--sub);line-height:1.8}
-.calc .out b{color:var(--ink);font:600 14px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums}
+.calc .out{margin-top:12px;font-size:14px;color:var(--sub);line-height:1.7}
+.calc .out b{color:var(--ink);font:600 14.5px 'IBM Plex Sans',sans-serif}
+.nota{font-size:12.5px;color:#8B8375;line-height:1.6;margin-top:10px}
 
-.state{border:1px dashed var(--line);border-radius:12px;text-align:center;padding:60px 20px;color:var(--sub);font-size:14px;line-height:1.9;margin:30px 0 70px}
-.state b{color:var(--ink);font:600 13.5px 'IBM Plex Sans',sans-serif}
-.nota{font-size:12px;color:var(--sub);line-height:1.7;margin-top:12px;max-width:70ch}
+/* Los números (tarjetas del prototipo) */
+.va-nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.va-num{border:1px solid var(--va-borde);border-radius:8px;padding:11px 13px;min-width:0}
+.va-num .l{font-size:12.5px;color:#57534A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.va-num .v{font:600 17px 'IBM Plex Sans',sans-serif;color:#101010;margin-top:5px}
+.va-num .s{font-size:12.5px;line-height:1.4;color:#8B8375;margin-top:3px}
 
-/* footer de Noticias (navy2) — a sangre, con el texto alineado a la columna de contenido */
-footer{margin-top:48px;background:#0B1327;padding:28px max(52px,calc(50% - 490px));font:400 12.5px 'IBM Plex Sans',sans-serif;line-height:1.9;color:rgba(255,255,255,.55)}
-main>footer{grid-column:1/-1;grid-row:13;align-self:end}
-footer a{color:inherit}
-footer a:hover{color:#E8CE96}
+/* Lo que escribimos */
+.va-esc-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.va-esc-top .va-h{margin:0}
+.va-nota{display:grid;grid-template-columns:86px minmax(0,1fr);gap:14px;padding:11px 0;border-bottom:1px solid var(--va-div);align-items:baseline;color:inherit}
+.va-nota .f{font:500 12.5px 'IBM Plex Sans',sans-serif;color:#8B8375}
+.va-nota .t{font:600 15px 'IBM Plex Sans',sans-serif;color:#101010}
+a.va-nota:hover .t{text-decoration:underline}
+.va-nota .s{font-size:13.5px;line-height:1.5;color:#8B8375;margin-top:2px}
 
-@media(max-width:880px){
-  .top-volver{padding-left:20px;padding-right:20px}
-  .top-volver::after{left:20px;right:20px}
-  main{grid-template-columns:minmax(20px,1fr) minmax(0,980px) minmax(20px,1fr)}
-  footer{padding-left:20px;padding-right:20px}
-}
-@media(max-width:600px){.px{text-align:left}}
+/* columna derecha */
+.va-cart{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--va-div);color:inherit}
+.va-cart .cod{font:700 11.5px 'IBM Plex Sans',sans-serif;color:#fff;padding:3px 6px;border-radius:99px;min-width:52px;text-align:center;display:inline-block}
+.va-cart .n{font:600 14.5px 'IBM Plex Sans',sans-serif;color:#101010}
+a.va-cart:hover .n{text-decoration:underline}
+.va-cart .e{font-size:12.5px;color:#8B8375}
+.va-cart .w{font:600 14px 'IBM Plex Sans',sans-serif;color:#101010}
+.va-ev{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;padding:9px 0;border-bottom:1px solid var(--va-div);align-items:start}
+.va-ev .d{font:600 20px/1 'IBM Plex Sans',sans-serif;color:#101010}
+.va-ev .m{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8A6A2F}
+.va-ev .t{font-size:14.5px;color:#101010}
+.va-ev .s{font-size:13px;color:#8B8375;margin-top:2px}
+.va-nw{display:block;padding:9px 0;border-bottom:1px solid var(--va-div);color:inherit}
+.va-nw .f{font:500 11.5px 'IBM Plex Sans',sans-serif;color:#8B8375}
+.va-nw .t{font:600 14.5px/1.4 'IBM Plex Sans',sans-serif;color:#101010;margin-top:3px}
+a.va-nw:hover .t{text-decoration:underline}
+.va-kv{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--va-div);font-size:14px}
+.va-kv span{color:#57534A}
+.va-kv b{font:600 14px 'IBM Plex Sans',sans-serif;color:#101010;text-align:right}
+
+.state{border:1px dashed var(--line);border-radius:12px;text-align:center;padding:60px 20px;color:var(--sub);font-size:14px;line-height:1.9;margin:30px auto 70px;max-width:var(--v-ancho)}
+.state b{color:var(--ink);font:600 14px 'IBM Plex Sans',sans-serif}
+.va-disc{font-size:13px;color:#8B8375;line-height:1.7;margin:22px 0 0;max-width:820px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+.va-disc a{color:inherit;text-decoration:underline}
+
+footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.footer-copy{font:400 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
+.footer-links{display:flex;gap:20px;flex-wrap:wrap}
+.footer-links a{font:500 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase}
+
+@media(max-width:1080px){.va-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:880px){.va-head{grid-template-columns:minmax(0,1fr)}.state{margin-left:20px;margin-right:20px}}
+@media(max-width:700px){.bn-dos{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:560px){th,td{padding-left:10px;padding-right:10px}td{font-size:13px}th{white-space:normal;vertical-align:bottom}.va-card{padding:18px 16px}.va-lect{padding:16px}.va-nota{grid-template-columns:74px minmax(0,1fr);gap:10px}.bn-bar span{display:none}}
 </style>
 <link rel="stylesheet" href="sitio.css?v=1">
 </head>
@@ -120,7 +162,7 @@ footer a:hover{color:#E8CE96}
     <a href="/inversion-mensual">Inversión mensual</a>
     <a href="/noticias">Noticias</a>
     <a href="/informes">Informes</a>
-    <a href="/herramientas">Herramientas</a>
+    <a href="/herramientas" class="active" aria-current="page">Herramientas</a>
     <a href="/planes">Planes</a>
   </div>
   <div class="nav-right">
@@ -129,45 +171,68 @@ footer a:hover{color:#E8CE96}
 </nav>
 <!-- cotizaciones en vivo, debajo del nav (módulo único del sitio: cotizaciones.js) -->
 <div id="valtia-cot"></div>
-<div class="top-volver">
-  <button class="volver" onclick="volver()">← Volver</button>
-  <a href="/herramientas" style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);text-decoration:none">Panel de bonos completo →</a>
-</div>
 <main id="main">
   <div class="state">Cargando la ficha…</div>
 </main>
+
+<footer>
+  <div class="footer-copy">© 2026 Valtia Analytics — Análisis de carácter general y educativo. No constituye asesoramiento financiero. · <a href="/terminos" style="color:inherit;text-decoration:underline">Términos</a> · <a href="/privacidad" style="color:inherit;text-decoration:underline">Privacidad</a></div>
+  <div class="footer-links">
+    <a href="/">Inicio</a><a href="/noticias">Noticias</a><a href="/informes">Informes</a><a href="/herramientas">Herramientas</a>
+  </div>
+</footer>
 
 <!-- botón de mail flotante, el mismo de todo el sitio (sitio.css) -->
 <a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
 <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+/* ══ Ficha de bono ═══════════════════════════════════════════════════════
+   De dónde sale cada cosa (nada se completa a mano):
+   · bonosPanel/latest   precio, variación, TIR, paridad, duration, current
+                         yield, vencimiento, ley; tasas de las letras; los
+                         precios de la especie en pesos, MEP y cable (todos);
+                         la mediana de cada número entre los del mismo panel
+   · bonosFlujos/latest  cronograma oficial de cupones y amortizaciones
+   · catalogo-activos.js el nombre de la especie (import dinámico, solo lectura)
+   · carterasModelo (+ posiciones e historial) que la sesión puede leer
+   · noticias publicadas que nombran la especie
+   · informes que la sesión puede leer y nombran la especie
+   · inversores/{email}/cartera  "Ya lo tenés" (solo con sesión)         ══ */
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, getDocs, doc, getDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { canon, parBono } from './activos.js?v=7';
 
-const app = initializeApp({
+const app = getApps().length ? getApp() : initializeApp({
   apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
   authDomain: 'valtia-analytics.firebaseapp.com',
   projectId: 'valtia-analytics',
 });
 const db = getFirestore(app);
 
-window.volver = () => {
-  try {
-    if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
-      history.back();
-      return;
-    }
-  } catch (e) {}
-  location.href = '/herramientas';
-};
-
 const $ = s => document.querySelector(s);
-const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+const esc = s => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const n2 = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const n1 = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const n0 = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
+const nCant = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 4 });
 const fmtPct = v => (v >= 0 ? "+" : "") + n2.format(v) + "%";
 const cls = v => v > 0.004 ? "pos" : v < -0.004 ? "neg" : "mut";
 const fverde = f => { const [a, m, d] = String(f).slice(0, 10).split("-"); return `${d}/${m}/${a.slice(2)}`; };
+const MES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const esISO = s => /^\d{4}-\d{2}-\d{2}$/.test(s);
+const iso = v => v && v.toDate ? v.toDate().toISOString().slice(0, 10) : String(v || "").slice(0, 10);
+const fLarga = v => { const s = iso(v); return esISO(s) ? `${+s.slice(8, 10)} ${MES[+s.slice(5, 7) - 1]} ${s.slice(0, 4)}` : s; };
+const fDM = v => { const s = iso(v); return esISO(s) ? `${+s.slice(8, 10)} ${MES[+s.slice(5, 7) - 1]}` : s; };
+const diaAR = d => new Date(d.getTime() - 3 * 3600e3).toISOString().slice(0, 10);
+const hoyAR = diaAR(new Date());
+const recorte = (s, n) => { s = String(s ?? "").trim(); return s.length > n ? s.slice(0, n).replace(/\s+\S*$/, "") + "…" : s; };
+const mediana = xs => {
+  const v = xs.filter(x => x != null && isFinite(x)).sort((a, b) => a - b);
+  if (v.length < 3) return null;
+  const m = v.length >> 1;
+  return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
+};
 
 /* TIR anual efectiva por bisección sobre los flujos (espejo de bonos_lib.xirr) */
 function xirr(fls, precio, hoyMs) {
@@ -192,125 +257,276 @@ function tasasLetra(precio, vpv, dias) {
            tirea: (Math.pow(r, 365 / dias) - 1) * 100 };
 }
 
-const tile = (l, v, s) => `<div class="tile"><div class="l">${l}</div><div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`;
+const tarjeta = (l, v, s) => `<div class="va-num"><div class="l" title="${esc(l)}">${esc(l)}</div><div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`;
+
+// estado de la ficha (lo completan la sesión y las lecturas que llegan después)
+const S = { e: "", par: "", tenencia: null, carteras: null, ocultas: [], pro: false, especies: [] };
+// el mismo título escrito de otra forma: AL30, AL30D, AL30C y AL30.BA son la misma especie
+const parDe = x => { try { return parBono(canon(String(x || "").toUpperCase())); } catch (e) { return ""; } };
+const mismo = x => !!x && parDe(x) === S.par;
 
 async function render() {
   // El '.BA' se saca ANTES de limpiar la puntuación: si no, AL30.BA quedaba
   // como "AL30BA" y la ficha decía que la especie no existe (misma regla que
   // canon() de activos.js). `e` puede cambiar abajo si el panel la lista por
-  // su versión en dólares.
-  let e = (new URLSearchParams(location.search).get("e") || "").trim().toUpperCase()
+  // su versión en dólares. ?e= es el parámetro de siempre; ?b= también sirve.
+  const qs = new URLSearchParams(location.search);
+  let e = (qs.get("e") || qs.get("b") || "").trim().toUpperCase()
     .replace(/\.BA$/, "").replace(/[^A-Z0-9]/g, "");
-  if (!e) { $("#main").innerHTML = `<div class="state">Elegí una especie desde el <a href="/herramientas" style="color:var(--gold)">panel de bonos →</a></div>`; return; }
+  if (!e) { $("#main").innerHTML = `<div class="state">Elegí una especie desde el <a href="/herramientas#bonos">panel de bonos →</a></div>`; return; }
   document.title = e + " — Ficha de bono · Valtia Analytics";
 
-  let panel = null, flujos = null, asof = null;
+  let panel = null, flujos = null, asof = null, cat = null, notSnap = null;
   try {
-    const [p, f] = await Promise.all([
+    const [p, f, c, ns] = await Promise.all([
       getDoc(doc(db, "bonosPanel", "latest")),
-      getDoc(doc(db, "bonosFlujos", "latest")),
+      getDoc(doc(db, "bonosFlujos", "latest")).catch(() => null),
+      import("./catalogo-activos.js?v=2").catch(() => null),
+      getDocs(query(collection(db, "noticias"), where("estado", "==", "publicado"))).catch(() => null),
     ]);
     if (p.exists()) { panel = JSON.parse(p.data().json || "{}"); asof = p.data().actualizado_utc; }
-    if (f.exists()) flujos = JSON.parse(f.data().json || "{}");
+    if (f && f.exists()) flujos = JSON.parse(f.data().json || "{}");
+    cat = c; notSnap = ns;
   } catch (err) {}
   if (!panel) { $("#main").innerHTML = `<div class="state">No se pudo cargar el panel de bonos. Probá de nuevo en un rato.</div>`; return; }
 
   const TIPOS = [
-    ["soberanos", "Bono soberano · USD"],
-    ["bopreal", "Bopreal (BCRA) · USD"],
-    ["tasa_fija", "Letra / Boncap a tasa fija · $"],
-    ["cer", "Bono CER · $ ajusta por inflación"],
-    ["dolar_linked", "Dólar linked · $ ajusta por A3500"],
+    ["soberanos", "Bono soberano · USD", "Bono soberano", "en dólares"],
+    ["bopreal", "Bopreal (BCRA) · USD", "Bopreal del BCRA", "en dólares"],
+    ["tasa_fija", "Letra / Boncap a tasa fija · $", "Letra o Boncap a tasa fija", "en pesos"],
+    ["cer", "Bono CER · $ ajusta por inflación", "Bono CER", "en pesos, ajusta por inflación"],
+    ["dolar_linked", "Dólar linked · $ ajusta por A3500", "Bono dólar linked", "en pesos, ajusta por el dólar oficial"],
   ];
-  let b = null, tipo = null, tipoNombre = "";
+  let b = null, tipo = null, tipoNombre = "", tipoCorto = "", monedaTxt = "";
   // El panel lista soberanos y Bopreal por la especie en dólares (AL30D). Quien
   // llega con AL30 —o con AL30C, que es el mismo título liquidado por cable—
   // tiene que caer en esa ficha, no en "no encontramos la especie".
   const candidatas = [e, e + "D", e.replace(/[CD]$/, "") + "D"].filter((x, i, a) => x && a.indexOf(x) === i);
   buscar:
   for (const cand of candidatas) {
-    for (const [k, nom] of TIPOS) {
+    for (const [k, nom, corto, mon] of TIPOS) {
       const hit = (panel[k] || []).find(x => x.s === cand);
-      if (hit) { b = hit; tipo = k; tipoNombre = nom; e = cand; break buscar; }
+      if (hit) { b = hit; tipo = k; tipoNombre = nom; tipoCorto = corto; monedaTxt = mon; e = cand; break buscar; }
     }
   }
   if (b) document.title = e + " — Ficha de bono · Valtia Analytics";
-  if (!b) { $("#main").innerHTML = `<div class="state">No encontramos la especie <b>${esc(e)}</b> en el panel.<br><br><a href="/herramientas" style="color:var(--gold)">Ver el panel completo →</a></div>`; return; }
+  if (!b) { $("#main").innerHTML = `<div class="state">No encontramos la especie <b>${esc(e)}</b> en el panel.<br><br><a href="/herramientas#bonos">Ver el panel completo →</a></div>`; return; }
+  S.e = e; S.par = parDe(e);
 
   const enUSD = tipo === "soberanos" || tipo === "bopreal";
   const mon = enUSD ? "US$" : "$";
   const fls = (flujos && (flujos[e] || (e.endsWith("D") ? flujos[e.slice(0, -1)] : null))) || null;
   const hoyMs = Date.now();
+  const futuros = fls ? fls.flujos.filter(([f]) => String(f).slice(0, 10) >= hoyAR) : [];
+  const prox = futuros[0] || null;
 
-  let tiles = "";
+  // nombre de la especie: el del catálogo, sin la moneda de liquidación
+  const entCat = cat && typeof cat.entradasCatalogo === "function" ? (cat.entradasCatalogo(e)[0] || cat.entradasCatalogo(S.par)[0] || null) : null;
+  // ("Bonar 2030 (AL30)"; "Lecap · letra del Tesoro…" queda "Lecap (S30O6)")
+  const seg0 = entCat && entCat.n && !/panel de bonos/i.test(entCat.n) ? String(entCat.n).split(" · ")[0] : "";
+  const nombre = !seg0 ? `${tipoCorto} (${S.par || e})` : seg0.includes("(") ? seg0 : `${seg0} (${S.par || e})`;
+  const hora = asof && asof.toDate ? (() => {
+    const d = asof.toDate();
+    const hh = d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "America/Argentina/Buenos_Aires" });
+    return diaAR(d) === hoyAR ? `Actualizado hoy · ${hh} hs` : `Último precio · ${fDM(diaAR(d))}, ${hh} hs`;
+  })() : "";
+  const venceTxt = b.vence ? fLarga(b.vence) : "";
+  const anios = b.vence ? (Date.parse(String(b.vence).slice(0, 10)) - Date.parse(hoyAR)) / 864e5 / 365.25 : null;
+  const faltan = anios == null ? "" : anios >= 1 ? `faltan ${n1.format(anios)} años` : anios > 0 ? `faltan ${Math.round(anios * 365.25)} días` : "vencido";
+  const meta = [tipoCorto, enUSD ? "USD" : "$", b.ley ? (b.ley === "NY" ? "Ley Nueva York" : "Ley argentina") : "", "BYMA"].filter(Boolean).join(" · ");
+
+  // ── Los números: los del bono, con la mediana de su grupo en el panel ──
+  const grupo = panel[tipo] || [];
+  // la mediana de los OTROS del grupo: con la especie adentro, AL30D (la del
+  // medio de trece soberanos) se comparaba contra su propia TIR
+  const med = campo => mediana(grupo.filter(x => x.s !== b.s).map(x => x[campo] == null ? null : Number(x[campo])));
+  const conMed = (campo, fmt) => { const m = med(campo); return m == null ? "" : `Mediana ${palOtros}: ${fmt(m)}`; };
+  const palOtros = { soberanos: "de los otros soberanos", bopreal: "de los otros Bopreal", tasa_fija: "de las otras letras", cer: "de los otros CER", dolar_linked: "de los otros dólar linked" }[tipo];
+  const pct1 = v => n1.format(v) + "%";
+  let nums = [];
   if (tipo === "tasa_fija") {
-    tiles = [
-      b.tirea != null ? tile("TIREA", n1.format(b.tirea) + "%", b.vpv_estimado ? "efectiva anual · sobre pago estimado" : "efectiva anual, de mercado") : "",
-      b.tem != null ? tile("TEM", n2.format(b.tem) + "%", "efectiva mensual") : "",
-      b.tna != null ? tile("TNA", n1.format(b.tna) + "%", "simple, 365 días") : "",
-      b.vpv != null ? tile("Paga al vencimiento", "$" + n2.format(b.vpv), b.vpv_estimado ? "por cada 100 VN · estimado, sin dato oficial" : "por cada 100 VN") : "",
-      b.dias != null ? tile("Días", b.dias, b.vence ? "al " + fverde(b.vence) : "") : (b.vence ? tile("Vence", fverde(b.vence), "") : ""),
-      b.tem_lic ? tile("TEM de licitación", n2.format(b.tem_lic) + "%", "tasa de emisión") : "",
-    ].join("");
+    nums = [
+      b.tirea != null ? tarjeta("TIREA", pct1(b.tirea), (b.vpv_estimado ? "Efectiva anual · sobre pago estimado" : "Efectiva anual, de mercado") + (med("tirea") != null ? ` · ${conMed("tirea", pct1)}` : "")) : "",
+      b.tem != null ? tarjeta("TEM", n2.format(b.tem) + "%", "Efectiva mensual") : "",
+      b.tna != null ? tarjeta("TNA", pct1(b.tna), "Simple, 365 días") : "",
+      b.vpv != null ? tarjeta("Paga al vencimiento", "$" + n2.format(b.vpv), b.vpv_estimado ? "Por cada 100 VN · estimado, sin dato oficial" : "Por cada 100 VN") : "",
+      // los días se cuentan desde hoy, como el "faltan" de la franja (b.dias es
+      // del día del sync y puede ir uno adelante un sábado)
+      b.vence ? tarjeta("Días al vencimiento", n0.format(Math.max(0, Math.round(anios * 365.25))), "Al " + fverde(b.vence))
+        : b.dias != null ? tarjeta("Días al vencimiento", n0.format(b.dias), "") : "",
+      b.tem_lic ? tarjeta("TEM de licitación", n2.format(b.tem_lic) + "%", "Tasa de emisión") : "",
+    ];
   } else if (enUSD) {
-    tiles = [
-      b.tir != null ? tile("TIR", n1.format(b.tir) + "%", "efectiva anual (TIREA)") : "",
-      b.paridad != null ? tile("Paridad", n1.format(b.paridad) + "%", "precio / valor técnico") : "",
-      b.md != null ? tile("Duration mod.", n2.format(b.md), "sensibilidad a la tasa") : "",
-      b.dur != null ? tile("Duration", n2.format(b.dur), "Macaulay, años") : "",
-      b.cy != null ? tile("Current yield", n1.format(b.cy) + "%", "cupón vigente / precio") : "",
-      tile("Vence", fverde(b.vence), ""),
-    ].join("");
+    const cobra = futuros.reduce((a, [, m]) => a + m, 0);
+    nums = [
+      b.tir != null ? tarjeta("TIR", pct1(b.tir), "Efectiva anual (TIREA)" + (med("tir") != null ? ` · ${conMed("tir", pct1)}` : "")) : "",
+      b.paridad != null ? tarjeta("Paridad", pct1(b.paridad), "Precio / valor técnico" + (med("paridad") != null ? ` · ${conMed("paridad", pct1)}` : "")) : "",
+      b.md != null ? tarjeta("Duration modificada", n2.format(b.md), "Qué % se mueve el precio por cada punto de tasa" + (med("md") != null ? ` · ${conMed("md", n2.format)}` : "")) : "",
+      b.dur != null ? tarjeta("Duration", n2.format(b.dur) + " años", "Macaulay: plazo promedio de los pagos") : "",
+      b.cy != null ? tarjeta("Current yield", pct1(b.cy), "Cupón vigente / precio") : "",
+      prox ? tarjeta("Próximo pago", fLarga(prox[0]), `US$${n2.format(prox[1])} por cada 100 VN`) : "",
+      futuros.length ? tarjeta("Flujo que falta cobrar", `US$${n2.format(cobra)}`, `En ${futuros.length} ${futuros.length === 1 ? "pago" : "pagos"} por cada 100 VN · hoy cuesta US$${n2.format(b.p)}`) : "",
+      b.vence ? tarjeta("Vence", fLarga(b.vence), faltan) : "",
+    ];
   } else {
-    tiles = [
-      tile("Último", mon + n2.format(b.p), "por 100 VN"),
-      b.vence ? tile("Vence", fverde(b.vence), "") : "",
-    ].join("");
+    nums = [
+      tarjeta("Último", mon + n2.format(b.p), "Por 100 VN"),
+      b.vence ? tarjeta("Vence", fLarga(b.vence), faltan) : "",
+    ];
   }
+  nums = nums.filter(Boolean);
 
+  // ── flujo de fondos: barras por fecha (el próximo pago en dorado), tabla y calculadora ──
+  const barras = futuros.length ? (() => {
+    const max = Math.max(...futuros.map(([, m]) => m)) || 1;
+    // el año va debajo de su primer pago; con muchos años (GD46: veinte) se
+    // salta de a varios para que las etiquetas no se pisen, hasta cinco
+    let anioPrev = "";
+    const anosEje = [...new Set(futuros.map(([f]) => String(f).slice(0, 4)))];
+    const paso = Math.max(1, Math.ceil(anosEje.length / 5));
+    const ejes = futuros.map(([f]) => { const a = String(f).slice(0, 4); const s = a !== anioPrev && anosEje.indexOf(a) % paso === 0 ? a : ""; anioPrev = a; return s; });
+    const conMonto = futuros.length <= 16;
+    return `<div class="bn-bars" role="img" aria-label="Pagos futuros por cada 100 VN">${futuros.map(([f, m], i) =>
+        `<div class="bn-bar${i === 0 ? " prox" : ""}" title="${esc(fLarga(f))}: US$${n2.format(m)}">${conMonto ? `<span>${n2.format(m)}</span>` : ""}<i style="height:${Math.max(1.5, m / max * 100).toFixed(1)}%"></i></div>`).join("")}</div>
+      <div class="bn-ejes" aria-hidden="true">${ejes.map(a => `<span>${a}</span>`).join("")}</div>
+      <div class="bn-leg"><span><i style="background:#B08A3E"></i>Próximo pago · ${esc(fLarga(futuros[0][0]))}</span><span><i style="background:#14213D"></i>Pago de cada fecha, en US$ por cada 100 VN</span></div>`;
+  })() : "";
   const filasFlujo = fls ? (() => {
     let acum = 0;
-    return fls.flujos.map(([f, m]) => {
+    return futuros.map(([f, m]) => {
       acum += m;
       return `<tr><td>${fverde(f)}</td><td class="num">US$ ${n2.format(m)}</td><td class="num mut">US$ ${n2.format(acum)}</td></tr>`;
     }).join("");
   })() : "";
-
   const calc = (tipo === "tasa_fija" && b.vpv != null) || (enUSD && fls) ? `
     <div class="calc">
-      <label>TIR a mi precio — ¿y si pago otra cosa?</label>
+      <label for="mi-precio">TIR a mi precio: ¿y si pago otra cosa?</label>
       <input type="number" step="any" min="0" id="mi-precio" value="${b.p}">
       <div class="out" id="mi-out"></div>
       <div class="nota">Misma matemática del panel: ${tipo === "tasa_fija" ? (b.vpv_estimado ? "tasas sobre un pago final ESTIMADO (sin dato oficial todavía)" : "tasas sobre el pago final oficial de la letra") : "TIR efectiva anual (act/365) por bisección sobre los flujos oficiales"}, valuada a hoy.</div>
     </div>` : "";
-
-  $("#main").innerHTML = `
-    <div class="eye">${tipoNombre}</div>
-    <div class="head">
-      <h1>${esc(e)}${b.ley ? `<span class="ley${b.ley === "NY" ? " ny" : ""}">Ley ${b.ley === "NY" ? "Nueva York" : "Argentina"}</span>` : ""}</h1>
-      <div class="px">
-        <div class="v">${mon}${n2.format(b.p)}</div>
-        <div class="s"><span class="${cls(b.v)}">${fmtPct(b.v)} hoy</span> · por 100 VN${asof ? " · " + new Date(asof.seconds ? asof.seconds * 1000 : asof).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) + " hs" : ""}</div>
+  const flujoCard = fls || calc ? `<section class="va-card" id="flujo">
+      <h2 class="va-h">${fls ? "Flujo de fondos" : "Calculadora"}</h2>
+      ${fls ? `<p class="va-sub">Lo que paga cada 100 de valor nominal, fecha por fecha, según el cronograma oficial.</p>` : ""}
+      ${barras}
+      <div class="bn-dos">
+        ${fls ? `<div class="bn-tabla"><table>
+          <thead><tr><th>Fecha de pago</th><th class="num">Por 100 VN</th><th class="num">Acumulado</th></tr></thead>
+          <tbody>${filasFlujo}</tbody></table></div>` : ""}
+        ${calc}
       </div>
-    </div>
-    <div class="tiles">${tiles}</div>
-    ${tipo === "cer" || tipo === "dolar_linked" ? `<p class="nota">Las tasas reales de los ${tipo === "cer" ? "bonos CER" : "dólar linked"} van a aparecer acá cuando haya una fuente oficial de condiciones de emisión — en Valtia no se estiman a mano.</p>` : ""}
-    ${fls || calc ? `<div class="sec">${fls ? "Flujos de fondos y calculadora" : "Calculadora"}</div>
-    <div class="dos">
-      ${fls ? `<div class="panel"><table>
-        <thead><tr><th>Fecha de pago</th><th class="num">Por 100 VN</th><th class="num">Acumulado</th></tr></thead>
-        <tbody>${filasFlujo}</tbody></table></div>` : ""}
-      ${calc}
-    </div>
-    ${fls ? `<p class="nota">Cronograma oficial (Dto. 701/2020 / prospecto BCRA): cupones + amortizaciones futuras por cada 100 de valor nominal.</p>` : ""}` : ""}
-    <footer>Análisis de carácter general y educativo — no constituye asesoramiento financiero ni recomendación de compra o venta.
-    Datos: BYMA vía IOL · condiciones de letras de la Secretaría de Finanzas vía ArgentinaDatos.
-    · <a href="/terminos" style="text-decoration:underline">Términos</a> · <a href="/privacidad" style="text-decoration:underline">Privacidad</a></footer>`;
+      ${fls ? `<p class="nota">Cronograma oficial (Dto. 701/2020 / prospecto BCRA): cupones + amortizaciones futuras por cada 100 de valor nominal.</p>` : ""}
+    </section>` : "";
+
+  // ── franja de datos clave ──
+  const tir = tipo === "tasa_fija" ? b.tirea : enUSD ? b.tir : null;
+  const franja = `<section class="va-lect" id="general" aria-label="Datos clave de ${esc(e)}">
+      <div><div class="l">Instrumento</div><div class="v">${esc(tipoCorto)}</div><div class="s">${esc(monedaTxt)}${b.ley ? ` · ley ${b.ley === "NY" ? "Nueva York" : "argentina"}` : ""}</div></div>
+      <div><div class="l">${tipo === "tasa_fija" ? "Rinde (TIREA)" : "Rinde (TIR)"}</div><div class="v">${tir != null ? pct1(tir) : "—"}</div><div class="s">${tir != null ? "Efectiva anual, comprando hoy a este precio" : tipo === "cer" || tipo === "dolar_linked" ? "Sin fuente oficial de condiciones: no se estima a mano" : "Sin tasa publicada"}</div></div>
+      <div><div class="l">Vencimiento</div><div class="v">${venceTxt || "—"}</div><div class="s">${esc(faltan)}</div></div>
+      <div><div class="l">Próximo pago</div><div class="v">${prox ? fLarga(prox[0]) : tipo === "tasa_fija" && b.vence ? fLarga(b.vence) : "—"}</div><div class="s">${prox ? `US$${n2.format(prox[1])} por cada 100 VN` : tipo === "tasa_fija" && b.vpv != null ? `Paga $${n2.format(b.vpv)} por cada 100 VN al vencer` : "Sin cronograma de pagos publicado"}</div></div>
+      <div class="va-cta" id="va-cta">${ctaHtml()}</div>
+    </section>`;
+
+  $("#main").innerHTML = `<header class="va-mh"><div class="va-in">
+      <div class="va-top"><a class="va-back" href="/herramientas#bonos">← Bonos y letras</a></div>
+      <div class="va-head">
+        <div>
+          <div class="va-id"><span class="va-tk">${esc(e)}</span><span class="va-meta">${esc(meta)}</span></div>
+          <h1>${esc(nombre)}</h1>
+        </div>
+        <div class="va-px">
+          <div class="p">${mon}${n2.format(b.p)}</div>
+          <div class="d"><span class="${cls(b.v)}">${fmtPct(b.v)} hoy</span><span class="c">Por 100 VN${hora ? " · " + esc(hora) : ""}</span></div>
+        </div>
+      </div>
+    </div></header>
+    <div class="va-body"><div class="va-in">
+      ${franja}
+      <div class="va-grid">
+        <div class="va-col">
+          ${flujoCard}
+          <section class="va-card" id="numeros">
+            <h2 class="va-h">Los números</h2>
+            <p class="va-sub">Lo que miro antes de decidir, con la mediana ${esc(palOtros)} del panel al lado cuando hay con quién comparar.</p>
+            <div class="va-nums">${nums.join("")}</div>
+            ${tipo === "cer" || tipo === "dolar_linked" ? `<p class="nota">Las tasas reales de los ${tipo === "cer" ? "bonos CER" : "dólar linked"} van a aparecer acá cuando haya una fuente oficial de condiciones de emisión: en Valtia no se estiman a mano.</p>` : ""}
+          </section>
+          <section class="va-card" id="escribimos">
+            <div class="va-esc-top"><h2 class="va-h">Lo que escribimos sobre ${esc(S.par || e)}</h2><a class="va-link" href="/informes">Todos los informes →</a></div>
+            <div id="escribimos-box"><div class="va-vacio">Buscando en los informes…</div></div>
+          </section>
+        </div>
+        <aside class="va-col" aria-label="Más sobre ${esc(e)}">
+          <section class="va-card" id="en-carteras"><h2 class="va-h">En las carteras Valtia</h2><div id="carteras-box"><div class="va-vacio">Buscando en las carteras…</div></div></section>
+          <section class="va-card" id="viene"><h2 class="va-h">Lo que viene</h2><div id="viene-box"></div><a class="va-link va-mas" href="/calendario">Agenda completa →</a></section>
+          <section class="va-card" id="noticias"><h2 class="va-h">Noticias</h2><div id="news-box"></div><a class="va-link va-mas" href="/noticias">Más noticias →</a></section>
+          <section class="va-card" id="como"><h2 class="va-h">Cómo comprarlo desde Argentina</h2><div id="como-box"></div></section>
+        </aside>
+      </div>
+      <p class="va-disc">Análisis de carácter general y educativo: no constituye asesoramiento financiero ni recomendación de compra o venta.
+        Datos: BYMA vía IOL · condiciones de letras de la Secretaría de Finanzas vía ArgentinaDatos.</p>
+    </div></div>`;
+
+  // Lo que viene: los próximos pagos del cronograma y el vencimiento
+  (() => {
+    // el cronograma trae el monto total de cada fecha, sin separar cupón de
+    // amortización (AL41 cobra solo renta hasta 2028): no se dice cuál es cuál
+    const ev = futuros.slice(0, 3).map(([f, m], i) => ({ f: String(f).slice(0, 10), t: i === futuros.length - 1 ? "Último pago y vencimiento" : "Pago del cronograma",
+      s: `US$${n2.format(m)} por cada 100 VN` }));
+    if (!futuros.length && b.vence && String(b.vence).slice(0, 10) >= hoyAR)
+      ev.push({ f: String(b.vence).slice(0, 10), t: "Vence", s: tipo === "tasa_fija" && b.vpv != null ? `Paga $${n2.format(b.vpv)} por cada 100 VN` : "Fecha de vencimiento de la especie" });
+    const dias = f => { const d = Math.round((Date.parse(f) - Date.parse(hoyAR)) / 864e5); return d === 0 ? "hoy" : d === 1 ? "mañana" : `en ${d} días`; };
+    $("#viene-box").innerHTML = ev.length ? ev.map(x => `<div class="va-ev">
+        <div><div class="d">${+x.f.slice(8, 10)}</div><div class="m">${MES[+x.f.slice(5, 7) - 1]}${x.f.slice(0, 4) !== hoyAR.slice(0, 4) ? " " + x.f.slice(2, 4) : ""}</div></div>
+        <div style="min-width:0"><div class="t">${esc(x.t)}</div><div class="s">${esc(x.s)} · ${dias(x.f)}</div></div></div>`).join("")
+      : `<div class="va-vacio">Sin pagos agendados para ${esc(e)}.</div>`;
+  })();
+
+  // Noticias: las que nombran la especie; si ninguna, las de la sección de bonos, dicho así
+  (() => {
+    const box = $("#news-box");
+    const base = S.par || e;
+    const rx = new RegExp("\\b" + base.replace(/[^A-Z0-9]/g, "") + "[CD]?\\b");
+    const todas = notSnap ? notSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, c) => String(c.fecha).localeCompare(String(a.fecha))) : [];
+    let lista = todas.filter(n => rx.test(String(n.titulo) + " " + String(n.resumen))).slice(0, 4);
+    let aviso = "";
+    if (!lista.length) {
+      lista = todas.filter(n => (n.categorias || []).includes("bonos")).slice(0, 3);
+      if (lista.length) aviso = `<div class="va-vacio">Ninguna nombra a ${esc(base)} todavía. Las últimas de la sección Bonos y acciones:</div>`;
+    }
+    box.innerHTML = !notSnap ? '<div class="va-vacio">No pudimos leer las noticias ahora.</div>'
+      : lista.length ? aviso + lista.map(n => `<a class="va-nw" href="/nota?n=${encodeURIComponent(n.id)}">
+          <div class="f">${esc(fDM(n.fecha))}${n.fuente ? " · " + esc(n.fuente) : ""}</div><div class="t">${esc(n.titulo)}</div></a>`).join("")
+      : `<div class="va-vacio">Sin noticias recientes de ${esc(base)}.</div>`;
+  })();
+
+  // Cómo comprarlo desde Argentina: la misma especie en pesos, MEP y cable
+  (() => {
+    const todos = panel.todos || {};
+    const base = S.par || e;
+    const filas = [];
+    const pesos = todos[base] && Number(todos[base].p) > 0 ? Number(todos[base].p) : null;
+    const mep = enUSD && todos[base + "D"] && Number(todos[base + "D"].p) > 0 ? Number(todos[base + "D"].p) : null;
+    const cable = enUSD && todos[base + "C"] && Number(todos[base + "C"].p) > 0 ? Number(todos[base + "C"].p) : null;
+    if (enUSD) {
+      if (pesos) filas.push([`${esc(base)} · en pesos`, "$" + n2.format(pesos)]);
+      if (mep) filas.push([`${esc(base)}D · dólar MEP`, "US$" + n2.format(mep)]);
+      if (cable) filas.push([`${esc(base)}C · dólar cable`, "US$" + n2.format(cable)]);
+      if (pesos && mep) filas.push(["Dólar MEP implícito", "$" + n2.format(pesos / mep)]);
+      if (pesos) filas.push(["Desde 1 VN", "≈ $" + n2.format(pesos / 100)]);
+    } else {
+      filas.push([`${esc(e)} · en pesos, cada 100 VN`, "$" + n2.format(b.p)]);
+      filas.push(["Desde 1 VN", "≈ $" + n2.format(b.p / 100)]);
+    }
+    $("#como-box").innerHTML = filas.map(([l, v]) => `<div class="va-kv"><span>${l}</span><b>${v}</b></div>`).join("")
+      + `<div class="va-fuente">Cotiza en BYMA: se compra desde cualquier broker local. Precios por cada 100 de valor nominal, del panel de bonos.</div>`;
+  })();
 
   const inp = $("#mi-precio"), out = $("#mi-out");
   if (inp && out) {
     const recalc = () => {
-      const px = parseFloat(inp.value);
+      const px = parseFloat(String(inp.value).replace(",", "."));
       if (!(px > 0)) { out.innerHTML = "Poné un precio mayor a cero."; return; }
       if (tipo === "tasa_fija") {
         const t = tasasLetra(px, b.vpv, b.dias);
@@ -318,7 +534,9 @@ async function render() {
           ? `A $${n2.format(px)}: TIREA <b>${n1.format(t.tirea)}%</b> · TEM <b>${n2.format(t.tem)}%</b> · TNA <b>${n1.format(t.tna)}%</b>`
           : "Sin tasa: la letra está al borde del vencimiento.";
       } else {
-        const y = xirr(fls.flujos, px, hoyMs);
+        // solo los pagos que faltan, los mismos de la tabla: un cupón ya
+        // cobrado (si el doc de flujos quedó de ayer) no entra en la TIR
+        const y = xirr(futuros, px, hoyMs);
         out.innerHTML = y != null
           ? `A US$${n2.format(px)}: TIR efectiva anual <b>${n1.format(y * 100)}%</b>`
           : "La TIR no converge con ese precio.";
@@ -327,7 +545,141 @@ async function render() {
     inp.addEventListener("input", recalc);
     recalc();
   }
+
+  llenarCarteras(false);
+  llenarEscribimos(false);
+  let primera = true;
+  onAuthStateChanged(getAuth(app), async user => {
+    if (!user && primera) { primera = false; return; }
+    primera = false;
+    let pro = false;
+    if (user) {
+      const esperar = ms => new Promise(r => setTimeout(r, ms));
+      for (let i = 0; i < 20 && !window.valtiaEsPro; i++) await esperar(150);
+      try { pro = !!(window.valtiaEsPro && await window.valtiaEsPro(user)); } catch (err) { pro = false; }
+    }
+    S.pro = pro;
+    llenarCarteras(pro);
+    llenarTenencia(user);
+    if (pro) llenarEscribimos(true);
+  });
 }
+
+// el botón: "Ya lo tenés · n VN" con sesión y tenencia; si no, "Agregar a Mi cartera".
+// Sin ?agregar=: Mi cartera abre el modal de ese link con el mercado "exterior"
+// (así lo hace prellenarDesdeUrl para las acciones), y un bono de BYMA cargado
+// como activo del exterior quedaría mal. Se llega a Mi cartera y se agrega ahí.
+function ctaHtml() {
+  const btn = S.tenencia
+    ? `<a class="va-btn" href="/#panel/micartera">Ya lo tenés · ${esc(S.tenencia)}</a>`
+    : `<a class="va-btn" href="/#panel/micartera">Agregar a Mi cartera</a>`;
+  let txt = "";
+  if (S.carteras) {
+    const n = S.carteras.filter(c => c.pos).length;
+    const soloAbiertas = !S.pro && S.ocultas.length;
+    txt = n ? `Está en ${n} ${n === 1 ? "cartera" : "carteras"} ${soloAbiertas ? (n === 1 ? "abierta de Valtia" : "abiertas de Valtia") : "Valtia"}`
+            : soloAbiertas ? "No está en las carteras abiertas" : "No está en las carteras Valtia";
+  }
+  return btn + `<div class="s">${txt}</div>`;
+}
+const pintarCta = () => { const el = $("#va-cta"); if (el) el.innerHTML = ctaHtml(); };
+
+// En las carteras Valtia: solo las que la sesión puede leer (las reglas no
+// dejan leer las posiciones de las PRO; esas solo se nombran, del teaser público)
+const COD_ID = { ia: "IA", semiconductores: "SEMI" };
+const COLOR_COD = { SP10: "#14213D", IA: "#2B5FB0", SEMI: "#5B3FA8", PAS: "#1F7A4D", CONS: "#0E7C86", AGR: "#B23A3A" };
+const pesoTxt = p => { const v = (Number(p) || 0) * 100; return (Math.abs(v - Math.round(v)) < 0.05 ? String(Math.round(v)) : n1.format(v)) + "%"; };
+let cartSeq = 0;
+async function llenarCarteras(pro) {
+  const mio = ++cartSeq;
+  let lista = null, ocultas = [];
+  try {
+    // PRO: públicas + de suscriptores (la regla exige el filtro). Si la sesión
+    // todavía no llegó a Firestore y la consulta rebota, quedan las públicas.
+    const publicas = () => getDocs(query(collection(db, "carterasModelo"), where("visibilidad", "==", "publico")));
+    const snap = pro ? await getDocs(query(collection(db, "carterasModelo"), where("visibilidad", "in", ["publico", "clientes"]))).catch(() => { pro = false; return publicas(); })
+                     : await publicas();
+    lista = await Promise.all(snap.docs.filter(d => d.data().estado === "activa").map(async d => {
+      const c = d.data();
+      const [ps, hs] = await Promise.all([
+        getDocs(collection(db, "carterasModelo", d.id, "posiciones")).catch(() => null),
+        getDocs(collection(db, "carterasModelo", d.id, "historial")).catch(() => null)]);
+      const pos = ps ? ps.docs.map(x => x.data()).find(p => p.estado === "activa" && mismo(p.ticker)) || null : null;
+      const hist = hs ? hs.docs.map(x => x.data()).filter(h => mismo(h.ticker)) : [];
+      const codigo = c.codigo || COD_ID[d.id] || c.slug || d.id;
+      return { id: d.id, nombre: c.nombre || d.id, codigo, color: COLOR_COD[String(codigo).toUpperCase()] || "#14213D", pos, hist };
+    }));
+  } catch (e) { lista = null; }
+  if (!pro) {
+    try {
+      const s = await getDoc(doc(db, "carterasTeaser", "latest"));
+      const tz = s.exists() ? (JSON.parse(s.data().json || "{}").carteras || []) : [];
+      ocultas = tz.filter(x => x && x.id && x.visibilidad !== "publico" && !(lista || []).some(c => c.id === x.id)).map(x => x.nombre || x.id);
+    } catch (e) {}
+  }
+  if (mio !== cartSeq) return;
+  S.carteras = lista || []; S.ocultas = ocultas;
+  const box = $("#carteras-box");
+  if (box) {
+    const con = S.carteras.filter(c => c.pos);
+    const entrada = v => Number(v) > 0 ? " a US$" + Number(v).toLocaleString("es-AR", { maximumFractionDigits: Math.abs(Number(v)) < 1 ? 4 : 2 }) : "";
+    box.innerHTML = (lista == null ? '<div class="va-vacio">No pudimos leer las carteras ahora.</div>'
+      : con.length ? con.map(c => `<a class="va-cart" href="/cartera?c=${encodeURIComponent(c.id)}">
+          <span class="cod" style="background:${c.color}">${esc(c.codigo)}</span>
+          <div style="min-width:0"><div class="n">${esc(c.nombre)}</div><div class="e">${c.pos.fechaIncorporacion ? "entró " + esc(fLarga(c.pos.fechaIncorporacion)) : "posición activa"}${entrada(c.pos.precioEntrada)}</div></div>
+          <span class="w">${pesoTxt(c.pos.pesoObjetivo)}</span></a>`).join("")
+      : `<div class="va-vacio">No está en ninguna cartera ${S.pro || !ocultas.length ? "Valtia" : "abierta"} hoy.</div>`)
+      + (ocultas.length ? `<div class="va-fuente">${esc(ocultas.join(" y "))}: qué tienen y cuánto pesa cada posición se ve con <a href="/planes">Valtia PRO</a>.</div>` : "");
+  }
+  pintarCta();
+  pintarEscribimos();
+}
+
+// Lo que escribimos: informes que la sesión puede leer y nombran la especie,
+// más los registros de las carteras que la movieron
+let INF = [];
+async function llenarEscribimos(pro) {
+  let docs = [];
+  try {
+    const s = pro ? await getDocs(collection(db, "informes")).catch(() => null) : null;
+    const snap = s || await getDocs(query(collection(db, "informes"), where("visibilidad", "==", "publico")));
+    docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) { docs = []; }
+  const base = S.par || S.e;
+  const rx = new RegExp("\\b" + base.replace(/[^A-Z0-9]/g, "") + "[CD]?\\b");
+  INF = docs.filter(d => rx.test([d.titulo, d.resumen, d.categorias, d.ticker].join(" ")));
+  pintarEscribimos();
+}
+function pintarEscribimos() {
+  const box = $("#escribimos-box");
+  if (!box) return;
+  const notas = INF.map(d => ({ f: iso(d.fecha), t: d.titulo || "Informe", s: [d.tipo, d.categorias].filter(Boolean).join(" · "),
+    href: `/informes?i=${encodeURIComponent(d.slug || d.id)}` }));
+  (S.carteras || []).forEach(c => c.hist.forEach(h => {
+    const a = String(h.accion || "").toLowerCase();
+    const que = /añad|compr|entr/.test(a) ? "entró" : /elimin|vend|venta|sal/.test(a) ? "salió" : /ajust|peso/.test(a) ? "cambió de peso" : (h.accion || "movimiento");
+    notas.push({ f: iso(h.fecha), t: `Registro de ${c.nombre}: ${S.e} ${que}`, s: recorte(h.razonamiento || "", 160), href: `/cartera?c=${encodeURIComponent(c.id)}` });
+  }));
+  notas.sort((a, c) => String(c.f).localeCompare(String(a.f)));
+  box.innerHTML = notas.length ? notas.slice(0, 5).map(n => `<a class="va-nota" href="${n.href}">
+      <span class="f">${esc(fLarga(n.f))}</span>
+      <div style="min-width:0"><div class="t">${esc(n.t)}</div>${n.s ? `<div class="s">${esc(n.s)}</div>` : ""}</div></a>`).join("")
+    : `<div class="va-vacio">Todavía no publicamos un informe sobre ${esc(S.par || S.e)}${S.pro ? "" : " que se pueda leer sin cuenta"}. El análisis de renta fija y macro está en <a href="/informes">Informes</a>.</div>`;
+}
+
+// "Ya lo tenés": solo con sesión, de inversores/{email}/cartera (en VN)
+async function llenarTenencia(user) {
+  let lotes = [];
+  if (user && user.email) {
+    try {
+      const snap = await getDocs(collection(db, "inversores", user.email, "cartera"));
+      lotes = snap.docs.map(x => x.data()).filter(p => mismo(p.ticker) && Number(p.cantidad) > 0);
+    } catch (e) { lotes = []; }
+  }
+  S.tenencia = lotes.length ? `${nCant.format(lotes.reduce((a, p) => a + (Number(p.cantidad) || 0), 0))} VN` : null;
+  pintarCta();
+}
+
 render();
 </script>
 <script type="module" src="nav-auth.js?v=10"></script>

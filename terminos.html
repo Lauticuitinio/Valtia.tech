@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Términos y Condiciones — Valtia Analytics</title>
+<title>Términos y condiciones — Valtia Analytics</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="/favicon-180.png">
@@ -12,9 +12,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Términos — reglas globales del rediseño (sitio.css): título negro sobre
-     blanco y texto legal justificado en una sola columna de 760px, alineada
-     con el título. Solo claro. ── */
+/* ── Términos y Privacidad (SPEC §10, prototipos "Valtia Terminos" y "Valtia
+     Privacidad"): una sola plantilla —terminos.html y privacidad.html comparten
+     este bloque y el script del pie tal cual— con dos pestañas, cada una en su
+     URL, e índice lateral fijo que marca la sección visible. En celular el
+     índice se oculta y las pestañas quedan arriba del texto. El texto legal es
+     el vigente: el del prototipo espera la revisión de un abogado. Solo claro. ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --navy:#0E1830;--navy2:#0B1327;
@@ -23,29 +26,67 @@
   --text:#101010;--sub:#57534A;--muted:#8B8375;
   --border:#E7E3DA;--card:#fff;
   --ink:#101010;--mut:#8B8375;--line:#E7E3DA;--marfil:#F6F3EC;
+  --cuerpo:#4A453B;
 }
 html{scroll-behavior:smooth}
-body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);min-height:100vh;--v-ancho:760px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+/* 1100 como la grilla del prototipo; el título usa el mismo ancho, así el
+   índice y el título arrancan en el mismo borde */
+body{background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);min-height:100vh;--v-ancho:1100px}
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
-/* en el cuerpo legal el enlace va en el dorado oscuro: el claro no llega a AA sobre blanco */
-main a{color:var(--gold2);text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
-main a:hover{color:var(--ink)}
 
-/* texto legal: una sola columna de máx. 760px con los bordes del título;
-   el margen lateral (52px / 20px) es --v-gutter de sitio.css. Justificado con
-   guiones: es texto corrido ancho. */
-main{max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto;padding:18px var(--v-gutter) 20px}
-main h2{font:700 22px/1.25 'IBM Plex Sans',sans-serif;color:var(--ink);margin:34px 0 10px;padding-top:26px;border-top:1px solid var(--line);text-wrap:pretty}
-main p,main li{font:400 15px/1.75 'IBM Plex Sans',sans-serif;color:var(--sub);text-align:justify;-webkit-hyphens:auto;hyphens:auto}
-main ul{padding-left:20px;display:flex;flex-direction:column;gap:6px;margin-top:6px}
-main b{color:var(--ink);font-weight:600}
+/* grilla: índice de 220px + texto, separados 48px (prototipo) */
+.lg-body{max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto;padding:36px var(--v-gutter) 70px}
+.lg-grid{display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px;align-items:start}
 
-/* footer (igual a Noticias); el mail flotante es el de sitio.css */
-footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:40px}
-.footer-copy{font:400 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
+/* índice lateral fijo: queda debajo del nav + la barra de cotizaciones */
+.lg-toc{position:sticky;top:calc(var(--v-top) + 26px);max-height:calc(100vh - var(--v-top) - 40px);overflow-y:auto;scrollbar-width:none}
+.lg-toc::-webkit-scrollbar{display:none}
+/* el índice recorta lo que sale de su caja (overflow): el foco de teclado va
+   por dentro, si no el borde izquierdo y el de arriba quedaban cortados */
+.lg-toc a:focus-visible{outline:2px solid var(--gold2);outline-offset:-2px}
+.lg-docs{display:inline-flex;gap:2px;margin-bottom:18px}
+.lg-docs .v-chip{display:inline-block;padding:6px 10px;text-decoration:none}
+.lg-toc-t{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin-bottom:10px}
+.lg-idx{display:flex;flex-direction:column;gap:2px}
+.lg-idx a{display:block;font-size:14px;line-height:1.45;color:var(--sub);padding:5px 0 5px 10px;border-left:2px solid var(--line);transition:color .15s,border-color .15s}
+.lg-idx a:hover{color:var(--ink);border-color:var(--navy)}
+/* la sección que se está leyendo: rail dorado, como el activo de los selectores */
+.lg-idx a.on{color:var(--ink);border-color:var(--gold);font-weight:500}
+
+/* texto legal: 72ch, justificado con guiones (texto corrido ancho, SPEC §0) */
+.lg-txt{max-width:72ch}
+.lg-intro{font-size:17px;line-height:1.7;color:var(--ink);margin:0 0 30px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+.lg-sec{margin-bottom:28px}
+.lg-sec h2{font:700 20px/1.3 'IBM Plex Sans',sans-serif;color:var(--ink);margin:0 0 8px;text-wrap:pretty}
+.lg-sec h2 .n{color:var(--gold2);margin-right:8px}
+.lg-sec p,.lg-sec li{font-size:15.5px;line-height:1.75;color:var(--cuerpo);text-align:justify;-webkit-hyphens:auto;hyphens:auto}
+.lg-sec p{margin:0 0 10px}
+.lg-sec ul{padding-left:20px;margin:0 0 10px;display:flex;flex-direction:column;gap:6px}
+.lg-sec b{color:var(--ink);font-weight:600}
+/* enlaces del texto en el dorado oscuro y subrayados: el dorado claro no llega a AA sobre blanco */
+.lg-sec a,.lg-pie a{color:var(--gold2);text-decoration:underline;text-decoration-color:rgba(176,138,62,.55);text-underline-offset:3px}
+.lg-sec a:hover,.lg-pie a:hover{color:var(--ink)}
+.lg-pie{border-top:1px solid var(--line);padding-top:18px;font-size:14.5px;line-height:1.7;color:var(--sub)}
+
+@media(max-width:880px){
+  .lg-body{padding-top:22px}
+  .lg-grid{grid-template-columns:1fr;gap:0}
+  .lg-toc{position:static;max-height:none;overflow:visible}
+  .lg-toc-t,.lg-idx{display:none}
+  .lg-docs{margin-bottom:24px}
+}
+
+/* pie del prototipo; el mail flotante es el de sitio.css */
+footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:0}
+.footer-copy{font:400 12.5px 'IBM Plex Sans',sans-serif;line-height:1.6;color:rgba(255,255,255,.35)}
 .footer-links{display:flex;gap:20px;flex-wrap:wrap}
 .footer-links a{font:500 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;color:rgba(255,255,255,.55);text-transform:uppercase}
+.footer-links a:hover{color:#E8CE96}
+/* en celular el mail flotante (48px a 28px del borde) tapaba "Inicio" del pie
+   al llegar al final: se le deja lugar abajo, como en Planes */
+@media(max-width:880px){footer{padding-bottom:92px}}
 </style>
 <link rel="stylesheet" href="sitio.css?v=1">
 </head>
@@ -72,66 +113,106 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
 <!-- cotizaciones en vivo, debajo del nav (módulo único del sitio: cotizaciones.js) -->
 <div id="valtia-cot"></div>
 
-<!-- título de la página: negro sobre blanco -->
+<!-- título de la página: negro sobre blanco, con la vigencia como bajada -->
 <header class="v-tit"><div class="v-tit-in">
   <button class="volver" onclick="volver()">← Volver</button>
-  <h1>Términos y Condiciones</h1>
+  <h1>Términos y condiciones</h1>
   <p class="v-baj">Vigentes desde el 1 de septiembre de 2026</p>
 </div></header>
 
-<main>
-  <p>Al usar valtia.tech aceptás estos términos. Están escritos para leerse: si algo no queda claro, escribinos.</p>
+<div class="lg-body">
+  <div class="lg-grid">
+    <aside class="lg-toc">
+      <nav class="lg-docs" aria-label="Documentos legales">
+        <a class="v-chip on" href="/terminos" aria-current="page">Términos</a>
+        <a class="v-chip" href="/privacidad">Privacidad</a>
+      </nav>
+      <div class="lg-toc-t" id="lg-toc-t">Contenido</div>
+      <nav class="lg-idx" aria-labelledby="lg-toc-t">
+        <a href="#terminos-1">1. Quiénes somos</a>
+        <a href="#terminos-2">2. Qué es (y qué no es) el servicio</a>
+        <a href="#terminos-3">3. Tu cuenta</a>
+        <a href="#terminos-4">4. Contenido PRO</a>
+        <a href="#terminos-5">5. Riesgos y datos</a>
+        <a href="#terminos-6">6. Propiedad intelectual</a>
+        <a href="#terminos-7">7. Responsabilidad</a>
+        <a href="#terminos-8">8. Cambios y contacto</a>
+      </nav>
+    </aside>
 
-  <h2>1. Quiénes somos</h2>
-  <p><b>Valtia Analytics</b> es un proyecto de análisis e investigación de mercados con base en Córdoba, Argentina,
-  creado y operado por Lautaro Cuitiño ("Valtia"). El sitio publica análisis, datos de mercado, carteras modelo,
-  informes y herramientas para inversores.</p>
+    <main class="lg-txt">
+      <p class="lg-intro">Al usar valtia.tech aceptás estos términos. Están escritos para leerse: si algo no queda claro, escribinos.</p>
 
-  <h2>2. Qué es (y qué no es) el servicio</h2>
-  <p>Todo el contenido de Valtia es de <b>carácter general y educativo</b>. Valtia <b>no</b> brinda asesoramiento
-  financiero personalizado a través del sitio, <b>no</b> intermedia en la compraventa de valores, <b>no</b> custodia
-  fondos ni ejecuta órdenes, y nada de lo publicado constituye oferta pública de valores. Las decisiones de inversión
-  son tuyas y se ejecutan en tu propio broker, bajo tu exclusiva responsabilidad.</p>
+      <section class="lg-sec" id="terminos-1">
+        <h2><span class="n">1.</span>Quiénes somos</h2>
+        <p><b>Valtia Analytics</b> es un proyecto de análisis e investigación de mercados con base en Córdoba, Argentina,
+        creado y operado por Lautaro Cuitiño ("Valtia"). El sitio publica análisis, datos de mercado, carteras modelo,
+        informes y herramientas para inversores.</p>
+      </section>
 
-  <h2>3. Tu cuenta</h2>
-  <ul>
-    <li>El registro es gratuito, con email verificado o cuenta de Google. Sos responsable de mantener tu contraseña segura.</li>
-    <li>Los datos que cargás en Mi Cartera y Disciplina son privados: solo vos (y la administración del sitio) pueden verlos.</li>
-    <li>Podemos suspender cuentas ante uso abusivo, automatizado o fraudulento del sitio.</li>
-  </ul>
+      <section class="lg-sec" id="terminos-2">
+        <h2><span class="n">2.</span>Qué es (y qué no es) el servicio</h2>
+        <p>Todo el contenido de Valtia es de <b>carácter general y educativo</b>. Valtia <b>no</b> brinda asesoramiento
+        financiero personalizado a través del sitio, <b>no</b> intermedia en la compraventa de valores, <b>no</b> custodia
+        fondos ni ejecuta órdenes, y nada de lo publicado constituye oferta pública de valores. Las decisiones de inversión
+        son tuyas y se ejecutan en tu propio broker, bajo tu exclusiva responsabilidad.</p>
+      </section>
 
-  <h2>4. Contenido PRO</h2>
-  <p>Valtia PRO es una suscripción paga. Mientras el cobro online no esté disponible, el alta se gestiona en forma
-  directa y la lista de espera reserva el precio de lanzamiento. La baja es <b>sin permanencia</b>: hoy con un mail
-  alcanza; cuando exista la suscripción online, desde tu cuenta.</p>
+      <section class="lg-sec" id="terminos-3">
+        <h2><span class="n">3.</span>Tu cuenta</h2>
+        <ul>
+          <li>El registro es gratuito, con email verificado o cuenta de Google. Sos responsable de mantener tu contraseña segura.</li>
+          <li>Los datos que cargás en Mi Cartera y Disciplina son privados: solo vos (y la administración del sitio) pueden verlos.</li>
+          <li>Podemos suspender cuentas ante uso abusivo, automatizado o fraudulento del sitio.</li>
+        </ul>
+      </section>
 
-  <h2>5. Riesgos y datos</h2>
-  <ul>
-    <li>Invertir implica riesgo de pérdida, incluso del capital. Los rendimientos pasados no garantizan resultados futuros.</li>
-    <li>Los precios, ratios y datos de mercado provienen de fuentes de terceros y pueden contener errores o demoras. Verificá siempre antes de operar.</li>
-    <li>Las lecturas del radar, veredictos y puntajes son metodología propia de análisis relativo — no son recomendaciones de compra o venta.</li>
-  </ul>
+      <section class="lg-sec" id="terminos-4">
+        <h2><span class="n">4.</span>Contenido PRO</h2>
+        <p>Valtia PRO es una suscripción paga. Mientras el cobro online no esté disponible, el alta se gestiona en forma
+        directa y la lista de espera reserva el precio de lanzamiento. La baja es <b>sin permanencia</b>: hoy con un mail
+        alcanza; cuando exista la suscripción online, desde tu cuenta.</p>
+      </section>
 
-  <h2>6. Propiedad intelectual</h2>
-  <p>Los informes, análisis, textos y herramientas de Valtia son contenido propio. Podés usarlos para tu inversión
-  personal y citarlos con atribución; no está permitida su redistribución comercial ni su reproducción masiva.</p>
+      <section class="lg-sec" id="terminos-5">
+        <h2><span class="n">5.</span>Riesgos y datos</h2>
+        <ul>
+          <li>Invertir implica riesgo de pérdida, incluso del capital. Los rendimientos pasados no garantizan resultados futuros.</li>
+          <li>Los precios, ratios y datos de mercado provienen de fuentes de terceros y pueden contener errores o demoras. Verificá siempre antes de operar.</li>
+          <li>Las lecturas del radar, veredictos y puntajes son metodología propia de análisis relativo — no son recomendaciones de compra o venta.</li>
+        </ul>
+      </section>
 
-  <h2>7. Responsabilidad</h2>
-  <p>El sitio se ofrece "tal como está". En la máxima medida permitida por la ley, Valtia no responde por decisiones
-  de inversión tomadas en base al contenido, ni por interrupciones, errores u omisiones del servicio.</p>
+      <section class="lg-sec" id="terminos-6">
+        <h2><span class="n">6.</span>Propiedad intelectual</h2>
+        <p>Los informes, análisis, textos y herramientas de Valtia son contenido propio. Podés usarlos para tu inversión
+        personal y citarlos con atribución; no está permitida su redistribución comercial ni su reproducción masiva.</p>
+      </section>
 
-  <h2>8. Cambios y contacto</h2>
-  <p>Podemos actualizar estos términos; la fecha de vigencia figura arriba y los cambios relevantes se comunican en el
-  sitio. Rigen las leyes de la República Argentina, con jurisdicción en los tribunales ordinarios de Córdoba.
-  Contacto: <a href="mailto:soporte@valtia.tech">soporte@valtia.tech</a>.</p>
-</main>
+      <section class="lg-sec" id="terminos-7">
+        <h2><span class="n">7.</span>Responsabilidad</h2>
+        <p>El sitio se ofrece "tal como está". En la máxima medida permitida por la ley, Valtia no responde por decisiones
+        de inversión tomadas en base al contenido, ni por interrupciones, errores u omisiones del servicio.</p>
+      </section>
+
+      <section class="lg-sec" id="terminos-8">
+        <h2><span class="n">8.</span>Cambios y contacto</h2>
+        <p>Podemos actualizar estos términos; la fecha de vigencia figura arriba y los cambios relevantes se comunican en el
+        sitio. Rigen las leyes de la República Argentina, con jurisdicción en los tribunales ordinarios de Córdoba.
+        Contacto: <a href="mailto:soporte@valtia.tech">soporte@valtia.tech</a>.</p>
+      </section>
+
+      <div class="lg-pie">Dudas sobre este documento: <a href="mailto:soporte@valtia.tech">soporte@valtia.tech</a>. Valtia Analytics · Córdoba, Argentina.</div>
+    </main>
+  </div>
+</div>
 
 <a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
 
 <footer>
-  <div class="footer-copy">Valtia Analytics · Córdoba, Argentina · <a href="/privacidad" style="color:inherit;text-decoration:underline">Política de Privacidad</a></div>
+  <div class="footer-copy">© 2026 Valtia Analytics — Análisis de carácter general y educativo. No constituye asesoramiento financiero.</div>
   <div class="footer-links">
-    <a href="/">Inicio</a><a href="/cartera">Carteras</a><a href="/informes">Informes</a><a href="/herramientas">Herramientas</a>
+    <a href="/">Inicio</a><a href="/terminos">Términos</a><a href="/privacidad">Privacidad</a>
   </div>
 </footer>
 <script>
@@ -144,6 +225,63 @@ function volver() {
   } catch (e) {}
   location.href = '/';
 }
+
+// Índice: marca la sección que se está leyendo. La línea de lectura es la
+// misma que usan los anclas (scroll-padding-top de sitio.css: nav + barra);
+// cerca del final baja hacia el pie de la pantalla, así las últimas secciones
+// —que nunca llegan arriba— también se marcan. Un clic en el índice deja
+// marcada esa sección hasta que la persona vuelva a mover la página.
+(function () {
+  var links = [].slice.call(document.querySelectorAll('.lg-idx a[href^="#"]'));
+  var secs = links.map(function (a) { return document.getElementById(a.getAttribute('href').slice(1)); });
+  if (!links.length || secs.indexOf(null) > -1) return;
+  var actual = -1, fijo = -1, pedido = false;
+
+  function marcar(i) {
+    if (i === actual) return;
+    actual = i;
+    links.forEach(function (a, j) {
+      a.classList.toggle('on', j === i);
+      if (j === i) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current');
+    });
+  }
+  function medir() {
+    pedido = false;
+    var alto = window.innerHeight;
+    if (fijo > -1) {
+      var r = secs[fijo].getBoundingClientRect();
+      // mientras el scroll suave viaja hacia ella, el marcador acompaña; al
+      // llegar, queda la elegida aunque no toque la línea de lectura
+      if (r.top < alto && r.bottom > 0) { marcar(fijo); return; }
+    }
+    var linea = (parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 120) + 8;
+    var resto = document.documentElement.scrollHeight - alto - window.scrollY;
+    var tramo = alto * 0.5;
+    if (resto < tramo) linea += Math.max(0, alto - 80 - linea) * (1 - Math.max(0, resto) / tramo);
+    var i = 0;
+    for (var j = 0; j < secs.length; j++) if (secs[j].getBoundingClientRect().top <= linea) i = j;
+    marcar(i);
+  }
+  function pedir() { if (!pedido) { pedido = true; requestAnimationFrame(medir); } }
+
+  links.forEach(function (a, j) { a.addEventListener('click', function () { fijo = j; marcar(j); }); });
+  ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach(function (ev) {
+    window.addEventListener(ev, function () { fijo = -1; }, { passive: true });
+  });
+  window.addEventListener('scroll', pedir, { passive: true });
+  window.addEventListener('resize', pedir);
+  // si se entra con un ancla (/terminos#terminos-3), esa sección queda marcada
+  var h = location.hash.slice(1);
+  secs.forEach(function (s, j) { if (s.id === h) fijo = j; });
+  window.addEventListener('hashchange', function () {
+    var id = location.hash.slice(1);
+    secs.forEach(function (s, j) { if (s.id === id) fijo = j; });
+    pedir();
+  });
+  // con ancla, el navegador todavía no saltó: se marca la pedida y se mide
+  // recién con el primer scroll
+  if (fijo > -1) marcar(fijo); else medir();
+})();
 </script>
 <script type="module" src="nav-auth.js?v=10"></script>
 <script type="module" src="cotizaciones.js?v=3"></script>
