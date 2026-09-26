@@ -8,11 +8,11 @@ import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, quer
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { calcular, agruparPorBroker, agruparPorActivo, normalizarTicker, reiniciarMiCartera, completarPreciosDeRentaFija }
-  from './mi-cartera.js?v=44';
+  from './mi-cartera.js?v=45';
 import { fxMercado, registrarImplicito, etiquetaFx } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
-import { renderResumen } from './panel-resumen.js?v=5';
+import { renderResumen } from './panel-resumen.js?v=6';
 import { renderComprar as renderComprarV3 } from './panel-comprar.js?v=1';
 import { renderCarteras as renderCarterasV3 } from './panel-carteras.js?v=2';
 import { renderMensual } from './panel-mensual.js?v=1';
@@ -22,7 +22,7 @@ import { renderAlertas, contarNoLeidas } from './panel-alertas.js?v=2';
 import { instalarEvaluacion, evaluarConPrecios, contarDisparadasNoVistas, fraseDisparo, fmtPrecio } from './alertas-precio.js?v=1';
 import { renderAgenda } from './panel-agenda.js?v=1';
 import { renderCuenta } from './panel-cuenta.js?v=2';
-import { renderOperar } from './panel-operar.js?v=3';
+import { renderOperar } from './panel-operar.js?v=4';
 import { eventos } from './panel-eventos.js?v=1';
 import { renderMovimientos } from './panel-movimientos.js?v=1';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }

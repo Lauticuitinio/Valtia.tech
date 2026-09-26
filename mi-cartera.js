@@ -24,8 +24,9 @@ export { convertir } from './fx.js?v=1';
 import { crearAlerta, precargaUmbral, alertasDe, textoAlerta, fmtPrecio, tickerCorto } from './alertas-precio.js?v=1';
 
 /* ── el catálogo grande (catalogo-activos.js: 1.469 CEDEARs, acciones, ETFs,
-   bonos, letras y cripto; solo símbolo, nombre y en qué mercado cotiza) ──
-   Pesa 93 KB, así que NO se importa arriba: se pide con import() la primera
+   bonos, letras y cripto; solo símbolo, nombre y en qué mercado cotiza, y en
+   los CEDEARs el ratio y el subyacente de la nómina de BYMA) ──
+   Pesa 99 KB, así que NO se importa arriba: se pide con import() la primera
    vez que hace falta —al abrir el modal de alta, o cuando una fila sin precio
    necesita saber en qué mercado cotiza su símbolo— y queda cacheado. Nunca
    traba el primer pintado. _cat guarda el módulo ya cargado para que el
@@ -34,7 +35,7 @@ import { crearAlerta, precargaUmbral, alertasDe, textoAlerta, fmtPrecio, tickerC
 let _cat = null, _catProm = null, _catPedido = false;
 function catalogo() {
   if (_cat) return Promise.resolve(_cat);
-  if (!_catProm) _catProm = import("./catalogo-activos.js?v=1")
+  if (!_catProm) _catProm = import("./catalogo-activos.js?v=2")
     .then(m => { _cat = m; return m; })
     .catch(() => { _catProm = null; return null; });   // una falla no queda cacheada
   return _catProm;
@@ -344,6 +345,19 @@ select.mc-brk-in{width:auto;max-width:200px}
    el motivo por el que con ese mercado no se guarda */
 .mc-sub .warn{color:var(--v3-warn)}
 .mc-sub .bad{color:var(--v3-dn)}
+/* el precio de referencia, debajo de "Se guarda como…" (como Senta): último
+   precio y cierre anterior con la hora del dato y, en los CEDEARs, el ratio y
+   el subyacente. Caja gris tenue como las fijas (nada de crema), Plex Sans con
+   cifras tabulares; el botón es el chico de los choques de mercado */
+.mc-ref{margin-top:10px;padding:9px 12px;border:1px solid var(--v3-line);border-radius:8px;background:var(--mc-soft);
+  font:400 12px/1.6 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-sub);font-variant-numeric:tabular-nums}
+.mc-ref[hidden]{display:none}
+.mc-ref b{font-weight:600;color:var(--v3-ink)}
+.mc-ref small{font-size:11px;color:var(--v3-mut)}
+.mc-ref-p{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+.mc-ref-p>span{flex:1 1 220px;min-width:0}
+.mc-ref-l+.mc-ref-p,.mc-ref-p+.mc-ref-l{margin-top:3px}
+.mc-ref .mc-sug-b{padding:4px 10px;flex:none}
 /* los botones de un clic del choque de mercado ("Cargarlo en BYMA (NVDA.BA)"):
    secundarios, blancos con borde */
 .mc-sug-bs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
@@ -2754,11 +2768,13 @@ function modalHTML() {
             <div class="fijo" id="mc-nombre" aria-labelledby="mc-nombre-k">—</div></div>
         </div>
         <div class="mc-sub" id="mc-guarda"></div>
+        <div class="mc-ref" id="mc-ref" hidden></div>
         <div class="mc-k2">Tus compras</div>
         <div class="mc-cmp-hd" aria-hidden="true"><span>Fecha</span><span>Cantidad</span><span>Precio</span><span></span></div>
         <div class="mc-cmps" id="mc-compras"></div>
         <button type="button" class="mc-mas" id="mc-mas">+ Agregar otra compra</button>
         <div class="mc-res">
+          <div class="f"><span>Posición</span><b id="mc-posic">—</b></div>
           <div class="f"><span>Precio promedio de compra</span><b id="mc-prom">—</b></div>
           <div class="f"><span>Total invertido</span><b id="mc-tot">—</b></div>
           <div class="nota" id="mc-resnota"></div>
@@ -2892,7 +2908,9 @@ function buscarConCatalogo(simbolo, mercado) {
    - aviso: lo que se informa sin bloquear (no está en el catálogo, se guarda
      igual; o está acá y también allá)
    - cambiarA: si está en UN solo mercado y no es el elegido, ese mercado (el
-     modal cambia el selector solo si el usuario no lo tocó a mano) ── */
+     modal cambia el selector solo si el usuario no lo tocó a mano)
+   - entrada: la entrada del catálogo en el mercado elegido (o null); en un
+     CEDEAR trae el ratio y el subyacente para la línea de referencia ── */
 /* ── con qué escritura se guarda un símbolo en un mercado ──
    1) Sin el sufijo de OTRO mercado: "NVDA.BA" en Cripto o Exterior es NVDA,
       "NVDA-USD" en BYMA es NVDA (normalizarTicker le pone después el sufijo
@@ -2922,9 +2940,10 @@ export function resolverSimbolo(crudo, mercadoElegido, buscar, bonos = new Set()
   // cargar, lo tipeado sin el sufijo de otro mercado
   const r = { tk: s ? tkEn(mercado) : "", simbolo: s ? escrituraEn(s, mercado, enM(mercado)) : "",
               nombre: "", enCatalogo: null, mercadosPosibles: [], esTxt: "",
-              choque: "", sugerencias: [], aviso: "", cambiarA: null };
+              choque: "", sugerencias: [], aviso: "", cambiarA: null, entrada: null };
   if (!s || typeof buscar !== "function") return r;
   const aca = enM(mercado);
+  r.entrada = aca;
   const otras = entradas.filter(e => e.m !== mercado);
   r.mercadosPosibles = entradas.map(e => e.m);
   r.enCatalogo = !!aca;
@@ -3063,6 +3082,361 @@ function elegirSugerencia(i) {
   if (c) try { c.focus(); } catch (e2) {}
 }
 
+/* ══ el precio de referencia (lo que pidió Lauti el 25/09: "como Senta, le da
+   la referencia") ══
+   Debajo de "Se guarda como…": el último precio del activo y el cierre
+   anterior, con la hora del dato; en los CEDEARs, además, de qué empresa es,
+   el ratio y cuánto vale la acción allá. Es una REFERENCIA: no bloquea
+   Guardar ni cambia lo que se guarda. "Usar este precio" solo completa un
+   campo que el usuario ve y puede cambiar, y nunca pisa uno ya escrito.
+   Las fuentes, en este orden (elegirPrecioRef):
+   1) precios/{ticker}: el intradía lo reescribe cada 15 min en rueda, así que
+      es el más fresco. Vale si es de HOY desde las 10:00 (antes de esa hora
+      es la copia del cierre anterior que deja el sync de las 09:00), si el
+      catálogo no dice que ese papel todavía no operó hoy y si el catálogo de
+      hoy no se armó DESPUÉS (entonces el más fresco es el catálogo).
+   2) preciosCatalogo/latest (precios_catalogo.py en fondo-sync): un mapa
+      {TICKER: [p, pc, mon, fecha]} para todo el catálogo, que el intradía
+      rehace una vez por hora en rueda y una vez después del cierre. Se lee
+      UNA vez por apertura del modal y queda en memoria 10 minutos.
+   3) la renta fija del panel de bonos (el mismo bonosPanel/latest que ya
+      bajó bonosSet): precio cada 100 VN y variación del día.
+   Sin ninguna: "Sin precio de referencia todavía…". Nada se estima ni se
+   completa con otra cosa. */
+const AR_MS = 3 * 3600e3;
+const DESDE_RUEDA = 10 * 60;        // el intradía arranca a las 10:00 (precios_intradia.py)
+const CIERRE_REF = 18 * 60 + 45;    // después, el catálogo guarda el cierre del día (precios_catalogo.py)
+const DIAS_SEM = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+/* un Timestamp de Firestore, una fecha ISO o milisegundos -> milisegundos (o null) */
+function msDe(t) {
+  if (t == null || t === "") return null;
+  if (typeof t === "number") return isFinite(t) ? t : null;
+  if (typeof t.toMillis === "function") { try { return t.toMillis(); } catch (e) { return null; } }
+  if (t.seconds != null) return Number(t.seconds) * 1000 + Math.round(Number(t.nanoseconds || 0) / 1e6);
+  const ms = Date.parse(t);
+  return isFinite(ms) ? ms : null;
+}
+/* el día en la Argentina de un instante en milisegundos (diaAR, más arriba,
+   recibe un Date: son dos funciones para no romper a quienes ya la usan) */
+const diaMs = ms => new Date(ms - AR_MS).toISOString().slice(0, 10);
+const minutosAR = ms => { const d = new Date(ms - AR_MS); return d.getUTCHours() * 60 + d.getUTCMinutes(); };
+const horaAR = ms => new Date(ms - AR_MS).toISOString().slice(11, 16);
+/* "jueves 24" si fue en la última semana; si no, "12/09" */
+function diaTxt(fecha, hoy) {
+  const f = Date.parse(String(fecha || "").slice(0, 10) + "T12:00:00Z"), h = Date.parse(hoy + "T12:00:00Z");
+  if (!isFinite(f)) return "";
+  const d = new Date(f), dias = Math.round((h - f) / 86400e3);
+  if (dias >= 1 && dias <= 6) return `${DIAS_SEM[d.getUTCDay()]} ${d.getUTCDate()}`;
+  return `${String(d.getUTCDate()).padStart(2, "0")}/${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+/* el precio redondeado como se muestra: de 1.000 para arriba sin decimales,
+   de 1 a 1.000 con dos, debajo de 1 con cuatro cifras (cripto chica). "Usar
+   este precio" completa ESTE número, el que la persona está leyendo. */
+export function redondearRef(n) {
+  const v = Number(n);
+  if (!isFinite(v) || v <= 0) return null;
+  if (v >= 1000) return Math.round(v);
+  if (v >= 1) return Math.round(v * 100) / 100;
+  return Number(v.toPrecision(4));
+}
+export function precioRefTxt(n, moneda) {
+  const r = redondearRef(n);
+  if (r == null) return "—";
+  const txt = r >= 1000 ? r.toLocaleString("es-AR", { maximumFractionDigits: 0 })
+    : r >= 1 ? r.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : r.toLocaleString("es-AR", { maximumFractionDigits: 10 });
+  return (moneda === "ARS" ? "$" : "US$") + txt;
+}
+/* cuánto cambió contra el cierre anterior, en por ciento; null sin él */
+export function variacionRef(p, pc) {
+  const a = Number(p), b = Number(pc);
+  return a > 0 && b > 0 ? (a / b - 1) * 100 : null;
+}
+const varRef1 = v => Math.round(v * 10) / 10;
+const varRefTxt = v => (varRef1(v) >= 0 ? "+" : "−") + Math.abs(varRef1(v)).toFixed(1).replace(".", ",") + "%";
+/* "15:1" (quince CEDEARs son una acción) o "1:3" (un CEDEAR son tres), como la nómina */
+export function ratioTxt(r) {
+  const v = Number(r);
+  if (!(v > 0)) return "";
+  const n = x => Number(x.toFixed(2)).toLocaleString("es-AR", { maximumFractionDigits: 2, useGrouping: false });
+  return v >= 1 ? `${n(v)}:1` : `1:${n(1 / v)}`;
+}
+
+/* la referencia de un ticker, de la fuente que corresponda (ver arriba). PURA:
+   todo entra por parámetro. pdoc: precios/{tk} (o null); catalogo: { mapa,
+   act } de preciosCatalogo/latest (o null); panel: bonosPanel/latest ya
+   leído (o null). Devuelve { p, pc, moneda, fuente, deHoy, cuando, fecha }
+   (fecha: el día del dato, "" si no se sabe), o null si no hay precio en
+   ningún lado. */
+export function elegirPrecioRef({ tk, pdoc = null, catalogo = null, panel = null, bonos = new Set(), ahora = Date.now() } = {}) {
+  const t = String(tk || "").trim().toUpperCase();
+  if (!t) return null;
+  const hoy = diaMs(ahora);
+  const esCripto = /-USD$/.test(t);
+  const c = catalogo && catalogo.mapa ? catalogo.mapa[t] : null;
+  const cOk = Array.isArray(c) && Number(c[0]) > 0 && (c[2] === "ARS" || c[2] === "USD");
+  const cFecha = cOk && /^\d{4}-\d{2}-\d{2}$/.test(String(c[3] || "")) ? String(c[3]) : "";
+  const act = cOk ? msDe(catalogo.act) : null;
+  // 1) precios/{tk}: de hoy, desde que arranca la rueda, si el catálogo no
+  //    dice que el papel todavía no operó hoy (feriado acá, o antes de que abra)
+  //    y si el catálogo de hoy no es MÁS NUEVO: un doc que el intradía dejó de
+  //    refrescar (nadie tiene ya ese ticker, o Yahoo le falló a ese papel)
+  //    queda con el precio de la mañana, y el catálogo se rehace cada hora
+  if (pdoc && !pdoc.sinDatos && Number(pdoc.precio) > 0 && (pdoc.moneda === "ARS" || pdoc.moneda === "USD")) {
+    const ms = msDe(pdoc.actualizado_utc);
+    const noOperoHoy = !esCripto && !!cFecha && cFecha < hoy;
+    const catMasNuevo = ms != null && act != null && act > ms && (esCripto ? diaMs(act) === hoy : cFecha === hoy);
+    if (ms != null && diaMs(ms) === hoy && minutosAR(ms) >= DESDE_RUEDA && !noOperoHoy && !catMasNuevo) {
+      const p = Number(pdoc.precio), d = pdoc.d == null ? NaN : Number(pdoc.d);
+      let pc = isFinite(d) && d > -100 ? p / (1 + d / 100) : null;
+      // sin variación del día (la renta fija: escribir_precio_bono no la
+      // escribe), el cierre anterior del catálogo si es de la misma rueda y
+      // la misma moneda: es el mismo cierre, no una estimación
+      if (pc == null && cOk && cFecha === hoy && c[2] === pdoc.moneda && Number(c[1]) > 0) pc = Number(c[1]);
+      return { p, pc, moneda: pdoc.moneda, fuente: "precios", deHoy: true, cuando: `precio de las ${horaAR(ms)}`, fecha: hoy };
+    }
+  }
+  // 2) preciosCatalogo/latest
+  if (cOk) {
+    let deHoy = false, cuando = "";
+    if (esCripto) {
+      // la cripto no cierra: el dato es el precio de cuando se armó el doc
+      deHoy = act != null && diaMs(act) === hoy;
+      if (act != null) cuando = deHoy ? `precio de las ${horaAR(act)}` : `precio del ${diaTxt(diaMs(act), hoy)} a las ${horaAR(act)}`;
+    } else if (cFecha === hoy) {
+      deHoy = true;
+      cuando = act != null && diaMs(act) === hoy && minutosAR(act) < CIERRE_REF ? `precio de las ${horaAR(act)}` : "cierre de hoy";
+    } else if (cFecha) {
+      cuando = `cierre del ${diaTxt(cFecha, hoy)}`;
+    }
+    return { p: Number(c[0]), pc: Number(c[1]) > 0 ? Number(c[1]) : null, moneda: c[2], fuente: "catalogo", deHoy, cuando,
+             fecha: esCripto ? (act != null ? diaMs(act) : "") : cFecha };
+  }
+  // 3) la renta fija del panel de bonos (cada 100 VN)
+  const todos = panel && panel.todos;
+  if (todos && esRentaFija(t, bonos)) {
+    const esp = canon(t, bonos), b = todos[esp];
+    if (b && Number(b.p) > 0) {
+      const p = Number(b.p), v = b.v == null ? NaN : Number(b.v);
+      // v = 0 no distingue "sin cambio" de "sin dato": sin cierre anterior, como en el pipeline
+      return { p, pc: isFinite(v) && v !== 0 && v > -100 ? p / (1 + v / 100) : null,
+               moneda: monedaProbable(esp, bonos), fuente: "panel", deHoy: false, cuando: "panel de bonos", fecha: "" };
+    }
+  }
+  return null;
+}
+
+/* "Hoy: $33.460 · cierre anterior $32.862 (+1,8%) · precio de las 14:15".
+   Si el dato no es de hoy arranca con "Último:"; sin cierre anterior, esa
+   parte no va. unidad: " cada 100 VN" en la renta fija. html: los números en
+   <b> y la variación con color (el modal); sin html, texto plano. PURA. */
+export function lineaRef(ref, { unidad = "", html = false } = {}) {
+  if (!ref || !(Number(ref.p) > 0)) return "";
+  const b = x => html ? `<b>${x}</b>` : x;
+  let s = `${ref.deHoy ? "Hoy" : "Último"}: ${b(precioRefTxt(ref.p, ref.moneda))}${unidad}`;
+  if (Number(ref.pc) > 0) {
+    s += ` · cierre anterior ${b(precioRefTxt(ref.pc, ref.moneda))}`;
+    const v = variacionRef(ref.p, ref.pc);
+    if (v != null) {
+      const cls = varRef1(v) > 0 ? "mc-pos" : varRef1(v) < 0 ? "mc-neg" : "mc-mut";
+      s += html ? ` <span class="${cls}">(${varRefTxt(v)})</span>` : ` (${varRefTxt(v)})`;
+    }
+  }
+  if (ref.cuando) s += html ? ` · <small>${esc(ref.cuando)}</small>` : ` · ${ref.cuando}`;
+  return s;
+}
+
+/* ── el CEDEAR: de qué empresa es, dónde cotiza el subyacente y el ratio ──
+   Salen de la entrada del catálogo (r, u y b: ver _CEDEARS en
+   catalogo-activos.js). b es la bolsa cuando NO es de EE.UU.: ahí no se dice
+   "en EE.UU." ni se busca precio allá. */
+const BOLSA_NOM = { B3: "B3, Brasil", XETRA: "Xetra, Alemania", FRA: "Fráncfort", LSE: "Londres", TSX: "Toronto",
+                    EURONEXT: "Euronext", MIL: "Milán", SIX: "Zúrich", TSE: "Tokio", HKEX: "Hong Kong", BME: "Madrid",
+                    OMX: "Nasdaq Nórdico" };
+/* la clave del subyacente en preciosCatalogo (como la guarda la cartera en el
+   exterior: AXP, BAC, BRK-B); "" si no es un CEDEAR o si no cotiza en EE.UU. */
+export function claveSubyacente(e) {
+  if (!e || e.t !== "cedear" || e.b) return "";
+  return String(e.u || e.s || "").trim().toUpperCase().replace(/\./g, "-");
+}
+/* "Es el CEDEAR de American Express Co (AXP en EE.UU.) · ratio 15:1" */
+export function lineaCedear(e, nombre) {
+  if (!e || e.t !== "cedear") return "";
+  // la clase con punto, como la ve quien opera allá (BRK.B)
+  const sub = String(e.u || e.s || "").replace(/-/g, ".");
+  const donde = e.b ? (BOLSA_NOM[e.b] || e.b) : "EE.UU.";
+  return `Es el CEDEAR de ${nombre || e.n} (${sub} en ${donde})` + (Number(e.r) > 0 ? ` · ratio ${ratioTxt(e.r)}` : "");
+}
+/* "≈ US$336,55 la acción allá · al CCL, ≈ $33.476 por CEDEAR". precioUS: la
+   fila [p, pc, mon, fecha] de preciosCatalogo para claveSubyacente(e); ccl:
+   _fx.ccl. Sin precio en dólares, "": no se inventa. Sin CCL, sin la cuenta.
+   hoy ("YYYY-MM-DD"): si el precio de allá es más viejo que el del CEDEAR
+   (base: el día de ese precio; sin él, hoy) —feriado en EE.UU., o antes de
+   que abra Nueva York— se dice de cuándo, para no compararlos callado. */
+export function lineaSubyacente(e, precioUS, ccl, hoy = "", base = "") {
+  if (!claveSubyacente(e) || !Array.isArray(precioUS) || !(Number(precioUS[0]) > 0) || precioUS[2] !== "USD") return "";
+  const p = Number(precioUS[0]);
+  const f = String(precioUS[3] || "");
+  const deOtroDia = !!hoy && /^\d{4}-\d{2}-\d{2}$/.test(f) && f < (base || hoy);
+  let s = `≈ ${precioRefTxt(p, "USD")} la acción allá` + (deOtroDia ? ` (cierre del ${diaTxt(f, hoy)})` : "");
+  if (Number(ccl) > 0 && Number(e.r) > 0) s += ` · al CCL, ≈ ${precioRefTxt(p * Number(ccl) / Number(e.r), "ARS")} por CEDEAR`;
+  return s;
+}
+
+/* "20 CEDEARs", "1.000 VN", "0,5 BTC", "3 acciones": lo que suman las compras
+   que se están cargando, con la unidad del activo (Senta dice "nominales") */
+export function posicionTxt(cant, e, tk, factor = 1) {
+  const n = Number(cant);
+  if (!(n > 0)) return "—";
+  const c = n.toLocaleString("es-AR", { maximumFractionDigits: 8 });
+  const t = e && e.t, uno = n === 1, k = String(tk || "").toUpperCase();
+  if (factor !== 1 || t === "bono" || t === "letra" || t === "on") return `${c} VN`;
+  if (t === "cedear") return `${c} ${uno ? "CEDEAR" : "CEDEARs"}`;
+  if (t === "accion_ar" || t === "accion_us") return `${c} ${uno ? "acción" : "acciones"}`;
+  if (t === "cripto" || /-USD$/.test(k)) return `${c} ${k.replace(/-USD$/, "") || (e && e.s) || ""}`.trim();
+  return `${c} ${uno ? "nominal" : "nominales"}`;
+}
+
+/* a qué renglón va "Usar este precio": el primero con el precio vacío y la
+   fecha de hoy o la del día del precio (diaRef: un "cierre del viernes" sirve
+   para una compra del viernes). -1 si no hay: lo que el usuario escribió no se
+   pisa nunca, y el precio de hoy no se le pone a una compra de otro día (sería
+   un costo equivocado que nadie mira). PURA (filas: {fecha, pxTxt}). */
+export function filaParaPrecio(filas, hoy, diaRef = "") {
+  const dias = new Set([hoy, diaRef].filter(Boolean));
+  return (filas || []).findIndex(f => !!f && dias.has(f.fecha) && !String(f.pxTxt ?? "").trim());
+}
+/* lo que "Usar este precio" escribe en el campo: el redondeado que se muestra,
+   con coma decimal y sin puntos de miles (numIn), que parseNum lee igual
+   ("33460", "336,55", "0,0001234"). "" si no hay precio. PURA. */
+export function precioParaCampo(n) {
+  const r = redondearRef(n);
+  return r == null ? "" : numIn(r);
+}
+
+/* preciosCatalogo/latest: UNA lectura por apertura del modal y queda en
+   memoria 10 minutos (se abre y se cierra varias veces seguidas al cargar
+   una cartera). Una falla no queda guardada: la próxima apertura reintenta. */
+const PCAT_TTL = 10 * 60e3;
+let _pcat = null, _pcatProm = null;
+function preciosCatalogoDoc() {
+  if (_pcat && Date.now() - _pcat.leido < PCAT_TTL) return Promise.resolve(_pcat);
+  if (!_pcatProm) {
+    const p = (async () => {
+      try {
+        const s = await getDoc(doc(getFirestore(getApp()), "preciosCatalogo", "latest"));
+        if (!s.exists()) return null;
+        const d = s.data() || {};
+        const mapa = JSON.parse(d.json || "{}");
+        _pcat = { leido: Date.now(), mapa: mapa && typeof mapa === "object" ? mapa : {}, act: msDe(d.actualizado_utc) };
+        return _pcat;
+      } catch (e) { return null; }
+    })();
+    _pcatProm = p;
+    // la promesa se suelta al terminar (bien o mal): la que sigue lee de nuevo o usa _pcat
+    p.then(() => { if (_pcatProm === p) _pcatProm = null; });
+  }
+  return _pcatProm;
+}
+/* al abrir el modal: el mapa del catálogo y el panel de bonos (la misma
+   promesa que ya pidió bonosSet: no es otra lectura) */
+function cargarRefModal() {
+  const m = _modal;
+  if (!m) return;
+  // si el doc ya está en memoria (menos de 10 min), se usa desde el primer pintado
+  if (_pcat && Date.now() - _pcat.leido < PCAT_TTL) { m.pcat = _pcat; m.pcatEstado = "listo"; }
+  else m.pcatEstado = "cargando";
+  preciosCatalogoDoc().then(pc => {
+    if (_modal !== m) return;
+    m.pcat = pc; m.pcatEstado = pc ? "listo" : "sin";
+    actualizarModal();
+  });
+  panelBonosDoc().then(p => { if (_modal === m && p) { m.panel = p; actualizarModal(); } }).catch(() => {});
+}
+/* precios/{tk} para la referencia: el que ya tiene la cartera (se refresca
+   cada 2 min) o, si no, una lectura por ticker y por apertura, 350 ms después
+   de la última tecla (no se lee cada letra), solo de un símbolo que existe
+   (catálogo o renta fija) y en día hábil desde las 10:00, que es cuando puede
+   ser de hoy. undefined mientras se pide; null si no hay. */
+function precioDocRef(tk, r) {
+  const m = _modal;
+  if (!m) return null;
+  // la espera es de UN símbolo (pdocTk): si el símbolo cambió o se borró, la
+  // del anterior se cancela y no se lee un ticker que ya no está escrito; si
+  // es el mismo sigue corriendo, así tipear la cantidad no la posterga
+  if (m.pdocT && m.pdocTk !== tk) { clearTimeout(m.pdocT); m.pdocT = null; }
+  if (!tk) return null;
+  if (_precios[tk]) return _precios[tk];
+  if (m.pdocs.has(tk)) return m.pdocs.get(tk);
+  const ahora = Date.now(), dow = new Date(ahora - AR_MS).getUTCDay();
+  const existe = !!r && (r.enCatalogo === true || esRentaFija(tk, _bonos));
+  if (!existe || dow === 0 || dow === 6 || minutosAR(ahora) < DESDE_RUEDA) return null;
+  if (!m.pdocT) {
+    m.pdocTk = tk;
+    m.pdocT = setTimeout(async () => {
+      m.pdocT = null;
+      if (_modal !== m || m.pdocs.has(tk)) return;
+      m.pdocs.set(tk, undefined);
+      let d = null;
+      try {
+        const s = await getDoc(doc(getFirestore(getApp()), "precios", tk));
+        d = s.exists() ? s.data() : null;
+      } catch (e) {}
+      m.pdocs.set(tk, d);
+      if (_modal === m && m.refTk === tk) actualizarModal();
+    }, 350);
+  }
+  return undefined;
+}
+/* la caja de referencia, con lo que haya en este momento */
+function pintarReferencia(ctx, r, nom) {
+  const m = _modal, box = $m("#mc-ref");
+  if (!m || !box) return;
+  const { tk, moneda, factor } = ctx;
+  m.refTk = tk; m.ref = null; m.refUsar = null;
+  if (!tk || r.choque) {
+    // sin símbolo que buscar: tampoco queda pendiente la lectura del anterior
+    if (m.pdocT) { clearTimeout(m.pdocT); m.pdocT = null; }
+    box.hidden = true; box.innerHTML = ""; m.refHtml = ""; return;
+  }
+  const e = r.entrada || null;
+  const pdoc = precioDocRef(tk, r);
+  const ref = elegirPrecioRef({ tk, pdoc: pdoc || null, catalogo: m.pcat, panel: m.panel || _panel, bonos: _bonos });
+  const partes = [];
+  const ced = lineaCedear(e, nom && nom.ok ? nom.txt : "");
+  if (ced) partes.push(`<div class="mc-ref-l">${esc(ced)}</div>`);
+  if (ref) {
+    m.ref = ref;
+    // el botón solo si el precio va en la moneda en que se guarda y hay un
+    // renglón sin precio con la fecha de hoy (o la del precio)
+    const i = ref.moneda === moneda ? filaParaPrecio(leerCompras(), hoyAR(), ref.fecha) : -1;
+    // lo que completa el botón: el número que se está mostrando, en esa moneda
+    if (i >= 0) m.refUsar = redondearRef(ref.p);
+    partes.push(`<div class="mc-ref-p"><span>${lineaRef(ref, { unidad: factor !== 1 ? " cada 100 VN" : "", html: true })}</span>`
+      + (i >= 0 ? `<button type="button" class="mc-sug-b" data-mc-usar>Usar este precio</button>` : "") + `</div>`);
+  } else {
+    const buscando = pdoc === undefined || m.pcatEstado === "cargando";
+    // sin precio se dice que no hay, y nada se promete: si no está en el
+    // catálogo, puede que Valtia tampoco lo encuentre después
+    // (r.enCatalogo es null mientras el catálogo no cargó: ahí no se afirma nada)
+    const fuera = r.enCatalogo === false && !esRentaFija(tk, _bonos);
+    partes.push(`<div class="mc-ref-p"><span class="mc-mut">${buscando ? "Buscando el precio de referencia…"
+      : fuera ? "Sin precio de referencia: no lo tenemos en el catálogo."
+      : "Sin precio de referencia por ahora: cuando lo cargues, Valtia lo busca."}</span></div>`);
+  }
+  const k = claveSubyacente(e);
+  const us = k && m.pcat && m.pcat.mapa ? lineaSubyacente(e, m.pcat.mapa[k], _fx && _fx.ccl, hoyAR(), ref && ref.fecha) : "";
+  if (us) partes.push(`<div class="mc-ref-l">${esc(us)}</div>`);
+  // se repinta solo si cambió: el modal se rehace en cada tecla y en cada
+  // "change", y el "change" de la cantidad salta justo al tocar el botón (el
+  // campo pierde el foco); si la caja se rehiciera ahí, el clic caería en un
+  // botón que ya no existe y "Usar este precio" no haría nada
+  const html = partes.join("");
+  if (m.refHtml !== html) { box.innerHTML = html; m.refHtml = html; }
+  box.hidden = false;
+}
+
 /* la línea del símbolo, el nombre y el resumen, en vivo. El precio promedio
    es el ponderado por cantidad —el mismo número que después muestran la fila
    y el desplegable— y va en la moneda del mercado elegido, que es la moneda
@@ -3115,6 +3489,8 @@ function actualizarModal() {
         + (r.aviso ? `<span class="${r.enCatalogo ? "" : "warn"}">${esc(r.aviso)}</span> ` : "")
         + `Se guarda como <b>${esc(tk)}</b> · el precio va ${enQue}, ${unidad}.${botones}`;
   }
+  // el precio de referencia (y en un CEDEAR, el ratio y la acción allá)
+  pintarReferencia(ctx, r, nom);
 
   const todas = leerCompras();
   const val = todas.filter(c => isFinite(c.cant) && c.cant > 0);
@@ -3125,7 +3501,11 @@ function actualizarModal() {
   const invertido = val.reduce((s, c) => s + c.cant * (isFinite(c.px) && c.px > 0 ? c.px : 0), 0);
   const sinPx = val.filter(c => !(isFinite(c.px) && c.px > 0)).length;
   const prom = cant > 0 && invertido > 0 ? invertido / cant : null;
-  const pEl = $m("#mc-prom"), tEl = $m("#mc-tot");
+  const pEl = $m("#mc-prom"), tEl = $m("#mc-tot"), posEl = $m("#mc-posic");
+  // la posición que suman estas compras, con la unidad del activo (como Senta);
+  // el precio promedio ya está en su propia línea, no se repite acá
+  // (con un choque de mercado el ticker no existe: no se le pone unidad)
+  if (posEl) posEl.textContent = r.choque ? posicionTxt(cant) : posicionTxt(cant, r.entrada, tk, factor);
   if (pEl) pEl.textContent = prom == null ? "—" : montoTxt(prom, moneda) + (factor !== 1 ? " / 100 VN" : "");
   if (tEl) tEl.textContent = invertido > 0 ? montoTxt(invertido * factor, moneda) : "—";
   const nota = $m("#mc-resnota");
@@ -3192,6 +3572,24 @@ function engancharModal() {
     sel.value = b.dataset.mcMercado; _modal.mercadoManual = true; _modal.mercadoAuto = null;
     limpiarMsg();
     actualizarModal();
+  });
+  // "Usar este precio": completa el precio vacío del renglón de hoy (o del
+  // día del precio) con la referencia redondeada como se muestra. Nunca pisa
+  // un precio ya escrito ni va a una compra de otra fecha, y es solo un campo
+  // más: se puede cambiar antes de Guardar
+  el.addEventListener("click", ev => {
+    const u = ev.target && ev.target.closest && ev.target.closest("[data-mc-usar]");
+    if (!u || !_modal || _modal.refUsar == null) return;
+    const filas = leerCompras();
+    const i = filaParaPrecio(filas, hoyAR(), _modal.ref && _modal.ref.fecha);
+    const txt = precioParaCampo(_modal.refUsar);
+    const inp = i >= 0 ? filas[i].fila.querySelector("[data-c-px]") : null;
+    if (!inp || !txt || String(inp.value || "").trim()) return;
+    inp.value = txt;
+    limpiarMsg();
+    actualizarModal();
+    // el botón se va si ya no queda un renglón sin precio: el foco va al campo completado
+    try { inp.focus(); } catch (e) {}
   });
   // el símbolo: sugerencias del catálogo mientras se escribe (flechas, Enter,
   // clic); Enter sin nada elegido lo da por escrito y pasa a la cantidad
@@ -3262,7 +3660,12 @@ function abrirModal(prefill) {
   // mercadoManual: el usuario tocó el selector de mercado (el catálogo ya no lo
   // cambia solo); mercadoAuto: el cambio que hizo el catálogo, para decirlo y
   // para deshacerlo; sug: las sugerencias que se están mostrando bajo el símbolo
-  _modal = { el, volver, porTecla, mercadoManual: false, mercadoAuto: null, sug: { items: [], hl: -1 } };
+  // la referencia de precio: pcat (preciosCatalogo/latest) y su estado, el
+  // panel de bonos, los precios/{tk} pedidos en esta apertura (pdocs) con su
+  // espera entre teclas (pdocT, del símbolo pdocTk), y lo que se está
+  // mostrando (ref, refTk, refUsar)
+  _modal = { el, volver, porTecla, mercadoManual: false, mercadoAuto: null, sug: { items: [], hl: -1 },
+             pcat: null, pcatEstado: "", panel: null, pdocs: new Map(), pdocT: null, pdocTk: "", ref: null, refTk: "", refUsar: null, refHtml: "" };
   document.addEventListener("keydown", porTecla, true);
   // tocar afuera cierra. Se piden las DOS mitades del clic sobre el velo: si
   // alguien selecciona texto adentro y suelta el botón afuera, no se le cierra
@@ -3270,9 +3673,11 @@ function abrirModal(prefill) {
   let desdeElVelo = false;
   el.addEventListener("mousedown", ev => { desdeElVelo = ev.target === el; });
   el.addEventListener("click", ev => { if (ev.target === el && desdeElVelo) cerrarModal(); });
+  // antes del primer pintado, así arranca en "Buscando…" y no en "Sin precio"
+  cargarRefModal();
   engancharModal();
   prellenarModal(prefill);
-  // el catálogo (93 KB) se pide recién acá, una vez; cuando llega se rehace la
+  // el catálogo (99 KB) se pide recién acá, una vez; cuando llega se rehace la
   // línea del símbolo (nombre, mercado, sugerencias)
   catalogo().then(() => { if (_modal) { actualizarModal(); const i = $m("#mc-ticker"); if (i && document.activeElement === i) pintarSugerencias(); } });
   // El Resumen abre el modal a los 50 ms de entrar a la pestaña: el panel de
@@ -3307,6 +3712,7 @@ function cerrarModal() {
   if (!m) return;
   _modal = null;
   _porImportar = null;
+  clearTimeout(m.pdocT);
   try { document.removeEventListener("keydown", m.porTecla, true); } catch (e) {}
   try { m.el.remove(); } catch (e) {}
   // el foco vuelve a donde estaba (el botón "+ Agregar posición" que lo abrió)

@@ -53,7 +53,7 @@ import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.
 // el mismo lector de números que usa la importación de Mi cartera: acepta
 // 1.900,50 y 1900.50. Se importa con el mismo ?v= que panel.js para que el
 // navegador reutilice el módulo que ya cargó y no baje una segunda copia.
-import { parseNum } from './mi-cartera.js?v=44';
+import { parseNum } from './mi-cartera.js?v=45';
 
 const CSS_ID = 'v3-css-operar';
 const db = () => getFirestore(getApp());

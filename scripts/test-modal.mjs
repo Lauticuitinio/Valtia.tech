@@ -298,9 +298,168 @@ ok("alerta: un error técnico en inglés no se muestra crudo", M.motivoAlerta(ne
 ok("alerta: sin error ni mensaje", M.motivoAlerta(null) === RED && M.motivoAlerta(undefined) === RED && M.motivoAlerta(new Error("")) === RED);
 ok("alerta: con code no pasa aunque empiece en voseo", M.motivoAlerta(Object.assign(new Error("Poné un precio"), { code: "unavailable" })) === RED);
 
+// ── el precio de referencia del modal (lo que pidió Lauti el 25/09, como Senta) ──
+// el formato de la línea: ARS sin decimales desde 1.000, US$ con dos, variación con una
+const REF_ARS = { p: 33460.2, pc: 32861.9132, moneda: "ARS", deHoy: true, cuando: "precio de las 14:15" };
+ok("ref: la línea en pesos (el ejemplo de Senta con AXP)",
+   M.lineaRef(REF_ARS) === "Hoy: $33.460 · cierre anterior $32.862 (+1,8%) · precio de las 14:15", M.lineaRef(REF_ARS));
+const REF_USD = { p: 336.554, pc: 340, moneda: "USD", deHoy: false, cuando: "cierre del jueves 24" };
+ok("ref: la línea en dólares, de otro día, bajando",
+   M.lineaRef(REF_USD) === "Último: US$336,55 · cierre anterior US$340,00 (−1,0%) · cierre del jueves 24", M.lineaRef(REF_USD));
+ok("ref: sin cierre anterior no hay variación", M.lineaRef({ p: 100, pc: null, moneda: "USD", deHoy: true, cuando: "" }) === "Hoy: US$100,00");
+ok("ref: el bono lleva la unidad", M.lineaRef({ p: 85000, pc: null, moneda: "ARS", deHoy: false, cuando: "panel de bonos" }, { unidad: " cada 100 VN" })
+   === "Último: $85.000 cada 100 VN · panel de bonos");
+ok("ref: sin precio no hay línea", M.lineaRef(null) === "" && M.lineaRef({ p: 0, moneda: "ARS" }) === "");
+h = M.lineaRef(REF_ARS, { html: true });
+ok("ref: en el modal, números en <b> y la suba en verde", h.includes("<b>$33.460</b>") && h.includes('<span class="mc-pos">(+1,8%)</span>') && h.includes("<small>precio de las 14:15</small>"), h);
+ok("ref: la baja en rojo", M.lineaRef(REF_USD, { html: true }).includes('<span class="mc-neg">(−1,0%)</span>'));
+ok("ref: variación con cierre anterior", cerca(M.variacionRef(110, 100), 10) && cerca(M.variacionRef(90, 100), -10));
+ok("ref: variación sin cierre anterior es null", M.variacionRef(110, null) === null && M.variacionRef(110, 0) === null && M.variacionRef(0, 100) === null);
+ok("ref: precio en ARS", M.precioRefTxt(1234567.8, "ARS") === "$1.234.568" && M.precioRefTxt(999.994, "ARS") === "$999,99");
+ok("ref: cripto chica con cuatro cifras", M.precioRefTxt(0.5678, "USD") === "US$0,5678");
+ok("ref: sin precio, raya", M.precioRefTxt(null, "USD") === "—" && M.precioRefTxt(-3, "USD") === "—");
+ok("ref: el ratio como la nómina", M.ratioTxt(15) === "15:1" && M.ratioTxt(0.333333) === "1:3" && M.ratioTxt(0.001) === "1:1000" && M.ratioTxt(0) === "");
+
+// el CEDEAR, con el catálogo de verdad (ratio y subyacente de la nómina de BYMA)
+const eAXP = C.buscarCatalogo("AXP", "byma");
+ok("cedear: AXP tiene ratio 15 y no lleva subyacente aparte", eAXP && eAXP.r === 15 && !eAXP.u && !eAXP.b, eAXP);
+ok("cedear: la línea de AXP", M.lineaCedear(eAXP, "American Express Co") === "Es el CEDEAR de American Express Co (AXP en EE.UU.) · ratio 15:1", M.lineaCedear(eAXP, "American Express Co"));
+ok("cedear: sin nombre usa el del catálogo", M.lineaCedear(eAXP, "") === `Es el CEDEAR de ${eAXP.n} (AXP en EE.UU.) · ratio 15:1`);
+const eBAC = C.buscarCatalogo("BA.C", "byma");
+ok("cedear: BA.C es BAC en EE.UU.", eBAC && eBAC.u === "BAC" && M.claveSubyacente(eBAC) === "BAC" && M.lineaCedear(eBAC, "Bank of America").includes("(BAC en EE.UU.) · ratio 4:1"), eBAC);
+const eBRK = C.buscarCatalogo("BRKB", "byma");
+ok("cedear: BRKB busca BRK-B y se lee BRK.B", M.claveSubyacente(eBRK) === "BRK-B" && M.lineaCedear(eBRK, "Berkshire").includes("(BRK.B en EE.UU.) · ratio 22:1"), eBRK);
+const eABEV = C.buscarCatalogo("ABEV", "byma");
+ok("cedear: 1:3 (un CEDEAR son tres ADRs)", eABEV && eABEV.r === 0.333333 &&M.lineaCedear(eABEV, "Ambev").endsWith("ratio 1:3"), eABEV);
+const eABEV3 = C.buscarCatalogo("ABEV3", "byma");
+ok("cedear: el de Brasil no dice EE.UU. ni busca precio allá", eABEV3 && eABEV3.b === "B3" && M.claveSubyacente(eABEV3) === ""
+   && M.lineaCedear(eABEV3, "Ambev").includes("(ABEV3 en B3, Brasil)") && M.lineaSubyacente(eABEV3, [3, 3, "USD"], 1500) === "", eABEV3);
+ok("cedear: una acción no es CEDEAR", M.lineaCedear(C.buscarCatalogo("GGAL", "byma"), "Galicia") === "" && M.claveSubyacente({ s: "NVDA", t: "accion_us", m: "ext" }) === "");
+ok("cedear: la acción allá y la cuenta al CCL", M.lineaSubyacente(eAXP, [336.55, 330, "USD", "2026-09-25"], 1500) === "≈ US$336,55 la acción allá · al CCL, ≈ $33.655 por CEDEAR",
+   M.lineaSubyacente(eAXP, [336.55, 330, "USD", "2026-09-25"], 1500));
+ok("cedear: sin CCL, solo el precio allá", M.lineaSubyacente(eAXP, [336.55, 330, "USD", "2026-09-25"], null) === "≈ US$336,55 la acción allá");
+ok("cedear: el precio de allá de otro día dice de cuándo", M.lineaSubyacente(eAXP, [336.55, 330, "USD", "2026-09-24"], 1500, "2026-09-25")
+   === "≈ US$336,55 la acción allá (cierre del jueves 24) · al CCL, ≈ $33.655 por CEDEAR"
+   && M.lineaSubyacente(eAXP, [336.55, 330, "USD", "2026-09-25"], null, "2026-09-25") === "≈ US$336,55 la acción allá"
+   // el sábado, los dos del viernes: nada que aclarar
+   && M.lineaSubyacente(eAXP, [336.55, 330, "USD", "2026-09-25"], null, "2026-09-26", "2026-09-25") === "≈ US$336,55 la acción allá",
+   M.lineaSubyacente(eAXP, [336.55, 330, "USD", "2026-09-24"], 1500, "2026-09-25"));
+ok("cedear: sin precio allá no se inventa", M.lineaSubyacente(eAXP, undefined, 1500) === "" && M.lineaSubyacente(eAXP, [0, 0, "USD"], 1500) === ""
+   && M.lineaSubyacente(eAXP, [33000, 32000, "ARS"], 1500) === "");
+
+// el ratio en el catálogo: todos los CEDEARs lo tienen, nada más lo tiene, y los 10 conocidos (contra el PDF de BYMA)
+const ceds = C.CATALOGO.filter(e => e.t === "cedear");
+ok("catálogo: todos los CEDEARs traen ratio", ceds.length > 400 && ceds.every(e => e.r > 0), ceds.filter(e => !(e.r > 0)).map(e => e.s));
+ok("catálogo: solo los CEDEARs traen r/u/b", C.CATALOGO.filter(e => e.t !== "cedear" && ("r" in e || "u" in e || "b" in e)).length === 0);
+const RATIOS = { AAPL: 20, MSFT: 30, NVDA: 24, KO: 5, AXP: 15, MELI: 120, SPY: 60, BRKB: 22, GOOGL: 58, AMZN: 144 };
+ok("catálogo: los 10 ratios de la nómina", Object.entries(RATIOS).every(([s, r]) => (C.buscarCatalogo(s, "byma") || {}).r === r),
+   Object.keys(RATIOS).map(s => s + "=" + (C.buscarCatalogo(s, "byma") || {}).r));
+// precios_catalogo.py (fondo-sync) lee CATALOGO con esta regex y exige que cierre con el "total" del encabezado
+{
+  const { readFileSync } = await import("node:fs");
+  const txt = readFileSync(new URL("../catalogo-activos.js", import.meta.url), "utf8");
+  const cuerpo = txt.split("export const CATALOGO")[1].split("];")[0];
+  const rx = /\{\s*s:\s*"((?:[^"\\]|\\.)*)"\s*,\s*n:\s*"(?:[^"\\]|\\.)*"\s*,\s*t:\s*"((?:[^"\\]|\\.)*)"\s*,\s*m:\s*"((?:[^"\\]|\\.)*)"\s*\}/g;
+  const n = (cuerpo.match(rx) || []).length, tot = Number((txt.match(/^\/\/\s*total\s+(\d+)\s*$/m) || [])[1]);
+  ok("catálogo: el pipeline lo sigue leyendo entero", n === tot && n === C.CATALOGO.length, { n, tot, js: C.CATALOGO.length });
+  ok("catálogo: pesa menos de 150 KB", Buffer.byteLength(txt) < 150 * 1024, Buffer.byteLength(txt));
+}
+
+// "Usar este precio": a qué renglón va, sin pisar nunca lo escrito
+const HOY = "2026-09-25";
+const fp = (fecha, pxTxt) => ({ fecha, pxTxt });
+ok("usar: va al renglón de hoy", M.filaParaPrecio([fp("2026-09-20", ""), fp(HOY, "")], HOY) === 1);
+ok("usar: el de hoy ya tiene precio y el vacío es de otra fecha: nada", M.filaParaPrecio([fp(HOY, "33000"), fp("2026-09-20", "")], HOY) === -1);
+ok("usar: sin renglón de hoy, el precio de hoy no va a una compra vieja", M.filaParaPrecio([fp("2026-09-01", "100"), fp("2026-09-02", ""), fp("2026-09-03", "")], HOY) === -1);
+ok("usar: dos de hoy, el primero ya escrito: va al segundo", M.filaParaPrecio([fp(HOY, "33000"), fp(HOY, "")], HOY) === 1);
+ok("usar: el cierre del viernes sirve para la compra del viernes", M.filaParaPrecio([fp("2026-09-24", "1"), fp("2026-09-25", "")], "2026-09-26", "2026-09-25") === 1
+   && M.filaParaPrecio([fp("2026-09-23", "")], "2026-09-26", "2026-09-25") === -1);
+ok("usar: todos con precio, no pisa nada", M.filaParaPrecio([fp(HOY, "33000"), fp("2026-09-20", "0")], HOY) === -1);
+ok("usar: un espacio cuenta como vacío", M.filaParaPrecio([fp(HOY, "  ")], HOY) === 0);
+ok("usar: sin renglones, nada", M.filaParaPrecio([], HOY) === -1 && M.filaParaPrecio(null, HOY) === -1);
+ok("usar: escribe lo que se muestra", M.precioParaCampo(33460.2) === "33460" && M.precioParaCampo(336.554) === "336,55" && M.precioParaCampo(0.56781) === "0,5678");
+ok("usar: parseNum lee lo que escribe", [33460.2, 336.554, 1234.5, 0.56781, 85000].every(x => cerca(M.parseNum(M.precioParaCampo(x)), M.redondearRef(x))));
+ok("usar: sin precio no escribe", M.precioParaCampo(null) === "" && M.precioParaCampo(0) === "");
+
+// la posición del resumen, con la unidad del activo
+ok("posición: CEDEARs", M.posicionTxt(20, eAXP, "AXP.BA") === "20 CEDEARs" && M.posicionTxt(1, eAXP, "AXP.BA") === "1 CEDEAR");
+ok("posición: bono en VN", M.posicionTxt(1000, null, "AL30", 0.01) === "1.000 VN" && M.posicionTxt(500, { t: "letra" }, "S30S6") === "500 VN");
+ok("posición: cripto con su símbolo", M.posicionTxt(0.5, { t: "cripto" }, "BTC-USD") === "0,5 BTC");
+ok("posición: acciones", M.posicionTxt(3, { t: "accion_ar" }, "GGAL.BA") === "3 acciones" && M.posicionTxt(1, { t: "accion_us" }, "KO") === "1 acción");
+ok("posición: sin catálogo, nominales", M.posicionTxt(7, null, "ZZZZ.BA") === "7 nominales");
+ok("posición: sin cantidad, raya", M.posicionTxt(0) === "—" && M.posicionTxt(NaN) === "—");
+
+// la fuente, por prioridad: precios/{tk} de hoy > preciosCatalogo/latest > panel de bonos. Todo de mentira.
+const T = iso => Date.parse(iso);
+const AHORA = T("2026-09-25T17:15:00Z");                         // viernes 25, 14:15 en Buenos Aires
+const PCAT = { mapa: { "AXP.BA": [33000, 32861.9132, "ARS", "2026-09-25"], "AXP": [336.55, 330, "USD", "2026-09-25"],
+                       "BTC-USD": [60000, 59000, "USD", "2026-09-25"], "AL30": [85100, 84000, "ARS", "2026-09-25"],
+                       "YPFD.BA": [40000, 39000, "ARS", "2026-09-24"] },
+               act: T("2026-09-25T16:05:00Z") };                  // armado a las 13:05
+const PDOC = { precio: 33460, d: 1.82, moneda: "ARS", actualizado_utc: "2026-09-25T17:15:00Z" };
+let ref = M.elegirPrecioRef({ tk: "AXP.BA", pdoc: PDOC, catalogo: PCAT, ahora: AHORA });
+ok("fuente: precios/{tk} de hoy gana", ref && ref.fuente === "precios" && ref.p === 33460 && ref.deHoy && ref.cuando === "precio de las 14:15" && cerca(ref.pc, 33460 / 1.0182), ref);
+ref = M.elegirPrecioRef({ tk: "axp.ba", pdoc: { ...PDOC, actualizado_utc: { seconds: T("2026-09-25T17:15:00Z") / 1000, nanoseconds: 0 } }, catalogo: PCAT, ahora: AHORA });
+ok("fuente: el Timestamp de Firestore también sirve (y el ticker en minúsculas)", ref && ref.fuente === "precios", ref);
+ref = M.elegirPrecioRef({ tk: "AXP.BA", pdoc: { ...PDOC, actualizado_utc: { toMillis: () => T("2026-09-25T17:15:00Z") } }, catalogo: PCAT, ahora: AHORA });
+ok("fuente: Timestamp con toMillis", ref && ref.fuente === "precios", ref);
+ref = M.elegirPrecioRef({ tk: "AXP.BA", pdoc: { ...PDOC, actualizado_utc: "2026-09-24T20:00:00Z" }, catalogo: PCAT, ahora: AHORA });
+ok("fuente: precios/{tk} de ayer no sirve, va el catálogo", ref && ref.fuente === "catalogo" && ref.p === 33000 && ref.deHoy && ref.cuando === "precio de las 13:05", ref);
+ref = M.elegirPrecioRef({ tk: "AXP.BA", pdoc: { ...PDOC, actualizado_utc: "2026-09-25T12:30:00Z" }, catalogo: PCAT, ahora: AHORA });
+ok("fuente: precios/{tk} de antes de las 10 (la copia del sync) no sirve", ref && ref.fuente === "catalogo", ref);
+ref = M.elegirPrecioRef({ tk: "AXP.BA", pdoc: { sinDatos: true, precio: 1, moneda: "ARS", actualizado_utc: "2026-09-25T17:15:00Z" }, catalogo: PCAT, ahora: AHORA });
+ok("fuente: sinDatos no sirve", ref && ref.fuente === "catalogo", ref);
+ref = M.elegirPrecioRef({ tk: "AXP.BA", pdoc: { ...PDOC, moneda: "EUR" }, catalogo: PCAT, ahora: AHORA });
+ok("fuente: otra moneda no sirve", ref && ref.fuente === "catalogo", ref);
+ref = M.elegirPrecioRef({ tk: "YPFD.BA", pdoc: { ...PDOC, precio: 40500 }, catalogo: PCAT, ahora: AHORA });
+ok("fuente: si el catálogo dice que no operó hoy, precios/{tk} no se anuncia como de hoy", ref && ref.fuente === "catalogo" && !ref.deHoy
+   && ref.cuando === "cierre del jueves 24" && M.lineaRef(ref).startsWith("Último: $40.000"), ref);
+ref = M.elegirPrecioRef({ tk: "AXP", catalogo: PCAT, ahora: AHORA });
+ok("fuente: sin precios/{tk}, el catálogo en dólares", ref && ref.fuente === "catalogo" && ref.moneda === "USD" && ref.p === 336.55 && ref.pc === 330, ref);
+ref = M.elegirPrecioRef({ tk: "AXP.BA", catalogo: { ...PCAT, act: T("2026-09-25T22:00:00Z") }, ahora: T("2026-09-25T22:30:00Z") });
+ok("fuente: el catálogo después de la rueda es el cierre de hoy", ref && ref.cuando === "cierre de hoy" && ref.deHoy, ref);
+// la más fresca: un precios/{tk} que el intradía dejó de refrescar (10:15) pierde contra el catálogo de las 13:05
+ref = M.elegirPrecioRef({ tk: "AXP.BA", pdoc: { ...PDOC, actualizado_utc: "2026-09-25T13:15:00Z" }, catalogo: PCAT, ahora: AHORA });
+ok("fuente: el catálogo de hoy armado después del doc gana", ref && ref.fuente === "catalogo" && ref.p === 33000 && ref.cuando === "precio de las 13:05" && ref.fecha === "2026-09-25", ref);
+ref = M.elegirPrecioRef({ tk: "AXP.BA", pdoc: PDOC, catalogo: null, ahora: AHORA });
+ok("fuente: sin catálogo, el doc de hoy y su fecha", ref && ref.fuente === "precios" && ref.fecha === "2026-09-25", ref);
+// la renta fija del intradía no trae variación: el cierre anterior sale del catálogo de la misma rueda
+ref = M.elegirPrecioRef({ tk: "AL30", pdoc: { precio: 85300, moneda: "ARS", factor: 0.01, actualizado_utc: "2026-09-25T17:00:00Z" }, catalogo: PCAT, bonos, ahora: AHORA });
+ok("fuente: bono del intradía sin d, cierre anterior del catálogo", ref && ref.fuente === "precios" && ref.p === 85300 && ref.pc === 84000, ref);
+ref = M.elegirPrecioRef({ tk: "AL30", pdoc: { precio: 85300, moneda: "ARS", factor: 0.01, actualizado_utc: "2026-09-25T17:00:00Z" }, catalogo: null, bonos, ahora: AHORA });
+ok("fuente: sin d y sin catálogo, sin cierre anterior (no se inventa)", ref && ref.fuente === "precios" && ref.pc === null, ref);
+ref = M.elegirPrecioRef({ tk: "AL30D", pdoc: { precio: 61.3, moneda: "USD", actualizado_utc: "2026-09-25T17:00:00Z" },
+                          catalogo: { ...PCAT, mapa: { AL30D: [61.2, 61.5, "ARS", "2026-09-25"] } }, bonos, ahora: AHORA });
+ok("fuente: el cierre anterior del catálogo en otra moneda no se usa", ref && ref.fuente === "precios" && ref.pc === null, ref);
+ref = M.elegirPrecioRef({ tk: "BTC-USD", pdoc: { precio: 61000, moneda: "USD", actualizado_utc: "2026-09-25T17:00:00Z" },
+                          catalogo: { ...PCAT, mapa: { "BTC-USD": [60000, 59000, "USD", "2026-09-24"] } }, ahora: AHORA });
+ok("fuente: la cripto no cierra, precios/{tk} de hoy gana aunque el catálogo diga ayer", ref && ref.fuente === "precios" && ref.p === 61000 && ref.pc === null, ref);
+ref = M.elegirPrecioRef({ tk: "BTC-USD", catalogo: { ...PCAT, act: T("2026-09-24T21:00:00Z") }, ahora: AHORA });
+ok("fuente: cripto del catálogo de ayer dice cuándo", ref && !ref.deHoy && ref.cuando === "precio del jueves 24 a las 18:00", ref);
+const PANEL = { todos: { AL30: { p: 85000, v: 1.2 }, GD30: { p: 70000, v: 0 }, AL30D: { p: 61.2, v: -0.5 } } };
+ref = M.elegirPrecioRef({ tk: "AL30", catalogo: PCAT, panel: PANEL, bonos, ahora: AHORA });
+ok("fuente: el bono que está en el catálogo sale del catálogo", ref && ref.fuente === "catalogo" && ref.p === 85100, ref);
+ref = M.elegirPrecioRef({ tk: "AL30", catalogo: null, panel: PANEL, bonos, ahora: AHORA });
+ok("fuente: sin catálogo, el panel de bonos (cada 100 VN)", ref && ref.fuente === "panel" && ref.p === 85000 && ref.moneda === "ARS" && cerca(ref.pc, 85000 / 1.012), ref);
+ref = M.elegirPrecioRef({ tk: "AL30D", panel: PANEL, bonos, ahora: AHORA });
+ok("fuente: el panel en dólares para la D", ref && ref.moneda === "USD" && ref.p === 61.2, ref);
+ref = M.elegirPrecioRef({ tk: "GD30", panel: PANEL, bonos, ahora: AHORA });
+ok("fuente: variación 0 del panel no inventa cierre anterior", ref && ref.fuente === "panel" && ref.pc === null, ref);
+ok("fuente: sin nada, null (el modal dice que no hay)", M.elegirPrecioRef({ tk: "ZZZZ.BA", pdoc: null, catalogo: PCAT, panel: PANEL, bonos, ahora: AHORA }) === null
+   && M.elegirPrecioRef({ tk: "", catalogo: PCAT }) === null && M.elegirPrecioRef() === null);
+ok("fuente: un catálogo con basura no cuenta", M.elegirPrecioRef({ tk: "X.BA", catalogo: { mapa: { "X.BA": [0, 1, "ARS"] } }, ahora: AHORA }) === null
+   && M.elegirPrecioRef({ tk: "X.BA", catalogo: { mapa: { "X.BA": [5, 1, "EUR"] } }, ahora: AHORA }) === null);
+
 // ── lo de siempre sigue exportado ──
 ok("exports: normalizarTicker", M.normalizarTicker("nvda", "byma") === "NVDA.BA" && M.normalizarTicker("btc", "cripto") === "BTC-USD");
 ok("exports: parseNum, agruparPorActivo, escrituraEn", ["parseNum", "agruparPorActivo", "escrituraEn", "sugerirCatalogo", "validarCompras", "resolverSimbolo", "brokerSelectHTML"].every(f => typeof M[f] === "function"));
+ok("exports: la referencia de precio", ["elegirPrecioRef", "lineaRef", "precioRefTxt", "variacionRef", "redondearRef", "ratioTxt", "lineaCedear", "lineaSubyacente",
+   "claveSubyacente", "posicionTxt", "filaParaPrecio", "precioParaCampo"].every(f => typeof M[f] === "function"));
+// resolverSimbolo devuelve la entrada del mercado elegido (de ahí salen el ratio y el subyacente)
+r = M.resolverSimbolo("AXP", "byma", C.buscarCatalogo);
+ok("resolverSimbolo: entrada con el ratio", r.entrada && r.entrada.t === "cedear" && r.entrada.r === 15 && r.tk === "AXP.BA", r.entrada);
+r = M.resolverSimbolo("AXP", "cripto", C.buscarCatalogo);
+ok("resolverSimbolo: sin entrada en el mercado elegido, null", r.entrada === null, r.entrada);
 ok("exports: monedaMercado", M.monedaMercado("byma", "GGAL.BA") === "ARS" && M.monedaMercado("ext", "NVDA") === "USD" && M.monedaMercado("byma", "AL30D", bonos) === "USD");
 ["renderMiCartera", "calcular", "parseImport", "abrirFormulario", "abrirFila", "initMiCartera", "reiniciarMiCartera",
  "evolucionComparada", "completarPreciosDeRentaFija", "agruparPorActivo", "agruparPorBroker", "convertir", "monedaPosicion"].forEach(f =>
