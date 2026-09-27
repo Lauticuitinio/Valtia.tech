@@ -13,21 +13,27 @@
   var nav = document.querySelector('nav');
   if (!nav || document.getElementById('vnav-burger')) return;
 
+  // los mismos enlaces que la barra de escritorio, en el mismo orden (pedido de
+  // Lauti, 27/09/2026: el menú del celular no tiene que mostrar más cosas que la
+  // compu). Candidatas del mes se llega desde Inversión mensual y Calendario
+  // desde las fichas de activo y de bono.
   var LINKS = [
     ['/', 'Inicio'],
     ['/cartera', 'Carteras'],
     ['/inversion-mensual', 'Inversión mensual'],
-    ['/disciplina', 'Candidatas del mes'],
     ['/noticias', 'Noticias'],
     ['/informes', 'Informes'],
     ['/herramientas', 'Herramientas'],
-    ['/calendario', 'Calendario'],
     ['/planes', 'Planes'],
   ];
   // nombre de la página, sin barra ni .html: '' en la home, 'noticias' en
   // /noticias y también en /noticias.html (por si queda un link viejo)
   var aca = (location.pathname.split('/').pop() || '').toLowerCase().replace(/\.html$/, '');
   if (aca === 'index') aca = '';
+  // las páginas que no están en el menú marcan la sección a la que pertenecen,
+  // igual que la barra de escritorio
+  var SECCION = { disciplina: 'inversion-mensual', calendario: 'herramientas' };
+  if (SECCION[aca]) aca = SECCION[aca];
 
   var st = document.createElement('style');
   st.textContent = [
