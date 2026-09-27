@@ -1,8 +1,14 @@
 // panel-mensual.js — pestaña "Inversión mensual" del panel del inversor (Panel v3).
-// La estructura es la del prototipo de Lauti (.claude/handoff-panel-v3, líneas
-// 552-624): a la izquierda la regla, los aportes de los últimos 6 meses y las
-// últimas compras; a la derecha las candidatas para la próxima compra. Los colores
-// y la tipografía son los de Noticias, vía las variables --v3-* de panel.js.
+// Estructura y valores: «Pestaña 5 · Inversión mensual» del SPEC y el prototipo
+// «Valtia Panel v3» del zip completo (24/09/2026). Grilla 0.8fr / 1.2fr: a la
+// izquierda la tarjeta navy "Tu regla" (aporte, compras del mes en una barra
+// segmentada, racha y total aportado), los aportes de los últimos 6 meses contra la
+// regla y las últimas compras; a la derecha las candidatas para la próxima compra
+// (del radar, que todavía no tenés) con su "por qué" en una frase y "La compré".
+// Piel vigente del SPEC §0: IBM Plex Sans en todo (sin Plex Mono ni Playfair),
+// cifras tabulares, tarjetas de 10-12 px, etiquetas de 6 px, botones de radio 8
+// (el primario navy) y el dorado claro solo sobre azul. Colores: variables --v3-*
+// de panel.js, así anda el tema oscuro.
 //
 // Todo sale del ctx: la regla y el log de compras (disciplina), la cartera (qué
 // tiene y en qué moneda cargó cada compra), el radar, los precios del día y el
@@ -10,128 +16,124 @@
 import { base, radarSym, tickerFicha, esRentaFija, esCripto, monedaProbable } from './activos.js?v=7';
 
 const CSS = `
-.im-wrap{color:var(--v3-ink);font-family:'IBM Plex Sans',system-ui,sans-serif;overflow-wrap:break-word}
+.im-wrap{color:var(--v3-ink);font-family:'IBM Plex Sans',system-ui,sans-serif;overflow-wrap:break-word;font-variant-numeric:tabular-nums;
+  container-type:inline-size;container-name:im}
 .im-wrap *,.im-wrap *::before,.im-wrap *::after{box-sizing:border-box}
-.im-wrap .n{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+.im-wrap a{text-decoration:none}
+.im-wrap a:focus-visible,.im-wrap button:focus-visible,.im-wrap input:focus-visible{outline:2px solid var(--v3-focus);outline-offset:2px}
 .im-grid{display:grid;grid-template-columns:minmax(300px,.8fr) minmax(0,1.2fr);gap:26px;align-items:start}
-@media (max-width:900px){.im-grid{grid-template-columns:minmax(0,1fr)}}
+/* celular (SPEC: <920 px) o una caja angosta: una sola columna */
+@media (max-width:920px){.im-grid{grid-template-columns:minmax(0,1fr)}}
+@container im (max-width:660px){.im-grid{grid-template-columns:minmax(0,1fr)}}
 .im-col{display:flex;flex-direction:column;gap:14px;min-width:0}
-.im-k{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut)}
+.im-k{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut)}
 .im-card{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px}
-.im-vacio{font-size:12.5px;color:var(--v3-sub);line-height:1.6;margin:0}
+.im-vacio{font-size:14px;color:var(--v3-sub);line-height:1.6;margin:0}
 
-/* la regla: bloque sólido navy, texto claro encima */
+/* la regla: bloque sólido navy, texto claro encima (acá sí va el dorado claro) */
 .im-regla{background:var(--v3-navy);border-radius:12px;padding:22px 24px;color:#fff}
-.im-regla .im-k{color:var(--v3-goldL);opacity:.8}
+.im-regla .im-k{color:rgba(232,206,150,.8)}
 .im-big{display:flex;align-items:baseline;gap:4px 8px;margin-top:8px;flex-wrap:wrap}
-.im-big b{font:600 34px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;letter-spacing:-.01em;line-height:1.1;color:#fff}
-.im-big span{font-size:13px;color:rgba(255,255,255,.6)}
+.im-big b{font:600 34px/1.1 'IBM Plex Sans',sans-serif;color:#fff}
+.im-big span{font-size:14.5px;color:rgba(255,255,255,.6)}
 .im-segs{display:flex;gap:6px;margin-top:16px}
-.im-segs i{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.15);display:block}
-.im-segs i.on{background:var(--v3-goldL)}
-.im-prog{display:flex;justify-content:space-between;gap:4px 12px;flex-wrap:wrap;font-size:12px;color:rgba(255,255,255,.7);margin-top:8px}
+.im-segs i{flex:1;height:8px;border-radius:6px;background:rgba(255,255,255,.15);display:block}
+.im-segs i.on{background:#E8CE96}
+.im-prog{display:flex;justify-content:space-between;gap:4px 12px;flex-wrap:wrap;font-size:13.5px;color:rgba(255,255,255,.7);margin-top:8px}
 .im-prog b{color:#fff;font-weight:600}
-.im-stats{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);font-size:12px;color:rgba(255,255,255,.7)}
-.im-stats b{font:600 15px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:#fff}
-.im-stats b.g{color:var(--v3-goldL)}
-.im-regla-nota{font-size:11px;color:rgba(255,255,255,.5);line-height:1.5;margin-top:8px}
+.im-stats{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);font-size:13.5px;color:rgba(255,255,255,.7)}
+.im-stats b{font:600 16.5px 'IBM Plex Sans',sans-serif;color:#fff}
+.im-stats b.g{color:#E8CE96}
+.im-regla-nota{font-size:12.5px;color:rgba(255,255,255,.55);line-height:1.5;margin-top:10px}
 .im-links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:16px}
-.im-links a{font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--v3-goldL);text-decoration:none}
-.im-links a:hover{color:#fff}
+.im-wrap .im-links a{font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#E8CE96}
+.im-wrap .im-links a:hover{color:#fff}
+.im-wrap .im-links a:focus-visible{outline-color:#E8CE96}
 
 /* sin regla / sin verificar / error */
 .im-def{padding:22px 24px}
-.im-def-t{font:700 22px 'Playfair Display',serif;color:var(--v3-ink);margin:8px 0 8px;line-height:1.2}
-.im-def p{font-size:13px;color:var(--v3-sub);line-height:1.65;margin:0}
+.im-def-t{font:600 20px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin:8px 0 8px;line-height:1.25}
+.im-def p{font-size:14px;color:var(--v3-sub);line-height:1.65;margin:0}
 .im-def-f{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-top:16px}
-.im-def-f label{display:block;font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);margin-bottom:5px}
-.im-def-f input{font:500 14px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;padding:9px 11px;border:1px solid var(--v3-line);border-radius:6px;
-  background:var(--v3-card);color:var(--v3-ink);width:132px;max-width:100%;outline:none}
-.im-def-f input:focus{border-color:var(--v3-gold)}
-.im-def-c{font-size:12px;color:var(--v3-mut);margin-top:10px;min-height:1em}
-.im-msg{font-size:12.5px;color:var(--v3-dn);margin-top:8px;line-height:1.5}
+.im-def-f label{display:block;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);margin-bottom:5px}
+.im-def-f input{font:500 14px 'IBM Plex Sans',sans-serif;padding:9px 11px;border:1px solid var(--v3-line);border-radius:8px;
+  background:var(--v3-input);color:var(--v3-ink);width:132px;max-width:100%;outline:none}
+.im-def-f input:focus{border-color:var(--v3-focus)}
+.im-def-c{font-size:13px;color:var(--v3-mut);margin-top:10px;min-height:1em}
+.im-msg{font-size:13.5px;color:var(--v3-dn);margin-top:8px;line-height:1.5}
 .im-msg:empty{display:none}
-.im-btn-oro{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#0E1830;background:var(--v3-goldL);
-  border:1px solid var(--v3-goldL);padding:10px 16px;border-radius:7px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
-.im-btn-oro:hover{background:var(--v3-card);border-color:var(--v3-gold);color:var(--v3-ink)}
-.im-btn-oro[disabled]{opacity:.5;cursor:default}
-.im-btn-sec{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-ink);background:transparent;
-  border:1px solid var(--v3-line);padding:9px 14px;border-radius:7px;cursor:pointer;white-space:nowrap;margin-top:14px;transition:border-color .15s}
-.im-btn-sec:hover{border-color:var(--v3-gold)}
-.im-btn-sec[disabled],.im-aviso button[disabled]{opacity:.5;cursor:default}
+/* los botones son los de panel.js: .vp-btn (primario navy) y .vp-btn.sec (el de la regla §0) */
+.im-wrap .vp-btn{white-space:nowrap}
+.im-wrap .vp-btn.im-reint{margin-top:14px}
 
-/* aportes de los últimos 6 meses contra la regla */
-.im-ap{padding:16px 18px;container-type:inline-size;--im-ok:var(--v3-serie);--im-no:var(--v3-gold);--im-cur:var(--v3-goldL)}
-[data-theme="dark"] .im-ap{--im-ok:var(--v3-goldL);--im-no:var(--v3-mut);--im-cur:var(--v3-azul)}
+/* aportes de los últimos 6 meses contra la regla: navy si cumplió, dorado si no, gris
+   el mes en curso (el prototipo; el dorado claro no va sobre blanco). En oscuro el
+   navy no se ve: la barra que cumplió pasa al azul claro */
+.im-ap{padding:16px 18px;container-type:inline-size;--im-ok:var(--v3-navy);--im-no:var(--v3-gold);--im-cur:var(--v3-cero)}
+[data-theme="dark"] .im-ap{--im-ok:var(--v3-azul)}
 .im-ap-h{display:flex;justify-content:space-between;gap:6px 12px;align-items:baseline;flex-wrap:wrap}
-.im-ap-ley{font-size:11px;color:var(--v3-mut);white-space:nowrap}
+.im-ap-ley{font-size:12.5px;color:var(--v3-mut);white-space:nowrap}
 .im-ap-ley i{display:inline-block;width:14px;border-top:1.5px dashed var(--v3-gold);vertical-align:middle;margin-right:5px}
 .im-ap-v,.im-ap-b,.im-ap-m{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
-.im-ap-v{margin-top:16px;font:600 10px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-ink);text-align:center}
+.im-ap-v{margin-top:16px;font:600 11.5px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);text-align:center}
 .im-ap-v span{white-space:nowrap}
 .im-ap-b{position:relative;align-items:end;height:96px;margin-top:6px}
 .im-ap-b .reg{position:absolute;left:0;right:0;border-top:1.5px dashed var(--v3-gold);display:block;z-index:1;pointer-events:none}
-.im-ap-b div{border-radius:4px 4px 0 0}
+.im-ap-b div{border-radius:6px 4px 0 0}
 .im-ap-b .ok{background:var(--im-ok)}
 .im-ap-b .no{background:var(--im-no)}
 .im-ap-b .cur{background:var(--im-cur)}
 .im-ap-b .cero{background:var(--v3-track);height:2px;border-radius:1px}
-.im-ap-m{margin-top:6px;font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);text-align:center}
-.im-ap-nota{font-size:11px;color:var(--v3-mut);line-height:1.5;margin-top:10px}
+.im-ap-m{margin-top:6px;font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);text-align:center}
+.im-ap-nota{font-size:13px;color:var(--v3-mut);line-height:1.5;margin-top:10px}
 .im-ap .im-vacio{margin-top:12px}
-/* el "US$" de cada cifra se cae cuando la columna no alcanza para la más larga
-   (Plex Mono 10px = 6px por carácter; la clase dice cuántos caracteres tiene) */
-@container (max-width:245px){.im-ap.w6 .im-ap-v .mon{display:none}}
-@container (max-width:313px){.im-ap.w8 .im-ap-v .mon{display:none}}
-@container (max-width:349px){.im-ap.w9 .im-ap-v .mon{display:none}}
-@container (max-width:385px){.im-ap.w10 .im-ap-v .mon{display:none}}
 
 /* últimas compras */
 .im-cmp{overflow:hidden}
 .im-cmp-h{padding:12px 16px;border-bottom:1px solid var(--v3-track)}
-.im-cmp-r{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:12px;align-items:baseline;padding:10px 16px;border-bottom:1px solid var(--v3-line2);font-size:12.5px}
+.im-cmp-r{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:12px;align-items:baseline;padding:10px 16px;border-bottom:1px solid var(--v3-line2);font-size:14px}
 .im-cmp-r:last-child{border-bottom:none}
-.im-cmp-r .f{font:600 10px 'IBM Plex Mono',monospace;color:var(--v3-mut);white-space:nowrap}
+.im-cmp-r .f{font:600 11.5px 'IBM Plex Sans',sans-serif;color:var(--v3-mut);white-space:nowrap}
 .im-cmp-r .t{min-width:0}
 .im-cmp-r .t b{color:var(--v3-gold);font-weight:700}
 .im-cmp-r .t span{color:var(--v3-sub)}
-.im-cmp-r .m{font:600 12px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-ink);white-space:nowrap}
+.im-cmp-r .m{font:600 13.5px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);white-space:nowrap}
 .im-cmp .im-vacio{padding:14px 16px}
 
 /* candidatas */
 .im-der{min-width:0;container-type:inline-size}
 .im-der-h{display:flex;align-items:baseline;justify-content:space-between;gap:4px 12px;margin-bottom:12px;flex-wrap:wrap}
-.im-h2{font:700 22px 'Playfair Display',serif;color:var(--v3-ink);margin:0;line-height:1.2}
-.im-der-h span{font:500 11px 'IBM Plex Sans',sans-serif;color:var(--v3-mut)}
-.im-aviso{font-size:12.5px;color:var(--v3-sub);line-height:1.55;background:var(--v3-warnBg);border-radius:10px;padding:10px 14px;margin-bottom:10px}
-.im-aviso button{font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-gold2);background:none;border:none;padding:0;margin-left:6px;cursor:pointer}
+.im-h2{font:400 22px/1.2 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin:0}
+.im-der-h span{font:500 12.5px 'IBM Plex Sans',sans-serif;color:var(--v3-mut)}
+.im-aviso{font-size:14px;color:var(--v3-sub);line-height:1.55;background:var(--v3-warnBg);border-radius:10px;padding:10px 14px;margin-bottom:10px}
+.im-aviso button{font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-gold2);background:none;border:none;padding:0;margin-left:6px;cursor:pointer}
 .im-aviso button:hover{color:var(--v3-ink)}
+.im-aviso button[disabled]{opacity:.5;cursor:default}
 .im-cands{display:flex;flex-direction:column;gap:10px}
 .im-cand{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:10px;padding:16px 18px;transition:border-color .15s}
 .im-cand:hover{border-color:var(--v3-gold)}
 .im-cand-row{display:flex;gap:16px;align-items:center}
 .im-cand-izq{flex:1;min-width:0}
 .im-cand-t{display:flex;align-items:baseline;gap:4px 8px;flex-wrap:wrap}
-.im-cand-t .tk{font:700 15px 'IBM Plex Sans',sans-serif;color:var(--v3-gold);text-decoration:none}
+.im-cand-t .tk{font:700 16.5px 'IBM Plex Sans',sans-serif;color:var(--v3-gold)}
 .im-cand-t a.tk:hover{color:var(--v3-gold2)}
-.im-cand-t .nm{font-size:12.5px;color:var(--v3-sub)}
+.im-cand-t .nm{font-size:14px;color:var(--v3-sub)}
 .im-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
-.im-pill{font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:4px;white-space:nowrap}
-.im-pill.zona{color:#0E1830;background:var(--v3-goldL)}
+.im-pill{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:6px;white-space:nowrap}
+/* ◎ zona de compra: blanco sobre navy (en oscuro el token se invierte) */
+.im-pill.zona{color:var(--v3-btnTx);background:var(--v3-btn)}
 .im-pill.warn{color:var(--v3-warn);background:var(--v3-warnBg)}
-.im-porque{font-size:12.5px;color:var(--v3-sub);line-height:1.55;margin-top:8px}
+.im-porque{font-size:14px;color:var(--v3-sub);line-height:1.55;margin-top:8px}
 .im-cand-der{text-align:right;flex:none}
-.im-cand-der .px{font:600 15px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-ink);white-space:nowrap}
-.im-cand-der .u{font-size:11.5px;color:var(--v3-mut);margin-top:2px;white-space:nowrap}
-.im-wrap .vp-btn.im-compre{display:inline-block;margin-top:10px;font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;
-  color:#0E1830;background:var(--v3-goldL);border:1px solid var(--v3-goldL);padding:7px 12px;border-radius:5px;white-space:nowrap;cursor:pointer}
-.im-wrap .vp-btn.im-compre:hover{background:var(--v3-card);border-color:var(--v3-gold);color:var(--v3-ink)}
+.im-cand-der .px{font:600 16.5px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);white-space:nowrap}
+.im-cand-der .u{font-size:13px;color:var(--v3-mut);margin-top:2px;white-space:nowrap}
+.im-wrap .vp-btn.im-compre{margin-top:10px}
 .im-cand .vp-form{margin-top:12px}
-.im-pie{font-size:11.5px;color:var(--v3-mut);line-height:1.7;margin:18px 0 0}
-.im-pie a{color:var(--v3-gold2);text-decoration:none}
+.im-pie{font-size:13px;color:var(--v3-mut);line-height:1.7;margin:18px 0 0}
+.im-pie a{color:var(--v3-gold2)}
 .im-pie a:hover{color:var(--v3-ink)}
-.im-ir{font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--v3-gold2);text-decoration:none;display:inline-block;margin-top:10px}
-.im-ir:hover{color:var(--v3-ink)}
+.im-wrap .im-ir{font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--v3-gold);display:inline-block;margin-top:10px}
+.im-wrap .im-ir:hover{color:var(--v3-gold2)}
 @container (max-width:460px){
   .im-cand-row{flex-wrap:wrap;align-items:flex-start;gap:12px}
   .im-cand-der{flex:1 1 100%;text-align:left;display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px}
@@ -184,7 +186,7 @@ function pintarError(el, ctx, titulo) {
       <div class="im-k">Inversión mensual</div>
       <h3 class="im-def-t">${ctx.esc(titulo)}</h3>
       <p>Puede ser la conexión. Tu regla y tus compras siguen guardadas: probá de nuevo en un momento.</p>
-      <button type="button" class="im-btn-sec" data-im-reintentar>Reintentar</button></div></div>`;
+      <button type="button" class="vp-btn mini sec im-reint" data-im-reintentar>Reintentar</button></div></div>`;
   const b = el.querySelector('[data-im-reintentar]');
   if (b) b.onclick = () => reintentar(el, ctx, b);
 }
@@ -308,7 +310,7 @@ async function dibujar(el, ctx, seq) {
         <div class="im-def-f">
           <div><label for="im-aporte">Aporte mensual (US$)</label><input type="number" id="im-aporte" min="1" step="any" value="200" inputmode="decimal"></div>
           <div><label for="im-compras">Compras por mes</label><input type="number" id="im-compras" min="1" max="6" step="1" value="2" inputmode="numeric"></div>
-          <button type="button" class="im-btn-oro" id="im-guardar">Guardar mi regla</button>
+          <button type="button" class="vp-btn" id="im-guardar">Guardar mi regla</button>
         </div>
         <div class="im-def-c" id="im-porc"></div>
         <div class="im-msg" id="im-msg" role="status"></div>
@@ -345,9 +347,17 @@ async function dibujar(el, ctx, seq) {
   } else {
     aportes = '<p class="im-vacio">Todavía nada: es normal al empezar. Cada "La compré" suma su aporte acá.</p>';
   }
-  // cuántos caracteres tiene la cifra más larga con su "US$" (define cuándo se cae el prefijo)
-  const largo = Math.min(10, Math.max(6, ...porMes.map(x => 3 + num(Math.round(x.usd), 0).length)));
-  const cardAportes = `<div class="im-card im-ap w${largo === 7 ? 8 : largo}">
+  // el "US$" de cada cifra se cae cuando la columna no alcanza para la más larga. El
+  // ancho sale de las medidas de IBM Plex Sans 600 a 11,5 px (cifras tabulares de
+  // 0,6 em; "US$" ≈ 1,9 em; el punto de miles ≈ 0,27 em) con un 8% de margen; la
+  // tarjeta es un container (se mide su caja de contenido) y la regla se escribe con
+  // el umbral de esta tabla
+  const anchoEm = s => 1.9 + [...s].reduce((t, c) => t + (/\d/.test(c) ? 0.6 : 0.27), 0);
+  const maxEm = Math.max(...porMes.map(x => anchoEm(num(Math.round(x.usd), 0))));
+  // 6 columnas + 5 huecos de 10 px
+  const umbral = Math.ceil(maxEm * 11.5 * 1.08 * 6 + 50);
+  const cardAportes = `<div class="im-card im-ap" id="im-ap">
+      <style>@container (max-width:${umbral}px){#im-ap .im-ap-v .mon{display:none}}</style>
       <div class="im-ap-h"><div class="im-k">Aportes · últimos 6 meses</div>${config && aporte > 0 ? `<span class="im-ap-ley"><i></i>tu regla <span class="n">${esc(money(aporte, 'USD'))}</span></span>` : ''}</div>
       ${aportes}</div>`;
 
@@ -440,7 +450,7 @@ async function dibujar(el, ctx, seq) {
   // "ya tenés todo" solo es cierto si el radar trae puntajes: sin ninguno, es que no está disponible
   const hayPuntajes = ctx.ordenComprar(activos).some(a => a.score != null);
   const vacioCands = !hayPuntajes
-    ? '<div class="im-card im-def"><p>El radar no está disponible ahora.</p><button type="button" class="im-btn-sec" data-im-reintentar>Reintentar</button></div>'
+    ? '<div class="im-card im-def"><p>El radar no está disponible ahora.</p><button type="button" class="vp-btn mini sec im-reint" data-im-reintentar>Reintentar</button></div>'
     : `<div class="im-card im-def"><p>Ya tenés todo lo que el radar puntúa. La lista completa, con lo que ya tenés, está en Qué comprar.</p>
         <a class="im-ir" href="#panel/comprar" data-go="comprar">Ir a Qué comprar →</a></div>`;
   const aviso = falloCartera

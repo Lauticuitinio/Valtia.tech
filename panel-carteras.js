@@ -1,6 +1,14 @@
 // panel-carteras.js — pestaña "Carteras Valtia" del panel v3 (id `carteras`).
-// Estructura del prototipo (handoff Panel v3, líneas 366-404); colores y tipografía
-// de Noticias a través de las variables --v3-* que define panel.js.
+// Estructura y valores: «Pestaña 4 · Carteras Valtia» del SPEC y el prototipo
+// «Valtia Panel v3» del zip completo (24/09/2026): una tarjeta por cartera con el
+// perfil, el nombre y su etiqueta (La seguís / Acceso / PRO), la sparkline cartera
+// vs. índice, tres cifras (desde el lanzamiento · el índice en el mismo lapso ·
+// última rotación), la barra de coincidencias con los chips de sus activos, "Ver
+// cartera →" y Seguir / Dejar de seguir. Sin acceso la tarjeta se muestra igual con
+// sus cifras (el rendimiento es público) y el botón lleva a los planes.
+// Piel vigente del SPEC §0: IBM Plex Sans en todo (sin Plex Mono ni Playfair),
+// cifras tabulares, tarjetas de 12 px, etiquetas de 6 px, botones de radio 8 y el
+// dorado claro solo sobre azul; los colores, de las variables --v3-* de panel.js.
 // Todo sale del ctx: teaser() (la vidriera pública de las carteras: retorno, serie,
 // última rotación), posicionesCartera() (solo las que el plan deja leer), seguidas()
 // y la cartera del usuario para las coincidencias. No importa panel.js.
@@ -10,68 +18,74 @@ import { base, radarSym, esRentaFija, parBono } from './activos.js?v=7';
 // juntas en <head>; con el mismo prefijo, .v3c-card/.v3c-bar/.v3c-tag de una
 // pestaña desarmaban la otra
 const CSS = `
-.v3ca{font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);min-width:0}
-.v3ca-intro{font-size:14px;color:var(--v3-sub);line-height:1.7;margin:0 0 18px;max-width:72ch}
+.v3ca{font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);min-width:0;font-variant-numeric:tabular-nums}
+.v3ca a{text-decoration:none}
+.v3ca a:focus-visible,.v3ca button:focus-visible{outline:2px solid var(--v3-focus);outline-offset:2px}
+.v3ca-intro{font-size:15.5px;color:var(--v3-sub);line-height:1.7;margin:0 0 18px;max-width:72ch;text-align:justify;hyphens:auto}
 .v3ca-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr));gap:16px}
-@media(max-width:480px){.v3ca-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:480px){.v3ca-grid{grid-template-columns:minmax(0,1fr)}.v3ca-intro{font-size:14.5px;text-align:left}}
 .v3ca-card{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;padding:20px 22px;
   display:flex;flex-direction:column;gap:12px;min-width:0;box-sizing:border-box}
+/* borde dorado si la sigue */
 .v3ca-card.sigue{border-color:var(--v3-gold)}
 @media(max-width:480px){.v3ca-card{padding:18px 16px}}
 .v3ca-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .v3ca-top .izq{flex:1 1 200px;min-width:0}
-.v3ca-eye{font:600 9px 'IBM Plex Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--v3-gold2);
+.v3ca-eye{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--v3-gold2);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.v3ca-nom{font:700 19px 'Playfair Display',serif;color:var(--v3-ink);line-height:1.2;margin-top:4px;overflow-wrap:anywhere}
-.v3ca-tag{font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:4px 9px;border-radius:4px;
-  white-space:nowrap;color:#0E1830;background:var(--v3-goldL);flex:none}
+.v3ca-nom{font:600 19px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);line-height:1.2;margin-top:4px;overflow-wrap:anywhere}
+/* la etiqueta: con acceso, blanco sobre navy (en oscuro el token se invierte); sin acceso, dorado */
+.v3ca-tag{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:4px 9px;border-radius:6px;
+  white-space:nowrap;color:var(--v3-btnTx);background:var(--v3-btn);flex:none}
 .v3ca-tag.pro{color:var(--v3-gold2);background:var(--v3-goldBg)}
 .v3ca-spark{width:100%;height:56px;display:block;overflow:visible}
 .v3ca-spark .c{fill:none;stroke:var(--v3-gold);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
 .v3ca-spark .b{fill:none;stroke:var(--v3-cero);stroke-width:1.2;stroke-dasharray:3 3}
 .v3ca-spark-vacio{height:56px;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 12px;
-  font-size:11.5px;color:var(--v3-mut);border:1px dashed var(--v3-line);border-radius:8px;box-sizing:border-box}
-.v3ca-cif{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.v3ca-cif .k{font:600 8.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);line-height:1.35;overflow-wrap:anywhere}
-.v3ca-cif .k .m{font-family:'IBM Plex Mono',monospace;letter-spacing:.04em;font-variant-numeric:tabular-nums}
-.v3ca-cif .v{font:600 15px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-ink);margin-top:4px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  font-size:13px;color:var(--v3-mut);border:1px dashed var(--v3-line);border-radius:10px;box-sizing:border-box}
+/* tres cifras: las etiquetas en la primera fila (abajo, por si una ocupa dos renglones)
+   y los valores alineados en la segunda */
+.v3ca-cif{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto auto;grid-auto-flow:column;column-gap:8px;row-gap:4px}
+.v3ca-cif .k{align-self:end;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--v3-mut);line-height:1.35;overflow-wrap:anywhere}
+.v3ca-cif .v{font:600 16.5px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .v3ca-cif .v.up{color:var(--v3-up)}.v3ca-cif .v.dn{color:var(--v3-dn)}.v3ca-cif .v.sub{color:var(--v3-sub)}.v3ca-cif .v.mut{color:var(--v3-mut)}
-.v3ca-tir,.v3ca-msg{font-size:12.5px;color:var(--v3-sub);line-height:1.55;margin:0}
-.v3ca-tir b,.v3ca-msg b,.v3ca-coinc b{font:600 12.5px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;color:var(--v3-ink)}
-.v3ca-msg a{color:var(--v3-gold);text-decoration:none}
+.v3ca-tir,.v3ca-msg{font-size:14px;color:var(--v3-sub);line-height:1.55;margin:0}
+.v3ca-tir b,.v3ca-msg b,.v3ca-coinc b{font-weight:600;color:var(--v3-ink)}
+.v3ca-msg a{color:var(--v3-gold)}
 .v3ca-msg a:hover{color:var(--v3-gold2)}
-.v3ca-coinc{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--v3-sub)}
-.v3ca-bar{display:flex;height:7px;flex:1;min-width:40px;border-radius:4px;overflow:hidden;background:var(--v3-track)}
+.v3ca-coinc{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--v3-sub)}
+.v3ca-bar{display:flex;height:7px;flex:1;min-width:40px;border-radius:6px;overflow:hidden;background:var(--v3-track)}
 .v3ca-bar i{display:block;height:100%;background:var(--v3-gold)}
 .v3ca-coinc span{white-space:nowrap}
 @media(max-width:480px){.v3ca-coinc span{white-space:normal}}
 .v3ca-chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.v3ca-chip{font:600 10.5px 'IBM Plex Mono',monospace;color:var(--v3-sub);background:var(--v3-track);padding:3px 8px;border-radius:4px}
-.v3ca-chip.on{color:#0E1830;background:var(--v3-goldL)}
-.v3ca-mas{font-size:11px;color:var(--v3-mut)}
-.v3ca-mas .m{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+/* los activos de la cartera; el que ya tenés, blanco sobre navy */
+.v3ca-chip{font:600 12px 'IBM Plex Sans',sans-serif;color:var(--v3-sub);background:var(--v3-track);padding:3px 8px;border-radius:6px}
+.v3ca-chip.on{color:var(--v3-btnTx);background:var(--v3-btn)}
+.v3ca-mas{font-size:12.5px;color:var(--v3-mut)}
 .v3ca-pie{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:auto;padding-top:6px}
-.v3ca-link{font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-gold);text-decoration:none}
-.v3ca-link:hover{color:var(--v3-gold2)}
-.v3ca-seg{font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#0E1830;background:var(--v3-goldL);
-  border:1px solid var(--v3-goldL);padding:7px 12px;border-radius:5px;white-space:nowrap;cursor:pointer;text-decoration:none;
-  display:inline-block;line-height:1.3;transition:background .15s,color .15s,border-color .15s}
-.v3ca-seg:not([disabled]):hover{background:var(--v3-gold);border-color:var(--v3-gold);color:#0E1830}
-.v3ca-seg.on{color:var(--v3-sub);background:transparent;border-color:var(--v3-line)}
-.v3ca-seg.on:not([disabled]):hover{color:var(--v3-ink);background:transparent;border-color:var(--v3-gold)}
-.v3ca-seg[disabled]{opacity:.5;cursor:default}
-.v3ca-nota{font-size:11.5px;color:var(--v3-mut);line-height:1.7;margin:18px 0 0;max-width:760px}
+.v3ca .v3ca-link{font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-gold)}
+.v3ca .v3ca-link:hover{color:var(--v3-gold2)}
+/* Seguir / Ver planes: el botón primario (navy) de panel.js; Dejar de seguir, el secundario (.sec) */
+.v3ca .vp-btn.v3ca-seg{white-space:nowrap}
+.v3ca-nota{font-size:13px;color:var(--v3-mut);line-height:1.7;margin:18px 0 0;max-width:760px;text-align:justify;hyphens:auto}
+@media(max-width:480px){.v3ca-nota{text-align:left}}
+/* la comparación con las que seguís (compararSeguidas de panel.js) va separada del pie */
+.v3ca-comp{margin-top:30px}
+.v3ca-comp:empty{display:none}
 .v3ca-vacio{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;padding:20px 22px;max-width:560px;box-sizing:border-box}
-.v3ca-vacio h4{font:700 19px 'Playfair Display',serif;color:var(--v3-ink);margin:0 0 6px;line-height:1.2}
-.v3ca-vacio p{font-size:13px;color:var(--v3-sub);line-height:1.65;margin:0}
-.v3ca-vacio .v3ca-seg{margin-top:14px}
-.v3ca-sk{background:var(--v3-track);border-radius:6px;animation:v3ca-pulso 1.4s ease-in-out infinite}
+.v3ca-vacio h4{font:600 19px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin:0 0 6px;line-height:1.25}
+.v3ca-vacio p{font-size:14px;color:var(--v3-sub);line-height:1.65;margin:0}
+.v3ca-vacio .vp-btn{margin-top:14px}
+/* cargando (SPEC «Estados»): bloques #F0EDE5 con la altura de lo que viene */
+.v3ca-sk{background:var(--v3-skel);border-radius:6px;animation:v3ca-pulso 1.4s ease-in-out infinite}
 @keyframes v3ca-pulso{50%{opacity:.55}}
 @media(prefers-reduced-motion:reduce){.v3ca-sk{animation:none}}
 `;
 
-const INTRO = `<p class="v3ca-intro">Cada cartera tiene historial real desde el día de su lanzamiento y cada rotación queda fechada con su razón. Seguí la que va con vos y el panel te avisa cuando rota y te muestra qué te falta para replicarla.</p>`;
+// la bajada del SPEC usa frases que el §0 no permite ("carteras vivas", "sin
+// backtests"): esta dice lo mismo sin ellas
+const INTRO = `<p class="v3ca-intro">Cada cartera muestra su rendimiento desde el día en que se lanzó y cada rotación queda fechada con su razón. Seguí la que va con vos: el panel te avisa cuando rota y te muestra qué te falta para replicarla.</p>`;
 
 // cada llamada nueva invalida a la anterior: si el usuario sigue una cartera
 // mientras la primera todavía carga, no la pisa un dibujo viejo
@@ -130,18 +144,18 @@ function sparkline(t, ctx) {
 
 function esqueleto() {
   const card = `<div class="v3ca-card" aria-hidden="true">
-    <div><div class="v3ca-sk" style="height:9px;width:42%"></div><div class="v3ca-sk" style="height:19px;width:64%;margin-top:8px"></div></div>
+    <div><div class="v3ca-sk" style="height:11px;width:42%"></div><div class="v3ca-sk" style="height:21px;width:64%;margin-top:8px"></div></div>
     <div class="v3ca-sk" style="height:56px"></div>
-    <div class="v3ca-sk" style="height:34px"></div>
+    <div class="v3ca-sk" style="height:40px"></div>
     <div class="v3ca-sk" style="height:7px"></div>
-    <div class="v3ca-sk" style="height:20px;width:70%"></div>
-    <div class="v3ca-sk" style="height:30px;width:48%;margin-top:auto"></div></div>`;
+    <div class="v3ca-sk" style="height:22px;width:70%"></div>
+    <div class="v3ca-sk" style="height:32px;width:48%;margin-top:auto;border-radius:8px"></div></div>`;
   return `<div class="v3ca-grid" role="status" aria-label="Cargando las carteras">${card.repeat(3)}</div>`;
 }
 
 function estado(el, ctx, titulo, texto, conReintentar) {
   el.innerHTML = `<div class="v3ca">${INTRO}<div class="v3ca-vacio"><h4>${ctx.esc(titulo)}</h4><p>${ctx.esc(texto)}</p>
-    ${conReintentar ? '<button type="button" class="v3ca-seg" data-v3ca-reintentar>Reintentar</button>' : ''}</div></div>`;
+    ${conReintentar ? '<button type="button" class="vp-btn mini sec" data-v3ca-reintentar>Reintentar</button>' : ''}</div></div>`;
   const b = el.querySelector('[data-v3ca-reintentar]');
   if (b) b.addEventListener('click', () => { ctx.invalidar('teaser', 'seg'); renderCarteras(el, ctx); });
 }
@@ -153,22 +167,21 @@ function cardCartera(t, x, ctx) {
   const id = String(t.id || '');
   const nombre = t.nombre || id;
 
-  // encabezado: código · riesgo (· perfil) + la etiqueta de acceso
+  // encabezado: código · riesgo (· perfil) + la etiqueta de acceso (las del prototipo)
   const rot = [t.codigo || id, RIESGO[t.nivelRiesgo] || t.nivelRiesgo || '', PERFIL[t.perfil] || ''].filter(Boolean).join(' · ');
-  const tag = abre ? (sigue ? 'La seguís' : 'Con tu plan') : 'PRO';
+  const tag = abre ? (sigue ? 'La seguís' : 'Acceso') : 'PRO';
+  const tagTit = abre ? (sigue ? 'Seguís esta cartera' : 'Tu plan incluye esta cartera completa') : 'Composición y rotaciones con Valtia PRO';
 
-  // las tres cifras
+  // las tres cifras: seis celdas en dos filas (etiquetas arriba, valores abajo)
   const ret = numero(t.retorno), retB = numero(t.retornoBench);
-  const desde = t.fechaInicio
-    ? `Desde <span class="m">${esc(fmtC(t.fechaInicio))}</span>`
-    : 'Desde el inicio';
+  const desde = t.fechaInicio ? `Desde ${esc(fmtC(t.fechaInicio))}` : 'Desde el inicio';
   const bench = t.benchmark ? esc(t.benchmark) : 'Índice';
   const ur = t.ultimaRotacion && t.ultimaRotacion.fecha ? t.ultimaRotacion : null;
   const urTit = ur && abre && (ur.accion || ur.ticker) ? ` title="${esc([ur.accion, ur.ticker].filter(Boolean).join(' '))}"` : '';
   const cifras = `<div class="v3ca-cif">
-      <div><div class="k"${t.fechaInicio ? ` title="Lanzada el ${esc(fmtF(t.fechaInicio))}"` : ''}>${desde}</div><div class="v ${tono(ret)}">${esc(menos(pct(ret, 2)))}</div></div>
-      <div><div class="k">${bench} mismo lapso</div><div class="v ${retB == null ? 'mut' : 'sub'}">${esc(menos(pct(retB, 2)))}</div></div>
-      <div><div class="k">Última rotación</div><div class="v${ur ? '' : ' mut'}"${urTit}>${ur ? esc(fmtC(ur.fecha)) : '—'}</div></div>
+      <div class="k"${t.fechaInicio ? ` title="Lanzada el ${esc(fmtF(t.fechaInicio))}"` : ''}>${desde}</div><div class="v ${tono(ret)}">${esc(menos(pct(ret, 2)))}</div>
+      <div class="k">${bench} mismo lapso</div><div class="v ${retB == null ? 'mut' : 'sub'}">${esc(menos(pct(retB, 2)))}</div>
+      <div class="k">Última rotación</div><div class="v${ur ? '' : ' mut'}"${urTit}>${ur ? esc(fmtC(ur.fecha)) : '—'}</div>
     </div>`;
 
   const tir = numero(t.tir), tirPeso = numero(t.tirPeso);
@@ -200,29 +213,31 @@ function cardCartera(t, x, ctx) {
     const chips = `<div class="v3ca-chips">${top.map(f => {
       const tit = (f.peso > 0 ? `Peso objetivo ${num(f.peso * 100, 0)}%` : '') + (f.tengo ? (f.peso > 0 ? ' · ' : '') + 'la tenés' : '');
       return `<span class="v3ca-chip${f.tengo ? ' on' : ''}"${tit ? ` title="${esc(tit)}"` : ''}>${esc(base(f.k))}</span>`;
-    }).join('')}${resto > 0 ? `<span class="v3ca-mas">y <span class="m">${resto}</span> más</span>` : ''}</div>`;
+    }).join('')}${resto > 0 ? `<span class="v3ca-mas">y ${resto} más</span>` : ''}</div>`;
     medio = linea + chips;
   }
 
-  // pie: a la cartera (o a los planes) + seguir / dejar de seguir
+  // pie: "Ver cartera →" (cartera.html muestra el rendimiento de todas, con o sin
+  // acceso) + seguir / dejar de seguir; sin acceso, el botón lleva a los planes
+  const verCartera = `<a class="v3ca-link" href="/cartera?c=${encodeURIComponent(id)}">Ver cartera →</a>`;
   let pie;
   if (abre) {
     const boton = S.verificado
-      ? `<button type="button" class="v3ca-seg${sigue ? ' on' : ''}" data-seguir="${esc(id)}" data-nombre="${esc(nombre)}" data-on="${sigue ? '1' : '0'}">${sigue ? 'Dejar de seguir' : 'Seguir'}</button>`
+      ? `<button type="button" class="vp-btn mini v3ca-seg${sigue ? ' sec' : ''}" data-seguir="${esc(id)}" data-nombre="${esc(nombre)}" data-on="${sigue ? '1' : '0'}">${sigue ? 'Dejar de seguir' : 'Seguir'}</button>`
       : '';
-    pie = `<a class="v3ca-link" href="/cartera?c=${encodeURIComponent(id)}">Ver composición y tesis →</a>${boton}`;
+    pie = verCartera + boton;
   } else {
     // si la seguía cuando tenía acceso, que la pueda dejar de seguir desde acá
     const boton = sigue && S.verificado
-      ? `<button type="button" class="v3ca-seg on" data-seguir="${esc(id)}" data-nombre="${esc(nombre)}" data-on="1">Dejar de seguir</button>`
-      : `<a class="v3ca-seg" href="/planes">Ver planes</a>`;
-    pie = `<a class="v3ca-link" href="/planes">Composición y rotaciones con PRO →</a>${boton}`;
+      ? `<button type="button" class="vp-btn mini sec v3ca-seg" data-seguir="${esc(id)}" data-nombre="${esc(nombre)}" data-on="1">Dejar de seguir</button>`
+      : `<a class="vp-btn mini v3ca-seg" href="/planes">Ver planes</a>`;
+    pie = verCartera + boton;
   }
 
   return `<div class="v3ca-card${sigue ? ' sigue' : ''}">
     <div class="v3ca-top">
       <div class="izq"><div class="v3ca-eye" title="${esc(rot)}">${esc(rot)}</div><div class="v3ca-nom">${esc(nombre)}</div></div>
-      <span class="v3ca-tag${abre ? '' : ' pro'}">${tag}</span>
+      <span class="v3ca-tag${abre ? '' : ' pro'}" title="${esc(tagTit)}">${tag}</span>
     </div>
     ${sparkline(t, ctx)}
     ${cifras}
@@ -299,7 +314,7 @@ export async function renderCarteras(el, ctx) {
     el.innerHTML = `<div class="v3ca">${INTRO}
       <div class="v3ca-grid">${cards}</div>
       <p class="v3ca-nota">${pie}</p>
-      <div id="vp-comparar"></div></div>`;
+      <div id="vp-comparar" class="v3ca-comp"></div></div>`;
     // sin la cartera del usuario, compararSeguidas diría "Tenés 0 de N" y "no la
     // tenés" en cada fila: se avisa que no se pudo comparar en lugar de mostrar eso
     const box = el.querySelector ? el.querySelector('#vp-comparar') : null;

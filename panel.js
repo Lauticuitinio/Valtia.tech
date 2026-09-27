@@ -13,9 +13,9 @@ import { fxMercado, registrarImplicito, etiquetaFx } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
 import { renderResumen } from './panel-resumen.js?v=8';
-import { renderComprar as renderComprarV3 } from './panel-comprar.js?v=1';
-import { renderCarteras as renderCarterasV3 } from './panel-carteras.js?v=2';
-import { renderMensual } from './panel-mensual.js?v=1';
+import { renderComprar as renderComprarV3 } from './panel-comprar.js?v=2';
+import { renderCarteras as renderCarterasV3 } from './panel-carteras.js?v=3';
+import { renderMensual } from './panel-mensual.js?v=2';
 import { renderAlertas, contarNoLeidas } from './panel-alertas.js?v=2';
 // alertas de precio por activo (la única puerta a inversores/{email}/alertasPrecio): el
 // panel las evalúa con los precios que lee y cuenta las que saltaron para la pastilla
