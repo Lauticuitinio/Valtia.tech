@@ -3,10 +3,13 @@
 // modelo: cada compra, venta y cambio de peso, agrupados por día, con la hora,
 // el precio de esa operación y la razón.
 //
-// La estructura es la del prototipo de Lauti (Valtia Panel v3.html, 118-177): a la
-// izquierda los filtros por tipo, "Marcar todas como leídas" y la lista por día; a la
-// derecha "Este mes" y "Cómo te llegan". Los colores y la tipografía son los de
-// Noticias, siempre por las variables --v3-* de panel.js (así anda el tema oscuro).
+// Estructura y valores: «Alertas (pestaña nueva)» del SPEC y el prototipo «Valtia Panel
+// v3» del zip completo (24/09/2026, líneas 117-176): a la izquierda los filtros por
+// tipo, "Marcar todas como leídas" y la lista por día; a la derecha "Este mes" y "Cómo
+// te llegan", que bajan abajo cuando no entran al lado. Piel vigente del SPEC §0: IBM
+// Plex Sans en todo (sin Plex Mono ni Playfair), cifras tabulares, selectores con el
+// borde dorado sutil y radio 8, etiquetas de 6 px y el dorado claro solo sobre azul.
+// Los colores salen de las variables --v3-* de panel.js (así anda el tema oscuro).
 // No importa panel.js —sería un import circular—: todo llega por ctx.
 //
 // De dónde salen los datos:
@@ -65,92 +68,98 @@ const CSS_ID = 'v3-css-alertas';
 const CSS = `
 .v3al{font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);min-width:0;max-width:1200px}
 .v3al *{box-sizing:border-box}
-.v3al-n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
-.v3al-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
-.v3al-col,.v3al-lat{min-width:0;display:flex;flex-direction:column;gap:12px}
-@media(min-width:980px){.v3al-grid{grid-template-columns:minmax(0,1fr) minmax(250px,320px)}}
-/* controles: selectores sin caja, la opción activa con subrayado dorado de 2px */
-.v3al-top{display:flex;align-items:center;justify-content:space-between;gap:8px 14px;flex-wrap:wrap;margin:0}
+.v3al-n{font-variant-numeric:tabular-nums}
+.v3al button:focus-visible,.v3al a:focus-visible,.v3al select:focus-visible,.v3al input:focus-visible{outline:2px solid var(--v3-focus);outline-offset:2px}
+/* dos columnas que se acomodan solas (prototipo 118 y 162): la lista se lleva el ancho y
+   "Este mes" + "Cómo te llegan" bajan abajo cuando no entran al lado */
+.v3al-grid{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.v3al-col{flex:999 1 520px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.v3al-lat{flex:1 1 260px;max-width:340px;min-width:0;display:flex;flex-direction:column;gap:12px}
+/* controles: los filtros son los selectores de la regla §0 (borde dorado sutil, radio 8;
+   el elegido con borde dorado y relleno crema) */
+.v3al-top{display:flex;align-items:center;justify-content:space-between;gap:10px 12px;flex-wrap:wrap;margin:0}
 .v3al-fil{display:inline-flex;gap:2px;flex-wrap:wrap;min-width:0}
-.v3al-sel{font:500 10.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.06em;padding:7px 10px;margin:0;cursor:pointer;
-  color:var(--v3-mut);background:none;border:none;border-bottom:2px solid transparent;border-radius:0;white-space:nowrap;transition:color .15s}
-.v3al-sel:hover{color:var(--v3-ink)}
-.v3al-sel.on{color:var(--v3-ink);border-bottom-color:var(--v3-gold)}
-.v3al-sel .v3al-n{color:var(--v3-mut);margin-left:4px}
-.v3al-leer{font:600 10.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-gold2);
+.v3al-sel{font:500 12px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.06em;padding:7px 10px;margin:0;cursor:pointer;
+  color:var(--v3-selTx);background:var(--v3-selBg);border:1px solid var(--v3-sel);border-radius:8px;white-space:nowrap;
+  transition:color .15s,border-color .15s,background .15s}
+.v3al-sel:hover{color:var(--v3-selOnTx)}
+.v3al-sel.on{color:var(--v3-selOnTx);border-color:var(--v3-selOn);background:var(--v3-selOnBg)}
+.v3al-sel .v3al-n{color:var(--v3-mut);margin-left:2px}
+/* "Marcar todas como leídas": texto navy (en oscuro, el claro del token) */
+.v3al-leer{font:600 12px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-btn);
   background:none;border:none;padding:7px 0;margin:0;cursor:pointer;white-space:nowrap}
-.v3al-leer:hover{color:var(--v3-ink)}
+.v3al-leer:hover{color:var(--v3-gold2)}
 .v3al-leer[disabled]{opacity:.45;cursor:default}
-/* la lista: un bloque por día, con la fecha arriba y las alertas en una card */
+.v3al-leer[disabled]:hover{color:var(--v3-btn)}
+/* la lista: un bloque por día, con la fecha arriba y las alertas en una tarjeta */
 .v3al-lista{display:flex;flex-direction:column;gap:14px;min-width:0}
-.v3al-dia{font:600 9.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);margin:0 0 8px 2px}
+.v3al-dia{font:600 11px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);margin:0 0 8px 2px}
 .v3al-card{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;overflow:hidden}
-.v3al-it{display:grid;grid-template-columns:76px minmax(0,1fr);gap:14px;align-items:start;padding:14px 18px;
-  border-bottom:1px solid var(--v3-line2);min-width:0}
+.v3al-it{display:grid;grid-template-columns:78px minmax(0,1fr);gap:14px;align-items:start;padding:14px 18px;
+  border-bottom:1px solid var(--v3-line2);min-width:0;cursor:pointer}
 .v3al-it:last-child{border-bottom:none}
-.v3al-it.nueva{background:var(--v3-hl)}
+/* sin leer: el celeste apenas marcado del prototipo (#F7F9FC) y el punto azul */
+.v3al-it.nueva{background:var(--v3-hover)}
 .v3al-tipo{display:flex;flex-direction:column;gap:6px;align-items:flex-start;min-width:0}
-.v3al-pill{font:700 9px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:4px;white-space:nowrap}
-.v3al-hora{font:500 10.5px 'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;color:var(--v3-mut)}
+.v3al-pill{font:700 10.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:6px;white-space:nowrap;line-height:1.5}
+.v3al-hora{font:500 12px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut)}
 .v3al-cuerpo{min-width:0}
 .v3al-tit{display:flex;align-items:flex-start;gap:8px;min-width:0}
-.v3al-tit b{font:600 14px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);line-height:1.4;overflow-wrap:anywhere}
-.v3al-pt{width:7px;height:7px;border-radius:50%;background:var(--v3-serie);display:block;flex:none;margin-top:6px}
-.v3al-sub{font-size:11.5px;color:var(--v3-mut);margin-top:3px;line-height:1.5;overflow-wrap:anywhere}
-.v3al-raz{font-size:12.5px;color:var(--v3-sub);line-height:1.55;margin-top:6px;overflow-wrap:anywhere}
+.v3al-tit b{font:600 15.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);line-height:1.4;overflow-wrap:anywhere}
+.v3al-pt{width:7px;height:7px;border-radius:50%;background:var(--v3-serie);display:block;flex:none;margin-top:8px}
+.v3al-sub{font-size:13px;color:var(--v3-mut);margin-top:3px;line-height:1.5;overflow-wrap:anywhere}
+.v3al-raz{font-size:14px;color:var(--v3-sub);line-height:1.55;margin-top:6px;overflow-wrap:anywhere}
 .v3al-acc{display:flex;gap:10px 14px;align-items:center;flex-wrap:wrap;margin-top:10px}
-.v3al-btn{font:600 10px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#fff;
-  background:var(--v3-navy);border:1px solid var(--v3-navy);padding:7px 11px;border-radius:6px;white-space:nowrap;cursor:pointer}
-.v3al-btn:hover{background:var(--v3-serie);border-color:var(--v3-serie)}
-/* en oscuro --v3-serie es el dorado: con texto blanco encima no se lee */
-[data-theme="dark"] .v3al-btn:hover{color:#0E1830;background:var(--v3-goldL);border-color:var(--v3-goldL)}
+/* "Ya lo hice": navy lleno (el token se invierte en oscuro); hecho, en verde */
+.v3al-btn{font:600 11.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-btnTx);
+  background:var(--v3-btn);border:1px solid var(--v3-btn);padding:7px 11px;border-radius:8px;white-space:nowrap;cursor:pointer;
+  transition:background .15s,border-color .15s,color .15s}
+.v3al-btn:hover{background:var(--v3-btnHover);border-color:var(--v3-btnHover)}
 .v3al-btn.ok{color:var(--v3-up);background:var(--v3-upBg);border-color:transparent}
 .v3al-btn.ok:hover{background:var(--v3-upBg);border-color:var(--v3-up)}
 .v3al-btn[disabled]{opacity:.45;cursor:default}
-.v3al .v3al-ir{font:600 10px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--v3-gold2);text-decoration:none;white-space:nowrap}
-.v3al .v3al-ir:hover{color:var(--v3-ink)}
-/* "Este mes": el único bloque sólido, navy con dorado claro encima */
+.v3al .v3al-ir{font:600 11.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--v3-btn);text-decoration:none;white-space:nowrap}
+.v3al .v3al-ir:hover{color:var(--v3-gold2)}
+/* "Este mes": el único bloque sólido, navy con el dorado claro encima */
 .v3al-mes{background:var(--v3-navy);border:1px solid var(--v3-navy);border-radius:12px;padding:18px 20px;color:#fff;min-width:0}
-.v3al-eye{font:600 9.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:rgba(232,206,150,.85);margin:0}
+.v3al-eye{font:600 11px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:rgba(232,206,150,.85);margin:0}
 .v3al-cif{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
-.v3al-cif .v{font:600 22px 'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;color:#fff;line-height:1.1;overflow-wrap:anywhere}
-.v3al-cif .k{font-size:10.5px;color:rgba(255,255,255,.6);margin-top:2px;line-height:1.4}
+.v3al-cif .v{font:600 22px 'IBM Plex Sans',system-ui,sans-serif;color:#fff;line-height:1.1;overflow-wrap:anywhere}
+.v3al-cif .k{font-size:12px;color:rgba(255,255,255,.6);margin-top:2px;line-height:1.4}
 .v3al-lado{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;padding:16px 18px;min-width:0}
-.v3al-lado .v3al-eye{color:var(--v3-mut)}
-.v3al-lado p{font-size:12.5px;color:var(--v3-sub);line-height:1.6;margin:8px 0 0;overflow-wrap:anywhere}
+.v3al-lado .v3al-eye{color:var(--v3-mut);letter-spacing:.14em}
+.v3al-lado p{font-size:14px;color:var(--v3-sub);line-height:1.6;margin:8px 0 0;overflow-wrap:anywhere}
 .v3al-lado p b{color:var(--v3-ink);font-weight:600}
+.v3al-lado .v3al-ir{display:inline-block;margin-top:2px;letter-spacing:.1em}
 /* avisos, vacío y error */
-.v3al-aviso{font-size:12px;line-height:1.55;color:var(--v3-warn);background:var(--v3-warnBg);border-radius:8px;padding:8px 12px}
+.v3al-aviso{font-size:14px;line-height:1.55;color:var(--v3-sub);background:var(--v3-warnBg);border-radius:10px;padding:10px 14px}
 .v3al-vacio{background:var(--v3-card);border:1px dashed var(--v3-line);border-radius:12px;padding:20px 22px}
-.v3al-vacio b{display:block;font:700 18px 'Playfair Display',Georgia,serif;color:var(--v3-ink);line-height:1.25;margin-bottom:6px}
-.v3al-vacio p{font-size:13px;color:var(--v3-sub);line-height:1.65;margin:0}
+.v3al-vacio b{display:block;font:600 17.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);line-height:1.3;margin-bottom:6px}
+.v3al-vacio p{font-size:14px;color:var(--v3-sub);line-height:1.65;margin:0}
 .v3al-vacio .v3al-ir{display:inline-block;margin-top:12px}
-.v3al-reint{font:600 10.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-gold2);
-  background:none;border:none;padding:0 0 0 6px;margin:0;cursor:pointer}
+.v3al-reint{font:600 11.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-gold2);
+  background:none;border:none;padding:0 0 0 8px;margin:0;cursor:pointer}
 .v3al-reint:hover{color:var(--v3-ink)}
-/* bloque de PRO: la lista va desenfocada con el acceso a planes. Lo de atrás son
-   barras vacías, NUNCA alertas inventadas: lo que no se puede leer, no se dibuja */
-.v3al-pro{position:relative;border-radius:12px;overflow:hidden;min-height:210px}
+/* bloque de PRO (prototipo 153-159): la lista desenfocada con el acceso a planes. Lo de
+   atrás son barras vacías, NUNCA alertas inventadas: lo que no se puede leer, no se dibuja */
+.v3al-pro{position:relative;border-radius:12px;overflow:hidden;min-height:230px}
 .v3al-velo{filter:blur(4px);pointer-events:none;user-select:none}
-.v3al-sk{display:grid;grid-template-columns:76px minmax(0,1fr);gap:14px;padding:16px 18px;border-bottom:1px solid var(--v3-line2)}
+.v3al-sk{display:grid;grid-template-columns:78px minmax(0,1fr);gap:14px;padding:16px 18px;border-bottom:1px solid var(--v3-line2)}
 .v3al-sk:last-child{border-bottom:none}
 .v3al-sk i{display:block;height:10px;border-radius:5px;background:var(--v3-track);margin:4px 0}
-.v3al-sk .a i:first-child{height:16px;border-radius:4px}
+.v3al-sk .a i:first-child{height:18px;border-radius:6px}
 .v3al-sk .b i:nth-child(2){width:62%}
 .v3al-sk .b i:nth-child(3){width:84%}
-.v3al-lock{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
-  text-align:center;padding:20px 16px;background:rgba(255,255,255,.66)}
+.v3al-lock{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  text-align:center;padding:20px 16px;background:rgba(255,255,255,.6)}
 [data-theme="dark"] .v3al-lock{background:rgba(11,19,39,.66)}
-.v3al-lock b{font:700 19px 'Playfair Display',Georgia,serif;color:var(--v3-ink);line-height:1.25}
-.v3al-lock p{font-size:12.5px;color:var(--v3-sub);line-height:1.6;margin:0;max-width:340px}
-.v3al .v3al-cta{display:inline-block;font:600 10.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;
-  color:#fff;background:var(--v3-navy);border:1px solid var(--v3-navy);padding:10px 20px;border-radius:7px;text-decoration:none;margin-top:2px}
-.v3al .v3al-cta:hover{background:var(--v3-serie);border-color:var(--v3-serie);color:#fff}
-[data-theme="dark"] .v3al .v3al-cta{color:#0E1830;background:var(--v3-goldL);border-color:var(--v3-goldL)}
-[data-theme="dark"] .v3al .v3al-cta:hover{color:#0E1830;background:var(--v3-gold);border-color:var(--v3-gold)}
-.v3al-nota{font:400 11.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut);line-height:1.7;margin:10px 0 0;max-width:760px}
-.v3al-cargando{font:400 13px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut)}
+.v3al-lock b{font:600 21px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);line-height:1.25}
+.v3al-lock p{font-size:14.5px;color:var(--v3-sub);line-height:1.6;margin:0;max-width:340px}
+.v3al .v3al-cta{display:inline-block;font:600 12px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--v3-btnTx);background:var(--v3-btn);border:1px solid var(--v3-btn);padding:11px 22px;border-radius:8px;text-decoration:none;margin-top:2px}
+.v3al .v3al-cta:hover{background:var(--v3-btnHover);border-color:var(--v3-btnHover);color:var(--v3-btnTx)}
+.v3al-nota{font:400 13px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut);line-height:1.7;margin:6px 0 0;max-width:760px;text-align:justify;hyphens:auto}
 /* celular: la etiqueta del tipo y la hora pasan a la misma línea, arriba del texto */
 @media(max-width:560px){
   .v3al-it,.v3al-sk{grid-template-columns:minmax(0,1fr);gap:8px;padding:14px}
@@ -158,61 +167,65 @@ const CSS = `
   .v3al-sk .a{display:flex;gap:8px}
   .v3al-sk .a i{width:64px;margin:0}
   .v3al-cif .v{font-size:19px}
+  .v3al-lat{max-width:none}
+  /* la nota angosta va a la izquierda (SPEC §0) */
+  .v3al-nota{text-align:left}
 }
-/* ── el selector de segmento (carteras | precio): los mismos .v3al-sel de los filtros,
-   con una línea abajo que lo separa de ellos ── */
-.v3al-vistas{border-bottom:1px solid var(--v3-line2);margin:0 0 16px}
+/* ── el selector de segmento (carteras | precio): los mismos selectores, un poco más
+   grandes porque cambian toda la pestaña, con una línea abajo que lo separa de los filtros ── */
+.v3al-vistas{border-bottom:1px solid var(--v3-line2);margin:0 0 16px;padding:0 0 14px}
+.v3al-vistas .v3al-fil{gap:6px}
+.v3al-vistas .v3al-sel{font:600 13px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.04em;padding:9px 14px}
 .v3al-sel .v3al-pt{display:inline-block;vertical-align:middle;margin:0 0 2px 6px}
+/* celular: los dos segmentos entran en una sola línea */
+@media(max-width:560px){.v3al-vistas .v3al-sel{font-size:12px;letter-spacing:.02em;padding:8px 9px}}
 /* ── "Tus alertas de precio" ── */
 .v3al-cab{display:flex;align-items:center;justify-content:space-between;gap:8px 14px;flex-wrap:wrap;min-width:0}
-.v3al-cab .v3al-eye{color:var(--v3-mut)}
-/* primario navy (--v3-btn) y secundario blanco con borde: nada crema ni dorado de relleno */
-.v3al-btn.sec{color:var(--v3-ink);background:var(--v3-card);border-color:var(--v3-line)}
-.v3al-btn.sec:hover{color:var(--v3-ink);background:var(--v3-hover);border-color:var(--v3-mut)}
-.v3al-btn.pri{color:var(--v3-btnTx);background:var(--v3-btn);border-color:var(--v3-btn);transition:opacity .15s}
-.v3al-btn.pri:hover{color:var(--v3-btnTx);background:var(--v3-btn);border-color:var(--v3-btn);opacity:.86}
-[data-theme="dark"] .v3al-btn.sec:hover{color:var(--v3-ink);background:var(--v3-hover);border-color:var(--v3-mut)}
-[data-theme="dark"] .v3al-btn.pri:hover{color:var(--v3-btnTx);background:var(--v3-btn);border-color:var(--v3-btn)}
-.v3al-btn.chico{padding:5px 9px;font-size:9.5px}
-.v3al-ch{display:flex;align-items:flex-start;justify-content:space-between;gap:6px 14px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid var(--v3-line2)}
-.v3al-ch b{font:600 13px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink)}
+.v3al-cab .v3al-eye{color:var(--v3-mut);letter-spacing:.14em}
+/* primario navy y secundario con el borde dorado sutil de la regla §0 */
+.v3al-btn.sec{color:var(--v3-selTx);background:var(--v3-selBg);border-color:var(--v3-sel)}
+.v3al-btn.sec:hover{color:var(--v3-selOnTx);background:var(--v3-selBg);border-color:var(--v3-selOn)}
+.v3al-btn.pri{color:var(--v3-btnTx);background:var(--v3-btn);border-color:var(--v3-btn)}
+.v3al-btn.pri:hover{color:var(--v3-btnTx);background:var(--v3-btnHover);border-color:var(--v3-btnHover)}
+.v3al-btn.chico{padding:6px 10px;font-size:11px}
+.v3al-ch{display:flex;align-items:flex-start;justify-content:space-between;gap:6px 14px;flex-wrap:wrap;padding:13px 18px;border-bottom:1px solid var(--v3-line2)}
+.v3al-ch b{font:600 15px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink)}
 .v3al-ch .v3al-sub{margin-top:2px}
 .v3al-ch .v3al-leer{padding:0}
 .v3al-ch .pau{font-weight:500;color:var(--v3-mut)}
-.v3al-nada{font-size:12.5px;color:var(--v3-sub);line-height:1.6;padding:16px 18px;overflow-wrap:anywhere}
-/* una fila por alerta activa: ticker, nombre, pastilla con la condición, el precio de hoy */
-.v3al-ap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--v3-line2);min-width:0}
+.v3al-nada{font-size:14px;color:var(--v3-sub);line-height:1.6;padding:16px 18px;overflow-wrap:anywhere}
+/* una fila por alerta activa: ticker, nombre, pastilla con la condición y el precio de hoy */
+.v3al-ap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;align-items:center;padding:13px 18px;border-bottom:1px solid var(--v3-line2);min-width:0}
 .v3al-ap:last-child{border-bottom:none}
 .v3al-ap.off .v3al-tit2 b,.v3al-ap.off .v3al-pill.up,.v3al-ap.off .v3al-pill.dn{opacity:.55}
 .v3al-tit2{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.v3al-tit2 b{font:700 14px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink)}
-.v3al-tit2 .nom{font-size:11.5px;color:var(--v3-mut);overflow-wrap:anywhere}
-.v3al-hoy{font:500 11.5px 'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;color:var(--v3-sub);margin-top:5px;overflow-wrap:anywhere}
+.v3al-tit2 b{font:700 15.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-gold)}
+.v3al-tit2 .nom{font-size:13.5px;color:var(--v3-sub);overflow-wrap:anywhere}
+.v3al-hoy{font:500 13px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut);margin-top:5px;overflow-wrap:anywhere}
 .v3al-ap .acc{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.v3al-pill.up,.v3al-pill.dn{font:600 11px 'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;letter-spacing:0;text-transform:none}
+.v3al-pill.up,.v3al-pill.dn{font:600 12px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:0;text-transform:none}
 .v3al-pill.up{color:var(--v3-up);background:var(--v3-upBg)}
 .v3al-pill.dn{color:var(--v3-dn);background:var(--v3-dnBg)}
 .v3al-pill.pau{color:var(--v3-mut);background:var(--v3-neutro)}
 /* historial: cada fila es un botón (tocarla abre el activo en Mi cartera) */
-.v3al-hi{display:grid;grid-template-columns:112px minmax(0,1fr);gap:4px 14px;align-items:start;width:100%;text-align:left;padding:12px 18px;margin:0;
+.v3al-hi{display:grid;grid-template-columns:112px minmax(0,1fr);gap:4px 14px;align-items:start;width:100%;text-align:left;padding:13px 18px;margin:0;
   border:none;border-bottom:1px solid var(--v3-line2);border-radius:0;background:none;color:var(--v3-ink);cursor:pointer;font-family:inherit;min-width:0}
 .v3al-hi:last-child{border-bottom:none}
 .v3al-hi:hover{background:var(--v3-hover)}
-.v3al-hi .f{font:500 10.5px 'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;color:var(--v3-mut);line-height:1.6;white-space:nowrap}
-.v3al-hi .t{display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.45;min-width:0;overflow-wrap:anywhere}
-.v3al-hi .t .v3al-pt{margin-top:5px}
-/* mini-form de alta: activo, sube/baja, umbral en la moneda y unidad del activo. El
-   sube/baja son los mismos .v3al-sel (subrayado dorado, sin caja), como el "Avisarme si…"
-   de la fila de Mi cartera */
-.v3al-form{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding:14px 18px;margin:0;background:var(--v3-hl)}
-.v3al-form label,.v3al-form .lab{display:block;font:600 9.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);margin:0 0 5px}
-.v3al-form select,.v3al-form input{width:100%;font:500 13px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);background:var(--v3-card);
-  border:1px solid var(--v3-line);border-radius:7px;padding:8px 10px;min-width:0;margin:0}
-.v3al-form input{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
-.v3al-form select:focus,.v3al-form input:focus{outline:none;border-color:var(--v3-mut)}
-.v3al-form .u{font:500 10.5px 'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;color:var(--v3-mut);line-height:1.5;margin-top:5px;overflow-wrap:anywhere}
+.v3al-hi .f{font:500 12.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut);line-height:1.6;white-space:nowrap}
+.v3al-hi .t{display:flex;align-items:flex-start;gap:8px;font-size:14px;line-height:1.5;min-width:0;overflow-wrap:anywhere}
+.v3al-hi .t .v3al-pt{margin-top:7px}
+/* mini-form de alta: activo, sube/baja (los mismos selectores) y el umbral en la moneda
+   y la unidad del activo */
+.v3al-form{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;padding:16px 18px;margin:0;background:var(--v3-hl)}
+.v3al-form label,.v3al-form .lab{display:block;font:600 10.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--v3-mut);margin:0 0 6px}
+.v3al-form select,.v3al-form input{width:100%;font:500 14px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);background:var(--v3-input);
+  border:1px solid var(--v3-line);border-radius:8px;padding:9px 11px;min-width:0;margin:0}
+.v3al-form select option{color:#101010;background:#fff}
+.v3al-form select:focus,.v3al-form input:focus{outline:none;border-color:var(--v3-focus)}
+.v3al-form .u{font:500 12.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut);line-height:1.5;margin-top:5px;overflow-wrap:anywhere}
 .v3al-form .acc{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap}
-.v3al-form .nota{font-size:11.5px;color:var(--v3-mut);line-height:1.5;flex:1 1 200px;min-width:0}
+.v3al-form .nota{font-size:13px;color:var(--v3-mut);line-height:1.5;flex:1 1 200px;min-width:0}
 .v3al-form .msg{color:var(--v3-dn)}
 .v3al-nada .v3al-acc{margin-top:8px}
 .v3al-nada .v3al-reint{padding-left:0}
@@ -386,7 +399,11 @@ export async function renderAlertas(el, ctx) {
       // el <select> del mini-form: al cambiar de activo se vuelve a proponer el umbral
       el.addEventListener('change', alCambio);
     }
-    if (!el.querySelector('.v3al')) el.innerHTML = '<p class="v3al-cargando">Cargando tus alertas…</p>';
+    // cargando (SPEC «Estados»): esqueletos con la altura del selector, los filtros y la lista
+    if (!el.querySelector('.v3al')) {
+      el.innerHTML = typeof ctx.skel === 'function' ? ctx.skel(44, 34, 150, 150)
+        : '<p class="vp-cargando">Cargando tus alertas…</p>';
+    }
     await dibujar(false);
   } catch (e) {
     try { el.innerHTML = errorHtml(); } catch (x) {}
@@ -488,7 +505,8 @@ function armar(d, ctx) {
     </div>
     <aside class="v3al-lat">${esteMes(todas, d, ctx)}
       <div class="v3al-lado"><div class="v3al-eye">Cómo te llegan</div>
-        <p>Cada alerta queda acá, en tu panel, apenas se publica. El mail es aparte: en <b>Mi cuenta</b> elegís qué avisos querés recibir, y ahí mismo te dice cuáles ya salen y cuáles todavía no.</p>
+        <p>Cada alerta queda acá, en tu panel, apenas se publica. Marcá «Ya lo hice» cuando repliques la operación en tu broker.</p>
+        <p>El mail es aparte: en <b>Mi cuenta</b> elegís qué avisos querés recibir, y ahí mismo te dice cuáles ya salen y cuáles todavía no.</p>
         <p><a class="v3al-ir" href="#panel/cuenta" data-go="cuenta">Elegir qué avisos recibir →</a></p>
       </div>
     </aside>
@@ -539,6 +557,19 @@ function titulo(a, ctx) {
   return tk ? `${tk}${px}` : 'Novedad de la cartera';
 }
 
+/* el "· peso 10%" del prototipo, con lo que Operar anota en la alerta: pesoNuevo (y
+   pesoAnterior en un cambio de peso), en fracción de 0 a 1. Sin ese dato no se dice nada */
+function extraPeso(a, ctx) {
+  if (!finito(a.pesoNuevo)) return '';
+  const n = Number(a.pesoNuevo);
+  if (n < 0 || n > 1) return '';
+  const p = x => { const v = Math.round(Number(x) * 1000) / 10; return ctx.num(v, Number.isInteger(v) ? 0 : 1) + '%'; };
+  if (a.tipo === 'venta') return n === 0 ? 'sale de la cartera' : 'queda en ' + p(n);
+  if (a.tipo === 'peso' && finito(a.pesoAnterior) && Number(a.pesoAnterior) >= 0 && Number(a.pesoAnterior) <= 1)
+    return 'peso ' + p(a.pesoAnterior) + ' → ' + p(n);
+  return n > 0 ? 'peso ' + p(n) : '';
+}
+
 function item(a, d, ctx, puedeMarcar) {
   const esc = ctx.esc;
   const [rot, color, fondo] = TIPOS[a.tipo] || [may(a.tipo || 'Novedad'), 'var(--v3-mut)', 'var(--v3-neutro)'];
@@ -546,7 +577,7 @@ function item(a, d, ctx, puedeMarcar) {
   const ya = hecha(d, a);
   const cart = String(a.carteraNombre || a.cartera || '').trim();
   const emp = String(a.empresa || '').trim();
-  const sub = [cart, emp].filter(Boolean).join(' · ');
+  const sub = [cart, emp, extraPeso(a, ctx)].filter(Boolean).join(' · ');
   const id = String(a.id);
   const acc = [];
   if (ACCIONABLE(a.tipo)) {

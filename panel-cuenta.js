@@ -1,14 +1,21 @@
 // panel-cuenta.js — pestaña "Mi cuenta" del panel del inversor (Panel v3).
-// Tres bloques, los del SPEC (sección "Mi cuenta"): TU PLAN (qué plan tiene y qué
-// incluye), TUS DATOS (nombre, mail y contraseña, tal como los guarda Firebase Auth)
-// y AVISOS POR MAIL (los interruptores del SPEC + cada cuánto).
+// Los bloques del SPEC (sección "Mi cuenta") con la estructura y los valores del
+// prototipo «Valtia Panel v3» del zip completo (24/09/2026, líneas 178-224): a la
+// izquierda TU PLAN (navy: qué plan tiene, qué incluye, "Cambiar de plan" y "Dar de
+// baja" por mail), TUS DATOS (nombre, mail y contraseña, tal como los guarda Firebase
+// Auth) y PAGOS (el cobro es manual por ahora); a la derecha AVISOS POR MAIL (los
+// interruptores del SPEC + cada cuánto). Piel vigente del SPEC §0: IBM Plex Sans en
+// todo (sin Plex Mono ni Playfair), selectores con el borde dorado sutil y radio 8,
+// etiquetas de 6 px y el dorado claro solo sobre azul.
 //
 // Dos reglas que ordenan todo este módulo:
 //
-// 1. Nada inventado. El alta, el próximo pago y el historial de pagos NO existen en
-//    Firestore: no se dibujan ni se estiman. En su lugar va una línea honesta de que
-//    el cobro se gestiona con nosotros y un mail de contacto. Lo mismo con el nombre:
-//    si la cuenta no tiene displayName, se dice que no hay, no se arma uno con el mail.
+// 1. Nada inventado. La fecha de alta del plan, el próximo pago y el historial de
+//    pagos NO existen en Firestore: no se dibujan ni se estiman. Lo que sí se muestra
+//    es cuándo se creó la cuenta (lo guarda Firebase Auth en user.metadata) y, en vez
+//    del próximo pago, lo que es cierto según el plan (gratis: sin cargo; pago: se
+//    coordina por mail). Lo mismo con el nombre: si la cuenta no tiene displayName,
+//    se dice que no hay, no se arma uno con el mail.
 //
 // 2. Los avisos NO estrenan colección. Se cuelgan del documento que ya existe,
 //    inversores/{email}/alertas/config (el de alertasMail() en panel.js, que lee
@@ -34,106 +41,120 @@ const CAMPO_AVISOS = 'avisos';
 const CAMPO_FREC = 'frecuenciaAvisos';
 
 const CSS = `
-.v3q{font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);min-width:0;max-width:1200px}
+.v3q{font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);min-width:0;max-width:1200px;
+  --q-on:var(--v3-serie);--q-off:#D5D9E0}
+[data-theme="dark"] .v3q{--q-off:rgba(255,255,255,.18)}
 .v3q *{box-sizing:border-box}
+.v3q-n{font-variant-numeric:tabular-nums}
+.v3q a:focus-visible,.v3q button:focus-visible{outline:2px solid var(--v3-focus);outline-offset:2px}
+/* prototipo 180: dos columnas 0,9 / 1,1; a la izquierda el plan, los datos y los pagos,
+   a la derecha los avisos por mail */
 .v3q-grid{display:grid;grid-template-columns:minmax(0,0.9fr) minmax(0,1.1fr);gap:16px;align-items:start}
 .v3q-col{display:flex;flex-direction:column;gap:14px;min-width:0}
 .v3q-card{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;padding:18px 20px;min-width:0}
 /* sirve para un div (la etiqueta de TU PLAN, que ya tiene su h2 con el nombre del
-   plan) y para el h2 de TUS DATOS: el margen va explícito para que el h2 no traiga
-   el suyo de fábrica */
-.v3q-eyebrow{font:600 9.5px 'IBM Plex Sans',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--v3-mut);margin:0 0 8px}
-.v3q-h{font:700 18px 'Playfair Display',serif;color:var(--v3-ink);line-height:1.25;margin:0}
-.v3q-p{font-size:12.5px;color:var(--v3-sub);line-height:1.6;margin:4px 0 0}
-.v3q-n{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+   plan) y para el h2 de TUS DATOS y PAGOS: el margen va explícito para que el h2 no
+   traiga el suyo de fábrica */
+.v3q-eyebrow{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);margin:0 0 6px}
+.v3q-h{font:600 18px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);line-height:1.3;margin:0}
+.v3q-p{font-size:14px;color:var(--v3-sub);line-height:1.6;margin:4px 0 10px}
+.v3q-txt{font-size:14px;color:var(--v3-sub);line-height:1.6;margin:8px 0 0;overflow-wrap:anywhere}
+.v3q-txt a{color:var(--v3-gold);text-decoration:none;font-weight:600}
+.v3q-txt a:hover{color:var(--v3-gold2)}
 /* TU PLAN: el único bloque sólido, sobre navy, con el dorado claro encima */
 .v3q-plan{background:var(--v3-navy);border:1px solid var(--v3-navy);border-radius:12px;padding:22px 24px;color:#fff;min-width:0}
-.v3q-plan .v3q-eyebrow{color:rgba(232,206,150,.85)}
-.v3q-plan h2{font:600 26px 'Playfair Display',serif;color:#fff;line-height:1.2;margin:6px 0 4px}
-.v3q-plan .sub{font-size:13px;color:rgba(255,255,255,.72);line-height:1.6;margin:0}
-.v3q-feat{list-style:none;padding:0;margin:16px 0 0;border-top:1px solid rgba(255,255,255,.14)}
-.v3q-feat li{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.6;
-  color:rgba(255,255,255,.82);padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08)}
-.v3q-feat li:last-child{border-bottom:none}
-.v3q-feat li::before{content:'—';color:#E8CE96;flex:none;font-size:11px;line-height:1.85}
+.v3q-plan .v3q-eyebrow{color:rgba(232,206,150,.85);letter-spacing:.16em}
+.v3q-plan h2{font:600 28px 'IBM Plex Sans',sans-serif;color:#fff;line-height:1.2;margin:8px 0 4px}
+.v3q-plan .sub{font-size:14.5px;color:rgba(255,255,255,.7);line-height:1.6;margin:0}
+.v3q-feat{list-style:none;padding:0;margin:14px 0 0}
+.v3q-feat li{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.55;color:rgba(255,255,255,.82);padding:5px 0}
+.v3q-feat li::before{content:'—';color:#E8CE96;flex:none}
+.v3q-fechas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(130px,100%),1fr));gap:12px;margin-top:16px;padding-top:14px;
+  border-top:1px solid rgba(255,255,255,.12)}
+.v3q-fechas .l{font-size:12px;color:rgba(255,255,255,.55)}
+.v3q-fechas .v{font:600 15.5px 'IBM Plex Sans',sans-serif;color:#fff;margin-top:4px;line-height:1.35}
 .v3q-acc{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
-.v3q .v3q-cta{display:inline-block;font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;
-  color:#0E1830;background:#E8CE96;border:1px solid #E8CE96;padding:9px 14px;border-radius:7px;text-decoration:none;cursor:pointer}
-.v3q .v3q-cta:hover{background:#fff;border-color:#fff;color:#0E1830}
-.v3q .v3q-cta.linea{color:rgba(255,255,255,.8);background:transparent;border-color:rgba(255,255,255,.28)}
-.v3q .v3q-cta.linea:hover{color:#0E1830;background:#fff;border-color:#fff}
-.v3q-cobro{font-size:11.5px;color:rgba(255,255,255,.6);line-height:1.65;margin:16px 0 0;padding-top:13px;border-top:1px solid rgba(255,255,255,.14)}
-.v3q-cobro a{color:#E8CE96;text-decoration:none}
-.v3q-cobro a:hover{text-decoration:underline}
-/* TUS DATOS */
-.v3q-dato{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 0;
+.v3q .v3q-cta{display:inline-block;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;
+  color:#14213D;background:#E8CE96;border:1px solid #E8CE96;padding:9px 14px;border-radius:8px;text-decoration:none;cursor:pointer;white-space:nowrap}
+.v3q .v3q-cta:hover{background:#fff;border-color:#fff;color:#14213D}
+.v3q .v3q-cta.linea{color:rgba(255,255,255,.75);background:transparent;border-color:rgba(255,255,255,.25)}
+.v3q .v3q-cta.linea:hover{color:#fff;border-color:rgba(255,255,255,.6)}
+/* TUS DATOS: etiqueta, valor y la acción a la derecha, como texto (prototipo 196-199) */
+.v3q-dato{display:flex;justify-content:space-between;align-items:center;gap:8px 14px;padding:11px 0;
   border-bottom:1px solid var(--v3-line2);min-width:0}
 .v3q-dato:last-of-type{border-bottom:none}
 .v3q-dato .izq{min-width:0}
-.v3q-dato .l{font-size:11px;color:var(--v3-mut);line-height:1.5}
-.v3q-dato .v{font:500 13.5px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin-top:2px;line-height:1.5;overflow-wrap:anywhere}
-.v3q-dato .v.vacio{color:var(--v3-mut);font-style:italic}
-.v3q-tag{display:inline-block;font:700 9px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;
-  padding:3px 7px;border-radius:4px;white-space:nowrap;line-height:1.5;vertical-align:middle}
+.v3q-dato .l{font-size:12.5px;color:var(--v3-mut);line-height:1.5}
+.v3q-dato .v{font:500 15px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin-top:2px;line-height:1.5;overflow-wrap:anywhere}
+.v3q-dato .v.vacio{color:var(--v3-mut);font-weight:400;font-size:14px}
+.v3q-act{font:600 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-btn);
+  background:none;border:none;padding:4px 0;margin:0;cursor:pointer;white-space:nowrap;flex:none}
+.v3q-act:hover:not([disabled]){color:var(--v3-gold2)}
+.v3q-act[disabled]{opacity:.45;cursor:default}
+/* etiquetas (6 px) */
+.v3q-tag{display:inline-block;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 7px;border-radius:6px;white-space:nowrap;line-height:1.5;vertical-align:middle}
 .v3q-tag.ok{color:var(--v3-up);background:var(--v3-upBg)}
 .v3q-tag.falta{color:var(--v3-warn);background:var(--v3-warnBg)}
-.v3q-tag.pro{color:var(--v3-gold2);background:var(--v3-goldBg)}
-.v3q-tag.aun{color:var(--v3-mut);background:var(--v3-neutro);letter-spacing:.06em;text-transform:none;font-weight:600;font-size:9.5px}
-.v3q-btn{font:600 10px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-ink);
-  background:transparent;border:1px solid var(--v3-line);border-radius:6px;padding:8px 12px;cursor:pointer;white-space:nowrap;flex:none}
-.v3q-btn:hover:not([disabled]){border-color:var(--v3-gold);color:var(--v3-gold2)}
+.v3q-tag.pro{color:var(--v3-btnTx);background:var(--v3-btn)}
+.v3q-tag.pro.sin{color:var(--v3-gold2);background:transparent;border:1px solid var(--v3-gold);padding:1px 6px}
+.v3q-tag.aun{color:var(--v3-mut);background:var(--v3-neutro);letter-spacing:.02em;text-transform:none;font-weight:600}
+/* botón primario (Guardar): navy lleno, radio 8; el token se invierte en oscuro */
+.v3q-btn{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-btnTx);
+  background:var(--v3-btn);border:1px solid var(--v3-btn);border-radius:8px;padding:10px 18px;cursor:pointer;white-space:nowrap;flex:none;
+  transition:background .15s,border-color .15s}
+.v3q-btn:hover:not([disabled]){background:var(--v3-btnHover);border-color:var(--v3-btnHover)}
 .v3q-btn[disabled]{opacity:.45;cursor:default}
-.v3q-btn.fuerte{color:#fff;background:var(--v3-navy);border-color:var(--v3-navy)}
-.v3q-btn.fuerte:hover:not([disabled]){color:#0E1830;background:#E8CE96;border-color:#E8CE96}
 /* overflow-wrap: este mensaje lleva el mail de la cuenta, que es una sola palabra
    larga; en el pie de los avisos convive con el botón en una fila flex y a 375px
    sin esto empujaba el ancho */
-.v3q-msg{font-size:12px;color:var(--v3-sub);line-height:1.65;margin:10px 0 0;min-width:0;overflow-wrap:anywhere}
+.v3q-msg{font-size:13.5px;color:var(--v3-sub);line-height:1.6;margin:10px 0 0;min-width:0;overflow-wrap:anywhere}
 .v3q-msg.ok{color:var(--v3-up)}
 .v3q-msg.mal{color:var(--v3-dn)}
-.v3q-nota{font-size:11.5px;color:var(--v3-mut);line-height:1.65;margin:12px 0 0}
-.v3q-nota a,.v3q-msg a{color:var(--v3-gold);text-decoration:none}
+.v3q-nota{font-size:13px;color:var(--v3-mut);line-height:1.65;margin:12px 0 0}
+.v3q-nota a,.v3q-msg a{color:var(--v3-gold);text-decoration:none;font-weight:600}
 .v3q-nota a:hover,.v3q-msg a:hover{color:var(--v3-gold2)}
-/* AVISOS POR MAIL */
-.v3q-banda{font-size:12px;color:var(--v3-warn);background:var(--v3-warnBg);border-radius:8px;
-  padding:9px 12px;line-height:1.6;margin:12px 0 4px}
+/* AVISOS POR MAIL (prototipo 209-222): una fila por aviso con su interruptor */
+.v3q-banda{font-size:14px;color:var(--v3-sub);background:var(--v3-warnBg);border-radius:10px;
+  padding:10px 14px;line-height:1.6;margin:4px 0 6px}
 .v3q-av{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;
   padding:13px 0;border-bottom:1px solid var(--v3-line2);cursor:pointer;min-width:0}
 .v3q-av:last-of-type{border-bottom:none}
 /* la fila entera es un label: si el interruptor está bloqueado, el cursor no
    tiene que prometer que se puede tocar */
 .v3q-av.quieto{cursor:default}
-.v3q-av .t{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font:600 13.5px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);line-height:1.4}
-.v3q-av .d{font-size:12px;color:var(--v3-mut);margin-top:3px;line-height:1.55}
+.v3q-av .t{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;font:600 15px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);line-height:1.4}
+.v3q-av .d{font-size:13.5px;color:var(--v3-mut);margin-top:3px;line-height:1.5}
+/* el interruptor del prototipo: 38 x 22, navy prendido y gris apagado, perilla blanca */
 .v3q-sw{position:relative;width:38px;height:22px;flex:none;display:block}
 .v3q-sw input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;z-index:2}
-.v3q-sw i{position:absolute;inset:0;display:block;border-radius:11px;background:var(--v3-track);
-  border:1px solid var(--v3-line);transition:background .15s,border-color .15s}
-.v3q-sw i::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
-  background:var(--v3-card);border:1px solid var(--v3-line);transition:left .15s}
-.v3q-sw input:checked+i{background:var(--v3-serie);border-color:var(--v3-serie)}
-.v3q-sw input:checked+i::after{left:18px;border-color:var(--v3-serie)}
-.v3q-sw input:focus-visible+i{outline:2px solid var(--v3-gold);outline-offset:2px}
+.v3q-sw i{position:absolute;inset:0;display:block;border-radius:11px;background:var(--q-off);transition:background .15s}
+.v3q-sw i::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .15s}
+.v3q-sw input:checked+i{background:var(--q-on)}
+.v3q-sw input:checked+i::after{left:19px}
+.v3q-sw input:focus-visible+i{outline:2px solid var(--v3-focus);outline-offset:2px}
 .v3q-sw input[disabled]{cursor:default}
 .v3q-sw input[disabled]+i{opacity:.5}
 .v3q-frec{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
-  margin-top:14px;padding-top:12px;border-top:1px solid var(--v3-line)}
-.v3q-frec .l{font-size:12.5px;color:var(--v3-sub)}
+  margin-top:16px;padding-top:14px;border-top:1px solid var(--v3-line)}
+.v3q-frec .l{font-size:14px;color:var(--v3-sub)}
+/* frecuencia: los selectores de la regla §0 (borde dorado sutil; el elegido con relleno crema) */
 .v3q-seg{display:inline-flex;gap:2px;align-items:center;flex-wrap:wrap}
-.v3q-seg button{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;padding:7px 10px;cursor:pointer;
-  color:var(--v3-mut);background:none;border:none;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s}
-.v3q-seg button:hover{color:var(--v3-ink)}
-.v3q-seg button.on{color:var(--v3-ink);border-bottom-color:var(--v3-gold)}
+.v3q-seg button{font:500 12px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;padding:7px 10px;cursor:pointer;
+  color:var(--v3-selTx);background:var(--v3-selBg);border:1px solid var(--v3-sel);border-radius:8px;white-space:nowrap;
+  transition:color .15s,border-color .15s,background .15s}
+.v3q-seg button:hover{color:var(--v3-selOnTx)}
+.v3q-seg button.on{color:var(--v3-selOnTx);border-color:var(--v3-selOn);background:var(--v3-selOnBg)}
 .v3q-pie{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:16px}
-.v3q-sk i{display:block;height:11px;border-radius:5px;background:var(--v3-track);margin:7px 0}
+.v3q-sk i{display:block;height:12px;border-radius:6px;background:var(--v3-skel);margin:10px 0}
 .v3q-sk i.corta{width:45%}
-@media (max-width:980px){.v3q-grid{grid-template-columns:1fr}}
+@media (max-width:1100px){.v3q-grid{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:420px){
   .v3q-card{padding:16px 14px}
   .v3q-plan{padding:18px 16px}
-  .v3q-plan h2{font-size:23px}
-  .v3q-dato{flex-wrap:wrap;gap:8px}
-  .v3q-dato .v3q-btn{width:100%;text-align:center}
+  .v3q-plan h2{font-size:24px}
+  .v3q-dato{flex-wrap:wrap}
 }
 `;
 
@@ -222,6 +243,10 @@ function codigo(e) {
 
 let _seq = 0;
 
+// el título de la tarjeta de avisos (prototipo 210): el mismo mientras carga y después
+const CABEZA_AVISOS = `<h2 class="v3q-h">Qué avisos recibir por mail</h2>
+    <p class="v3q-p">Elegí qué te queremos contar y cada cuánto.</p>`;
+
 export function renderCuenta(el, ctx) {
   return pintar(el, ctx);
 }
@@ -233,11 +258,10 @@ async function pintar(el, ctx) {
   ponerCss();
 
   el.innerHTML = `<div class="v3q"><div class="v3q-grid">
-    <div class="v3q-col">${bloquePlan(ctx)}${bloqueDatos(ctx)}</div>
+    <div class="v3q-col">${bloquePlan(ctx)}${bloqueDatos(ctx)}${bloquePagos(ctx)}</div>
     <div class="v3q-col"><div class="v3q-card" id="v3q-avisos">
-      <h2 class="v3q-h">Avisos por mail</h2>
-      <p class="v3q-p">Elegí qué te queremos contar y cada cuánto.</p>
-      <div class="v3q-sk" aria-hidden="true"><i></i><i class="corta"></i><i></i><i class="corta"></i></div>
+      ${CABEZA_AVISOS}
+      <div class="v3q-sk" role="status" aria-label="Cargando tus avisos"><i></i><i class="corta"></i><i></i><i class="corta"></i><i></i><i class="corta"></i></div>
     </div></div></div></div>`;
 
   engancharDatos(el, ctx);
@@ -245,22 +269,54 @@ async function pintar(el, ctx) {
 }
 
 /* ───────────────────────── TU PLAN ───────────────────────── */
+// cuándo se creó la cuenta, como lo guarda Firebase Auth (user.metadata.creationTime,
+// una fecha en texto). En hora de Buenos Aires, dd/mm/aaaa; '' si no está o no se lee
+function cuentaCreada(user) {
+  try {
+    const t = user && user.metadata && user.metadata.creationTime;
+    const ms = t ? Date.parse(t) : NaN;
+    if (!Number.isFinite(ms)) return '';
+    const s = new Date(ms - 3 * 3600e3).toISOString();
+    return `${s.slice(8, 10)}/${s.slice(5, 7)}/${s.slice(0, 4)}`;
+  } catch (e) { return ''; }
+}
+
 function bloquePlan(ctx) {
   const esc = ctx.esc, S = ctx.S, p = planDe(S);
-  const puedeSubir = !S.isAdmin && !S.cliente && !S.pro;
+  const alta = cuentaCreada(S.user);
+  // "Próximo pago": no hay fecha guardada en ningún lado; se dice lo que es cierto
+  // según el plan, sin inventar un día
+  const prox = S.isAdmin ? '' : (S.cliente || S.pro) ? 'Lo coordinamos por mail' : 'Sin cargo: es gratis';
+  const fechas = [alta ? ['Cuenta creada', alta] : null, prox ? ['Próximo pago', prox] : null].filter(Boolean);
   return `<section class="v3q-plan">
     <div class="v3q-eyebrow">Tu plan</div>
     <h2>${esc(p.n)}</h2>
     <p class="sub">${esc(p.s)}</p>
     <ul class="v3q-feat">${p.f.map(x => `<li><span>${esc(x)}</span></li>`).join('')}</ul>
+    ${fechas.length ? `<div class="v3q-fechas">${fechas.map(([l, v]) =>
+      `<div><div class="l">${esc(l)}</div><div class="v">${esc(v)}</div></div>`).join('')}</div>` : ''}
     <div class="v3q-acc">
-      <a class="v3q-cta" href="/planes">${puedeSubir ? 'Ver planes y precios' : 'Ver los planes'}</a>
-      <a class="v3q-cta linea" href="mailto:${SOPORTE}?subject=${encodeURIComponent('Mi plan en Valtia')}">Escribinos</a>
+      <a class="v3q-cta" href="/planes">${S.isAdmin ? 'Ver los planes' : 'Cambiar de plan'}</a>
+      ${S.isAdmin ? '' : `<a class="v3q-cta linea" href="mailto:${SOPORTE}?subject=${encodeURIComponent('Baja')}">Dar de baja</a>`}
     </div>
-    <p class="v3q-cobro">Todavía no se cobra desde la web: el alta, el cambio de plan y la baja los
-      gestionamos con vos por mail, así que en tu cuenta no vas a ver ni la fecha de alta ni un
-      historial de pagos. Para cualquiera de las tres cosas, escribinos a
-      <a href="mailto:${SOPORTE}">${SOPORTE}</a>.</p>
+  </section>`;
+}
+
+/* ───────────────────────── PAGOS ─────────────────────────
+   El cobro no pasa por la web: no hay pagos guardados que listar. Se dice eso, con el
+   mail de contacto, en vez de dibujar una tabla vacía o de ejemplo */
+function bloquePagos(ctx) {
+  const S = ctx.S;
+  const paga = !S.isAdmin && (S.cliente || S.pro);
+  const txt = S.isAdmin
+    ? 'La cuenta de administración no tiene pagos.'
+    : paga
+      ? 'Por ahora el cobro es manual y no pasa por la web: el alta, el cambio de plan y la baja los coordinamos con vos por mail. Por eso acá no vas a ver un historial de pagos.'
+      : 'Tu cuenta es gratuita, así que no tiene pagos. Si pasás a un plan pago, por ahora el cobro es manual y lo coordinamos con vos por mail.';
+  return `<section class="v3q-card">
+    <h2 class="v3q-eyebrow">Pagos</h2>
+    <p class="v3q-txt">${txt}</p>
+    ${S.isAdmin ? '' : `<p class="v3q-txt">Para el plan, el cobro o la baja, escribinos a <a href="mailto:${SOPORTE}">${SOPORTE}</a>.</p>`}
   </section>`;
 }
 
@@ -283,12 +339,12 @@ function bloqueDatos(ctx) {
     <div class="v3q-dato">
       <div class="izq"><div class="l">Mail de la cuenta</div>
         <div class="v">${esc(S.email || '—')} <span class="v3q-tag ${verif ? 'ok' : 'falta'}">${verif ? 'Verificado' : 'Sin verificar'}</span></div></div>
-      ${puedeReenviar ? '<button type="button" class="v3q-btn" data-q="verif">Reenviar el mail</button>' : ''}
+      ${puedeReenviar ? '<button type="button" class="v3q-act" data-q="verif">Reenviar el mail</button>' : ''}
     </div>
     <div class="v3q-dato">
       <div class="izq"><div class="l">Contraseña</div>
         <div class="v">${conPass ? 'La cambiás desde un mail que te mandamos' : 'La maneja tu cuenta de Google'}</div></div>
-      ${conPass ? '<button type="button" class="v3q-btn fuerte" data-q="pass">Cambiar la contraseña</button>' : ''}
+      ${conPass ? '<button type="button" class="v3q-act" data-q="pass" aria-label="Cambiar la contraseña">Cambiar</button>' : ''}
     </div>
     <p class="v3q-msg" id="v3q-dmsg">${conPass
       ? 'No te pedimos la contraseña actual acá: tocás el botón y te llega un correo con el enlace para ponerle una nueva.'
@@ -333,8 +389,7 @@ async function pintarAvisos(el, ctx, vigente) {
   const box = el.querySelector('#v3q-avisos');
   if (!box) return;
   const esc = ctx.esc, S = ctx.S;
-  const cabeza = `<h2 class="v3q-h">Avisos por mail</h2>
-    <p class="v3q-p">Elegí qué te queremos contar y cada cuánto.</p>`;
+  const cabeza = CABEZA_AVISOS;
 
   // sin el mail verificado las reglas no dejan ni leer la configuración
   if (!S.verificado) {
@@ -374,7 +429,7 @@ async function pintarAvisos(el, ctx, vigente) {
 
   const fila = a => `<label class="v3q-av${sinPlan(a) ? ' quieto' : ''}">
     <div class="izq" style="min-width:0">
-      <div class="t"><span>${esc(a.t)}</span>${a.pro ? `<span class="v3q-tag pro">${sinPlan(a) ? 'Con Valtia PRO' : 'PRO'}</span>` : ''}${
+      <div class="t"><span>${esc(a.t)}</span>${a.pro ? (sinPlan(a) ? '<span class="v3q-tag pro sin">Con Valtia PRO</span>' : '<span class="v3q-tag pro">PRO</span>') : ''}${
         marcaFila && !a.ya ? '<span class="v3q-tag aun">todavía no lo estamos mandando</span>' : ''}</div>
       <div class="d">${esc(a.d)}</div>
     </div>
@@ -392,7 +447,7 @@ async function pintarAvisos(el, ctx, vigente) {
     `<div class="v3q-frec"><span class="l">Cuándo mandarlos</span>
       <div class="v3q-seg" role="group" aria-label="Frecuencia de los avisos">${FRECS.map(([k, t]) =>
         `<button type="button" data-frec="${k}" class="${k === frec ? 'on' : ''}" aria-pressed="${k === frec}">${t}</button>`).join('')}</div></div>
-    <div class="v3q-pie"><button type="button" class="v3q-btn fuerte" id="v3q-ok">Guardar</button>
+    <div class="v3q-pie"><button type="button" class="v3q-btn" id="v3q-ok">Guardar</button>
       <span class="v3q-msg" id="v3q-amsg" style="margin:0">Llegarían a ${esc(S.email)}.</span></div>
     <p class="v3q-nota">Las alertas del radar (zona de valor, resultados, vencimientos) son otra cosa
       y esas sí salen hoy: tienen su propio interruptor al final de

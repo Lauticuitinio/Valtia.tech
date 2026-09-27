@@ -2,8 +2,14 @@
 // título "Agenda del mercado"). Tres vistas —Lista (la de entrada), Semana y Mes— con
 // los mismos filtros: mercado, tipo de evento y "◆ Solo mis activos".
 //
-// La estructura es la del prototipo (Valtia Panel v3.html, 406-550); los colores y la
-// tipografía, los de Noticias, siempre por las variables --v3-* de panel.js.
+// Estructura y valores: «Pestaña 6 · Agenda» del SPEC y el prototipo «Valtia Panel v3»
+// del zip completo (24/09/2026, líneas 620-763), estilo Google Calendar: filtros y
+// vistas con los botones de la regla §0 (borde dorado sutil, radio 8; el elegido con
+// borde dorado y relleno crema), "◆ Solo mis activos" como toggle subrayado, la fecha
+// grande de la lista, la semana con rail de color por tipo y el mes con puntos.
+// Piel vigente del SPEC §0: IBM Plex Sans en todo (sin Plex Mono ni Playfair), cifras
+// tabulares, etiquetas de 6 px, tarjetas de 10-12 px y el dorado claro solo sobre azul.
+// Los colores salen de las variables --v3-* de panel.js, así anda el tema oscuro.
 //
 // Los datos salen de eventos() de panel-eventos.js: resultados de empresas (fecha
 // estimada por cada una) y pagos y vencimientos de bonos y letras. Dividendos, IPO,
@@ -17,106 +23,124 @@ import { eventos, TIPOS } from './panel-eventos.js?v=1';
 
 /* ───────────────────────── estilos ───────────────────────── */
 const ESTILO = `
-.ag{min-width:0}
-.ag-cargando{font:400 13px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut)}
-.ag-n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
-/* controles: selectores sin caja, la opción activa con subrayado dorado de 2px */
+.ag{min-width:0;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink)}
+.ag *{box-sizing:border-box}
+.ag-n{font-variant-numeric:tabular-nums}
+.ag button:focus-visible,.ag [role="button"]:focus-visible,.ag a:focus-visible{outline:2px solid var(--v3-focus);outline-offset:2px}
+/* controles (prototipo 622-638): filtros a la izquierda; contador y vistas a la derecha */
 .ag-top{display:flex;align-items:center;justify-content:space-between;gap:12px 18px;flex-wrap:wrap;margin:0 0 16px}
-.ag-fil{display:flex;gap:6px 18px;flex-wrap:wrap;align-items:center;min-width:0}
+.ag-fil{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:center;min-width:0}
 .ag-der{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
 .ag-seg{display:inline-flex;flex-wrap:wrap;gap:2px;align-items:center;min-width:0}
-.ag-sel{font:500 10.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.06em;padding:8px 10px;margin:0;cursor:pointer;
-  color:var(--v3-mut);background:none;border:none;border-bottom:2px solid transparent;border-radius:0;white-space:nowrap;transition:color .15s}
-.ag-sel:hover{color:var(--v3-ink)}
-.ag-sel.on{color:var(--v3-ink);border-bottom-color:var(--v3-gold)}
-.ag-cuenta{font:400 12.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-sub);white-space:nowrap}
-/* lista: fecha grande a la izquierda (sticky) y la card del día a la derecha */
+/* selectores de la regla §0: borde dorado sutil y radio 8; el elegido con borde dorado,
+   relleno crema y texto negro (las --v3-sel* de panel.js, que en oscuro se invierten) */
+.ag-sel{font:500 12px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.06em;padding:8px 10px;margin:0;cursor:pointer;
+  color:var(--v3-selTx);background:var(--v3-selBg);border:1px solid var(--v3-sel);border-radius:8px;white-space:nowrap;
+  transition:color .15s,border-color .15s,background .15s}
+.ag-sel:hover{color:var(--v3-selOnTx)}
+.ag-sel.on{color:var(--v3-selOnTx);border-color:var(--v3-selOn);background:var(--v3-selOnBg)}
+/* "◆ Solo mis activos": el toggle del prototipo, sin caja y con subrayado dorado de 2 px */
+.ag-mios{font:500 12px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.06em;padding:8px 10px;margin:0;cursor:pointer;
+  color:var(--v3-selTx);background:none;border:none;border-bottom:2px solid var(--v3-sel);border-radius:0;white-space:nowrap;
+  transition:color .15s,border-color .15s}
+.ag-mios:hover{color:var(--v3-selOnTx)}
+.ag-mios.on{color:var(--v3-selOnTx);border-bottom-color:var(--v3-selOn)}
+.ag-cuenta{font:400 14px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-sub);white-space:nowrap}
+/* lista: la fecha grande a la izquierda (pegada al bajar) y la tarjeta del día a la derecha */
 .ag-lista{display:flex;flex-direction:column;gap:14px}
 .ag-dia{display:grid;grid-template-columns:96px minmax(0,1fr);gap:18px;align-items:start}
 .ag-fecha{position:sticky;top:96px;padding-top:6px}
-.ag-fecha .d{font:700 30px 'Playfair Display',Georgia,serif;font-variant-numeric:lining-nums;color:var(--v3-ink);line-height:1}
-/* nowrap: "sep · miércoles" pasa apenas los 96px y, cortado, deja el punto colgando;
-   así se mete en el hueco de 18px de la grilla sin tocar la card */
-.ag-fecha .m{font:600 9.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-gold2);margin-top:4px;white-space:nowrap}
+.ag-fecha .d{font:600 30px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);line-height:1}
+/* "sep · sáb": con el día entero ("miércoles") no entra en los 96 px y el punto
+   quedaba colgando; el nombre largo vuelve en el celular, donde la fecha va en una línea */
+.ag-fecha .m{font:600 11px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-gold2);
+  margin-top:4px;white-space:nowrap}
+.ag-fecha .dl{display:none}
 .ag-card{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;overflow:hidden}
 .ag-fila{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:14px;align-items:center;padding:13px 18px;
   border-bottom:1px solid var(--v3-line2);color:inherit;text-decoration:none;transition:background .15s}
 .ag-fila:last-child{border-bottom:none}
 /* sin hora (hoy ninguna fuente la trae) no se reserva la columna */
 .ag-fila.sin-h{grid-template-columns:minmax(0,1fr) auto}
-.ag-lista .ag-fila:hover,a.ag-fila:hover{background:var(--v3-hover)}
-.ag-fila .h{font:600 10px 'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;color:var(--v3-mut);white-space:nowrap}
+a.ag-fila:hover{background:var(--v3-hover)}
+.ag-fila .h{font:600 11.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut);white-space:nowrap}
 .ag-fila .b{min-width:0}
 /* ARG/USA en línea con el texto: si el texto no entra, sigue debajo en vez de dejar el rótulo solo */
 .ag-fila .l1{display:block}
-.ag-fila .mk{font:600 9px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;margin-right:8px}
-.ag-fila .t{font:400 13.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);line-height:1.45;min-width:0;overflow-wrap:anywhere}
-.ag-fila .s{font:400 11.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut);margin-top:3px;line-height:1.5;overflow-wrap:anywhere}
+.ag-fila .mk{font:600 10.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;margin-right:8px}
+.ag-fila .t{font:400 15px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);line-height:1.45;min-width:0;overflow-wrap:anywhere}
+.ag-fila .t b{font-weight:700}
+.ag-fila .s{font:400 13px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut);margin-top:3px;line-height:1.5;overflow-wrap:anywhere}
 .ag-fila .p{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.ag-pill{font:700 9px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:4px;white-space:nowrap}
-.ag-pill.tuyo{color:#0E1830;background:var(--v3-goldL)}
+/* etiquetas (6 px): el tipo con su color y "◆ tuyo" en blanco sobre navy */
+.ag-pill{font:700 10.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:6px;
+  white-space:nowrap;line-height:1.5}
+.ag-pill.tuyo{color:var(--v3-btnTx);background:var(--v3-btn)}
 .ag-vacio{background:var(--v3-card);border:1px dashed var(--v3-line);border-radius:10px;padding:18px;
-  font:400 13px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut);line-height:1.6}
+  font:400 14.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut);line-height:1.6}
 .ag-vacio a{color:var(--v3-gold);text-decoration:none;font-weight:600;white-space:nowrap}
 .ag-vacio a:hover{color:var(--v3-gold2)}
 .ag-aviso{margin:0 0 12px}
-.ag-reint{font:600 10.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-gold2);
-  background:none;border:none;padding:0 0 0 6px;margin:0;cursor:pointer}
+.ag-reint{font:600 11.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--v3-gold2);
+  background:none;border:none;padding:0 0 0 8px;margin:0;cursor:pointer}
 .ag-reint:hover{color:var(--v3-ink)}
-/* navegación ‹ › Hoy + título */
+/* navegación ‹ › Hoy + título: solo texto, con el fondo #F0EDE5 al pasar */
 .ag-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px}
 .ag-flecha{width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--v3-mut);
   font:400 18px 'IBM Plex Sans',system-ui,sans-serif;line-height:1;border-radius:6px;background:none;border:none;padding:0;margin:0}
 .ag-flecha:hover{color:var(--v3-ink);background:var(--v3-track)}
-.ag-hoy{font:500 10.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:7px 8px;margin:0;
+.ag-hoy{font:500 12px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:7px 8px;margin:0;
   cursor:pointer;color:var(--v3-gold2);background:none;border:none;border-radius:6px}
-.ag-hoy:hover{color:var(--v3-ink)}
-.ag-tit{font:700 20px 'Playfair Display',Georgia,serif;color:var(--v3-ink);margin-left:8px;line-height:1.2}
-/* semana: siete cards, lunes a domingo */
+.ag-hoy:hover{color:var(--v3-ink);background:var(--v3-track)}
+.ag-tit{font:600 20px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);margin-left:8px;line-height:1.2}
+/* semana: siete tarjetas, lunes a domingo; la elegida con borde dorado y el crema del SPEC */
 .ag-sem{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
 .ag-sd{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:10px;padding:12px 10px;min-height:190px;cursor:pointer;
-  display:flex;flex-direction:column;gap:6px;min-width:0;transition:border-color .15s}
-.ag-sd:hover,.ag-sd.sel{border-color:var(--v3-gold)}
+  display:flex;flex-direction:column;gap:6px;min-width:0;transition:border-color .15s,background .15s}
+.ag-sd:hover{border-color:var(--v3-gold)}
+.ag-sd.sel{border-color:var(--v3-selOn);background:var(--v3-hl)}
 .ag-sd .hd{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
-.ag-hoyn{font:600 16px 'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;color:#fff;background:var(--v3-navy);border-radius:6px;padding:2px 7px;line-height:1.2}
-.ag-sd .dn{font:600 9.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--v3-mut)}
-.ag-sev{border-left:3px solid var(--v3-line);border-radius:0 5px 5px 0;padding:5px 7px;min-width:0}
-.ag-sev .k{font:600 11px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ag-sev .tl{font:400 10px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-sub);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* hoy: el número en una pastilla navy (en oscuro el token se invierte: crema con texto navy) */
+.ag-hoyn{font:600 17.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-btnTx);background:var(--v3-btn);border-radius:6px;padding:2px 7px;line-height:1.2}
+.ag-sd .dn{font:600 11px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--v3-mut)}
+.ag-sev{border-left:3px solid var(--v3-line);border-radius:5px;padding:5px 7px;min-width:0}
+.ag-sev .k{font:600 12.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ag-sev .tl{font:400 11.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-sub);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ag-sev .tl b{color:var(--v3-gold2)}
-/* mes: grilla 7 x 6 */
+/* mes: grilla 7 x 6; fuera del mes el número en gris, hoy en pastilla navy y el día elegido en #FDFBF4 */
 .ag-mes{background:var(--v3-card);border:1px solid var(--v3-line);border-radius:12px;overflow:hidden}
 .ag-mh{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-bottom:1px solid var(--v3-line)}
-.ag-mh div{padding:8px;font:600 9.5px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--v3-mut);text-align:center}
+.ag-mh div{padding:8px;font:600 11px 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--v3-mut);text-align:center}
 .ag-mg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
 .ag-mc{min-height:108px;padding:8px;border-right:1px solid var(--v3-line2);border-bottom:1px solid var(--v3-line2);background:var(--v3-card);
   cursor:pointer;display:flex;flex-direction:column;gap:3px;min-width:0;transition:background .15s}
 .ag-mc:nth-child(7n){border-right:none}
 .ag-mc:nth-last-child(-n+7){border-bottom:none}
-.ag-mc.fuera{background:var(--v3-bg)}
-.ag-mc.sel,.ag-mc:hover{background:var(--v3-hl)}
-.ag-mc .n{font:600 12px 'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;color:var(--v3-ink);border-radius:5px;padding:1px 6px;align-self:flex-start;line-height:1.4}
+.ag-mc:hover{background:var(--v3-hover)}
+.ag-mc.sel{background:var(--v3-hl)}
+.ag-mc .n{font:600 13.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);border-radius:6px;padding:1px 6px;align-self:flex-start;line-height:1.4}
 .ag-mc.fuera .n{color:var(--v3-cero)}
-/* sin el crema del prototipo el fondo de afuera es blanco: lo de otro mes se atenúa entero */
 .ag-mc.fuera .ev,.ag-mc.fuera .mas,.ag-mc.fuera .pt{opacity:.55}
-.ag-mc .n.hoy{color:#fff;background:var(--v3-navy)}
-/* en oscuro el navy de bloque casi no se distingue de la card: hoy va en dorado claro */
-[data-theme="dark"] .ag-hoyn,[data-theme="dark"] .ag-mc .n.hoy{color:#0E1830;background:var(--v3-goldL)}
-.ag-mc .ev{display:flex;align-items:center;gap:5px;font:400 10.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);min-width:0}
+.ag-mc .n.hoy{color:var(--v3-btnTx);background:var(--v3-btn)}
+.ag-mc .ev{display:flex;align-items:center;gap:5px;font:400 12px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);min-width:0}
 .ag-mc .ev i{width:6px;height:6px;border-radius:50%;display:block;flex:none}
 .ag-mc .ev span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ag-mc .mas{font:400 10px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut)}
+.ag-mc .mas{font:400 11.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut)}
 .ag-mc .pt{display:none}
 /* detalle del día elegido (semana y mes) */
 .ag-det{margin-top:18px}
-.ag-det-t{font:700 20px 'Playfair Display',Georgia,serif;color:var(--v3-ink);margin:0 0 10px;line-height:1.25}
-.ag-pie{font:400 11.5px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut);line-height:1.7;margin:22px 0 0;max-width:760px}
-/* sin lateral el encabezado deja de ser sticky: la fecha se pega debajo de la barra de 50px */
-@media (max-width:920px){.ag-fecha{top:62px}}
+.ag-det-t{font:400 20px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);margin:0 0 10px;line-height:1.25}
+.ag-pie{font:400 13px 'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-mut);line-height:1.7;margin:22px 0 0;max-width:760px;text-align:justify;hyphens:auto}
+/* sin lateral el encabezado deja de ser sticky: la fecha se pega debajo de la barra azul de 44 px */
+@media (max-width:920px){.ag-fecha{top:56px}}
 @media (max-width:760px){
   .ag-dia{grid-template-columns:minmax(0,1fr);gap:8px}
   .ag-fecha{position:static;padding-top:0;display:flex;align-items:baseline;gap:10px}
   .ag-fecha .m{margin-top:0}
+  .ag-fecha .dc{display:none}
+  .ag-fecha .dl{display:inline}
+  /* angosto: el texto corrido va a la izquierda (SPEC §0), sin huecos entre palabras */
+  .ag-pie{text-align:left}
   .ag-fila{display:flex;flex-wrap:wrap;gap:6px 12px;padding:12px 14px}
   .ag-fila .h{flex:none}
   .ag-fila .h:empty{display:none}
@@ -227,7 +251,11 @@ export async function renderAgenda(el, ctx) {
       el.addEventListener('click', alClic);
       el.addEventListener('keydown', alTecla);
     }
-    if (nueva || !el.querySelector('.ag')) el.innerHTML = '<p class="ag-cargando">Cargando la agenda…</p>';
+    // cargando (SPEC «Estados»): esqueletos con la altura de los controles y de los días
+    if (nueva || !el.querySelector('.ag')) {
+      el.innerHTML = typeof ctx.skel === 'function' ? ctx.skel(38, 118, 118, 118)
+        : '<p class="vp-cargando">Cargando la agenda…</p>';
+    }
     await dibujar(true);
   } catch (e) {
     try { el.innerHTML = errorHtml(); } catch (x) {}
@@ -310,7 +338,7 @@ function controles(vis) {
   const seg = (items, cur, clave, etq) => `<div class="ag-seg" role="group" aria-label="${etq}">${items.map(([v, l]) =>
     `<button type="button" class="ag-sel${cur === v ? ' on' : ''}" aria-pressed="${cur === v}" data-ag="${clave}:${v}">${l}</button>`).join('')}</div>`;
   return `<div class="ag-top">
-    <div class="ag-fil">${seg(MERCADOS, E.mk, 'mk', 'Mercado')}${seg(FILTROS, E.tipo, 'tipo', 'Tipo de evento')}<button type="button" class="ag-sel${E.mios ? ' on' : ''}" aria-pressed="${E.mios}" data-ag="mios">◆ Solo mis activos</button></div>
+    <div class="ag-fil">${seg(MERCADOS, E.mk, 'mk', 'Mercado')}${seg(FILTROS, E.tipo, 'tipo', 'Tipo de evento')}<button type="button" class="ag-mios${E.mios ? ' on' : ''}" aria-pressed="${E.mios}" data-ag="mios">◆ Solo mis activos</button></div>
     <div class="ag-der"><span class="ag-cuenta"><span class="ag-n">${n}</span> ${n === 1 ? 'evento' : 'eventos'} · <span class="ag-n">${k}</span> ${k === 1 ? 'toca' : 'tocan'} tu cartera</span>${seg(VISTAS, E.vista, 'vista', 'Vista')}</div>
   </div>`;
 }
@@ -351,7 +379,7 @@ function vistaLista(vis, aviso) {
     g.items.push(e);
   });
   return `<div class="ag-lista">${grupos.map(g => `<div class="ag-dia">
-      <div class="ag-fecha"><div class="d">${g.f.slice(8, 10)}</div><div class="m">${mesC(g.f)} · ${DIAS[dow(g.f)]}</div></div>
+      <div class="ag-fecha"><div class="d">${g.f.slice(8, 10)}</div><div class="m">${mesC(g.f)} · <span class="dc">${DIAS_C[(dow(g.f) + 6) % 7]}</span><span class="dl">${DIAS[dow(g.f)]}</span></div></div>
       <div class="ag-card">${g.items.map(fila).join('')}</div></div>`).join('')}</div>`;
 }
 

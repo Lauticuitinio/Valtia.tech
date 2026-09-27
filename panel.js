@@ -16,13 +16,13 @@ import { renderResumen } from './panel-resumen.js?v=8';
 import { renderComprar as renderComprarV3 } from './panel-comprar.js?v=2';
 import { renderCarteras as renderCarterasV3 } from './panel-carteras.js?v=3';
 import { renderMensual } from './panel-mensual.js?v=2';
-import { renderAlertas, contarNoLeidas } from './panel-alertas.js?v=2';
+import { renderAlertas, contarNoLeidas } from './panel-alertas.js?v=3';
 // alertas de precio por activo (la única puerta a inversores/{email}/alertasPrecio): el
 // panel las evalúa con los precios que lee y cuenta las que saltaron para la pastilla
 import { instalarEvaluacion, evaluarConPrecios, contarDisparadasNoVistas, fraseDisparo, fmtPrecio } from './alertas-precio.js?v=1';
-import { renderAgenda } from './panel-agenda.js?v=1';
-import { renderCuenta } from './panel-cuenta.js?v=2';
-import { renderOperar } from './panel-operar.js?v=5';
+import { renderAgenda } from './panel-agenda.js?v=2';
+import { renderCuenta } from './panel-cuenta.js?v=3';
+import { renderOperar } from './panel-operar.js?v=6';
 import { eventos } from './panel-eventos.js?v=1';
 import { renderMovimientos } from './panel-movimientos.js?v=2';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
