@@ -106,5 +106,10 @@ body.fl-app-on #valtia-cot{position:relative;top:auto}
 body.fl-app-on .wa-float{display:none}
 
 /* ── pie navy de las páginas: textos a 12.5px como en los prototipos ── */
+/* el botón de mail está fijo abajo a la izquierda (28px + 48px = hasta 76px):
+   el texto del pie arranca a su derecha para que al llegar al final no se pisen.
+   --pie-centro lo define la página cuyo pie se centra en la columna de 1340. */
+footer:not(.legal),.site-foot{padding-left:max(92px,var(--v-gutter),var(--pie-centro,0px))}
+.v2pie{padding-left:max(92px,5vw)!important}
 footer .footer-copy{font-size:12.5px}
 footer .footer-links a{font-size:12.5px}
