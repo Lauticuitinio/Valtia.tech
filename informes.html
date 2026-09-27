@@ -58,7 +58,7 @@ img{max-width:100%}
 /* las portadas SVG de img/ son 1200×630 con el texto arrancando a la
    izquierda: al recortarlas a 16:10 o 4:3 se ancla ese lado, si no el
    recorte centrado se come el principio del título */
-.cov img[src$=".svg"]{object-position:left center}
+.cov img[src*=".svg"]{object-position:left center}
 .cov .cov-l{position:absolute;left:14px;bottom:12px;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#E8CE96}
 /* el rótulo del degradé solo se ve si NO hay foto: si la foto falla, el
    onerror saca la <img> y la regla deja de aplicar, así que aparece solo */
@@ -401,14 +401,21 @@ const claseDe = d => {
 };
 const tipoDe = d => d.tipo || (claseDe(d) === 'registro' ? 'Registro mensual' : 'Informe');
 
+// ?v= de las portadas: el CDN y el navegador las guardan 7 días. Subilo si
+// cambia algún img/informe-*.svg (el 25/09 se corrió el subtítulo y quien ya
+// las tenía seguía viendo el texto encimado)
+const V_PORTADA = 2;
 const fotoDe = d => {
-  if (d.imagen) return String(d.imagen);
+  if (d.imagen) {
+    const s = String(d.imagen);
+    return /^\/?img\/[^?#]+\.svg$/.test(s) ? `${s}?v=${V_PORTADA}` : s;
+  }
   const id = d.slug || d.id || '';
-  if (PORTADAS.has(id)) return `img/${id}.svg`;
+  if (PORTADAS.has(id)) return `img/${id}.svg?v=${V_PORTADA}`;
   const e = empDe(d);
-  if (e && e.slug && PORTADAS.has(e.slug)) return `img/${e.slug}.svg`;
+  if (e && e.slug && PORTADAS.has(e.slug)) return `img/${e.slug}.svg?v=${V_PORTADA}`;
   const porTk = d.ticker ? 'informe-' + String(d.ticker).toLowerCase() : '';
-  if (porTk && PORTADAS.has(porTk)) return `img/${porTk}.svg`;
+  if (porTk && PORTADAS.has(porTk)) return `img/${porTk}.svg?v=${V_PORTADA}`;
   // variante 1-3 fija por informe, para que dos tarjetas del mismo tema
   // no repitan la misma foto una al lado de la otra
   const n = [...String(id)].reduce((s, c) => s + c.charCodeAt(0), 0) % 3 + 1;

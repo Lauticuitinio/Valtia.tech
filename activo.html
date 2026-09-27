@@ -1175,7 +1175,8 @@ try {
   // informe (si las reglas lo dejan leer; si no, la tarjeta bloqueada)
   const inf = infSnap && infSnap.exists() ? infSnap.data() : null;
   S.inf = inf;
-  const cover = `img/${emp.slug}.svg`;
+  // ?v=: la portada se corrigió el 25/09 y el navegador la guarda 7 días (igual que en informes.html)
+  const cover = `img/${emp.slug}.svg?v=2`;
 
   // histórico (2 años): cada fila es [fecha, cierre ajustado, apertura,
   // máximo, mínimo, volumen, cierre real]. Los índices 1 a 4 vienen ajustados
