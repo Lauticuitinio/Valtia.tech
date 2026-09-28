@@ -3,8 +3,9 @@
 // «Valtia Panel v3» del zip completo (24/09/2026): tarjeta principal con el
 // valor y dos donas (por broker y por tipo), la evolución comparada adentro de
 // esa misma tarjeta, la fila "Atención", hasta cuatro tarjetas de "hoy", dos
-// columnas (lo que viene en tus activos · research), la primera vez con tres
-// pasos y, abajo, los avisos por mail (alertasMail de panel.js).
+// columnas (lo que viene en tus activos · research) y la primera vez con tres
+// pasos. Las alertas por mail ya no van acá: desde el 27/09/2026 se configuran
+// en Mi cuenta (panel-cuenta.js), junto con el resto de los avisos.
 // Piel vigente del SPEC §0: IBM Plex Sans en todo, números con cifras tabulares
 // (sin Plex Mono ni Playfair), tarjetas de 10-12 px, etiquetas de 6 px, botones
 // y selectores con borde dorado sutil y radio 8, y el dorado claro solo sobre
@@ -196,7 +197,6 @@ const CSS = `
 .rs-mt-c .t{font:600 18px/1.3 'IBM Plex Sans',sans-serif;color:var(--v3-ink);margin:8px 0 4px;overflow-wrap:anywhere}
 .rs-mt-c .d{font-size:14px;color:var(--v3-sub);line-height:1.55;overflow-wrap:anywhere}
 .rs-mt-c .d b{font-weight:600}
-.rs-alertas{margin-top:30px}
 /* cargando (SPEC «Estados»): esqueletos en #F0EDE5 con la altura de lo que viene */
 .rs-sk{background:var(--v3-skel);border-radius:6px;animation:rs-pulso 1.4s ease-in-out infinite}
 @keyframes rs-pulso{0%,100%{opacity:1}50%{opacity:.55}}
@@ -370,7 +370,6 @@ export async function renderResumen(el, ctx) {
           <a class="rs-lnk" href="/informes">Informes →</a></div>
           <div data-rs="research">${ESQ_COL}</div></section>
       </div>
-      ${tiene ? '<section class="rs-alertas"><div class="rs-col-h"><h3>Alertas por mail</h3></div><div id="vp-alertas"></div></section>' : ''}
     </div>`;
     const q = s => el.querySelector(`[data-rs="${s}"]`);
     if (falta) {
@@ -387,7 +386,6 @@ export async function renderResumen(el, ctx) {
     if (tiene) pintarHoy(q('hoy'), ctx, vivo, cc, disc, bset, evP);
     pintarAgenda(q('agenda'), ctx, vivo, tiene, evP);
     pintarResearch(q('research'), ctx, vivo, cc, bset);
-    if (tiene && typeof ctx.alertasMail === 'function') Promise.resolve().then(() => ctx.alertasMail()).catch(() => {});
   } catch (e) {
     if (vivo()) el.innerHTML = tarjetaError('No pudimos armar tu resumen', 'Algo falló al leer los datos. Tus posiciones siguen guardadas: probá de nuevo en un momento.');
   }

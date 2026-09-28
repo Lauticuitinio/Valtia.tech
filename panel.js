@@ -4,7 +4,7 @@
 // selector de moneda. El Fondo NO aparece en el panel del inversor: la gestión
 // del fondo (fondo-live.js) es otro modo del lateral y solo lo ve el admin.
 // Mi cartera vive en mi-cartera.js; acá se reutilizan su cálculo y sus tipos.
-import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where, serverTimestamp }
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { calcular, agruparPorBroker, agruparPorActivo, normalizarTicker, reiniciarMiCartera, completarPreciosDeRentaFija }
@@ -12,7 +12,7 @@ import { calcular, agruparPorBroker, agruparPorActivo, normalizarTicker, reinici
 import { fxMercado, registrarImplicito, etiquetaFx } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
-import { renderResumen } from './panel-resumen.js?v=8';
+import { renderResumen } from './panel-resumen.js?v=9';
 import { renderComprar as renderComprarV3 } from './panel-comprar.js?v=2';
 import { renderCarteras as renderCarterasV3 } from './panel-carteras.js?v=3';
 import { renderMensual } from './panel-mensual.js?v=2';
@@ -21,8 +21,10 @@ import { renderAlertas, contarNoLeidas } from './panel-alertas.js?v=3';
 // panel las evalúa con los precios que lee y cuenta las que saltaron para la pastilla
 import { instalarEvaluacion, evaluarConPrecios, contarDisparadasNoVistas, fraseDisparo, fmtPrecio } from './alertas-precio.js?v=1';
 import { renderAgenda } from './panel-agenda.js?v=2';
-import { renderCuenta } from './panel-cuenta.js?v=3';
+import { renderCuenta } from './panel-cuenta.js?v=4';
 import { renderOperar } from './panel-operar.js?v=6';
+// la lista de espera PRO (waitlistPro): solo el admin la ve y solo a él se le cuenta la pastilla
+import { renderEspera, contarSinContactar } from './panel-espera.js?v=1';
 import { eventos } from './panel-eventos.js?v=1';
 import { renderMovimientos } from './panel-movimientos.js?v=2';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
@@ -260,14 +262,6 @@ a.vp-ir:hover{color:var(--v3-gold2)}
   font:500 14px 'IBM Plex Sans',system-ui,sans-serif;outline:none;min-width:90px}
 .vp-form input:focus,.vp-form select:focus{border-color:var(--v3-focus)}
 .vp-msg{font-size:13px;margin-top:8px}
-/* avisos por mail del Resumen (alertasMail): texto de 14 px y selectores de la regla §0 */
-.vp-al{font-size:14px;color:var(--v3-ink);line-height:1.5}
-.vp-al label{cursor:pointer}
-.vp-al input[type="checkbox"]{accent-color:var(--v3-gold);width:15px;height:15px;margin:0 6px 0 0;vertical-align:-2px;cursor:pointer}
-.vp-al select{font:500 14px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);background:var(--v3-input);border:1px solid var(--v3-sel);border-radius:8px;
-  padding:6px 10px;margin-left:6px;cursor:pointer;max-width:100%}
-.vp-al select:focus-visible,.vp-al input:focus-visible{outline:2px solid var(--v3-focus);outline-offset:2px}
-.vp-al select option{color:#101010;background:#fff}
 .vp-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);max-width:calc(100vw - 32px);box-sizing:border-box;background:#14213D;color:#fff;
   border:1px solid rgba(232,206,150,.35);border-radius:10px;padding:11px 18px;font:500 14px 'IBM Plex Sans',sans-serif;z-index:999;box-shadow:0 12px 32px rgba(14,24,48,.28)}
 /* bienvenida: el modal del prototipo (velo navy con desenfoque, caja de radio 14) */
@@ -566,6 +560,8 @@ const GESTION = [
   // Operar carteras (panel-operar.js) va primera: es lo que más se usa y lo
   // único de este grupo que ESCRIBE las carteras modelo
   { id: 'operar', t: 'Operar carteras' },
+  // los mails que dejaron en «Precio de lanzamiento — escribinos» (panel-espera.js)
+  { id: 'espera', t: 'Lista de espera PRO' },
   { id: 'dashboard', t: 'Fondo · Dashboard' }, { id: 'rendimientos', t: 'Rendimientos' },
   { id: 'movimientos', t: 'Posiciones' }, { id: 'fondo', t: 'Balance consolidado' },
   { id: 'senales', t: 'Señales' }, { id: 'analisis', t: 'Análisis de cartera' },
@@ -587,7 +583,7 @@ const _render = { inicio: enModulo(renderResumen, 'inicio'), comprar: enModulo(r
                   carteras: enModulo(renderCarterasV3, 'carteras'), disciplina: enModulo(renderMensual, 'disciplina'),
                   alertas: enModulo(renderAlertas, 'alertas'), historial: enModulo(renderMovimientos, 'historial'),
                   agenda: enModulo(renderAgenda, 'agenda'), cuenta: enModulo(renderCuenta, 'cuenta'),
-                  operar: enModulo(renderOperar, 'operar'),
+                  operar: enModulo(renderOperar, 'operar'), espera: enModulo(renderEspera, 'espera'),
                   empresas: renderEmpresas, herramientas: renderHerramientas };
 const _hecho = {};
 
@@ -756,6 +752,7 @@ function pintarEncabezado() {
 let _latSeq = 0;
 async function actualizarLateral() {
   const email = S.email, seq = ++_latSeq;
+  pastillaEspera();
   try {
     const [cc, disc, bset, f] = await Promise.all([carteraCalc(), disciplina(), bonosSet(), fx()]);
     if (S.email !== email || seq !== _latSeq) return;
@@ -1176,77 +1173,9 @@ const fmtC = iso => { const [aa, mm, dd] = String(iso || '').slice(0, 10).split(
 const COLB = ['#B08A3E', '#4E6E9E', '#6FA287', '#D8B87A', '#9B7BA8', '#8C8477'];
 const COLM = { ARS: '#9EC7A8', USD: '#3F8F63' };
 
-/* ── alertas por mail: la config la guarda el usuario; los mails los manda
-   alertas_cartera.py (máximo uno por día, apagadas por defecto). Los campos
-   tienen que ser EXACTAMENTE los que aceptan las reglas (alertas/config). ── */
-const TIPOS_ALERTA = [['zona', 'Entrada en zona de valor del radar'], ['estirada', 'Pasa a «Estirada»'],
-  ['resultados', 'Resultados en los próximos días'], ['vencimientos', 'Vencimientos de bonos y letras'],
-  ['variacion', 'Movimientos fuertes de precio']];
-async function alertasMail() {
-  const box = $('vp-alertas');
-  if (!box) return;
-  if (!S.verificado) {
-    box.innerHTML = `<p class="vp-nota">Para recibir estas novedades por mail, primero verificá tu email.</p>`;
-    return;
-  }
-  let cfg = null, ultimo = '';
-  try {
-    const sn = await getDoc(doc(db(), 'inversores', S.email, 'alertas', 'config'));
-    if (sn.exists()) cfg = sn.data();
-  } catch (e) {
-    // sin leer la config no se ofrece guardar: se pisaría con valores por defecto
-    box.innerHTML = `<p class="vp-nota">No pudimos leer tu configuración de alertas por mail. Recargá la página para verla o cambiarla.</p>`;
-    return;
-  }
-  try {
-    const env = await getDocs(collection(db(), 'inversores', S.email, 'alertasEnvios'));
-    const ok = env.docs.filter(d => d.data().estado === 'enviado').map(d => d.id).sort();
-    if (ok.length) ultimo = ok[ok.length - 1];
-  } catch (e) {}
-  const on = !!(cfg && cfg.activo);
-  const tipos = (cfg && cfg.tipos) || {};
-  const umbral = [3, 5, 8].includes(Number(cfg && cfg.umbralVar)) ? Number(cfg.umbralVar) : 5;
-  const frec = cfg && cfg.frecuencia === 'semanal' ? 'semanal' : 'diaria';
-  box.innerHTML = `<div class="vp-card vp-al" style="margin-top:12px">
-      <label style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <input type="checkbox" id="al-on"${on ? ' checked' : ''}> <b>Recibir estas novedades por mail</b> <span class="vp-mut" style="font-size:13px">(máximo uno por día)</span></label>
-      <div id="al-opc" style="display:${on ? 'block' : 'none'};margin-top:12px">
-        <div style="display:flex;flex-wrap:wrap;gap:8px 18px">${TIPOS_ALERTA.map(([k, t]) =>
-          `<label><input type="checkbox" data-al-tipo="${k}"${tipos[k] === false ? '' : ' checked'}> ${t}</label>`).join('')}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:12px;align-items:center">
-          <label>Frecuencia <select id="al-frec"><option value="diaria"${frec === 'diaria' ? ' selected' : ''}>diaria</option><option value="semanal"${frec === 'semanal' ? ' selected' : ''}>semanal (lunes)</option></select></label>
-          <label>Movimiento desde <select id="al-umbral">${[3, 5, 8].map(u => `<option value="${u}"${u === umbral ? ' selected' : ''}>${u}%</option>`).join('')}</select></label>
-        </div>
-      </div>
-      <div style="display:flex;gap:12px;align-items:center;margin-top:12px;flex-wrap:wrap">
-        <button class="vp-btn" id="al-ok">Guardar</button>
-        <span class="vp-nota" id="al-msg" style="margin:0">${on ? `Llegan a ${esc(S.email)}${ultimo ? ' · último envío ' + esc(fmtF(ultimo)) : ''}.` : 'Apagadas.'}
-          Son lecturas automáticas, no recomendaciones. Sin montos ni cantidades de tu cartera.</span>
-      </div></div>`;
-  $('al-on').addEventListener('change', e => { $('al-opc').style.display = e.target.checked ? 'block' : 'none'; });
-  $('al-ok').addEventListener('click', async () => {
-    const btn = $('al-ok'), msg = $('al-msg');
-    btn.disabled = true;
-    const nuevo = {
-      activo: $('al-on').checked,
-      frecuencia: $('al-frec').value === 'semanal' ? 'semanal' : 'diaria',
-      tipos: Object.fromEntries(TIPOS_ALERTA.map(([k]) => [k, !!box.querySelector(`[data-al-tipo="${k}"]`).checked])),
-      umbralVar: [3, 5, 8].includes(Number($('al-umbral').value)) ? Number($('al-umbral').value) : 5,
-      actualizado: serverTimestamp(),
-    };
-    try {
-      // merge: el mismo documento guarda los avisos por mail de Mi cuenta
-      // (campos "avisos" y "frecuenciaAvisos"). Sin merge, guardar acá los borraba.
-      await setDoc(doc(db(), 'inversores', S.email, 'alertas', 'config'), nuevo, { merge: true });
-      msg.textContent = nuevo.activo
-        ? `Listo: llegan a ${S.email}, ${nuevo.frecuencia === 'semanal' ? 'los lunes' : 'cuando haya novedades'} (máximo uno por día).`
-        : 'Listo: alertas apagadas.';
-    } catch (e) {
-      msg.textContent = 'No se pudo guardar. Probá de nuevo en un rato.';
-    }
-    btn.disabled = false;
-  });
-}
+/* Las alertas por mail de tus activos (alertas_cartera.py) se configuran en Mi
+   cuenta: panel-cuenta.js lee y escribe inversores/{email}/alertas/config. Hasta el
+   27/09/2026 vivían al final del Resumen (alertasMail(), que ya no existe). */
 
 /* ── contadores del sidebar: cuanto hay detras de cada seccion ── */
 // la misma pastilla en el lateral y en la barra del celular
@@ -1258,6 +1187,18 @@ function contadorNav(id, txt, tit) {
     s.textContent = txt;
     if (tit) a.title = tit;
   });
+}
+// la pastilla de la Lista de espera PRO: los pedidos sin contactar. Solo para el admin (a
+// cualquier otro no se le lee waitlistPro) y aparte de contadores(), que no corre si la
+// cartera no se pudo leer. panel-espera.js la vuelve a poner al marcar o deshacer
+function pastillaEspera() {
+  if (!S.isAdmin) return;
+  const email = S.email;
+  Promise.resolve().then(() => contarSinContactar(ctx)).then(n => {
+    if (S.email !== email) return;
+    n = Number(n) || 0;
+    contadorNav('espera', n ? String(n) : '', n ? `${n} pedido${n === 1 ? '' : 's'} sin contactar` : '');
+  }, () => {});
 }
 // los precios que ya se evaluaron contra las alertas de precio (ver contadores). Es por
 // OBJETO: cartera() los cachea toda la sesión y devuelve el mismo objeto hasta que alguien
@@ -1562,6 +1503,9 @@ const ctx = {
   $, esc, hoyAR, enDias, fmtF, fmtC, money, moneyS, pct, num, cls, verCls,
   curVista, curEtq, curMoneda, BROKERS, brokerPref, DATALIST, RIESGO, PERFIL, MESES, mesAnterior, EMPRESAS,
   toast, invalidar, refrescar, portalTab,
+  // la pastilla de una pestaña en el lateral y en la barra del celular:
+  //   ctx.contadorNav('espera', '3', '3 pedidos sin contactar')   ·   ('espera', '') la saca
+  contadorNav,
   radarDoc, radar, teaser, calendario, flujos, panelBonos, preciosInf, desglosePer, bonosSet, vencMapa, vencimientoDe,
   fx, carteraCalc, ventas, ajustes, disciplina, informes, noticias, seguidas, posicionesCartera, precioHoy,
   // la cartera tal cual está guardada, sin calcular nada: { pos: [docs de
@@ -1603,7 +1547,7 @@ const ctx = {
     const s = await getDoc(doc(db(), 'historialInformes', cual === 'mep' ? '_mep' : '_ccl'));
     return s.exists() ? JSON.parse(s.data().json || '[]') : [];
   }),
-  tenencias, frescura, ordenComprar, mapaCarteras, alertasMail, compararSeguidas,
+  tenencias, frescura, ordenComprar, mapaCarteras, compararSeguidas,
   // guarda la regla de inversión mensual ({ aporte US$/mes, compras por mes }). Devuelve
   // true o el mensaje de error. Refresca el plan y el Resumen.
   guardarRegla: async ({ aporte, compras }) => {

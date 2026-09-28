@@ -4,9 +4,10 @@
 // izquierda TU PLAN (navy: qué plan tiene, qué incluye, "Cambiar de plan" y "Dar de
 // baja" por mail), TUS DATOS (nombre, mail y contraseña, tal como los guarda Firebase
 // Auth) y PAGOS (el cobro es manual por ahora); a la derecha AVISOS POR MAIL (los
-// interruptores del SPEC + cada cuánto). Piel vigente del SPEC §0: IBM Plex Sans en
-// todo (sin Plex Mono ni Playfair), selectores con el borde dorado sutil y radio 8,
-// etiquetas de 6 px y el dorado claro solo sobre azul.
+// interruptores del SPEC + cada cuánto, con las alertas de tus activos arriba de
+// todo). Piel vigente del SPEC §0: IBM Plex Sans en todo (sin Plex Mono ni
+// Playfair), selectores con el borde dorado sutil y radio 8, etiquetas de 6 px y el
+// dorado claro solo sobre azul.
 //
 // Dos reglas que ordenan todo este módulo:
 //
@@ -17,17 +18,22 @@
 //    coordina por mail). Lo mismo con el nombre: si la cuenta no tiene displayName,
 //    se dice que no hay, no se arma uno con el mail.
 //
-// 2. Los avisos NO estrenan colección. Se cuelgan del documento que ya existe,
-//    inversores/{email}/alertas/config (el de alertasMail() en panel.js, que lee
-//    alertas_cartera.py), agregándole dos campos: "avisos" (el mapa de interruptores)
-//    y "frecuenciaAvisos". Se escribe con merge para no pisar lo que ya hay ahí
-//    (activo, frecuencia, tipos, umbralVar) — y por eso el guardado de panel.js
-//    también va con merge. Mientras firestore.rules no acepte los campos nuevos, el
-//    guardado va a fallar con permission-denied y se lo dice al usuario tal cual.
+// 2. Todos los avisos viven en UN documento, inversores/{email}/alertas/config, y
+//    esta tarjeta es la única pantalla que lo escribe. Tiene dos grupos de campos:
+//    - las ALERTAS DE TUS ACTIVOS (activo, tipos, frecuencia, umbralVar), las que lee
+//      alertas_cartera.py con config_valida(). Hasta el 27/09/2026 se configuraban al
+//      final del Resumen (alertasMail() de panel.js); Lauti las pidió acá y aquella
+//      tarjeta se sacó. Mismos campos, mismos valores y mismos tipos que antes: no
+//      se cambia ninguno sin cambiar también el pipeline y firestore.rules.
+//    - los interruptores del resto de los avisos: "avisos" (el mapa) y
+//      "frecuenciaAvisos".
+//    Un solo Guardar escribe los dos grupos juntos con merge y actualizado =
+//    serverTimestamp(), que es lo que exige la regla (keys hasOnly y actualizado ==
+//    request.time).
 //
 // La piel es la del panel: SOLO variables --v3-* de panel.js (así anda el tema
 // oscuro). No importa panel.js —sería un import circular—: todo llega por ctx.
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp }
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
@@ -36,9 +42,24 @@ const CSS_ID = 'v3-css-cuenta';
 const SOPORTE = 'soporte@valtia.tech';
 
 /* ── el documento donde viven los interruptores ────────────────────────────────
-   Es el MISMO de las alertas del radar. Los campos nuevos son estos dos y nada más. */
+   Es el MISMO de las alertas de tus activos. Los campos del resto de los avisos son
+   estos dos y nada más. */
 const CAMPO_AVISOS = 'avisos';
 const CAMPO_FREC = 'frecuenciaAvisos';
+
+/* ── alertas de tus activos (alertas_cartera.py) ───────────────────────────────
+   Los campos, las claves y los valores son EXACTAMENTE los que aceptan
+   firestore.rules (match /alertas/{docId}) y los que normaliza config_valida():
+     activo: bool (apagadas por defecto) · frecuencia: 'diaria' | 'semanal'
+     tipos: { zona, estirada, resultados, vencimientos, variacion: bool }
+       (un tipo que no vino en el doc cuenta como prendido, igual que en el pipeline)
+     umbralVar: 3 | 5 | 8 (5 por defecto) */
+const TIPOS_ALERTA = [['zona', 'Entrada en zona de valor del radar'], ['estirada', 'Pasa a «Estirada»'],
+  ['resultados', 'Resultados en los próximos días'], ['vencimientos', 'Vencimientos de bonos y letras'],
+  ['variacion', 'Movimientos fuertes de precio']];
+const FRECS_ALERTA = [['diaria', 'Diaria'], ['semanal', 'Semanal (lunes)']];
+const UMBRALES = [3, 5, 8];
+const UMBRAL_DEF = 5;
 
 const CSS = `
 .v3q{font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);min-width:0;max-width:1200px;
@@ -146,7 +167,29 @@ const CSS = `
   transition:color .15s,border-color .15s,background .15s}
 .v3q-seg button:hover{color:var(--v3-selOnTx)}
 .v3q-seg button.on{color:var(--v3-selOnTx);border-color:var(--v3-selOn);background:var(--v3-selOnBg)}
+.v3q-seg button[disabled]{cursor:default}
+.v3q-seg button[disabled]:not(.on):hover{color:var(--v3-selTx)}
 .v3q-pie{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:16px}
+/* ALERTAS DE TUS ACTIVOS: la fila con su interruptor, como las demás, y abajo sus
+   opciones en un recuadro; con el interruptor apagado quedan a la vista pero
+   deshabilitadas */
+.v3q-al{border-bottom:1px solid var(--v3-line2);padding-bottom:14px}
+.v3q-al .v3q-av{border-bottom:none;padding-bottom:10px}
+.v3q-alop{background:var(--v3-hl);border:1px solid var(--v3-line2);border-radius:10px;padding:12px 14px;min-width:0;transition:opacity .15s}
+.v3q-alop.off{opacity:.5}
+.v3q-alop .l{font-size:13px;color:var(--v3-sub);line-height:1.5}
+.v3q-tipos{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:2px 18px;margin-top:6px}
+.v3q-ck{display:flex;gap:8px;align-items:flex-start;font-size:14px;color:var(--v3-ink);line-height:1.45;padding:4px 0;cursor:pointer;min-width:0}
+.v3q-ck input{accent-color:var(--v3-selOn);width:15px;height:15px;margin:2px 0 0;flex:none;cursor:pointer}
+.v3q-ck input:focus-visible{outline:2px solid var(--v3-focus);outline-offset:2px}
+.v3q-alop.off .v3q-ck,.v3q-alop.off .v3q-ck input{cursor:default}
+.v3q-alfila{display:flex;justify-content:space-between;align-items:center;gap:8px 12px;flex-wrap:wrap;
+  margin-top:12px;padding-top:12px;border-top:1px solid var(--v3-line2)}
+.v3q-alnota{font-size:13px;color:var(--v3-mut);line-height:1.6;margin:10px 0 0}
+/* la de "sin posiciones" va fuera del recuadro (no se atenúa con el interruptor apagado) */
+#v3q-al-pos{margin:-2px 0 10px}
+.v3q-alnota a{color:var(--v3-gold);text-decoration:none;font-weight:600}
+.v3q-alnota a:hover{color:var(--v3-gold2)}
 .v3q-sk i{display:block;height:12px;border-radius:6px;background:var(--v3-skel);margin:10px 0}
 .v3q-sk i.corta{width:45%}
 @media (max-width:1100px){.v3q-grid{grid-template-columns:minmax(0,1fr)}}
@@ -198,10 +241,11 @@ const PLANES = {
 const planDe = S => PLANES[S.isAdmin ? 'admin' : S.cliente ? 'cliente' : S.pro ? 'pro' : 'gratis'];
 
 /* ── los interruptores del SPEC ───────────────────────────────────────────────
-   "ya" dice si HOY hay alguien mandando ese aviso. Al 23/09/2026 no lo hay para
-   ninguno: el único mail que sale es el de las alertas del radar (alertas_cartera.py),
-   que se prende en Resumen y usa otros campos de este mismo documento. Cuando el
-   envío de uno exista, se le pone ya:true acá y desaparece su "todavía no".
+   "ya" dice si HOY hay alguien mandando ese aviso; los que no, llevan la etiqueta
+   «todavía no lo estamos mandando». Las alertas de tus activos (alertas_cartera.py)
+   no están en esta lista: tienen su bloque propio arriba, con otros campos de este
+   mismo documento, y esas sí salen. Cuando el envío de uno de estos exista, se le
+   pone ya:true acá y desaparece su etiqueta.
    "cierre" (25/09/2026, pedido de Lauti después de ver el de Senta) sí sale: lo
    manda cierre_cartera.py desde precios_intradia.py al cierre de cada rueda, solo
    a quien lo prende acá y con el mail verificado. */
@@ -385,6 +429,33 @@ function engancharDatos(el, ctx) {
 }
 
 /* ───────────────────────── AVISOS POR MAIL ───────────────────────── */
+// las alertas de tus activos tal como las lee el pipeline (config_valida): apagadas si
+// activo no es true, un tipo ausente cuenta como prendido, diaria y 5 % por defecto
+function alertasDe(cfg) {
+  const c = cfg || {};
+  const tipos = c.tipos && typeof c.tipos === 'object' ? c.tipos : {};
+  return {
+    on: c.activo === true,
+    tipos: Object.fromEntries(TIPOS_ALERTA.map(([k]) => [k, tipos[k] !== false])),
+    frec: c.frecuencia === 'semanal' ? 'semanal' : 'diaria',
+    umbral: UMBRALES.includes(Number(c.umbralVar)) ? Number(c.umbralVar) : UMBRAL_DEF,
+  };
+}
+
+// el último mail de alertas que salió: alertasEnvios/{aaaa-mm-dd} con estado
+// "enviado" (lo escribe solo el pipeline). '' si no hay o no se pudo leer
+async function ultimoEnvio(email) {
+  try {
+    const env = await getDocs(collection(db(), 'inversores', email, 'alertasEnvios'));
+    const ok = env.docs.filter(d => (d.data() || {}).estado === 'enviado').map(d => d.id).sort();
+    return ok.length ? ok[ok.length - 1] : '';
+  } catch (e) { return ''; }
+}
+const fechaCorta = iso => {
+  const [a, m, d] = String(iso || '').slice(0, 10).split('-');
+  return a && m && d ? `${d}/${m}/${a.slice(2)}` : '';
+};
+
 async function pintarAvisos(el, ctx, vigente) {
   const box = el.querySelector('#v3q-avisos');
   if (!box) return;
@@ -398,10 +469,11 @@ async function pintarAvisos(el, ctx, vigente) {
     return;
   }
 
-  let cfg = null;
+  let cfg = null, ultimo = '';
   try {
-    const sn = await getDoc(refConfig(S.email));
+    const [sn, u] = await Promise.all([getDoc(refConfig(S.email)), ultimoEnvio(S.email)]);
     if (sn.exists()) cfg = sn.data();
+    ultimo = u;
   } catch (e) {
     // sin poder leer lo que hay, no se ofrece guardar: se pisaría con los valores de fábrica
     if (!vigente()) return;
@@ -411,15 +483,16 @@ async function pintarAvisos(el, ctx, vigente) {
   }
   if (!vigente()) return;
 
+  const al = alertasDe(cfg);
   const guardados = (cfg && typeof cfg[CAMPO_AVISOS] === 'object' && cfg[CAMPO_AVISOS]) || {};
   const frec = FRECS.some(([k]) => k === (cfg && cfg[CAMPO_FREC])) ? cfg[CAMPO_FREC] : FREC_DEF;
   // apagados por defecto, y los que todavía no tienen quién los mande arrancan
   // apagados aunque nunca se hayan tocado
   const estado = k => guardados[k] === true;
   const faltantes = AVISOS.filter(a => !a.ya).length;
-  // si faltan TODOS, lo dice la banda de arriba y no hace falta repetirlo seis veces;
-  // la marca por fila aparece cuando algunos sí salen y otros no
-  const marcaFila = faltantes > 0 && faltantes < AVISOS.length;
+  // la marca va en cada fila que todavía no sale: las alertas de tus activos
+  // salen siempre, así que nunca es "ninguno se manda"
+  const marcaFila = faltantes > 0;
   // Los dos que el SPEC marca (PRO) son del plan PRO. A una cuenta gratuita se le
   // muestran igual, pero sin interruptor: dejarla prenderlos y contestarle
   // "guardado" sería prometerle un mail que su plan no incluye. Si ya venían
@@ -437,32 +510,82 @@ async function pintarAvisos(el, ctx, vigente) {
       sinPlan(a) ? ' disabled' : ''} aria-label="${esc(a.t)}"><i></i></span>
   </label>`;
 
+  // ALERTAS DE TUS ACTIVOS: la fila con su interruptor y abajo sus opciones. Con el
+  // interruptor apagado las opciones se ven pero no se tocan (y se guardan como están)
+  const dis = al.on ? '' : ' disabled';
+  const boton = (attr, v, t, on) =>
+    `<button type="button" ${attr}="${v}" class="${on ? 'on' : ''}" aria-pressed="${on}"${dis}>${esc(t)}</button>`;
+  const bloqueAlertas = `<section class="v3q-al" aria-labelledby="v3q-al-t">
+    <label class="v3q-av">
+      <div class="izq" style="min-width:0">
+        <div class="t"><span id="v3q-al-t">Alertas de tus activos</span></div>
+        <div class="d">Lecturas automáticas sobre lo que tenés en Mi cartera, no recomendaciones. Como mucho un mail por día y sin montos ni cantidades de tu cartera.</div>
+      </div>
+      <span class="v3q-sw"><input type="checkbox" id="v3q-al-on"${al.on ? ' checked' : ''} aria-label="Alertas de tus activos"><i></i></span>
+    </label>
+    <p class="v3q-alnota" id="v3q-al-pos" hidden>Se aplica a los activos que cargues en
+      <a href="#panel/micartera" data-go="micartera">Mi cartera</a>.</p>
+    <div class="v3q-alop${al.on ? '' : ' off'}" id="v3q-alop">
+      <div role="group" aria-labelledby="v3q-al-tl"><div class="l" id="v3q-al-tl">Qué te avisamos</div>
+        <div class="v3q-tipos">${TIPOS_ALERTA.map(([k, t]) => `<label class="v3q-ck"><input type="checkbox" data-alq-tipo="${k}"${
+          al.tipos[k] ? ' checked' : ''}${dis}><span>${esc(t)}</span></label>`).join('')}</div></div>
+      <div class="v3q-alfila"><span class="l" id="v3q-al-fl">Frecuencia</span>
+        <div class="v3q-seg" role="group" aria-labelledby="v3q-al-fl">${FRECS_ALERTA.map(([k, t]) =>
+          boton('data-alq-frec', k, t, k === al.frec)).join('')}</div></div>
+      <div class="v3q-alfila"><span class="l" id="v3q-al-ul">Movimiento desde</span>
+        <div class="v3q-seg" role="group" aria-labelledby="v3q-al-ul">${UMBRALES.map(u =>
+          boton('data-alq-umbral', u, u + '%', u === al.umbral)).join('')}</div></div>
+      ${ultimo ? `<p class="v3q-alnota">Último envío: ${esc(fechaCorta(ultimo))}.</p>` : ''}
+    </div>
+  </section>`;
+
   box.innerHTML = cabeza +
-    (faltantes ? `<p class="v3q-banda">${faltantes === AVISOS.length
-      ? 'Ninguno de estos avisos se está mandando todavía. Guardamos tu elección para cuando el envío exista; hasta entonces no te va a llegar nada por acá.'
-      : 'Los marcados abajo todavía no se están mandando. Guardamos tu elección para cuando el envío exista.'}</p>` : '') +
+    (faltantes ? `<p class="v3q-banda">Los que dicen «todavía no lo estamos mandando» no salen todavía:
+      guardamos tu elección para cuando el envío exista. Los demás ya salen.</p>` : '') +
+    bloqueAlertas +
     AVISOS.map(fila).join('') +
     (hayBloqueados ? `<p class="v3q-nota">Los que dicen «Con Valtia PRO» llegan con ese plan:
       <a href="/planes">mirá los planes</a>.</p>` : '') +
-    `<div class="v3q-frec"><span class="l">Cuándo mandarlos</span>
-      <div class="v3q-seg" role="group" aria-label="Frecuencia de los avisos">${FRECS.map(([k, t]) =>
+    `<div class="v3q-frec"><span class="l">Cuándo mandar los demás avisos</span>
+      <div class="v3q-seg" role="group" aria-label="Frecuencia de los demás avisos">${FRECS.map(([k, t]) =>
         `<button type="button" data-frec="${k}" class="${k === frec ? 'on' : ''}" aria-pressed="${k === frec}">${t}</button>`).join('')}</div></div>
     <div class="v3q-pie"><button type="button" class="v3q-btn" id="v3q-ok">Guardar</button>
-      <span class="v3q-msg" id="v3q-amsg" style="margin:0">Llegarían a ${esc(S.email)}.</span></div>
-    <p class="v3q-nota">Las alertas del radar (zona de valor, resultados, vencimientos) son otra cosa
-      y esas sí salen hoy: tienen su propio interruptor al final de
-      <a href="#panel/inicio" data-go="inicio">Resumen</a>, que aparece cuando ya cargaste
-      alguna posición.</p>`;
+      <span class="v3q-msg" id="v3q-amsg" style="margin:0">Llegan a ${esc(S.email)}.</span></div>`;
 
-  let elegida = frec;
-  box.querySelectorAll('[data-frec]').forEach(b => b.addEventListener('click', () => {
-    elegida = b.dataset.frec;
-    box.querySelectorAll('[data-frec]').forEach(x => {
-      const on = x === b;
-      x.classList.toggle('on', on);
-      x.setAttribute('aria-pressed', String(on));
-    });
-  }));
+  // sin posiciones el bloque se ve igual, con una línea que dice sobre qué se aplica.
+  // La cartera es la lectura cacheada del panel: no se espera para dibujar
+  if (typeof ctx.cartera === 'function') {
+    Promise.resolve().then(() => ctx.cartera()).then(c => {
+      if (!vigente() || !c || !Array.isArray(c.pos) || c.pos.length) return;
+      const p = box.querySelector('#v3q-al-pos');
+      if (p) p.hidden = false;
+    }).catch(() => {});
+  }
+
+  // los selectores de la regla §0: uno elegido por grupo
+  const elegir = (attr, fijar) => {
+    const bs = box.querySelectorAll(`[${attr}]`);
+    bs.forEach(b => b.addEventListener('click', () => {
+      if (b.disabled) return;
+      fijar(b.getAttribute(attr));
+      bs.forEach(x => {
+        const on = x === b;
+        x.classList.toggle('on', on);
+        x.setAttribute('aria-pressed', String(on));
+      });
+    }));
+  };
+  let elegida = frec, alFrec = al.frec, alUmbral = al.umbral;
+  elegir('data-frec', v => { elegida = v; });
+  elegir('data-alq-frec', v => { alFrec = v; });
+  elegir('data-alq-umbral', v => { alUmbral = Number(v); });
+
+  // los tipos, la frecuencia y el umbral se habilitan solo con el interruptor prendido
+  const alOn = box.querySelector('#v3q-al-on'), alOp = box.querySelector('#v3q-alop');
+  alOn.addEventListener('change', () => {
+    alOp.classList.toggle('off', !alOn.checked);
+    alOp.querySelectorAll('input, button').forEach(x => { x.disabled = !alOn.checked; });
+  });
 
   const ok = box.querySelector('#v3q-ok'), msg = box.querySelector('#v3q-amsg');
   const poner = (txt, clase) => { msg.textContent = txt; msg.className = 'v3q-msg' + (clase ? ' ' + clase : ''); };
@@ -474,23 +597,37 @@ async function pintarAvisos(el, ctx, vigente) {
       const c = box.querySelector(`[data-av="${a.k}"]`);
       mapa[a.k] = !!(c && c.checked);
     });
+    // un deshabilitado conserva su "checked": apagar el interruptor no borra los tipos
+    const tipos = Object.fromEntries(TIPOS_ALERTA.map(([k]) => {
+      const c = box.querySelector(`[data-alq-tipo="${k}"]`);
+      return [k, !!(c && c.checked)];
+    }));
+    const nuevo = {
+      activo: !!alOn.checked,
+      frecuencia: alFrec === 'semanal' ? 'semanal' : 'diaria',
+      tipos,
+      umbralVar: UMBRALES.includes(alUmbral) ? alUmbral : UMBRAL_DEF,
+      [CAMPO_AVISOS]: mapa,
+      [CAMPO_FREC]: FRECS.some(([k]) => k === elegida) ? elegida : FREC_DEF,
+      actualizado: serverTimestamp(),
+    };
     try {
-      // merge: este documento también guarda las alertas del radar (activo,
-      // frecuencia, tipos, umbralVar) y no se pueden pisar desde acá
-      await setDoc(refConfig(S.email), {
-        [CAMPO_AVISOS]: mapa,
-        [CAMPO_FREC]: elegida,
-        actualizado: serverTimestamp(),
-      }, { merge: true });
+      // todo junto y con merge: si el doc tuviera algo más (no debería: la regla no
+      // deja), no se pisa desde acá
+      await setDoc(refConfig(S.email), nuevo, { merge: true });
       const n = Object.values(mapa).filter(Boolean).length;
-      const pendiente = faltantes === AVISOS.length ? ' Todavía no los estamos mandando.' : '';
-      poner(n
-        ? `Guardado: ${n} aviso${n === 1 ? '' : 's'} para ${S.email}, ${elegida === 'momento' ? 'al momento' : 'en un resumen diario'}.${pendiente}`
+      const partes = [nuevo.activo
+        ? `alertas de tus activos prendidas, ${nuevo.frecuencia === 'semanal' ? 'los lunes' : 'cuando haya novedades (máximo un mail por día)'}`
+        : 'alertas de tus activos apagadas'];
+      // "otros … prendidos" y no "N más": con las alertas apagadas, "más" no suma a nada
+      if (n) partes.push(`${n === 1 ? 'otro aviso prendido' : `otros ${n} avisos prendidos`}, ${nuevo[CAMPO_FREC] === 'momento' ? 'al momento' : 'en un resumen diario'}`);
+      poner(nuevo.activo || n
+        ? `Guardado para ${S.email}: ${partes.join('; ')}.`
         : 'Guardado: por ahora no querés ningún aviso.', 'ok');
     } catch (e) {
       const c = codigo(e);
       poner(/permission-denied|insufficient/i.test(c)
-        ? 'Todavía no podemos guardar esto: falta habilitar los campos nuevos del lado del servidor. Escribinos a ' + SOPORTE + ' si lo necesitás ya.'
+        ? 'No se pudo guardar: el servidor no aceptó el cambio. Recargá la página y probá de nuevo; si sigue, escribinos a ' + SOPORTE + '.'
         : 'No se pudo guardar (' + c + '). Probá de nuevo en un rato.', 'mal');
     }
     ok.disabled = false;

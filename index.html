@@ -581,8 +581,10 @@ a.v2plain{color:inherit;text-decoration:none}
       </div>
       <div id="cli-rend-body" style="margin-top:22px"></div>
     </div>
-    <!-- Gestión (solo admin; los llena fondo-live.js, salvo Operar, que es panel-operar.js) -->
+    <!-- Gestión (solo admin; los llena fondo-live.js, salvo Operar, que es panel-operar.js,
+         y Lista de espera PRO, que es panel-espera.js) -->
     <div id="tab-operar" style="display:none"></div>
+    <div id="tab-espera" style="display:none"></div>
     <div id="tab-dashboard" style="display:none"></div>
     <div id="tab-rendimientos" style="display:none"></div>
     <div id="tab-movimientos" style="display:none"></div>
@@ -728,6 +730,27 @@ function loginModo(m){
     history.replaceState({},'',location.pathname+location.hash);
   }
 })();
+// volvió de leer Términos o Privacidad en medio del alta (el modal de los Términos
+// lo anota en terminos-aceptar.js): se reabre "Crear cuenta" con su mail. Si el
+// navegador restauró la página tal cual (bfcache), el modal ya está ahí: se descarta.
+(function(){
+  var v=null;
+  try{v=JSON.parse(sessionStorage.getItem('valtia-alta-volver')||'null');sessionStorage.removeItem('valtia-alta-volver');}catch(e){}
+  if(v&&Date.now()-(+v.t||0)<30*60*1000){
+    openLogin(null,'crear');
+    var i=document.getElementById('signup-email'),p=document.getElementById('signup-pass');
+    if(i&&v.email)i.value=String(v.email);
+    if(p)p.focus();
+    var b=document.getElementById('btn-signup');
+    if(b&&!document.getElementById('login-error')){
+      var m=document.createElement('div');m.id='login-error';m.setAttribute('role','status');
+      m.style.cssText='background:var(--bg3);border:1px solid var(--border);padding:10px 12px;font-size:13px;color:var(--sub);margin-top:10px;text-align:center;line-height:1.5';
+      m.textContent='Escribí de nuevo tu contraseña y tocá "Crear mi cuenta gratis": te volvemos a mostrar los Términos para que los aceptes.';
+      b.after(m);
+    }
+  }
+  window.addEventListener('pageshow',function(e){if(e.persisted){try{sessionStorage.removeItem('valtia-alta-volver');}catch(x){}}});
+})();
 
 // ── CHIP DE USUARIO (nav) ──
 function toggleUserMenu(e){e.preventDefault();e.stopPropagation();document.getElementById('nav-user-menu').classList.toggle('open')}
@@ -826,7 +849,9 @@ function updateChartTheme(){
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   import { getDatabase, ref, push, onValue, serverTimestamp as dbTimestamp }
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-  import { iniciarPanel } from './panel.js?v=54';
+  import { iniciarPanel } from './panel.js?v=56';
+  // Términos y Condiciones: el modal del alta y la puerta del panel
+  import { exigirTerminos, cerrarTerminos, pedirTerminosAlta, anotarAlta, olvidarAlta } from './terminos-aceptar.js?v=1';
 
   
   // ── FIREBASE CONFIG ──
@@ -856,11 +881,25 @@ function updateChartTheme(){
   let currentIsAdmin = false;
   // ── AUTH STATE LISTENER ──
   onAuthStateChanged(auth, async (user) => {
+    // cambió la sesión: el modal de los Términos de la sesión anterior (si quedó
+    // abierto, por ejemplo al salir desde otra pestaña) ya no corresponde
+    cerrarTerminos();
     if (user) {
       closeLogin();   // si llegó con ?login=1 ya logueado, el modal sobra
       const isAdmin = user.email === ADMIN_EMAIL;
       updateNavUser(user, isAdmin);
-      const userData = await getUserData(user.email, isAdmin);
+      // los datos se piden ya, pero el panel espera a los Términos: si esta cuenta
+      // no aceptó la versión vigente, el modal bloquea hasta «Confirmar» o «Cerrar
+      // sesión» (terminos-aceptar.js). Vale para todos, el admin incluido, y con el
+      // mail sin verificar también. Si algo del módulo fallara, el ingreso sigue.
+      const pedido = getUserData(user.email, isAdmin);
+      let paso = 'ok';
+      try { paso = await exigirTerminos(user, { cerrarSesion: () => window.logout() }); }
+      catch (e) { console.error('Términos:', e); }
+      const userData = await pedido;
+      // mientras el modal esperaba, la sesión pudo cambiar (salió o entró otra cuenta
+      // desde otra pestaña): esta vuelta ya no entra al panel, la maneja la nueva
+      if (paso === 'fuera' || !auth.currentUser || auth.currentUser.uid !== user.uid) return;
       enterPortal(user, userData, isAdmin);
       avisoVerificacion(user);
     } else {
@@ -992,13 +1031,24 @@ function updateChartTheme(){
     const email = document.getElementById('signup-email').value.trim();
     const pass = document.getElementById('signup-pass').value;
     if (!email) { showLoginMsg('Completá tu email.', 'error'); document.getElementById('signup-email').focus(); return; }
+    // el formato se mira acá: si no, el error llegaba recién después de aceptar los Términos
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showLoginMsg(AUTH_MSGS['auth/invalid-email'], 'error'); document.getElementById('signup-email').focus(); return; }
     if (!pass || pass.length < 6) { showLoginMsg('Elegí una contraseña de al menos 6 caracteres.', 'error'); document.getElementById('signup-pass').focus(); return; }
+    // Términos y Condiciones: el modal sale ANTES de crear la cuenta y sin «Confirmar»
+    // no se crea. Lo aceptado lo guarda exigirTerminos apenas existe la sesión
+    // (inversores/{email}/legal/terminos), sin volver a preguntar.
+    if (!(await pedirTerminosAlta({ email }))) {
+      showLoginMsg('Para crear tu cuenta tenés que aceptar los Términos y Condiciones.', 'error');
+      return;
+    }
     try {
       showLoginLoading(true, true);
+      anotarAlta(email);
       const cred = await createUserWithEmailAndPassword(auth, email, pass);
       try { await sendEmailVerification(cred.user); } catch(e2) {}
       // onAuthStateChanged toma la sesión nueva y entra al portal solo
     } catch(e) {
+      olvidarAlta();
       showLoginMsg(AUTH_MSGS[e.code] || 'No se pudo crear la cuenta. Probá de nuevo.', 'error');
     } finally {
       showLoginLoading(false, true);

@@ -169,11 +169,11 @@ service cloud.firestore {
       // "config" la escribe el dueño desde el panel (apagada por defecto);
       // "estado" (qué ya se avisó) lo escribe solo el pipeline. Los envíos
       // quedan fechados en alertasEnvios, que tampoco se escribe desde la web.
-      // El mismo doc guarda dos cosas escritas desde dos pantallas, siempre con
-      // merge: las alertas del radar (Resumen: activo, frecuencia, tipos,
-      // umbralVar) y los interruptores de Mi cuenta (avisos, frecuenciaAvisos).
-      // Por eso ningún grupo es obligatorio: cada pantalla manda lo suyo y el
-      // resto viene del doc; lo que aparezca tiene que estar bien formado.
+      // El mismo doc guarda dos grupos, los dos desde Mi cuenta (desde el 27/09
+      // las alertas del radar ya no están en el Resumen) y siempre con merge:
+      // las alertas de tus activos (activo, frecuencia, tipos, umbralVar) y los
+      // interruptores de avisos (avisos, frecuenciaAvisos). Ningún grupo es
+      // obligatorio: lo que aparezca tiene que estar bien formado.
       match /alertas/{docId} {
         allow read: if esDuenio();
         allow delete: if esDuenio() && docId == 'config';
@@ -249,6 +249,24 @@ service cloud.firestore {
           && (!('precioDisparo' in request.resource.data.diff(resource.data).affectedKeys())
               || 'disparada' in request.resource.data.diff(resource.data).affectedKeys())
           && (resource.data.disparada == null || request.resource.data.activa == false);
+      }
+
+      // ── ACEPTACIÓN DE LOS TÉRMINOS Y CONDICIONES (terminos-aceptar.js) ──
+      // Un solo doc, "terminos": { version, aceptado }. Lo escribe el dueño al tocar
+      // «Confirmar» (en el alta o al entrar al panel), con la hora del servidor. Con
+      // el mail SIN verificar también: la cuenta nueva acepta antes de verificar, por
+      // eso acá no va esDuenio(). Una versión nueva se acepta encima (update); no se
+      // borra nunca. El admin la lee pero no la escribe por nadie.
+      match /legal/{docId} {
+        allow read: if isAdmin() || (request.auth != null && request.auth.token.email == email);
+        allow create, update: if request.auth != null && request.auth.token.email == email
+          && docId == 'terminos'
+          && request.resource.data.keys().hasOnly(['version', 'aceptado'])
+          && request.resource.data.version is string
+          && request.resource.data.version.size() > 0
+          && request.resource.data.version.size() <= 20
+          && request.resource.data.aceptado == request.time;
+        allow delete: if false;
       }
     }
 
