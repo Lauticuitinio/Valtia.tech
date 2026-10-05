@@ -8,21 +8,21 @@ import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, quer
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { calcular, agruparPorBroker, agruparPorActivo, normalizarTicker, reiniciarMiCartera, completarPreciosDeRentaFija }
-  from './mi-cartera.js?v=46';
+  from './mi-cartera.js?v=47';
 import { fxMercado, registrarImplicito, etiquetaFx } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
-import { renderResumen } from './panel-resumen.js?v=9';
+import { renderResumen } from './panel-resumen.js?v=10';
 import { renderComprar as renderComprarV3 } from './panel-comprar.js?v=2';
-import { renderCarteras as renderCarterasV3 } from './panel-carteras.js?v=3';
+import { renderCarteras as renderCarterasV3 } from './panel-carteras.js?v=4';
 import { renderMensual } from './panel-mensual.js?v=2';
 import { renderAlertas, contarNoLeidas } from './panel-alertas.js?v=3';
 // alertas de precio por activo (la única puerta a inversores/{email}/alertasPrecio): el
 // panel las evalúa con los precios que lee y cuenta las que saltaron para la pastilla
 import { instalarEvaluacion, evaluarConPrecios, contarDisparadasNoVistas, fraseDisparo, fmtPrecio } from './alertas-precio.js?v=1';
 import { renderAgenda } from './panel-agenda.js?v=2';
-import { renderCuenta } from './panel-cuenta.js?v=4';
-import { renderOperar } from './panel-operar.js?v=6';
+import { renderCuenta } from './panel-cuenta.js?v=5';
+import { renderOperar } from './panel-operar.js?v=7';
 // la lista de espera PRO (waitlistPro): solo el admin la ve y solo a él se le cuenta la pastilla
 import { renderEspera, contarSinContactar } from './panel-espera.js?v=1';
 import { eventos } from './panel-eventos.js?v=1';
@@ -1288,7 +1288,8 @@ async function mapaCarteras() {
 }
 
 /* ───────────────────────── CARTERAS VALTIA ───────────────────────── */
-const RIESGO = { conservador: 'Riesgo bajo', moderado: 'Riesgo medio', agresivo: 'Riesgo alto' };
+// los mismos nombres que la página de la cartera y la home («moderado», no «medio»)
+const RIESGO = { conservador: 'Riesgo bajo', moderado: 'Riesgo moderado', agresivo: 'Riesgo alto' };
 const PERFIL = { 'renta-fija': 'Renta fija', 'renta-mixta': 'Renta mixta', 'renta-variable': 'Renta variable' };
 /* Comparación contra las carteras que sigue: qué le falta y con qué peso.
    Solo de las que puede leer (la regla de Firestore manda). */

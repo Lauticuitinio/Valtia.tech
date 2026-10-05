@@ -169,7 +169,8 @@ function cardCartera(t, x, ctx) {
 
   // encabezado: código · riesgo (· perfil) + la etiqueta de acceso (las del prototipo)
   const rot = [t.codigo || id, RIESGO[t.nivelRiesgo] || t.nivelRiesgo || '', PERFIL[t.perfil] || ''].filter(Boolean).join(' · ');
-  const tag = abre ? (sigue ? 'La seguís' : 'Acceso') : 'PRO';
+  // «Acceso libre», como dice la página de la cartera
+  const tag = abre ? (sigue ? 'La seguís' : 'Acceso libre') : 'PRO';
   const tagTit = abre ? (sigue ? 'Seguís esta cartera' : 'Tu plan incluye esta cartera completa') : 'Composición y rotaciones con Valtia PRO';
 
   // las tres cifras: seis celdas en dos filas (etiquetas arriba, valores abajo)

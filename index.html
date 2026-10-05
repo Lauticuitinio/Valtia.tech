@@ -96,6 +96,14 @@ nav{position:sticky;top:0;z-index:200;height:64px;display:flex;align-items:cente
 .form-group label{display:block;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
 .form-group input{width:100%;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px;outline:none;transition:border-color .2s}
 .form-group input:focus{border-color:var(--gold)}
+/* el ojito para ver la contraseña */
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:48px}
+.pw-ojo{position:absolute;top:0;right:0;width:46px;height:100%;display:flex;align-items:center;justify-content:center;background:none;border:0;border-radius:0 8px 8px 0;color:var(--muted);cursor:pointer;transition:color .15s}
+.pw-ojo:hover{color:var(--text)}
+.pw-ojo:focus-visible{outline:2px solid var(--gold);outline-offset:-3px}
+.pw-ojo .ojo-tapado,.pw-ojo[aria-pressed="true"] .ojo-abierto{display:none}
+.pw-ojo[aria-pressed="true"] .ojo-tapado{display:block}
 .btn-login{width:100%;padding:14px;background:var(--btn-bg);border:none;border-radius:8px;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--btn-tx);cursor:pointer;transition:background .2s;margin-top:6px}
 .btn-login:hover{background:var(--btn-hover)}
 .login-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted);font-size:12px}
@@ -645,7 +653,10 @@ a.v2plain{color:inherit;text-decoration:none}
       </div>
       <div class="form-group">
         <label>Contraseña</label>
-        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+        <div class="pw-wrap">
+          <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+          <button type="button" class="pw-ojo" data-ojo="login-pass" aria-label="Mostrar la contraseña" aria-pressed="false"><svg class="ojo-abierto" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="ojo-tapado" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.5 6.6C3.7 8.4 2 12 2 12s3.6 7 10 7c1.7 0 3.2-.5 4.6-1.2"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
+        </div>
       </div>
       <div style="text-align:right;margin:-4px 0 14px">
         <a href="#" onclick="resetPassword(event)" style="font-size:12px;color:var(--link);text-decoration:none">¿Olvidaste tu contraseña?</a>
@@ -659,7 +670,10 @@ a.v2plain{color:inherit;text-decoration:none}
       </div>
       <div class="form-group">
         <label>Creá una contraseña</label>
-        <input type="password" id="signup-pass" placeholder="mínimo 6 caracteres" autocomplete="new-password">
+        <div class="pw-wrap">
+          <input type="password" id="signup-pass" placeholder="mínimo 6 caracteres" autocomplete="new-password">
+          <button type="button" class="pw-ojo" data-ojo="signup-pass" aria-label="Mostrar la contraseña" aria-pressed="false"><svg class="ojo-abierto" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="ojo-tapado" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.5 6.6C3.7 8.4 2 12 2 12s3.6 7 10 7c1.7 0 3.2-.5 4.6-1.2"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
+        </div>
       </div>
       <button class="btn-login" id="btn-signup" onclick="signupWithEmail()">Crear mi cuenta gratis</button>
       <div style="font-size:12px;opacity:.6;text-align:center;margin-top:10px;line-height:1.6">La cuenta gratis incluye Mi cartera, tu inversión mensual, noticias y herramientas. No pedimos datos de pago.</div>
@@ -686,7 +700,40 @@ if(savedTheme)document.documentElement.dataset.theme=savedTheme;
 
 // ── LOGIN / MODAL ──
 function openLogin(e,modo){if(e)e.preventDefault();document.getElementById('loginModal').classList.add('open');if(modo)loginModo(modo)}
-function closeLogin(){document.getElementById('loginModal').classList.remove('open')}
+// la home también es la página de «no encontrado» (.htaccess: ErrorDocument 404). Si
+// la dirección pedida no es la de la home, se avisa en vez de mostrarla como si nada,
+// y la barra de direcciones queda en «/» para que el resto de la página funcione igual
+(function(){
+  var p=location.pathname.replace(/\/+$/,'');
+  if(p===''||p==='/index.html'||p==='/index')return;
+  var d=document.createElement('div');
+  d.id='aviso-404';d.setAttribute('role','status');
+  d.style.cssText='position:fixed;left:50%;top:118px;transform:translateX(-50%);z-index:900;width:max-content;max-width:calc(100vw - 32px);'+
+    'background:#14213D;color:#fff;border:1px solid #B08A3E;border-radius:10px;padding:12px 14px 12px 16px;'+
+    'font:500 14px "IBM Plex Sans",system-ui,sans-serif;line-height:1.5;box-shadow:0 10px 30px rgba(0,0,0,.35);display:flex;gap:12px;align-items:center';
+  d.innerHTML='<span>No encontramos esa página. Te dejamos en el inicio.</span>'+
+    '<button type="button" aria-label="Cerrar el aviso" style="flex:none;background:none;border:0;color:#E8CE96;font-size:16px;line-height:1;cursor:pointer;padding:4px 6px">✕</button>';
+  d.querySelector('button').onclick=function(){d.remove()};
+  document.body.appendChild(d);
+  try{history.replaceState(null,'','/')}catch(e){}
+})();
+// el ojito: muestra u oculta la contraseña de su campo
+function verClave(boton,ver){
+  const campo=document.getElementById(boton.dataset.ojo);
+  if(!campo)return;
+  campo.type=ver?'text':'password';
+  boton.setAttribute('aria-pressed',String(ver));
+  boton.setAttribute('aria-label',ver?'Ocultar la contraseña':'Mostrar la contraseña');
+}
+document.addEventListener('click',function(e){
+  const boton=e.target.closest&&e.target.closest('.pw-ojo');
+  if(!boton)return;
+  verClave(boton,boton.getAttribute('aria-pressed')!=='true');
+  const campo=document.getElementById(boton.dataset.ojo);
+  if(campo)campo.focus();
+});
+// al cerrar el modal la contraseña vuelve a quedar tapada
+function closeLogin(){document.getElementById('loginModal').classList.remove('open');document.querySelectorAll('.pw-ojo').forEach(function(b){verClave(b,false)})}
 document.getElementById('loginModal').addEventListener('click',function(e){if(e.target===this)closeLogin()})
 function openContacto(){closeLogin();document.getElementById('contacto')?.scrollIntoView({behavior:'smooth'})}
 // pestañas Ingresar / Crear cuenta del modal
@@ -849,7 +896,7 @@ function updateChartTheme(){
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   import { getDatabase, ref, push, onValue, serverTimestamp as dbTimestamp }
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-  import { iniciarPanel } from './panel.js?v=56';
+  import { iniciarPanel } from './panel.js?v=57';
   // Términos y Condiciones: el modal del alta y la puerta del panel
   import { exigirTerminos, cerrarTerminos, pedirTerminosAlta, anotarAlta, olvidarAlta } from './terminos-aceptar.js?v=1';
 
@@ -1268,7 +1315,7 @@ function updateChartTheme(){
 
     // "Mi cartera": seguimiento de las posiciones propias (todo usuario con
     // sesión, admin incluido). Se carga aparte para no demorar el portal.
-    import('./mi-cartera.js?v=46')
+    import('./mi-cartera.js?v=47')
       .then(m => m.initMiCartera(user, document.getElementById('tab-micartera')))
       .catch(() => {});
   }
@@ -1668,6 +1715,6 @@ if (wl) wl.addEventListener('keydown', e => {
 </script>
 <script type="module" src="fondo-live.js?v=24"></script>
 
-<script src="nav-menu.js?v=12"></script>
+<script src="nav-menu.js?v=13"></script>
 </body>
 </html>

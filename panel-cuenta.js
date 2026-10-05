@@ -33,10 +33,10 @@
 //
 // La piel es la del panel: SOLO variables --v3-* de panel.js (así anda el tema
 // oscuro). No importa panel.js —sería un import circular—: todo llega por ctx.
-import { getFirestore, collection, getDocs, doc, getDoc, setDoc, serverTimestamp }
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, addDoc, deleteDoc, query, where, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getAuth, sendPasswordResetEmail, updateProfile } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
 const CSS_ID = 'v3-css-cuenta';
 const SOPORTE = 'soporte@valtia.tech';
@@ -112,6 +112,10 @@ const CSS = `
   background:none;border:none;padding:4px 0;margin:0;cursor:pointer;white-space:nowrap;flex:none}
 .v3q-act:hover:not([disabled]){color:var(--v3-gold2)}
 .v3q-act[disabled]{opacity:.45;cursor:default}
+/* el campo del nombre, cuando se edita en la misma fila */
+.v3q-in{display:block;width:100%;max-width:320px;margin-top:5px;padding:9px 11px;font:500 15px 'IBM Plex Sans',sans-serif;
+  color:var(--v3-ink);background:var(--v3-card);border:1px solid var(--v3-line);border-radius:8px;outline:none}
+.v3q-in:focus{border-color:var(--v3-gold)}
 /* etiquetas (6 px) */
 .v3q-tag{display:inline-block;font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;
   padding:2px 7px;border-radius:6px;white-space:nowrap;line-height:1.5;vertical-align:middle}
@@ -260,8 +264,11 @@ const AVISOS = [
     d: 'Cuando sale un informe de una empresa que tenés o seguís.', ya: false },
   { k: 'eventos', pro: false, t: 'Eventos de tus activos',
     d: 'Resultados, cupones y vencimientos, unos días antes.', ya: false },
+  // el newsletter es la lista `newsletter` (la misma del formulario de Noticias y la
+  // que lee newsletter_envio.py): el interruptor muestra si esta casilla está en la
+  // lista, y Guardar la suma o la saca. Ver suscripcionNews() más abajo.
   { k: 'newsletter', pro: false, t: 'Newsletter',
-    d: 'Las claves de la semana y lo que se movió en el mercado.', ya: false },
+    d: 'Las noticias del día, de lunes a viernes a la mañana, y los lunes el resumen de la semana.', ya: true },
   { k: 'resumen', pro: false, t: 'Resumen mensual de tu cartera',
     d: 'Cómo te fue en el mes contra tu índice de referencia.', ya: false },
 ];
@@ -270,6 +277,15 @@ const FREC_DEF = 'diaria';   // como el resto de los mails: como mucho uno por d
 
 const db = () => getFirestore(getApp());
 const refConfig = email => doc(db(), 'inversores', email, 'alertas', 'config');
+
+/* ── la suscripción al newsletter de esta casilla ──────────────────────────────
+   Los docs de `newsletter` con email == el de la sesión (puede haber más de uno si se
+   anotó dos veces desde Noticias). La regla solo deja leer los de la propia casilla y
+   con el mail verificado. Devuelve los ids; levanta si no se pudo leer. */
+async function suscripcionNews(email) {
+  const sn = await getDocs(query(collection(db(), 'newsletter'), where('email', '==', email)));
+  return sn.docs.map(d => d.id);
+}
 
 /* ¿la cuenta tiene contraseña propia, o entra con Google? Firebase lo dice en
    providerData. Sin ese dato (no debería pasar) se ofrece el cambio igual. */
@@ -376,9 +392,10 @@ function bloqueDatos(ctx) {
   // pantalla y la página saltaba de "Tu plan" a "Avisos por mail"
   return `<section class="v3q-card">
     <h2 class="v3q-eyebrow">Tus datos</h2>
-    <div class="v3q-dato">
+    <div class="v3q-dato" id="v3q-nom">
       <div class="izq"><div class="l">Nombre</div>
-        <div class="v${nombre ? '' : ' vacio'}">${nombre ? esc(nombre) : 'Tu cuenta no tiene un nombre cargado'}</div></div>
+        <div class="v${nombre ? '' : ' vacio'}">${nombre ? esc(nombre) : 'Todavía no cargaste tu nombre'}</div></div>
+      <button type="button" class="v3q-act" data-q="nombre" aria-label="${nombre ? 'Cambiar el nombre' : 'Cargar tu nombre'}">${nombre ? 'Cambiar' : 'Cargar'}</button>
     </div>
     <div class="v3q-dato">
       <div class="izq"><div class="l">Mail de la cuenta</div>
@@ -409,6 +426,49 @@ function engancharDatos(el, ctx) {
   if (bVerif) bVerif.addEventListener('click', () => {
     const fallo = e => poner('No se pudo reenviar el mail (' + codigo(e) + '). Probá de nuevo en un rato.', 'mal');
     try { Promise.resolve(window.reenviarVerificacion()).catch(fallo); } catch (e) { fallo(e); }
+  });
+
+  // el nombre: es el displayName de Firebase Auth, el mismo que usa el saludo del
+  // panel. Se edita en la misma fila; guardado, se repinta la pestaña y el nombre
+  // de la barra lateral
+  const fNom = el.querySelector('#v3q-nom');
+  const bNom = el.querySelector('[data-q="nombre"]');
+  if (fNom && bNom) bNom.addEventListener('click', () => {
+    const user = getAuth(getApp()).currentUser;
+    if (!user) return;
+    const actual = String(user.displayName || '').trim();
+    fNom.innerHTML = `<div class="izq" style="flex:1"><label class="l" for="v3q-nom-in">Nombre</label>
+      <input type="text" id="v3q-nom-in" class="v3q-in" maxlength="60" autocomplete="name" placeholder="Cómo querés que te llamemos"></div>
+      <button type="button" class="v3q-act" data-q="nombre-ok">Guardar</button>
+      <button type="button" class="v3q-act" data-q="nombre-no">Cancelar</button>`;
+    const inp = fNom.querySelector('#v3q-nom-in');
+    inp.value = actual;
+    inp.focus();
+    const ok = fNom.querySelector('[data-q="nombre-ok"]');
+    const guardar = async () => {
+      const nuevo = inp.value.replace(/\s+/g, ' ').trim().slice(0, 60);
+      if (nuevo === actual) { pintar(el, ctx); return; }
+      ok.disabled = true;
+      poner('Guardando…');
+      try {
+        await updateProfile(user, { displayName: nuevo });
+        const lat = document.getElementById('portal-user-name');
+        if (lat) lat.textContent = nuevo || String(S.email || '').split('@')[0];
+        await pintar(el, ctx);
+        const m = el.querySelector('#v3q-dmsg');
+        if (m) { m.textContent = nuevo ? `Listo: te vamos a llamar ${nuevo}.` : 'Listo: sacamos el nombre.'; m.className = 'v3q-msg ok'; }
+        if (typeof ctx.toast === 'function') ctx.toast('Nombre guardado');
+      } catch (e) {
+        ok.disabled = false;
+        poner('No se pudo guardar el nombre (' + codigo(e) + '). Probá de nuevo en un rato.', 'mal');
+      }
+    };
+    ok.addEventListener('click', guardar);
+    inp.addEventListener('keydown', ev => {
+      if (ev.key === 'Enter') { ev.preventDefault(); guardar(); }
+      if (ev.key === 'Escape') pintar(el, ctx);
+    });
+    fNom.querySelector('[data-q="nombre-no"]').addEventListener('click', () => pintar(el, ctx));
   });
 
   const bPass = el.querySelector('[data-q="pass"]');
@@ -469,11 +529,15 @@ async function pintarAvisos(el, ctx, vigente) {
     return;
   }
 
-  let cfg = null, ultimo = '';
+  // news: los ids de la suscripción al newsletter de esta casilla; null si no se pudo
+  // leer (entonces ese interruptor queda quieto: no se adivina ni se pisa)
+  let cfg = null, ultimo = '', news = null;
   try {
-    const [sn, u] = await Promise.all([getDoc(refConfig(S.email)), ultimoEnvio(S.email)]);
+    const [sn, u, nw] = await Promise.all([getDoc(refConfig(S.email)), ultimoEnvio(S.email),
+      suscripcionNews(S.email).catch(() => null)]);
     if (sn.exists()) cfg = sn.data();
     ultimo = u;
+    news = nw;
   } catch (e) {
     // sin poder leer lo que hay, no se ofrece guardar: se pisaría con los valores de fábrica
     if (!vigente()) return;
@@ -488,7 +552,9 @@ async function pintarAvisos(el, ctx, vigente) {
   const frec = FRECS.some(([k]) => k === (cfg && cfg[CAMPO_FREC])) ? cfg[CAMPO_FREC] : FREC_DEF;
   // apagados por defecto, y los que todavía no tienen quién los mande arrancan
   // apagados aunque nunca se hayan tocado
-  const estado = k => guardados[k] === true;
+  // el del newsletter no sale del doc de avisos: dice si la casilla está en la lista
+  const estado = k => k === 'newsletter' && news ? news.length > 0 : guardados[k] === true;
+  const sinLista = a => a.k === 'newsletter' && news === null;
   const faltantes = AVISOS.filter(a => !a.ya).length;
   // la marca va en cada fila que todavía no sale: las alertas de tus activos
   // salen siempre, así que nunca es "ninguno se manda"
@@ -503,11 +569,12 @@ async function pintarAvisos(el, ctx, vigente) {
   const fila = a => `<label class="v3q-av${sinPlan(a) ? ' quieto' : ''}">
     <div class="izq" style="min-width:0">
       <div class="t"><span>${esc(a.t)}</span>${a.pro ? (sinPlan(a) ? '<span class="v3q-tag pro sin">Con Valtia PRO</span>' : '<span class="v3q-tag pro">PRO</span>') : ''}${
-        marcaFila && !a.ya ? '<span class="v3q-tag aun">todavía no lo estamos mandando</span>' : ''}</div>
+        marcaFila && !a.ya ? '<span class="v3q-tag aun">todavía no lo estamos mandando</span>' : ''}${
+        sinLista(a) ? '<span class="v3q-tag aun">no pudimos leer tu suscripción: recargá la página</span>' : ''}</div>
       <div class="d">${esc(a.d)}</div>
     </div>
     <span class="v3q-sw"><input type="checkbox" data-av="${a.k}"${estado(a.k) ? ' checked' : ''}${
-      sinPlan(a) ? ' disabled' : ''} aria-label="${esc(a.t)}"><i></i></span>
+      sinPlan(a) || sinLista(a) ? ' disabled' : ''} aria-label="${esc(a.t)}"><i></i></span>
   </label>`;
 
   // ALERTAS DE TUS ACTIVOS: la fila con su interruptor y abajo sus opciones. Con el
@@ -615,15 +682,36 @@ async function pintarAvisos(el, ctx, vigente) {
       // todo junto y con merge: si el doc tuviera algo más (no debería: la regla no
       // deja), no se pisa desde acá
       await setDoc(refConfig(S.email), nuevo, { merge: true });
-      const n = Object.values(mapa).filter(Boolean).length;
+      // el newsletter: sumar esta casilla a la lista o sacarla (solo si se pudo leer
+      // cómo estaba). Nunca un segundo doc para la misma casilla: saldrían dos mails
+      let newsMal = '';
+      if (news) {
+        const quiere = mapa.newsletter === true;
+        try {
+          if (quiere && !news.length) {
+            const r = await addDoc(collection(db(), 'newsletter'), { email: S.email, fecha: serverTimestamp() });
+            news = [r.id];
+          } else if (!quiere && news.length) {
+            await Promise.all(news.map(id => deleteDoc(doc(db(), 'newsletter', id))));
+            news = [];
+          }
+        } catch (e) { newsMal = codigo(e); }
+      }
+      const conNews = !!(news && news.length);
+      const n = AVISOS.filter(a => a.k !== 'newsletter' && mapa[a.k]).length;
       const partes = [nuevo.activo
         ? `alertas de tus activos prendidas, ${nuevo.frecuencia === 'semanal' ? 'los lunes' : 'cuando haya novedades (máximo un mail por día)'}`
         : 'alertas de tus activos apagadas'];
       // "otros … prendidos" y no "N más": con las alertas apagadas, "más" no suma a nada
       if (n) partes.push(`${n === 1 ? 'otro aviso prendido' : `otros ${n} avisos prendidos`}, ${nuevo[CAMPO_FREC] === 'momento' ? 'al momento' : 'en un resumen diario'}`);
-      poner(nuevo.activo || n
-        ? `Guardado para ${S.email}: ${partes.join('; ')}.`
-        : 'Guardado: por ahora no querés ningún aviso.', 'ok');
+      if (conNews) partes.push('newsletter prendido');
+      if (newsMal) {
+        poner(`Guardado, salvo el newsletter: no se pudo cambiar tu suscripción (${newsMal}). Probá de nuevo en un rato.`, 'mal');
+      } else {
+        poner(nuevo.activo || n || conNews
+          ? `Guardado para ${S.email}: ${partes.join('; ')}.`
+          : 'Guardado: por ahora no querés ningún aviso.', 'ok');
+      }
     } catch (e) {
       const c = codigo(e);
       poner(/permission-denied|insufficient/i.test(c)

@@ -637,8 +637,11 @@ function pintarEsqueletos() {
 
 /* una sola fila de filtros, con el .v-chip de sitio.css (activo = .on) */
 function barraHTML(cuenta) {
+  // un filtro sin informes no se muestra (un «Macro y sectores 0» no le sirve a nadie);
+  // vuelve solo cuando haya algo publicado en esa categoría
   const tabs = [['todo', 'Todo'], ['empresas', 'Empresas'],
-    ['macro', 'Macro y sectores'], ['registros', 'Registro mensual']];
+    ['macro', 'Macro y sectores'], ['registros', 'Registro mensual']]
+    .filter(([k]) => k === 'todo' || k === TAB || cuenta[k] > 0);
   return `<div class="tools">
     <div class="tabs" id="tabs" role="group" aria-label="Filtrar informes">${tabs.map(([k, l]) =>
       `<button class="v-chip${TAB === k ? ' on' : ''}" data-k="${k}" type="button" aria-pressed="${TAB === k}">${l} <b>${cuenta[k]}</b></button>`).join('')}</div>
@@ -989,6 +992,6 @@ onAuthStateChanged(getAuth(app), user => {
 });
 </script>
 <script type="module" src="nav-auth.js?v=10"></script>
-<script src="nav-menu.js?v=12"></script>
+<script src="nav-menu.js?v=13"></script>
 </body>
 </html>

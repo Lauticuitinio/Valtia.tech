@@ -126,7 +126,10 @@
       // margen): si comparten esquina la pastilla lo tapa entero en el celular
       st2.textContent = '#vnav-volver{position:fixed;left:24px;bottom:88px;z-index:996;background:#14213D;color:#E8CE96;border:1px solid #B08A3E;' +
         'border-radius:20px;padding:9px 16px;font:600 11px "IBM Plex Sans",sans-serif;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;' +
-        'box-shadow:0 6px 24px rgba(0,0,0,.35)}#vnav-volver:hover{background:#B08A3E;color:#14213D}';
+        'box-shadow:0 6px 24px rgba(0,0,0,.35)}#vnav-volver:hover{background:#B08A3E;color:#14213D}' +
+        // en el celular va al lado del boton de mail, en la misma fila: uno arriba
+        // del otro tapaban dos franjas del contenido
+        '@media(max-width:640px){#vnav-volver{left:88px;bottom:35px;padding:8px 13px}}';
       document.head.appendChild(st2);
       var v = document.createElement('a');
       v.id = 'vnav-volver'; v.href = '/#panel/' + tabPanel; v.textContent = '← Volver al panel';

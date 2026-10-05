@@ -525,13 +525,20 @@ service cloud.firestore {
     // lista solo la ve el admin. La baja es por link con el id del doc
     // (id aleatorio no adivinable que solo viaja en el mail del suscripto),
     // por eso delete abierto: sin lectura pública no se pueden enumerar.
+    // Desde el 05/10/2026 el interruptor «Newsletter» de Mi cuenta es esta misma
+    // lista: quien entró con su cuenta (mail VERIFICADO) puede leer SOLO los docs
+    // de su propia casilla, para saber si está suscripto y poder darse de baja. La
+    // consulta del panel filtra por email == el de la sesión; cualquier otra se
+    // rechaza, así que nadie puede listar casillas ajenas.
     match /newsletter/{docId} {
       allow create: if request.resource.data.keys().hasOnly(['email', 'fecha'])
         && request.resource.data.email is string
         && request.resource.data.email.matches('.+@.+[.].+')
         && request.resource.data.email.size() < 120;
       allow delete: if true;
-      allow read, update: if isAdmin();
+      allow read: if isAdmin()
+        || (esVerificado() && resource.data.email == request.auth.token.email);
+      allow update: if isAdmin();
     }
 
     // ── LISTA DE ESPERA DE VALTIA PRO ──

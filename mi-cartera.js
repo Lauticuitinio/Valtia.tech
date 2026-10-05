@@ -1000,7 +1000,10 @@ function lectura(r) {
                           .reduce((s, f) => s + (f.peso || 0), 0);
   const est = peso("Estirada"), inf = peso("Infravalorada");
   const partes = [];
-  if (est > 0) partes.push(`<b>${est.toFixed(0)}%</b> de tu cartera está en activos que nuestra lectura marca <b>estirados</b>`);
+  // «estirado» es por VALUACIÓN (caro para sus números) y el RSI de más abajo es por
+  // cómo se movió el PRECIO: son dos medidas distintas y un mismo activo puede estar
+  // estirado y sobrevendido a la vez. Sin decirlo, las dos frases juntas se contradecían
+  if (est > 0) partes.push(`<b>${est.toFixed(0)}%</b> de tu cartera está en activos <b>estirados</b> por valuación (caros para sus números)`);
   if (inf > 0) partes.push(`<b>${inf.toFixed(0)}%</b> en activos <b>infravalorados</b>`);
   const corto = f => esc(base(f.ticker));
   // un activo comprado dos veces son dos filas de r: se nombra una sola vez
@@ -1008,11 +1011,14 @@ function lectura(r) {
   const unicos = arr => [...new Set(arr)];
   const sobrev = unicos(conVer.filter(f => f.px.rsi != null && f.px.rsi > 70).map(corto));
   const sobrec = unicos(conVer.filter(f => f.px.rsi != null && f.px.rsi < 30).map(corto));
-  let extra = "";
-  if (sobrev.length) extra += ` ${sobrev.join(", ")} viene${sobrev.length > 1 ? "n" : ""} sobrecomprado${sobrev.length > 1 ? "s" : ""} (RSI &gt; 70).`;
-  if (sobrec.length) extra += ` ${sobrec.join(", ")} está${sobrec.length > 1 ? "n" : ""} sobrevendido${sobrec.length > 1 ? "s" : ""} (RSI &lt; 30).`;
-  if (!partes.length && !extra) return "";
-  return `<div class="mc-lect">Lectura Valtia: ${partes.join(" y ")}.${extra}</div>`;
+  const movs = [];
+  if (sobrev.length) movs.push(`${sobrev.join(", ")} viene${sobrev.length > 1 ? "n" : ""} sobrecomprado${sobrev.length > 1 ? "s" : ""} (RSI &gt; 70)`);
+  if (sobrec.length) movs.push(`${sobrec.join(", ")} está${sobrec.length > 1 ? "n" : ""} sobrevendido${sobrec.length > 1 ? "s" : ""} (RSI &lt; 30)`);
+  if (!partes.length && !movs.length) return "";
+  const frases = [];
+  if (partes.length) frases.push(partes.join(" y ") + ".");
+  if (movs.length) frases.push(`${partes.length ? "Aparte, por" : "Por"} cómo se movió el precio estos días: ${movs.join("; ")}.`);
+  return `<div class="mc-lect">Lectura Valtia: ${frases.join(" ")}</div>`;
 }
 
 /* ── Análisis de la cartera: cómo está repartida y qué riesgo tiene ──
@@ -4152,7 +4158,10 @@ async function guardarCompras() {
     avisarPanel();
     // el repintado rehace la pestaña: el mensaje se escribe recién ahora
     const m2 = _el && _el.querySelector("#mc-msg");
-    if (m2) m2.innerHTML = `<span style="color:var(--v3-up)">${esc(tk)} agregado (${donde}${broker ? ", " + esc(broker) : ""})${ok > 1 ? `, ${ok} compras` : ""}. El precio llega en la próxima actualización, en unos 15 minutos.</span>`
+    // si el precio ya está (el activo ya lo seguíamos), no se promete «en 15 minutos»
+    const pxYa = _precios[String(tk).toUpperCase()];
+    const cuando = pxYa && pxYa.precio != null ? "" : " El precio llega en la próxima actualización, en unos 15 minutos.";
+    if (m2) m2.innerHTML = `<span style="color:var(--v3-up)">${esc(tk)} agregado (${donde}${broker ? ", " + esc(broker) : ""})${ok > 1 ? `, ${ok} compras` : ""}.${cuando}</span>`
       + (fallaron.length ? " " + rojo(`De ${compras.length} compras entraron ${ok}: ${fallaron.length === 1 ? "quedó afuera" : "quedaron afuera"} ${esc(fallaron.map(compraTxt).join(" · "))}. ${fallaron.length === 1 ? "Cargala" : "Cargalas"} de nuevo.`) : "");
   } catch (e) {
     if (msg && msg.isConnected) msg.innerHTML = rojo(`No se pudo guardar: ${esc(String(e).slice(0, 90))}`);
