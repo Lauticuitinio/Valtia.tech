@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test": "node scripts/test-activos.mjs && node scripts/test-ventas.mjs && node scripts/test-evolucion.mjs && node scripts/test-fx.mjs && node scripts/test-modal.mjs && node scripts/test-tipos.mjs && node scripts/test-alertas-precio.mjs && node scripts/test-movimientos.mjs && node scripts/test-terminos.mjs"
+    "test": "node scripts/test-activos.mjs && node scripts/test-ventas.mjs && node scripts/test-evolucion.mjs && node scripts/test-fx.mjs && node scripts/test-modal.mjs && node scripts/test-tipos.mjs && node scripts/test-alertas-precio.mjs && node scripts/test-movimientos.mjs && node scripts/test-terminos.mjs && node scripts/test-informe-graficos.mjs"
   },
   "dependencies": {
     "firebase-admin": "^14.1.0"

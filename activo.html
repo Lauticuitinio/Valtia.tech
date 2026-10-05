@@ -361,6 +361,9 @@ import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, where, g
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { EMPRESAS, SECTORES } from './empresas.js?v=3';
 import { radarSym, tickerFicha, mergeRadar, canon, esRentaFija, especieBono } from './activos.js?v=7';
+// los gráficos de adentro de los informes, dibujados con datos reales (05/10/2026)
+import { filasDe, figuraDesde, figuraFamilia, CSS_FIGURAS } from './informe-graficos.js?v=1';
+document.head.insertAdjacentHTML('beforeend', `<style id="inf-fig-css">${CSS_FIGURAS}</style>`);
 
 const app = getApps().length ? getApp() : initializeApp({
   apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
@@ -1402,6 +1405,27 @@ try {
     return tips.length ? tips.join("") : '<div class="va-vacio">Sin lecturas todavía: faltan datos del radar para este activo.</div>';
   };
 
+  // ── los gráficos de adentro del informe (informe-graficos.js), con lo que esta ficha
+  // ya bajó: la acción contra su índice desde la publicación y, con los múltiplos del
+  // radar a la vista (PRO), la empresa al lado de su familia. La portada no se toca:
+  // ahí van fotos (pedido de Lauti del 05/10/2026). ──
+  const benchFilas = (() => { try { return filasDe(benchSnap && benchSnap.exists() ? JSON.parse(benchSnap.data().json || "[]") : []); } catch (e) { return []; } })();
+  const figurasInforme = d => {
+    if (!d) return "";
+    const desde = figuraDesde({ ticker: t, benchNom: BENCH_NOM, filas, bench: benchFilas, fecha: fdate(d.fecha), precioPub: d.precio_pub });
+    let familia = "";
+    if (conRatios && fundOk && ra) {
+      const veces = v => n1.format(v) + "×", porc = v => n1.format(v) + "%";
+      const it = (campo, nombre, fmt, mejor) => ({ nombre, valor: ra[campo], mediana: medSector(campo, true), fmt, mejor });
+      familia = figuraFamilia({ ticker: t, familia: sectorTxt(ra.sector), items: [
+        it("per", "P/E (precio sobre ganancias)", veces, "bajo"), it("evebitda", "EV / EBITDA", veces, "bajo"),
+        it("pb", "Precio / valor libro", veces, "bajo"), it("margen", "Margen operativo", porc, "alto"), it("roe", "ROE", porc, "alto")] });
+    }
+    return desde || familia ? `<div class="inf-figs">${desde}${familia}</div>` : "";
+  };
+  // se llama de nuevo cuando llegan los múltiplos PRO (el informe pudo pintarse antes)
+  const pintarFiguras = () => { const c = document.getElementById("inf-figs"); if (c && S.inf) c.innerHTML = figurasInforme(S.inf); };
+
   // ── el último informe, destacado: portada, fecha, título, resumen, precio
   // en el informe y variación desde entonces ──
   pintarDestacado = () => {
@@ -1521,6 +1545,7 @@ try {
         <h1>${esc(d.titulo)}</h1>
         <div class="inf-meta" style="margin:12px 0 0">${venc(fdate(d.fecha))} · ${esc(d.autor || "Lautaro Cuitiño · Valtia Analytics")}</div>
       </div>
+      <div id="inf-figs">${figurasInforme(d)}</div>
       ${d.contenido_html || ""}
     </div>`;
     if (location.hash === "#informe") full.scrollIntoView();
@@ -1687,6 +1712,7 @@ try {
       // leer, queda la muestra desenfocada con el aviso (sin destaparla: son
       // tarjetas de muestra, no datos)
       repintarPro();
+      pintarFiguras();
     }
     // el getDoc inicial corre sin sesión: si el informe estaba vedado,
     // reintentar ahora que Firestore conoce al usuario
