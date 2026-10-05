@@ -662,7 +662,7 @@ a.v2plain{color:inherit;text-decoration:none}
         <input type="password" id="signup-pass" placeholder="mínimo 6 caracteres" autocomplete="new-password">
       </div>
       <button class="btn-login" id="btn-signup" onclick="signupWithEmail()">Crear mi cuenta gratis</button>
-      <div style="font-size:12px;opacity:.6;text-align:center;margin-top:10px;line-height:1.6">La cuenta gratis incluye Mi Cartera, tu plan de Disciplina, noticias y herramientas. No pedimos datos de pago.</div>
+      <div style="font-size:12px;opacity:.6;text-align:center;margin-top:10px;line-height:1.6">La cuenta gratis incluye Mi cartera, tu inversión mensual, noticias y herramientas. No pedimos datos de pago.</div>
     </div>
     <div class="login-2fa">🔒 Conexión cifrada · Firebase Authentication de Google</div>
     <div class="login-signup" id="lm-alt">¿No tenés cuenta? <a href="#" onclick="loginModo('crear');return false">Creala gratis en un minuto</a></div>
@@ -869,6 +869,8 @@ function updateChartTheme(){
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  // los mails de Firebase (verificar la cuenta, cambiar la contraseña) salen en castellano
+  auth.languageCode = 'es';
   const db = getFirestore(app);
   const rtdb = getDatabase(app);
   const googleProvider = new GoogleAuthProvider();
@@ -888,6 +890,14 @@ function updateChartTheme(){
       closeLogin();   // si llegó con ?login=1 ya logueado, el modal sobra
       const isAdmin = user.email === ADMIN_EMAIL;
       updateNavUser(user, isAdmin);
+      // recién verificó el mail: el navegador ya lo sabe (user.emailVerified) pero el
+      // token guardado sigue diciendo que no, y las reglas de Firestore leen el token.
+      // Sin pedir uno nuevo, Mi cartera daba «permission-denied» hasta una hora.
+      try {
+        if (user.emailVerified && (await user.getIdTokenResult()).claims.email_verified !== true) {
+          await user.getIdToken(true);
+        }
+      } catch (e) {}
       // los datos se piden ya, pero el panel espera a los Términos: si esta cuenta
       // no aceptó la versión vigente, el modal bloquea hasta «Confirmar» o «Cerrar
       // sesión» (terminos-aceptar.js). Vale para todos, el admin incluido, y con el
@@ -1182,7 +1192,7 @@ function updateChartTheme(){
     const d = document.createElement('div');
     d.id = 'aviso-verif';
     d.style.cssText = 'margin:14px clamp(16px,4vw,52px) 0;padding:12px 16px;border:1px solid rgba(224,169,62,.5);border-left:3px solid #E0A93E;border-radius:8px;font-size:13.5px;line-height:1.6;background:rgba(224,169,62,.08)';
-    d.innerHTML = 'Te mandamos un mail a <b>' + user.email.replace(/</g, '&lt;') + '</b> para verificar tu cuenta. Hasta verificarla, Mi Cartera y el plan de Disciplina quedan bloqueados. ' +
+    d.innerHTML = 'Te mandamos un mail a <b>' + user.email.replace(/</g, '&lt;') + '</b> para verificar tu cuenta. Hasta verificarla, Mi cartera y la inversión mensual quedan bloqueadas. ' +
       '<a href="#" onclick="reenviarVerificacion(event)" style="color:#B08A3E;font-weight:600">Reenviar mail</a> · ' +
       '<a href="#" onclick="location.reload()" style="color:#B08A3E;font-weight:600">Ya la verifiqué</a>';
     portal.prepend(d);
