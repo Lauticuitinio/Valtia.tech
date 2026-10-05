@@ -589,26 +589,18 @@ a.v2plain{color:inherit;text-decoration:none}
       </div>
       <div id="cli-rend-body" style="margin-top:22px"></div>
     </div>
-    <!-- Gestión (solo admin; los llena fondo-live.js, salvo Operar, que es panel-operar.js,
-         y Lista de espera PRO, que es panel-espera.js) -->
+    <!-- Administración (solo admin). Operar es panel-operar.js, Rendimiento de las carteras es
+         panel-rendimientos.js y Lista de espera PRO es panel-espera.js; Señales, Análisis de
+         cartera y Lector de informes los llena fondo-live.js. Las pantallas del fondo (Dashboard,
+         Posiciones, Balance consolidado e Inversores) se sacaron el 05/10/2026. -->
     <div id="tab-operar" style="display:none"></div>
-    <div id="tab-espera" style="display:none"></div>
-    <div id="tab-dashboard" style="display:none"></div>
     <div id="tab-rendimientos" style="display:none"></div>
-    <div id="tab-movimientos" style="display:none"></div>
+    <div id="tab-espera" style="display:none"></div>
     <div id="tab-informes" style="display:none"></div>
-    <div id="tab-admin" style="display:none">
-      <div class="portal-title">Inversores</div>
-      <p style="color:var(--sub);font-size:14px">Cargando datos...</p>
-    </div>
     <div id="tab-senales" style="display:none"></div>
     <div id="tab-analisis" style="display:none">
       <div class="portal-title">Análisis de cartera</div>
       <p style="color:var(--sub);font-size:14px">Cargando el mapa de cartera…</p>
-    </div>
-    <div id="tab-fondo" style="display:none">
-      <div class="portal-title">Fondo</div>
-      <p style="color:var(--sub);font-size:14px">Cargando el balance consolidado…</p>
     </div>
   </div>
 </div>
@@ -896,7 +888,7 @@ function updateChartTheme(){
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   import { getDatabase, ref, push, onValue, serverTimestamp as dbTimestamp }
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-  import { iniciarPanel } from './panel.js?v=57';
+  import { iniciarPanel } from './panel.js?v=58';
   // Términos y Condiciones: el modal del alta y la puerta del panel
   import { exigirTerminos, cerrarTerminos, pedirTerminosAlta, anotarAlta, olvidarAlta } from './terminos-aceptar.js?v=1';
 
@@ -968,15 +960,9 @@ function updateChartTheme(){
   // ── GET USER DATA FROM FIRESTORE ──
   async function getUserData(email, isAdmin) {
     if (isAdmin) {
-      // Admin: get all clients
-      try {
-        const snap = await getDocs(collection(db, 'inversores'));
-        const clientes = [];
-        snap.forEach(d => clientes.push({ id: d.id, ...d.data() }));
-        return { isAdmin: true, clientes };
-      } catch(e) {
-        return { isAdmin: true, clientes: [] };
-      }
+      // el admin ya no baja la lista de inversores: la pantalla «Inversores» se sacó
+      // el 05/10/2026 junto con el resto del fondo
+      return { isAdmin: true };
     } else {
       // Regular user: get own data
       try {
@@ -1381,62 +1367,11 @@ function updateChartTheme(){
 
   // ── ADMIN DASHBOARD ──
   function renderAdminDashboard(data) {
-    // skeleton inmediato: evita el flash del dashboard viejo hasta que
-    // fondo-live.js renderiza las secciones reales
-    document.getElementById('tab-dashboard').innerHTML = `
-      <style>.fl-skel{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:16px 0 20px}
-      .fl-skel div{height:98px;border-radius:10px;background:var(--bg3);animation:flpulse 1.2s ease-in-out infinite}
-      @keyframes flpulse{50%{opacity:.45}}</style>
-      <div class="portal-title">Fondo Lautaro</div>
-      <div class="fl-skel"><div></div><div></div><div></div><div></div><div></div><div></div></div>
-      <p style="color:var(--muted);font-size:11px;letter-spacing:.14em;text-transform:uppercase">Cargando telemetría del fondo…</p>`;
-
-    const adminTab = document.getElementById('admin-tab');
-    if (adminTab) adminTab.style.display = 'inline';
-    const analisisTab = document.getElementById('analisis-tab');
-    if (analisisTab) analisisTab.style.display = 'inline';
-    const senalesTab = document.getElementById('senales-tab');
-    if (senalesTab) senalesTab.style.display = 'inline';
-    const fondoTab = document.getElementById('fondo-tab');
-    if (fondoTab) fondoTab.style.display = 'inline';
-    // poblar las secciones del portal con el fondo en vivo (fondo-live.js)
+    // Señales, Análisis de cartera y Lector de informes los llena fondo-live.js. Las
+    // pantallas del fondo (Dashboard, Posiciones, Balance consolidado e Inversores) se
+    // sacaron el 05/10/2026: el fondo es privado y no va mezclado con Valtia.
     if (window.initFondoAdmin) window.initFondoAdmin();
     else window.__fondoAdminPending = true;
-
-    renderClientsTable(data.clientes || []);
-  }
-
-  function renderClientsTable(clientes) {
-    const wrap = document.getElementById('tab-admin');
-    if (!wrap) return;
-    if (clientes.length === 0) {
-      wrap.innerHTML = '<div class="portal-title">Panel de administrador</div><p style="color:var(--sub);font-size:14px">No hay inversores cargados aún. Los inversores se cargan desde Firestore → colección "inversores".</p>';
-      return;
-    }
-    const fmt = n => '$' + Math.round(n || 0).toLocaleString('es-AR');
-    const rows = clientes.map(c => `
-      <tr style="border-bottom:0.5px solid var(--border)">
-        <td style="padding:10px 14px;font-weight:500;color:var(--text)">${c.nombre || c.id}</td>
-        <td style="padding:10px 14px;color:var(--sub)">${c.id}</td>
-        <td style="padding:10px 14px;font-variant-numeric:tabular-nums;color:var(--text)">${fmt(c.capital)}</td>
-        <td style="padding:10px 14px;font-variant-numeric:tabular-nums;color:var(--text)">${(c.cuotapartes||0).toFixed(2)}</td>
-        <td style="padding:10px 14px;font-variant-numeric:tabular-nums" class="${(c.pnl||0)>=0?'up':'down'}">${(c.pnl||0)>=0?'+':''}${fmt(c.pnl)}</td>
-      </tr>`).join('');
-    wrap.innerHTML = `
-      <div class="portal-title">Panel de administrador</div>
-      <p style="color:var(--sub);font-size:13px;margin-bottom:20px">${clientes.length} inversores activos</p>
-      <div style="overflow:auto;background:var(--card);border:1px solid var(--border);border-radius:8px">
-        <table style="width:100%;border-collapse:collapse;font-size:13px">
-          <thead><tr style="border-bottom:1px solid var(--border)">
-            <th style="padding:11px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Nombre</th>
-            <th style="padding:11px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Email</th>
-            <th style="padding:11px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Capital</th>
-            <th style="padding:11px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Cuotapartes</th>
-            <th style="padding:11px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">PnL</th>
-          </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`;
   }
 
   function showHome() {
@@ -1713,7 +1648,7 @@ if (wl) wl.addEventListener('keydown', e => {
   if (e.key === 'Enter') { e.preventDefault(); if (window.waitlistPro) window.waitlistPro(); }
 });
 </script>
-<script type="module" src="fondo-live.js?v=24"></script>
+<script type="module" src="fondo-live.js?v=25"></script>
 
 <script src="nav-menu.js?v=13"></script>
 </body>

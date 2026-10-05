@@ -1,8 +1,8 @@
-﻿// fondo-live.js — Fondo Lautaro integrado en las secciones nativas del portal.
-// Diseño: estética de Lauti (crema / navy / dorado, Playfair Display + IBM Plex
-// Sans) en tema claro, con variante para el modo oscuro del sitio.
-// Modelo contable v2: fee inicial 10% s/aportes, fee 2% mensual s/ganancia,
-// ganancia de clientes contra CAPITAL NETO repartida por capital × días.
+// fondo-live.js — las tres pantallas de la administración que quedaron de la gestión vieja:
+// Señales, Análisis de cartera y Lector de informes. Las del fondo (Dashboard, Rendimientos,
+// Posiciones, Balance consolidado e Inversores) se sacaron el 05/10/2026 por pedido de Lauti:
+// el fondo es privado y no va mezclado con Valtia. Lo que sigue llegando del fondo es solo lo
+// que usa Análisis de cartera (fondoSync/latest y fondoAnalisis/latest).
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, getDoc, collection, query, orderBy, limit, getDocs,
          addDoc, serverTimestamp }
@@ -253,9 +253,8 @@ const curRango = () => {
   return !r || r === "Todo" ? "Máx" : r;
 };
 const reRender = () => {
-  if (lastPayload) renderAll(lastPayload.sync, lastPayload.sheet, lastPayload.news, lastPayload.mercado,
-    lastPayload.informes, lastPayload.radar, lastPayload.analisis, lastPayload.fondoWeb,
-    lastPayload.historial, lastPayload.intradia);
+  if (lastPayload) renderAll(lastPayload.sync, lastPayload.mercado, lastPayload.informes,
+    lastPayload.radar, lastPayload.analisis);
 };
 window.flSetCur = cur => { localStorage.setItem("fl-cur", cur); reRender(); };
 window.flSetRango = r => { localStorage.setItem("fl-rango", r); reRender(); };
@@ -401,319 +400,8 @@ window.flResizeCharts = () => {
   });
 };
 
-function renderAll(d, sheet, news, mercado, informes, radar, analisis, fondoWeb, historial, intradia) {
+function renderAll(d, mercado, informes, radar, analisis) {
   const c = compute(d);
-  const sh = sheet || {};
-  const clientes = sh.clientes || [];
-  const resumen = sh.resumen || {};
-  const snaps = sh.snapshots || [];
-  const movs = sh.movimientos || [];
-  const aportesBrutos = sh.aportes_brutos || {};
-  const ts = c.ts ? new Date(c.ts) : null;
-  const ageH = ts ? (Date.now() - ts.getTime()) / 36e5 : null;
-  const fresh = ageH != null && ageH <= 48;
-
-  const capNetoTot = rKey(resumen, "capital neto de clientes") ||
-                     clientes.reduce((s,x) => s + (Number(x.capital_neto)||0), 0);
-  const feePend = rKey(resumen, "fee gestor pendiente") || 0;
-  const patrimonioLive = c.total - feePend;
-  const ganLive = capNetoTot ? patrimonioLive - capNetoTot : null;
-  const rendLive = capNetoTot ? ganLive / capNetoTot : null;
-  const ganCorte = rKey(resumen, "ganancia de clientes");
-  const rendCorte = rKey(resumen, "rendimiento clientes");
-  const cclSheet = rKey(sh.params||{}, "ccl");
-  const corte = String((sh.params||{})["Fecha de corte"] || "").slice(0,10);
-  const pnlIol = c.activos.reduce((s,a) => s + a.pnl, 0);
-  const costoIol = c.activos.reduce((s,a) => s + (a.val - a.pnl), 0);
-
-  const blocks = BLOCK_DEFS.map(def => {
-    const row = (sh.bloques||[]).find(b => def.match.test(String(b.nombre||"")));
-    return { ...def, nombre: row ? row.nombre : def.fallback, tgt: row ? Number(row.pct) : 0 };
-  });
-
-  /* ── DASHBOARD 2a: datos derivados ── */
-  const cur = curCur();
-  const mny = n => cur === "USD" ? fmtUSD(n / c.fx) : fmtARS(n);
-  // evolución: cierres mensuales + historial diario (fondoHistorial) + hoy en
-  // vivo, cada punto convertido a USD con su propio FX; rango estilo Binance
-  const snapPtsE = snaps.filter(s => Number(s.total_ars) > 0);
-  const hoyISO = new Date().toISOString().slice(0, 10);
-  const evoMapa = new Map();
-  snapPtsE.forEach(s => evoMapa.set(String(s.cierre), { f: String(s.cierre),
-    t: Number(s.total_ars), fx: Number(s.ccl) || c.fx }));
-  (historial || []).forEach(h => { if (Number(h.total_ars) > 0)
-    evoMapa.set(String(h.fecha), { f: String(h.fecha), t: Number(h.total_ars), fx: Number(h.fx) || c.fx }); });
-  evoMapa.set(hoyISO, { f: hoyISO, t: c.total, fx: c.fx, hoy: true });
-  let evoSerie = [...evoMapa.values()].sort((a, b) => a.f.localeCompare(b.f));
-  const rango = curRango();
-  if (RANGOS[rango]) {
-    const desde = new Date(Date.now() - RANGOS[rango] * 864e5).toISOString().slice(0, 10);
-    evoSerie = evoSerie.filter(p => p.f >= desde);
-  }
-  let evoPts;
-  if (rango === "1D") {
-    // intradía: puntos cada ~15' de fondoIntradia + valuación en vivo
-    evoPts = ((intradia && intradia.puntos) || []).map(p => ({ label: p.h,
-      v: cur === "USD" ? p.t / (p.fx || c.fx) : p.t }))
-      .concat([{ label: "ahora", v: cur === "USD" ? c.total / c.fx : c.total }]);
-  } else {
-    evoPts = evoSerie.map(p => ({ label: p.hoy ? "hoy" : p.f.slice(8, 10) + "/" + p.f.slice(5, 7),
-      v: cur === "USD" ? p.t / (p.fx || c.fx) : p.t }));
-  }
-  const evoDelta = evoPts.length > 1 ? (evoPts[evoPts.length - 1].v / evoPts[0].v - 1) * 100 : null;
-  const evoDeltaTxt = rango === "Máx" ? "desde el inicio del fondo"
-    : rango === "1D" ? "hoy" : rango === "1S" ? "en la última semana" : "en " + rango;
-  // principales posiciones: IOL + agregados de Binance, ordenadas por valor
-  const topPos = c.activos.map(a => {
-      const b = blocks.find(x => x.key === a.blk) || {};
-      return { sim: a.sim, bloque: b.nombre || "", slot: b.slot || "--flS1",
-        cant: a.cant ? a.cant.toLocaleString("es-AR") : "—",
-        ult: a.ult ? fmtARS(a.ult) : "—", val: a.val, pnl: a.pnlPct };
-    })
-    .concat([
-      { sim: "BTC · Earn", bloque: "Crypto (Binance)", slot: "--flS3",
-        cant: c.ebtcQty ? c.ebtcQty.toFixed(6) : "—", ult: c.btcP ? fmtUSD(c.btcP) : "—",
-        val: c.ebtcUsd * c.fx, pnl: null },
-      { sim: "USDT · Futuros + Earn", bloque: "Crypto (Binance)", slot: "--flS3",
-        cant: "—", ult: "US$1,00", val: (c.fut + c.eusdt + c.upnl) * c.fx, pnl: null },
-    ])
-    .sort((a, b) => b.val - a.val).slice(0, 6);
-  // flujo mensual (aportes vs devoluciones/fees) desde MOVIMIENTOS
-  const fj = flujoMensual(movs);
-  const flujo = fj.bars;
-  const flMax = Math.max(...flujo.map(f => Math.abs(f.net)), 1);
-  const apTot = fj.aportes, reTot = fj.salidas;
-
-  // retiros por cliente + cuenta del gestor (detalle del ledger)
-  const devRows = Object.entries(sh.devoluciones_detalle || {})
-    .flatMap(([nom, ds]) => (ds||[]).map(d => ({ nom, fecha: d.fecha, monto: Number(d.monto)||0 })))
-    .sort((x, y) => String(x.fecha||"").localeCompare(String(y.fecha||"")));
-  const devTot = devRows.reduce((s, d) => s + d.monto, 0);
-  const g = sh.gestor || {};
-  const g10 = Number(rKey(g, "fee 10")) || 0, g2 = Number(rKey(g, "fee 2")) || 0;
-  const gDev = Number(rKey(g, "total devengado")) || (g10 + g2);
-  const gCob = Math.abs(Number(rKey(g, "cobrado")) || 0);
-  const gSaldo = rKey(g, "saldo") != null ? Number(rKey(g, "saldo")) : gDev - gCob;
-  const gPctCob = gDev ? Math.min(100, gCob / gDev * 100) : 0;
-  // objetivos por bloque (composición card)
-  const objMax = Math.max(...blocks.map(b => Math.max(c.blk[b.key] / c.total, b.tgt))) * 1.15;
-
-  const newsHtml = news.length ? news.map(n => {
-    const f = n.fecha && n.fecha.toDate ? n.fecha.toDate().toLocaleString("es-AR") : (n.fecha || "");
-    return `<div class="card"><div class="m">${f}${n.fuente ? " · " + n.fuente : ""}</div>
-      <h5>${n.titulo || "Briefing"}</h5>
-      <p>${n.contenido || n.resumen || ""}</p></div>`;
-  }).join("") : `<div class="card"><p class="fl-mut">Sin briefings todavía — la tarea diaria de Cowork los deja en la página Notion "Noticias Fondo" y aparecen acá.</p></div>`;
-
-  document.getElementById("tab-dashboard").innerHTML = `<div class="flx">
-    <div class="fl-head">
-      <div>
-        <div class="portal-title" style="margin-bottom:0">Fondo Lautaro</div>
-        <div class="fl-meta" style="margin:6px 0 0">Sync ${ts ? ts.toLocaleString("es-AR") : "—"} · FX implícito ${c.fx.toLocaleString("es-AR")}${cclSheet ? " · CCL ref. " + Number(cclSheet).toLocaleString("es-AR") : ""}${corte ? " · corte contable " + corte : ""}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span class="fl-status"><span class="fl-dot${fresh?"":" warn"}"></span>${fresh ? "Telemetría al día" : "Datos desactualizados"}</span>
-        ${mercado && mercado.regimen ? `<span class="fl-status" style="cursor:pointer" onclick="flGo('senales')" title="Ver señales del sistema">
-          <span class="fl-dot" style="background:${mercado.regimen.estado==="RISK ON"?"#4ade80":mercado.regimen.estado==="NEUTRAL"?"#facc15":"#f87171"};box-shadow:none"></span>
-          ${mercado.regimen.estado} · cash ${(mercado.regimen.cash_recomendado*100).toFixed(0)}%</span>` : ""}
-        <span class="fl-cur">
-          <button class="${cur==="ARS"?"on":""}" onclick="flSetCur('ARS')">ARS</button>
-          <button class="${cur==="USD"?"on":""}" onclick="flSetCur('USD')">USD</button>
-        </span>
-      </div>
-    </div>
-    <div style="height:14px"></div>
-    ${!fresh && ts ? `<div class="fl-strip"><b>Datos viejos:</b> el último sync es de hace ${Math.round(ageH/24)} días. Revisá la tarea programada de la PC (fondo_sync.py).</div>` : ""}
-    <div class="fl-kpis">
-      <div class="fl-kpi" style="--fla:var(--flGold)"><div class="l">Valor total del fondo</div>
-        <div class="v mono">${mny(c.total)}</div><div class="s mono">${cur==="USD"?fmtARS(c.total):fmtUSD(c.total/c.fx)} @ FX ${c.fx.toLocaleString("es-AR")}</div></div>
-      ${ganLive != null ? `<div class="fl-kpi" style="--fla:${ganLive>=0?"var(--flGood)":"var(--flCrit)"}"><div class="l">Ganancia clientes · MTM</div>
-        <div class="v mono ${cls(ganLive)}">${ganLive>=0?"+":""}${mny(ganLive)}</div>
-        <div class="s mono">${pill(rendLive*100, fmtPct(rendLive*100))} s/capital neto${ganCorte!=null?`<br>Al corte ${corte}: <span class="${cls(ganCorte)}">${ganCorte>=0?"+":""}${mny(ganCorte)}${rendCorte!=null?" ("+fmtPct(rendCorte*100)+")":""}</span>`:""}</div></div>` : ""}
-      <div class="fl-kpi" style="--fla:var(--flS1)"><div class="l">IOL · Argentina</div>
-        <div class="v mono">${mny(c.iolTotal)}</div>
-        <div class="s mono">${(c.iolTotal/c.total*100).toFixed(1)}% del fondo · P&L pos. <span class="${cls(pnlIol)}">${pnlIol>=0?"+":""}${mny(pnlIol)} (${fmtPct(costoIol?pnlIol/costoIol*100:0)})</span></div></div>
-      <div class="fl-kpi" style="--fla:var(--flS3)"><div class="l">Binance · Crypto</div>
-        <div class="v mono">${mny(c.binTotal)}</div>
-        <div class="s mono">${cur==="USD"?fmtARS(c.binTotal):fmtUSD(c.binTotalUSD)} · ${(c.binTotal/c.total*100).toFixed(1)}% del fondo</div></div>
-      <div class="fl-kpi" style="--fla:${c.upnl>=0?"var(--flGood)":"var(--flCrit)"}"><div class="l">uPnL futuros · live</div>
-        <div class="v mono ${cls(c.upnl)}">${mny(c.upnl*c.fx)}</div>
-        <div class="s mono">${cur==="USD"?fmtARS(c.upnl*c.fx):fmtUSD(c.upnl)} · ${c.open.length} posición${c.open.length===1?"":"es"} abierta${c.open.length===1?"":"s"}</div></div>
-      ${feePend ? `<div class="fl-kpi" style="--fla:var(--flS2)"><div class="l">Fee gestor pendiente</div>
-        <div class="v mono">${mny(feePend)}</div>
-        <div class="s">10% inicial s/aportes + 2% mensual s/ganancia</div></div>` : ""}
-    </div>
-
-    <div class="fl-dashrow">
-      <div class="fl-panel fl-pad" style="min-width:0">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-          <h4 class="fl-h4" style="margin:0">Evolución del valor del fondo</h4>
-          <span class="fl-cur fl-rango">${["1D","1S","1M","3M","6M","1A","5A","Máx"].map(r =>
-            `<button class="${rango===r?"on":""}" onclick="flSetRango('${r}')">${r}</button>`).join("")}</span>
-        </div>
-        <div class="fl-evohead"><span class="big">${mny(c.total)}</span>${evoDelta!=null?pill(evoDelta, fmtPct(evoDelta) + " " + evoDeltaTxt):""}</div>
-        <div class="fl-evochart"><canvas id="flChEvo"></canvas></div>
-        <div class="fl-foot" style="border-top:none;padding:8px 0 0">Historia desde el nacimiento del fondo (18/05, reconstruida de cierres y flujos hasta el 30/07) · un punto real por día desde ahora · 1D = intradía cada 15'.</div>
-      </div>
-      <div class="fl-panel fl-pad" style="min-width:0">
-        <h4 class="fl-h4">Composición real del fondo</h4>
-        <div class="fl-donutwrap"><canvas id="flChSplit"></canvas>
-          <div class="fl-dcenter"><div class="big">${cur==="USD"?fmtUSD(c.total/c.fx):fmtM(c.total)}</div><div class="sm">${blocks.length} bloques</div></div></div>
-        <div class="fl-leg">${blocks.map(b => `<div class="row" style="--flc:var(${b.slot})">
-          <span class="nm"><span class="sq"></span>${b.nombre}</span>
-          <span class="pc">${(c.blk[b.key]/c.total*100).toFixed(1)}%</span></div>`).join("")}</div>
-        <div class="fl-objs">${blocks.map(b => {
-          const rp = c.blk[b.key]/c.total, dev = (rp - b.tgt) * 100;
-          return `<div class="fl-obj" style="--flc:var(${b.slot})">
-            <div class="hd"><span class="n">${b.nombre.split("/")[0].trim()} <i>· obj ${(b.tgt*100).toFixed(0)}%</i></span>
-              <span class="${cls(dev)}" style="font-weight:600;font-size:10px">${dev>=0?"▲":"▼"} ${Math.abs(dev).toFixed(1)}</span></div>
-            <div class="bar"><div class="fill" style="width:${(rp/objMax*100).toFixed(1)}%"></div>
-              <div class="tick" style="left:${(b.tgt/objMax*100).toFixed(1)}%"></div></div></div>`;
-        }).join("")}</div>
-      </div>
-    </div>
-
-    <div class="fl-dashrow2">
-      <div class="fl-panel fl-pad" style="min-width:0">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <h4 class="fl-h4" style="margin:0">Principales posiciones</h4>
-          <span class="fl-link" onclick="flGo('movimientos')">Ver todas →</span>
-        </div>
-        <table class="fl-mini-tbl">
-          <thead><tr><th>Activo</th><th>Bloque</th><th class="fl-num">Cant.</th><th class="fl-num">Último</th><th class="fl-num">Valor</th><th class="fl-num">P&L</th></tr></thead>
-          <tbody>${topPos.map(p => `<tr>
-            <td style="font-weight:600">${p.sim}</td>
-            <td style="color:var(--flMut)"><span class="fl-chip" style="--flc:var(${p.slot})"></span>${p.bloque.split("/")[0].trim()}</td>
-            <td class="fl-num">${p.cant}</td><td class="fl-num">${p.ult}</td>
-            <td class="fl-num" style="font-weight:600">${mny(p.val)}</td>
-            <td class="fl-num ${p.pnl!=null?cls(p.pnl):"fl-mut"}" style="font-weight:600">${p.pnl!=null?fmtPct(p.pnl):"—"}</td></tr>`).join("")}</tbody>
-        </table>
-      </div>
-      <div class="fl-panel fl-pad" style="min-width:0">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <h4 class="fl-h4" style="margin:0">Flujo neto mensual</h4>
-          <span class="${cls(apTot-reTot)}" style="font-weight:600;font-size:11px">${apTot-reTot>=0?"+":""}${fmtM(apTot-reTot)}</span>
-        </div>
-        ${flujo.length ? `<div class="fl-flowbars">${flujo.map(f => `<div class="fl-fbar" title="${f.label}: ${f.net>=0?"+":""}${fmtM(f.net)}"
-            style="height:${Math.max(4, Math.abs(f.net)/flMax*100).toFixed(0)}%;background:var(${f.net>=0?"--flGold":"--flS6"});opacity:${f.net>=0?".9":".75"}"></div>`).join("")}</div>
-        <div class="fl-fxlbl">${flujo.map(f => `<span>${f.label}</span>`).join("")}</div>` :
-        `<div class="fl-foot" style="border-top:none;padding:20px 0">Sin movimientos externos registrados todavía.</div>`}
-        <div class="fl-flowfoot">
-          <div><div class="l">Aportes</div><div class="v ${apTot?"fl-pos":"fl-mut"}">${apTot?"+"+fmtM(apTot):"$0"}</div></div>
-          <div><div class="l">Salidas · fees</div><div class="v ${reTot?"fl-neg":"fl-mut"}">${reTot?"−"+fmtM(reTot):"$0"}</div></div>
-          <div><div class="l">Flujo neto</div><div class="v" style="color:var(--flInk)">${apTot-reTot>=0?"+":""}${fmtM(apTot-reTot)}</div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="fl-dashrow2">
-      <div class="fl-panel fl-pad" style="min-width:0">
-        <h4 class="fl-h4">Retiros y devoluciones</h4>
-        ${devRows.length ? `<table class="fl-mini-tbl">
-          <thead><tr><th>Cliente</th><th>Fecha</th><th class="fl-num">Monto</th></tr></thead>
-          <tbody>${devRows.map(d => `<tr>
-            <td style="font-weight:600">${d.nom}</td>
-            <td style="color:var(--flMut)">${d.fecha||"—"}</td>
-            <td class="fl-num fl-neg" style="font-weight:600">−${mny(d.monto)}</td></tr>`).join("")}
-          <tr><td style="font-weight:700">Total devuelto</td><td></td>
-            <td class="fl-num fl-neg" style="font-weight:700">−${mny(devTot)}</td></tr></tbody>
-        </table>` : `<div class="fl-foot" style="border-top:none">Sin retiros registrados todavía.</div>`}
-        <div class="fl-foot">Devoluciones de capital por cliente, ya descontadas de su capital neto.</div>
-      </div>
-      <div class="fl-panel fl-pad" style="min-width:0">
-        <h4 class="fl-h4">Tu cuenta de gestor</h4>
-        <table class="fl-mini-tbl"><tbody>
-          <tr><td>Fee 10% s/aportes (devengado)</td><td class="fl-num" style="font-weight:600">${mny(g10)}</td></tr>
-          <tr><td>Fee 2% s/ganancia mensual</td><td class="fl-num" style="font-weight:600">${g2?mny(g2):"$0"}</td></tr>
-          <tr><td style="font-weight:700">Total devengado</td><td class="fl-num" style="font-weight:700">${mny(gDev)}</td></tr>
-          ${(sh.gestor_detalle||[]).map(x => `<tr>
-            <td style="color:var(--flMut)">${String(x.detalle||"Cobro").replace(/^\(-\)\s*/,"")}</td>
-            <td class="fl-num fl-neg">−${mny(Math.abs(Number(x.monto)||0))}</td></tr>`).join("")}
-          <tr><td style="font-weight:700">Saldo pendiente de cobro</td>
-            <td class="fl-num" style="font-weight:700;color:var(--flGold)">${mny(gSaldo)}</td></tr>
-        </tbody></table>
-        <div style="height:6px;border-radius:3px;background:var(--flLine);margin:12px 0 6px;overflow:hidden">
-          <div style="height:100%;width:${gPctCob.toFixed(1)}%;background:var(--flGold)"></div></div>
-        <div class="fl-foot" style="border-top:none;padding-top:0">Ya cobraste el ${gPctCob.toFixed(0)}% de lo devengado (${mny(gCob)} de ${mny(gDev)}).</div>
-      </div>
-    </div>
-
-    <div class="fl-sec">Briefing del día · Cowork</div>
-    <div class="fl-news">${newsHtml}</div></div>`;
-
-  /* ── RENDIMIENTOS: cierres mensuales (SNAPSHOTS) ── */
-  const snapRows = snaps.map(s => `<tr><td><b>${s.cierre}</b></td>
-    <td class="fl-num">${s.total_ars?fmtARS(s.total_ars):"—"}</td>
-    <td class="fl-num ${cls(Number(s.ganancia_mes)||0)}">${s.ganancia_mes!=null?fmtARS(s.ganancia_mes):"—"}</td>
-    <td class="fl-num">${s.fee?fmtARS(s.fee):"—"}</td>
-    <td class="fl-num">${s.iol_ars?fmtARS(s.iol_ars):"—"}</td>
-    <td class="fl-num">${s.binance_usd?fmtUSD(s.binance_usd):"—"}</td>
-    <td class="fl-num">${s.ccl?Number(s.ccl).toLocaleString("es-AR"):"—"}</td></tr>`).join("");
-  document.getElementById("tab-rendimientos").innerHTML = `<div class="flx">
-    <div class="portal-title">Rendimientos del fondo</div>
-    <div class="fl-meta">Cierres de mes de la contabilidad · base del fee 2% sobre ganancia${ganLive!=null?` · ganancia actual de clientes ${fmtPct(rendLive*100)}`:""}</div>
-    <div class="fl-grid2">
-      <div class="fl-panel"><table>
-        <thead><tr><th>Cierre</th><th class="fl-num">Total ARS</th><th class="fl-num">Ganancia mes</th><th class="fl-num">Fee 2%</th><th class="fl-num">IOL ARS</th><th class="fl-num">Binance USD</th><th class="fl-num">CCL</th></tr></thead>
-        <tbody>${snapRows || '<tr><td colspan="7" class="fl-mut" style="text-align:center">Sin cierres cargados todavía</td></tr>'}</tbody></table>
-        <div class="fl-foot">El fee 2% se cobra solo en meses con ganancia (julio cerró en pérdida → fee $0). El cierre corre solo el 1° de cada mes.</div></div>
-      <div class="fl-chart"><h4>Valor del fondo (ARS) por cierre</h4><div class="inner"><canvas id="flChHist"></canvas></div></div>
-    </div></div>`;
-
-  /* ── POSICIONES (tab movimientos) ── */
-  const rows = c.activos.map(a => {
-    const b = blocks.find(x => x.key === a.blk);
-    return `<tr><td class="mono"><b>${a.sim}</b></td>
-      <td><span class="fl-chip" style="--flc:var(${b.slot})"></span><span class="fl-tag">${a.tipo}</span></td>
-      <td class="fl-num">${a.cant || "—"}</td><td class="fl-num">${a.ppc ? fmtARS(a.ppc) : "—"}</td>
-      <td class="fl-num">${a.ult ? fmtARS(a.ult) : "—"}</td><td class="fl-num">${fmtARS(a.val)}</td>
-      <td class="fl-num ${cls(a.pnl)}">${a.pnl>=0?"+":""}${fmtARS(a.pnl)} ${pill(a.pnlPct, fmtPct(a.pnlPct))}</td></tr>`;
-  }).join("");
-  const openRows = c.open.length ? c.open.map(p => {
-    const u = Number(p.unRealizedProfit)||0, mark = Number(p.markPrice)||0, liq = Number(p.liquidationPrice)||0;
-    const dLiq = mark && liq ? Math.abs(liq - mark) / mark * 100 : null;
-    const liqWarn = dLiq != null && dLiq < 15;
-    return `<tr><td><b>${p.symbol}</b> <span class="fl-tag">${Number(p.positionAmt)<0?"Short":"Long"} ${p.leverage}x</span></td>
-      <td class="fl-num">${p.positionAmt}</td>
-      <td class="fl-num">${fmtUSD(Number(p.entryPrice)||0)}</td><td class="fl-num">${fmtUSD(mark)}</td>
-      <td class="fl-num ${cls(u)}">${fmtUSD(u)}</td>
-      <td class="fl-num ${liqWarn?"fl-neg":""}">${fmtUSD(liq)}${dLiq!=null?` <span class="fl-pill ${liqWarn?"n":"m"}">${liqWarn?"⚠ ":""}${dLiq.toFixed(1)}%</span>`:""}</td>
-      <td class="fl-num" style="color:var(--flInk2)">${p.marginType||""}</td></tr>`;
-  }).join("") : `<tr><td colspan="7" class="fl-mut" style="text-align:center">Sin posiciones abiertas de futuros</td></tr>`;
-  const movRows = movs.slice().reverse().map(m => `<tr>
-    <td style="white-space:nowrap">${m.fecha}</td><td><span class="fl-tag">${m.tipo}</span></td>
-    <td style="color:var(--flInk2)">${m.detalle||""}</td>
-    <td class="fl-num ${m.ars!=null?cls(m.ars):""}">${m.ars!=null?(m.ars>=0?"+":"")+fmtARS(m.ars):"—"}</td>
-    <td class="fl-num">${m.usd!=null?fmtUSD(m.usd):"—"}</td></tr>`).join("");
-  document.getElementById("tab-movimientos").innerHTML = `<div class="flx">
-    <div class="portal-title">Posiciones</div>
-    <div class="fl-meta">IOL + Binance al último sync · ${ts ? ts.toLocaleString("es-AR") : "—"}</div>
-    <div class="fl-sec">IOL · P&L sobre costo</div>
-    <div class="fl-panel"><table>
-      <thead><tr><th>Activo</th><th>Bloque / tipo</th><th class="fl-num">Cant.</th><th class="fl-num">PPC</th><th class="fl-num">Último</th><th class="fl-num">Valorizado</th><th class="fl-num">P&L</th></tr></thead>
-      <tbody>${rows}</tbody></table></div>
-    <div class="fl-sec">Binance · futuros y earn</div>
-    <div class="fl-grid2">
-      <div class="fl-panel"><table>
-        <thead><tr><th>Posición</th><th class="fl-num">Cant.</th><th class="fl-num">Entry</th><th class="fl-num">Mark</th><th class="fl-num">uPnL</th><th class="fl-num">Liq. (dist.)</th><th class="fl-num">Margen</th></tr></thead>
-        <tbody>${openRows}</tbody></table>
-      <table style="border-top:1px solid var(--flLine2)">
-        <thead><tr><th>Componente</th><th class="fl-num">USD</th><th class="fl-num">ARS</th></tr></thead>
-        <tbody>
-        <tr><td>Futuros (wallet)</td><td class="fl-num">${fmtUSD(c.fut)}</td><td class="fl-num">${fmtARS(c.fut*c.fx)}</td></tr>
-        <tr><td>PnL no realizado</td><td class="fl-num ${cls(c.upnl)}">${fmtUSD(c.upnl)}</td><td class="fl-num ${cls(c.upnl)}">${fmtARS(c.upnl*c.fx)}</td></tr>
-        <tr><td>Earn BTC (${c.ebtcQty.toFixed(8)} ₿${c.btcP ? " @ " + fmtUSD(c.btcP) : ""})</td><td class="fl-num">${fmtUSD(c.ebtcUsd)}</td><td class="fl-num">${fmtARS(c.ebtcUsd*c.fx)}</td></tr>
-        <tr><td>Earn USDT</td><td class="fl-num">${fmtUSD(c.eusdt)}</td><td class="fl-num">${fmtARS(c.eusdt*c.fx)}</td></tr>
-        <tr class="tot"><td>Total Binance</td><td class="fl-num">${fmtUSD(c.binTotalUSD)}</td><td class="fl-num">${fmtARS(c.binTotal)}</td></tr>
-        </tbody></table></div>
-      <div class="fl-chart"><h4>Composición Binance (USD)</h4><div class="inner"><canvas id="flChBin"></canvas></div></div>
-    </div>
-    ${movRows ? `<div class="fl-sec">Últimos movimientos del fondo</div>
-    <div class="fl-panel"><table>
-      <thead><tr><th>Fecha</th><th>Tipo</th><th>Detalle</th><th class="fl-num">ARS</th><th class="fl-num">USD</th></tr></thead>
-      <tbody>${movRows}</tbody></table>
-      <div class="fl-foot">Registro contable del fondo (últimos ${movs.length} movimientos).</div></div>` : ""}</div>`;
-
   /* ── SEÑALES: sistema dinámico de rotación ── */
   const tabSen = document.getElementById("tab-senales");
   if (tabSen && mercado && mercado.senales) {
@@ -823,126 +511,11 @@ function renderAll(d, sheet, news, mercado, informes, radar, analisis, fondoWeb,
   _informes = informes || [];
   flRenderInformesList();
 
-  /* ── ADMIN: clientes del fondo + registro de eventos ── */
-  if (clientes.length) {
-    const cliRows = clientes.map(x => {
-      const neto = Number(x.capital_neto)||0, pct = Number(x.pct)||0;
-      const gan = ganLive != null ? ganLive * pct : (Number(x.ganancia)||0);
-      const valor = neto + gan;
-      const ret = neto ? gan / neto * 100 : 0;
-      return `<tr><td><b>${x.nombre}</b>${x.devoluciones?` <span class="fl-tag">Devol. ${fmtARS(x.devoluciones)}</span>`:""}</td>
-        <td class="fl-num">${fmtARS(aportesBrutos[x.nombre]||0)}</td>
-        <td class="fl-num">${fmtARS(neto)}</td>
-        <td class="fl-num">${(pct*100).toFixed(1)}%</td>
-        <td class="fl-num">${fmtARS(valor)}</td>
-        <td class="fl-num ${cls(gan)}">${gan>=0?"+":""}${fmtARS(gan)}</td>
-        <td class="fl-num">${pill(ret, fmtPct(ret))}</td></tr>`;
-    }).join("");
-    const adminTab = document.getElementById("tab-admin");
-    const old = adminTab.querySelector("#fl-clientes");
-    if (old) old.remove();
-    adminTab.insertAdjacentHTML("afterbegin", `<div id="fl-clientes" class="flx">
-      <div class="fl-sec" style="margin-top:6px">Clientes del fondo · valor y ganancia en vivo</div>
-      <div class="fl-panel" style="margin-bottom:22px"><table>
-        <thead><tr><th>Cliente</th><th class="fl-num">Aporte bruto</th><th class="fl-num">Capital neto</th><th class="fl-num">Partic.</th><th class="fl-num">Valor hoy</th><th class="fl-num">Ganancia</th><th class="fl-num">Rendimiento</th></tr></thead>
-        <tbody>${cliRows}
-        <tr class="tot"><td>TOTAL</td>
-          <td class="fl-num">${fmtARS(Object.values(aportesBrutos).reduce((s,v)=>s+v,0))}</td>
-          <td class="fl-num">${fmtARS(capNetoTot)}</td><td class="fl-num">100%</td>
-          <td class="fl-num">${fmtARS(patrimonioLive)}</td>
-          <td class="fl-num ${cls(ganLive)}">${ganLive>=0?"+":""}${fmtARS(ganLive)}</td>
-          <td class="fl-num">${pill(rendLive*100, fmtPct(rendLive*100))}</td></tr></tbody></table>
-        <div class="fl-foot">Capital neto = aportes − fee inicial 10% − devoluciones. Ganancia en vivo = (valor del fondo − fee gestor pendiente) − capital neto, repartida por participación (capital × días). <b>Mark-to-market:</b> incluye el uPnL de futuros y usa FX implícito — puede diferir del balance del sheet (Binance por wallet y CCL ${cclSheet ? Number(cclSheet).toLocaleString("es-AR") : "de referencia"}).${ganCorte!=null?` Al corte ${corte}: ${ganCorte>=0?"+":""}${fmtARS(ganCorte)} (${rendCorte!=null?fmtPct(rendCorte*100):"—"}).`:""} ${sh.nota_clientes||""}</div>
-      </div>
-      <div class="fl-sec">Registrar aporte / retiro</div>
-      <div class="fl-panel" style="margin-bottom:22px;overflow:visible">
-        <div class="fl-form">
-          <div class="fg"><label>Tipo</label>
-            <select id="fl-ev-tipo" class="fl-input">
-              <option>Aporte</option>
-              <option>Retiro / Devolución</option>
-            </select></div>
-          <div class="fg"><label>Cliente</label>
-            <input id="fl-ev-cliente" class="fl-input" list="fl-ev-clientes" placeholder="Nombre">
-            <datalist id="fl-ev-clientes">${clientes.map(x=>`<option value="${x.nombre}">`).join("")}</datalist></div>
-          <div class="fg"><label>Monto ARS</label>
-            <input id="fl-ev-monto" class="fl-input" type="number" min="1" step="any" placeholder="0"></div>
-          <div class="fg"><label>Fecha</label>
-            <input id="fl-ev-fecha" class="fl-input" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
-          <div class="fg"><label>Nota (opcional)</label>
-            <input id="fl-ev-nota" class="fl-input" placeholder="Ej. transferencia Galicia"></div>
-          <div class="fg"><button class="fl-btn" id="fl-ev-btn" onclick="flRegistrarEvento()">Registrar</button></div>
-        </div>
-        <div class="fl-ev-msg" id="fl-ev-msg"></div>
-        <div class="fl-foot">El evento queda <b>pendiente</b> y el sync diario (9:00, o corré <code>run_sync.bat</code>) lo aplica a la contabilidad del fondo: los aportes descuentan el fee 10% y recalculan las participaciones, los retiros suman a devoluciones, y todo queda logueado en Movimientos. Ya no depende del sheet.</div>
-      </div>
-      <div class="fl-sec">Eventos registrados</div>
-      <div class="fl-panel" id="fl-eventos" style="margin-bottom:22px"><div class="fl-foot" style="border-top:none">Cargando…</div></div>
-      </div>`);
-    flLoadEventos();
-  }
-
-  /* ── charts (colores resueltos del tema activo) ── */
+  /* ── gráficos: se limpian los que hubiera (al cambiar de tema se redibuja todo) y
+        quedan los valores por defecto de Chart.js con los colores del tema activo ── */
   charts.forEach(ch => ch.destroy()); charts = [];
-  const panelBg = flTok("--flPanel"), inkSub = flTok("--flInk2"), lineC = flTok("--flLine") || "rgba(0,0,0,.08)";
-  const gold = flTok("--flGold");
-  const blockColors = blocks.map(b => flTok(b.slot));
-  Chart.defaults.color = inkSub;
+  Chart.defaults.color = flTok("--flInk2");
   Chart.defaults.font.family = "'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif";
-  const legend = { position:"bottom", labels:{ boxWidth:10, boxHeight:10, font:{size:10}, color:inkSub, padding:12 } };
-  // donut de composición (leyenda propia en la card, centro con el total)
-  chart("flChSplit", { type:"doughnut",
-    data:{ labels: blocks.map(b=>b.nombre), datasets:[{ data: blocks.map(b=>c.blk[b.key]),
-      backgroundColor: blockColors, borderColor:panelBg, borderWidth:2 }] },
-    options:{ responsive:true, maintainAspectRatio:false, cutout:"66%", plugins:{ legend:{ display:false } } } });
-  // evolución del valor del fondo (cierres + hoy)
-  if (evoPts.length && document.getElementById("flChEvo")) {
-    chart("flChEvo", { type:"line",
-      data:{ labels: evoPts.map(p=>p.label),
-        datasets:[{ label:"Fondo", data: evoPts.map(p=>p.v), borderColor:gold,
-          backgroundColor:"rgba(176,138,62,.13)", fill:true, borderWidth:2,
-          pointRadius: evoPts.length < 20 ? 4 : 0, pointBackgroundColor:gold, tension:.3 }] },
-      options:{ responsive:true, maintainAspectRatio:false,
-        interaction:{ mode:"index", intersect:false },
-        plugins:{ legend:{ display:false } },
-        scales:{ y:{ grid:{ color:lineC }, ticks:{ color:inkSub, font:{size:10},
-                  callback:v => cur==="USD" ? "US$"+(Number(v)/1e3).toLocaleString("es-AR")+"k" : "$"+(Number(v)/1e6).toLocaleString("es-AR")+"M" } },
-                 x:{ grid:{ display:false }, ticks:{ color:inkSub, font:{size:10} } } } } });
-  }
-  chart("flChBin", { type:"doughnut",
-    data:{ labels:["Futuros","PnL no real.","Earn BTC","Earn USDT"],
-      datasets:[{ data:[c.fut,c.upnl,c.ebtcUsd,c.eusdt].map(v=>Math.abs(v)),
-      backgroundColor:[flTok("--flS1"), flTok("--flS2"), flTok("--flS3"), flTok("--flS5")],
-      borderColor:panelBg, borderWidth:2 }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend } } });
-  const snapPts = snaps.filter(s => Number(s.total_ars) > 0);
-  if (snapPts.length) {
-    chart("flChHist", { type:"line",
-      data:{ labels: snapPts.map(s=>s.cierre),
-        datasets:[{ data: snapPts.map(s=>Number(s.total_ars)), borderColor:gold,
-          backgroundColor:"rgba(176,138,62,.14)", fill:true, borderWidth:2,
-          pointRadius:4, pointBackgroundColor:gold, tension:.25 }] },
-      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } },
-        scales:{ y:{ grid:{ color:lineC }, ticks:{ color:inkSub, font:{size:10.5}, callback:v=>"$"+(Number(v)/1e6).toLocaleString("es-AR")+"M" } },
-                 x:{ grid:{ display:false }, ticks:{ color:inkSub, font:{size:10.5} } } } } });
-  }
-
-  /* ── FONDO: balance consolidado (fondo_web.json → fondoWeb/latest).
-        Va DESPUÉS de la sección de charts: renderAll destruye todos los
-        charts ahí arriba (línea "charts.forEach(destroy)"), así que crear
-        el del fondo antes lo mataba en silencio. ── */
-  const tabFondo = document.getElementById("tab-fondo");
-  if (tabFondo && fondoWeb && fondoWeb.json) {
-    try { renderFondo(tabFondo, JSON.parse(fondoWeb.json), c); }
-    catch (e) { tabFondo.innerHTML = `<div class="flx"><div class="portal-title">Fondo</div><div class="fl-strip">No pude leer el balance: ${String(e).slice(0, 120)}</div></div>`; }
-  } else if (tabFondo && !fondoWeb) {
-    tabFondo.innerHTML = `<div class="flx"><div class="portal-title">Fondo</div>
-      <div class="fl-strip">Sin balance consolidado — corré <code>python seed_fondo_web.py</code> con el fondo_web.json más nuevo.</div></div>`;
-  }
-
-  // pestaña "Movimientos" pasa a llamarse "Posiciones" para el admin
-  const movLink = [...document.querySelectorAll(".portal-nav a")].find(a => a.textContent.trim() === "Movimientos");
-  if (movLink) movLink.textContent = "Posiciones";
 }
 
 /* ── informes: lista + lector dentro del portal ── */
@@ -997,145 +570,8 @@ window.flLeerInforme = async function(id) {
   }
 };
 
-/* ── eventos: registrar y listar aportes/retiros ── */
+/* ── la base de la sesión: la usa el lector de informes ── */
 let _db = null;
-const EV_ESTADOS = { pendiente:["m","Pendiente de sync"], aplicado:["p","Aplicado"],
-                     aplicado_manual:["p","Aplicado a mano"],
-                     revisar_manual:["n","Revisar a mano"], error:["n","Error al aplicar"] };
-
-window.flRegistrarEvento = async function() {
-  const msg = document.getElementById("fl-ev-msg");
-  const btn = document.getElementById("fl-ev-btn");
-  const tipo = document.getElementById("fl-ev-tipo").value;
-  const cliente = document.getElementById("fl-ev-cliente").value.trim();
-  const monto = Number(document.getElementById("fl-ev-monto").value);
-  const fecha = document.getElementById("fl-ev-fecha").value;
-  const nota = document.getElementById("fl-ev-nota").value.trim();
-  const say = (t, ok) => { msg.innerHTML = `<span class="${ok?"fl-pos":"fl-neg"}">${t}</span>`; };
-  if (!cliente) return say("Completá el nombre del cliente.");
-  if (!monto || monto <= 0) return say("El monto tiene que ser mayor a cero.");
-  if (!fecha) return say("Elegí la fecha del movimiento.");
-  if (!_db) return say("Modo dev: el registro solo funciona en producción.");
-  btn.disabled = true;
-  try {
-    await addDoc(collection(_db, "fondoEventos"), {
-      tipo, cliente, monto_ars: monto, fecha, nota,
-      estado: "pendiente", creado: serverTimestamp() });
-    say(`✓ ${tipo} de ${fmtARS(monto)} para ${cliente} registrado. Se aplica a la contabilidad en el próximo sync.`, true);
-    document.getElementById("fl-ev-monto").value = "";
-    document.getElementById("fl-ev-nota").value = "";
-    flLoadEventos();
-  } catch (e) {
-    say("No se pudo guardar: " + String(e).slice(0, 140));
-  }
-  btn.disabled = false;
-};
-
-window.flLoadEventos = async function() {
-  const box = document.getElementById("fl-eventos");
-  if (!box) return;
-  if (!_db) { box.innerHTML = `<div class="fl-foot" style="border-top:none">Modo dev — sin eventos.</div>`; return; }
-  try {
-    const snap = await getDocs(query(collection(_db, "fondoEventos"), orderBy("creado", "desc"), limit(10)));
-    if (snap.empty) {
-      box.innerHTML = `<div class="fl-foot" style="border-top:none">Sin eventos registrados todavía.</div>`;
-      return;
-    }
-    const rows = snap.docs.map(d => {
-      const e = d.data();
-      const [k, label] = EV_ESTADOS[e.estado] || ["m", e.estado];
-      const esAporte = String(e.tipo||"").toLowerCase().startsWith("aporte");
-      return `<tr><td style="white-space:nowrap">${e.fecha||""}</td>
-        <td><span class="fl-tag">${e.tipo||""}</span></td><td><b>${e.cliente||""}</b>${e.nota?` <span style="color:var(--flInk2);font-size:11px">· ${e.nota}</span>`:""}</td>
-        <td class="fl-num ${esAporte?"fl-pos":"fl-neg"}">${esAporte?"+":"−"}${fmtARS(e.monto_ars||0)}</td>
-        <td class="fl-num"><span class="fl-pill ${k}">${label}</span></td></tr>`;
-    }).join("");
-    box.innerHTML = `<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Cliente</th><th class="fl-num">Monto</th><th class="fl-num">Estado</th></tr></thead><tbody>${rows}</tbody></table>`;
-  } catch (e) {
-    box.innerHTML = `<div class="fl-foot" style="border-top:none">No se pudieron cargar los eventos (${String(e).slice(0,100)}).</div>`;
-  }
-};
-
-/* ── Fondo: balance consolidado (KPIs, cierres, clientes, gestor) ── */
-function renderFondo(tab, data, comp) {
-  const f = data.fondo || {};
-  const cierres = data.cierres || [];
-  const clientes = data.clientes || [];
-  const g = data.gestor || {};
-  const pctf = v => (v >= 0 ? "+" : "") + Number(v).toFixed(2).replace(".", ",") + "%";
-  const MES = { "01": "Ene", "02": "Feb", "03": "Mar", "04": "Abr", "05": "May", "06": "Jun",
-                "07": "Jul", "08": "Ago", "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dic" };
-  const mesLbl = m => { const p = String(m || "").split("-"); return (MES[p[1]] || p[1]) + " " + (p[0] || "").slice(2); };
-  const mtm = comp && comp.total ? comp.total : null;
-  const difMtm = (mtm && f.valor_total_ars) ? mtm - f.valor_total_ars : null;
-
-  const cliRows = clientes.map(x => {
-    const r = Number(x.rendimiento_pct) || 0;
-    return `<tr><td><b>${x.nombre}</b></td>
-      <td class="fl-num">${fmtARS(x.capital_neto)}</td>
-      <td class="fl-num ${cls(x.ganancia_acum)}">${x.ganancia_acum >= 0 ? "+" : ""}${fmtARS(x.ganancia_acum)}</td>
-      <td class="fl-num" style="font-weight:600">${fmtARS(x.valor_actual)}</td>
-      <td class="fl-num ${cls(r)}" style="font-weight:600">${pctf(r)}</td></tr>`;
-  }).join("");
-
-  tab.innerHTML = `<div class="flx">
-    <div class="fl-head"><div style="min-width:0">
-      <div class="portal-title" style="margin-bottom:0">Fondo</div>
-      <div class="fl-meta" style="margin:6px 0 0">Balance consolidado · actualizado ${data.actualizado || ""} · fee 10% inicial + 2% mensual s/ganancia</div>
-    </div></div>
-    <div style="height:14px"></div>
-    <div class="fl-ana-strip">
-      <div class="fl-ana-chip"><div class="l">Valor total del fondo</div><div class="v">${fmtARS(f.valor_total_ars)}</div></div>
-      <div class="fl-ana-chip"><div class="l">Ganancia clientes</div><div class="v" style="color:${(f.ganancia_total_clientes || 0) >= 0 ? "var(--flGood)" : "var(--flCrit)"}">${(f.ganancia_total_clientes || 0) >= 0 ? "+" : ""}${fmtARS(f.ganancia_total_clientes)}</div></div>
-      <div class="fl-ana-chip"><div class="l">Rendimiento clientes</div><div class="v" style="color:${(f.rendimiento_clientes || 0) >= 0 ? "var(--flGood)" : "var(--flCrit)"}">${pctf(f.rendimiento_clientes || 0)}</div></div>
-      <div class="fl-ana-chip"><div class="l">Saldo gestor pendiente</div><div class="v">${fmtARS(g.saldo)}</div></div>
-      ${difMtm != null ? `<div class="fl-ana-chip"><div class="l">MTM hoy (sync) vs balance</div><div class="v" style="color:${difMtm >= 0 ? "var(--flGood)" : "var(--flCrit)"}">${difMtm >= 0 ? "+" : ""}${fmtARS(difMtm)}</div></div>` : ""}
-    </div>
-    <div class="fl-dashrow2" style="margin-top:4px;margin-bottom:14px">
-      <div class="fl-panel fl-pad">
-        <h4 class="fl-h4">Evolución mensual</h4>
-        <div class="fl-meta" style="margin:2px 0 10px">Cierres contables${mtm ? " + valuación de hoy a mercado" : ""}</div>
-        <div style="position:relative;height:240px;min-width:0;overflow:hidden"><canvas id="fl-fondo-chart"></canvas></div>
-      </div>
-      <div class="fl-panel fl-pad">
-        <h4 class="fl-h4">Cuenta del gestor</h4>
-        <div class="fl-meta" style="margin:2px 0 12px">Fees devengados vs retirados</div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--flInk2)"><span>Devengado (10% aportes + 2% mensual)</span><b class="fl-num" style="color:var(--flInk)">${fmtARS(g.devengado)}</b></div>
-          <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--flInk2)"><span>Ya cobrado / retirado</span><b class="fl-num" style="color:var(--flInk)">${fmtARS(g.cobrado)}</b></div>
-          <div style="border-top:1px solid var(--flLine);padding-top:10px;display:flex;justify-content:space-between;font-size:13px;color:var(--flInk2)"><span><b style="color:var(--flInk)">Saldo pendiente</b></span><b class="fl-num" style="font:500 20px 'Playfair Display',serif;color:var(--flGold)">${fmtARS(g.saldo)}</b></div>
-        </div>
-        ${cierres.length ? `<div class="fl-foot" style="margin-top:14px">Fee 2% del último cierre: ${fmtARS(cierres[cierres.length - 1].fee2 || 0)} (${mesLbl(cierres[cierres.length - 1].mes)})</div>` : ""}
-      </div>
-    </div>
-    <div class="fl-panel">
-      <div style="overflow-x:auto"><table style="min-width:640px">
-        <thead><tr><th>Cliente</th><th class="fl-num">Capital neto</th><th class="fl-num">Ganancia</th><th class="fl-num">Valor actual</th><th class="fl-num">Rendimiento</th></tr></thead>
-        <tbody>${cliRows}</tbody>
-      </table></div>
-      <div class="fl-foot">Ganancia medida sobre el capital neto (aportes − fee − retiros), repartida por capital y días. Documento privado del gestor (fondoWeb/latest) · se actualiza con seed_fondo_web.py.</div>
-    </div>
-  </div>`;
-
-  // chart: barras de cierres + valuación de hoy (MTM) si está disponible
-  const dark = document.documentElement.dataset.theme === "dark";
-  const grid = dark ? "rgba(255,255,255,.06)" : "rgba(0,0,0,.06)";
-  const tick = dark ? "rgba(240,237,232,.5)" : "rgba(35,32,26,.55)";
-  const labels = cierres.map(x => mesLbl(x.mes));
-  const totales = cierres.map(x => x.total_ars);
-  const gans = cierres.map(x => x.ganancia_ars);
-  if (mtm) { labels.push("Hoy (MTM)"); totales.push(mtm); gans.push(null); }
-  chart("fl-fondo-chart", { type: "bar",
-    data: { labels, datasets: [
-      { label: "Total del fondo", data: totales, backgroundColor: labels.map(l => l === "Hoy (MTM)" ? "rgba(176,138,62,.45)" : "rgba(176,138,62,.85)"), borderRadius: 6, maxBarThickness: 64 },
-      { label: "Ganancia del mes", data: gans, backgroundColor: "rgba(31,122,77,.75)", borderRadius: 6, maxBarThickness: 64 },
-    ] },
-    options: { responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: tick, font: { size: 11 } } },
-        tooltip: { callbacks: { label: x => ` ${x.dataset.label}: ${fmtARS(x.parsed.y)}` } } },
-      scales: { x: { grid: { color: grid }, ticks: { color: tick, font: { size: 11 } } },
-        y: { grid: { color: grid }, ticks: { color: tick, font: { size: 10 }, callback: v => "$" + (v / 1e6).toFixed(0) + "M" } } } } });
-}
 
 /* ── Mapa de cartera: render nativo (checklist de integración de Lauti:
       mismos tokens, tema claro/oscuro, sin iframe ni doble scroll) ── */
@@ -1286,40 +722,30 @@ function renderAnalisis(tab, data, sync, comp, mercado) {
 async function fetchAll() {
   if (DEV) {
     const j = async f => { const r = await fetch(f, { cache: "no-store" }); return r.ok ? await r.json() : null; };
-    return { sync: await j("dev-data/sync_latest.json"), sheet: await j("dev-data/sheet_meta.json"),
+    return { sync: await j("dev-data/sync_latest.json"),
       mercado: await j("dev-data/mercado.json"), informes: [], radar: await j("dev-data/radar.json"),
-      analisis: await j("dev-data/analisis.json"), fondoWeb: await j("dev-data/fondo_web.json"),
-      historial: (await j("dev-data/historial.json")) || [],
-      intradia: await j("dev-data/intradia.json"),
-      news: [{ titulo:"Briefing demo", fecha:"09/07/2026", fuente:"cowork", contenido:"Briefing de ejemplo (modo dev)." }] };
+      analisis: await j("dev-data/analisis.json") };
   }
   const db = getFirestore(getApp());
   _db = db;
-  const [syncSnap, sheetSnap, newsSnap, mercadoSnap, informesSnap, radarSnap, anaSnap, fwSnap, histSnap, idSnap] = await Promise.all([
+  // solo lo que usan Señales, Análisis de cartera y el Lector de informes. La contabilidad
+  // del fondo (fondoMeta, fondoWeb, fondoHistorial, fondoIntradia, noticiasFondo) ya no se
+  // lee desde la web: esas pantallas se sacaron el 05/10/2026
+  const [syncSnap, mercadoSnap, informesSnap, radarSnap, anaSnap] = await Promise.all([
     getDoc(doc(db, "fondoSync", "latest")),
-    getDoc(doc(db, "fondoMeta", "sheet")),
-    getDocs(query(collection(db, "noticiasFondo"), orderBy("fecha", "desc"), limit(5))).catch(() => null),
     getDoc(doc(db, "mercado", "latest")).catch(() => null),
     getDocs(collection(db, "informes")).catch(() => null),
     getDoc(doc(db, "radar", "latest")).catch(() => null),
     getDoc(doc(db, "fondoAnalisis", "latest")).catch(() => null),
-    getDoc(doc(db, "fondoWeb", "latest")).catch(() => null),
-    getDocs(query(collection(db, "fondoHistorial"), orderBy("fecha", "desc"), limit(370))).catch(() => null),
-    getDoc(doc(db, "fondoIntradia", new Date().toISOString().slice(0, 10))).catch(() => null),
   ]);
   return {
-    historial: histSnap ? histSnap.docs.map(d => d.data()).reverse() : [],
-    intradia: idSnap && idSnap.exists() ? { puntos: JSON.parse(idSnap.data().json || "[]") } : null,
     sync: syncSnap.exists() ? JSON.parse(syncSnap.data().json) : null,
-    sheet: sheetSnap.exists() ? JSON.parse(sheetSnap.data().json) : null,
-    news: newsSnap ? newsSnap.docs.map(d => d.data()) : [],
     mercado: mercadoSnap && mercadoSnap.exists() ? JSON.parse(mercadoSnap.data().json) : null,
     informes: informesSnap ? informesSnap.docs.map(d => ({ id: d.id, titulo: d.data().titulo,
       fecha: d.data().fecha, tipo: d.data().tipo, resumen: d.data().resumen,
       slug: d.data().slug, visibilidad: d.data().visibilidad })) : [],
     radar: radarSnap && radarSnap.exists() ? JSON.parse(radarSnap.data().json) : null,
     analisis: anaSnap && anaSnap.exists() ? anaSnap.data() : null,
-    fondoWeb: fwSnap && fwSnap.exists() ? fwSnap.data() : null,
   };
 }
 
@@ -1339,19 +765,19 @@ window.initFondoAdmin = async function initFondoAdmin() {
     document.head.appendChild(l);
   }
   try {
-    const { sync, sheet, news, mercado, informes, radar, analisis, fondoWeb, historial, intradia } = await fetchAll();
+    const { sync, mercado, informes, radar, analisis } = await fetchAll();
     if (!sync) {
-      document.getElementById("tab-dashboard").insertAdjacentHTML("afterbegin",
+      document.getElementById("tab-senales").insertAdjacentHTML("afterbegin",
         `<div class="flx"><div class="fl-strip"><b>Sin snapshot</b> <code>fondoSync/latest</code> en Firestore — corré fondo_sync.py o esperá la corrida de las 9:00.</div></div>`);
       return;
     }
-    lastPayload = { sync, sheet, news, mercado, informes, radar, analisis, fondoWeb, historial, intradia };
-    renderAll(sync, sheet, news, mercado, informes, radar, analisis, fondoWeb, historial, intradia);
+    lastPayload = { sync, mercado, informes, radar, analisis };
+    renderAll(sync, mercado, informes, radar, analisis);
     // el toggle claro/oscuro del portal cambia data-theme: re-renderizar con los tokens nuevos
     new MutationObserver(reRender)
       .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
   } catch (e) {
-    document.getElementById("tab-dashboard").insertAdjacentHTML("afterbegin",
+    document.getElementById("tab-senales").insertAdjacentHTML("afterbegin",
       `<div class="flx"><div class="fl-strip"><b>No se pudo cargar el fondo:</b> ${String(e).slice(0,200)}</div></div>`);
   }
 };

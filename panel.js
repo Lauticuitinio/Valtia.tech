@@ -22,9 +22,11 @@ import { renderAlertas, contarNoLeidas } from './panel-alertas.js?v=3';
 import { instalarEvaluacion, evaluarConPrecios, contarDisparadasNoVistas, fraseDisparo, fmtPrecio } from './alertas-precio.js?v=1';
 import { renderAgenda } from './panel-agenda.js?v=2';
 import { renderCuenta } from './panel-cuenta.js?v=5';
-import { renderOperar } from './panel-operar.js?v=7';
+import { renderOperar } from './panel-operar.js?v=8';
 // la lista de espera PRO (waitlistPro): solo el admin la ve y solo a él se le cuenta la pastilla
 import { renderEspera, contarSinContactar } from './panel-espera.js?v=1';
+// el rendimiento de las carteras y de cada posición (solo el admin)
+import { renderRendimientos } from './panel-rendimientos.js?v=1';
 import { eventos } from './panel-eventos.js?v=1';
 import { renderMovimientos } from './panel-movimientos.js?v=2';
 import { base, radarSym, tickerFicha, esRentaFija, especieBono, parBono, linkDe, nombreDe, desglose, mergeRadar }
@@ -555,17 +557,21 @@ const SUBVISTAS = {
   empresas: { t: 'Mis empresas', de: 'micartera' },
   herramientas: { t: 'Datos de tus activos', de: 'micartera' },
 };
-// la gestión del fondo: la llena fondo-live.js y solo existe para el admin
+// la administración: solo existe para el admin. El 05/10/2026 Lauti sacó el fondo de
+// acá (Fondo · Dashboard, Rendimientos del fondo, Posiciones, Balance consolidado e
+// Inversores): el fondo es privado y no va mezclado con Valtia. Señales, Análisis de
+// cartera y Lector de informes no se tocaron y los sigue llenando fondo-live.js.
 const GESTION = [
   // Operar carteras (panel-operar.js) va primera: es lo que más se usa y lo
   // único de este grupo que ESCRIBE las carteras modelo
   { id: 'operar', t: 'Operar carteras' },
+  // cómo rinde cada cartera y cada posición (panel-rendimientos.js): ocupa el lugar
+  // y la ruta (#panel/rendimientos) que tenía «Rendimientos del fondo»
+  { id: 'rendimientos', t: 'Rendimiento de las carteras' },
   // los mails que dejaron en «Precio de lanzamiento — escribinos» (panel-espera.js)
   { id: 'espera', t: 'Lista de espera PRO' },
-  { id: 'dashboard', t: 'Fondo · Dashboard' }, { id: 'rendimientos', t: 'Rendimientos' },
-  { id: 'movimientos', t: 'Posiciones' }, { id: 'fondo', t: 'Balance consolidado' },
   { id: 'senales', t: 'Señales' }, { id: 'analisis', t: 'Análisis de cartera' },
-  { id: 'informes', t: 'Lector de informes' }, { id: 'admin', t: 'Inversores' },
+  { id: 'informes', t: 'Lector de informes' },
 ];
 const ES_GESTION = new Set(GESTION.map(x => x.id));
 // el selector de moneda va donde cambia las cifras. En Qué comprar, Carteras e
@@ -584,6 +590,7 @@ const _render = { inicio: enModulo(renderResumen, 'inicio'), comprar: enModulo(r
                   alertas: enModulo(renderAlertas, 'alertas'), historial: enModulo(renderMovimientos, 'historial'),
                   agenda: enModulo(renderAgenda, 'agenda'), cuenta: enModulo(renderCuenta, 'cuenta'),
                   operar: enModulo(renderOperar, 'operar'), espera: enModulo(renderEspera, 'espera'),
+                  rendimientos: enModulo(renderRendimientos, 'rendimientos'),
                   empresas: renderEmpresas, herramientas: renderHerramientas };
 const _hecho = {};
 
@@ -628,11 +635,11 @@ function instalarShell() {
       <div class="lg" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M1 12 L5 6 L8 9 L12 3 L15 6" fill="none" stroke="#B08A3E" stroke-width="1.5"/></svg></div>
       <div><div class="nm">VAL<span>T</span>IA</div><div class="sb">Analytics</div></div></div>` +
     grupos.map(g => `<div class="vp-grp" data-m="inv">${g}</div>` + enGrupo.filter(x => x.g === g).map(x => link(x, 'inv')).join('')).join('') +
-    (S.isAdmin ? `<div class="vp-grp" data-m="ges">Gestión del fondo</div>` + GESTION.map(x => link(x, 'ges')).join('') : '') +
+    (S.isAdmin ? `<div class="vp-grp" data-m="ges">Administración</div>` + GESTION.map(x => link(x, 'ges')).join('') : '') +
     `<div class="vp-foot"><span id="portal-user-name">${esc(nombreUsuario())}</span>
       <div class="vp-plan-w"><span class="vp-plan${S.pro ? ' pro' : ''}" id="vp-plan">${etiquetaPlan()}</span></div>
       ${cuenta ? `<a href="#panel/${cuenta.id}" class="vp-lat-l vp-lat-cuenta" data-m="inv" onclick="portalTab(event,'${cuenta.id}')">${cuenta.t}</a>` : ''}
-      ${S.isAdmin ? `<a href="#panel/dashboard" class="vp-lat-l vp-lat-ges" data-m="inv" onclick="portalTab(event,'dashboard')">Gestión del fondo →</a>
+      ${S.isAdmin ? `<a href="#panel/operar" class="vp-lat-l vp-lat-ges" data-m="inv" onclick="portalTab(event,'operar')">Administración →</a>
       <a href="#panel/inicio" class="vp-lat-l vp-lat-ges" data-m="ges" onclick="portalTab(event,'inicio')">← Panel del inversor</a>` : ''}
       <a href="/herramientas" class="vp-lat-l">Herramientas y datos ↗</a>
       <a href="#" class="vp-lat-l" onclick="valtiaPanel.salir(event)">← Volver al sitio</a>
@@ -702,7 +709,7 @@ function llenarBarraMovil() {
     TABS.filter(x => !x.pie).map(x => item(x, 'inv')).join('') +
     TABS.filter(x => x.pie).map(x => item(x, 'inv')).join('') +
     (S.isAdmin
-      ? `<a href="#panel/dashboard" class="vp-mx ges" data-m="inv" onclick="portalTab(event,'dashboard')">Gestión del fondo →</a>` +
+      ? `<a href="#panel/operar" class="vp-mx ges" data-m="inv" onclick="portalTab(event,'operar')">Administración →</a>` +
         GESTION.map(x => item(x, 'ges')).join('') +
         `<a href="#panel/inicio" class="vp-mx ges" data-m="ges" onclick="portalTab(event,'inicio')">← Panel del inversor</a>`
       : '') +
@@ -725,9 +732,9 @@ function centrarEnBarra() {
 function pintarEncabezado() {
   const h = $('vp-enc'); if (!h) return;
   const tab = _tab, ges = ES_GESTION.has(tab), sub = SUBVISTAS[tab], ficha = TABS.find(x => x.id === tab);
-  // la gestión del fondo (fondo-live.js) y la posición en el fondo pintan su propio título
+  // las pestañas de la administración y la posición en el fondo pintan su propio título
   const propio = ges || tab === 'fondocli';
-  const tit = ges ? 'Gestión del fondo' : tab === 'inicio' ? 'Hola, ' + primerNombre()
+  const tit = ges ? 'Administración' : tab === 'inicio' ? 'Hola, ' + primerNombre()
     : sub ? sub.t : tab === 'fondocli' ? 'Tu posición en el fondo' : ficha ? (ficha.tit || ficha.t) : '';
   const cur = curVista(), conMon = CON_MONEDA.has(tab);
   const partes = [hoyLargo()];

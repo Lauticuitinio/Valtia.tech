@@ -79,7 +79,7 @@ const MAX_PUBLICAR = 150;   // por publicación: el tope de Firestore son 500 op
 const MAX_LISTA = 12;       // cuántos movimientos publicados se listan abajo (los borradores van todos)
 
 const CSS = `
-.v3op{font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);max-width:1080px;min-width:0}
+.v3op{font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--v3-ink);max-width:1240px;min-width:0}
 .v3op *{box-sizing:border-box}
 .v3op button,.v3op input,.v3op select,.v3op textarea{font-family:inherit}
 .v3op a:focus-visible,.v3op button:focus-visible{outline:2px solid var(--v3-focus);outline-offset:2px}
@@ -175,6 +175,68 @@ const CSS = `
 .v3op-vacio{font-size:14px;color:var(--v3-mut);line-height:1.7}
 .v3op-sk i{display:block;height:12px;border-radius:6px;background:var(--v3-skel);margin:8px 0}
 .v3op-sk i.corta{width:45%}
+/* «cómo funciona», plegado: la explicación larga está a un clic y no tapa la pantalla */
+.v3op-como{margin:0 0 16px}
+.v3op-como > summary{cursor:pointer;list-style:none;display:inline-flex;gap:7px;align-items:center;
+  font:600 13.5px 'IBM Plex Sans',sans-serif;color:var(--v3-gold2)}
+.v3op-como > summary::-webkit-details-marker{display:none}
+.v3op-como > summary::before{content:'+';font-weight:700;width:10px;text-align:center}
+.v3op-como[open] > summary::before{content:'−'}
+.v3op-como .v3op-honesto{margin:10px 0 0}
+/* la cartera elegida (izquierda) y el formulario (derecha), lado a lado */
+.v3op-dos{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px;align-items:start;margin-bottom:14px}
+.v3op-dos > .v3op-card{margin-bottom:0}
+/* lado a lado solo en pantallas anchas: en una notebook común la tabla de la cartera
+   no entra al lado del formulario, así que van una debajo de la otra */
+@media (max-width:1499px){.v3op-dos{grid-template-columns:minmax(0,1fr)}}
+/* la cartera, hoy: la suma de los pesos y una fila por posición */
+.v3op-suma{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:baseline;margin:16px 0 4px}
+.v3op-suma .n{font:700 28px 'IBM Plex Sans',sans-serif;color:var(--v3-ink);font-variant-numeric:tabular-nums;line-height:1}
+.v3op-suma .l{font-size:13.5px;color:var(--v3-sub)}
+.v3op-tabla-w{overflow-x:auto;margin-top:12px}
+.v3op-tabla{width:100%;border-collapse:collapse;font-size:14px}
+.v3op-tabla th{font:700 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut);
+  padding:8px 6px;border-bottom:1px solid var(--v3-line);text-align:right;white-space:nowrap}
+.v3op-tabla td{padding:9px 6px;border-bottom:1px solid var(--v3-line2);text-align:right;white-space:nowrap;
+  vertical-align:middle;font-variant-numeric:tabular-nums;color:var(--v3-ink)}
+.v3op-tabla .v3op-b.mini{padding:6px 10px;letter-spacing:.05em}
+.v3op-tabla th:first-child,.v3op-tabla td:first-child{text-align:left;padding-left:0}
+.v3op-tabla th:last-child,.v3op-tabla td:last-child{padding-right:0}
+.v3op-tabla tr:last-child td{border-bottom:none}
+.v3op-tabla .tk{font:700 14.5px 'IBM Plex Sans',sans-serif;color:var(--v3-ink)}
+.v3op-tabla .em{display:block;font-size:12px;color:var(--v3-mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:128px}
+.v3op-tabla .peso b{font-weight:700}
+.v3op-tabla .barra{display:block;height:4px;border-radius:2px;background:var(--v3-gold);margin:5px 0 0 auto;min-width:2px}
+.v3op-tabla .borr{display:block;font-size:11.5px;font-weight:600;color:var(--v3-warn);margin-top:2px}
+.v3op-tabla .up{color:var(--v3-up)}
+.v3op-tabla .dn{color:var(--v3-dn)}
+.v3op-tabla .acc{display:flex;gap:6px;justify-content:flex-end}
+.v3op-nota-chica{font-size:12.5px;color:var(--v3-mut);line-height:1.6;margin:10px 0 0}
+.v3op-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* qué le hace el movimiento del formulario a la cartera, antes de guardarlo */
+.v3op-efecto{font-size:14px;line-height:1.6;color:var(--v3-sub);background:var(--v3-neutro);border-radius:10px;padding:10px 14px;margin-top:14px}
+.v3op-efecto b{color:var(--v3-ink);font-weight:600}
+.v3op-efecto.ojo{background:var(--v3-warnBg)}
+@media (max-width:620px){
+  /* en el celular cada posición es un bloque: arriba el activo, el peso y lo que rinde;
+     abajo, sus dos botones enteros (en una tabla quedaban cortados a la derecha) */
+  .v3op-tabla,.v3op-tabla tbody{display:block}
+  .v3op-tabla thead{display:none}
+  .v3op-tabla tr{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 14px;align-items:center;
+    padding:11px 0;border-bottom:1px solid var(--v3-line2)}
+  .v3op-tabla tr:last-child{border-bottom:none}
+  .v3op-tabla td{display:block;padding:0;border:0}
+  .v3op-tabla td.opc{display:none}
+  .v3op-tabla td.peso::before,.v3op-tabla td.rinde::before{display:block;font:700 9.5px 'IBM Plex Sans',sans-serif;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--v3-mut)}
+  .v3op-tabla td.peso::before{content:'Peso'}
+  .v3op-tabla td.rinde::before{content:'Rinde'}
+  .v3op-tabla .barra{display:none}
+  .v3op-tabla td:last-child{grid-column:1/-1}
+  .v3op-tabla td:last-child:empty{display:none}
+  .v3op-tabla .acc{justify-content:flex-start;margin-top:4px}
+  .v3op-tabla .em{max-width:none}
+}
 @media (max-width:520px){
   .v3op-tit{font-size:24px}
   /* angosto: el texto corrido va a la izquierda (SPEC §0), sin huecos entre palabras */
@@ -479,11 +541,9 @@ export async function renderOperar(el, ctx) {
 
   el.innerHTML = `<div class="v3op">
     <h1 class="v3op-tit">Operar carteras</h1>
-    <p class="v3op-sub">Acá se registran los movimientos de las carteras modelo. Guardar deja el movimiento en
-      <b>borrador</b>: no cambia la cartera ni avisa a nadie. <b>Publicar</b> aplica el peso nuevo y deja la
-      entrada en el historial que mira la corrida automática. Un movimiento publicado se puede deshacer durante
-      ${VENTANA_MIN} minutos.</p>
-    ${bloqueHonesto()}
+    <p class="v3op-sub">Elegí la cartera, mirá cómo está hoy y cargá lo que hiciste. Primero queda en <b>borrador</b>
+      (no cambia nada) y recién cuando lo <b>publicás</b> se aplica y se avisa.</p>
+    <details class="v3op-como"><summary>Cómo funciona guardar, publicar y deshacer</summary>${bloqueHonesto()}</details>
     <div class="v3op-card"><div class="v3op-sk" aria-hidden="true"><i></i><i class="corta"></i><i></i></div>
       <p class="v3op-vacio">Cargando las carteras…</p></div>
   </div>`;
@@ -527,6 +587,8 @@ function bloqueHonesto() {
         la <b>próxima corrida automática</b>, mirando las entradas nuevas del historial. No sale al instante.</span></li>
       <li><span>El <b>precio de entrada</b> y el de seguimiento los pone esa corrida con precios reales.
         Lo que cargás acá es el precio de la operación, y queda solo en el movimiento.</span></li>
+      <li><span>Un movimiento publicado se puede <b>deshacer durante ${VENTANA_MIN} minutos</b>. Pasado ese
+        tiempo, para corregirlo se carga otro movimiento.</span></li>
     </ul>
   </div>`;
 }
@@ -538,16 +600,21 @@ function pintarCuerpo(el, ctx) {
   // se conserva el encabezado y los avisos; se reemplaza de la primera tarjeta para abajo
   const viejo = cuerpo.querySelector('.v3op-card');
   const html = `
+    <div class="v3op-dos">
+    <section class="v3op-card" id="v3op-hoy" aria-labelledby="v3op-hoy-t">
+      <h2 class="v3op-h" id="v3op-hoy-t">1 · Elegí la cartera</h2>
+      <div class="v3op-f" style="margin-top:12px">
+        <label for="v3op-cartera">Cartera</label>
+        <select id="v3op-cartera" data-op-cartera>${_carteras.map(c =>
+          `<option value="${esc(c.id)}"${c.id === _cid ? ' selected' : ''}>${esc(c.nombre || c.id)} · ${esc(VIS[c.visibilidad] || c.visibilidad || 'sin visibilidad')}</option>`).join('')}</select>
+        <div class="v3op-ayuda" id="v3op-cartera-ay"></div>
+      </div>
+      <div id="v3op-hoy-cuerpo"><div class="v3op-sk" aria-hidden="true" style="margin-top:14px"><i></i><i class="corta"></i><i></i></div></div>
+    </section>
     <section class="v3op-card" id="v3op-form">
-      <h2 class="v3op-h">Un movimiento</h2>
-      <p class="v3op-p">Lo que hiciste, en una pantalla. El peso va en porcentaje y se guarda como fracción (0 a 1).</p>
+      <h2 class="v3op-h">2 · Cargá lo que hiciste</h2>
+      <p class="v3op-p">Si la posición ya está en la cartera, tocá «Cambiar peso» o «Vender» en su fila y se completa sola.</p>
       <div class="v3op-gr" style="margin-top:16px">
-        <div class="v3op-f ancho">
-          <label for="v3op-cartera">Cartera</label>
-          <select id="v3op-cartera" data-op-cartera>${_carteras.map(c =>
-            `<option value="${esc(c.id)}"${c.id === _cid ? ' selected' : ''}>${esc(c.nombre || c.id)} · ${esc(VIS[c.visibilidad] || c.visibilidad || 'sin visibilidad')}</option>`).join('')}</select>
-          <div class="v3op-ayuda" id="v3op-cartera-ay"></div>
-        </div>
         <div class="v3op-f">
           <label for="v3op-tipo">Qué hiciste</label>
           <select id="v3op-tipo" data-op-tipo>${TIPOS.map(t => `<option value="${t[0]}">${t[1]}</option>`).join('')}</select>
@@ -592,16 +659,25 @@ function pintarCuerpo(el, ctx) {
           <select id="v3op-para" data-op-para>${DESTINOS.map(d => `<option value="${d[0]}">${d[1]}</option>`).join('')}</select>
         </div>
       </div>
+      <div class="v3op-efecto" id="v3op-efecto" role="status" aria-live="polite" hidden></div>
       <div class="v3op-pie">
         <button type="button" class="v3op-b" data-op-guardar>Guardar como borrador</button>
-        <span class="v3op-ayuda" style="margin:0">No cambia la cartera ni avisa a nadie hasta que lo publiques desde la lista de abajo.</span>
+        <span class="v3op-ayuda" style="margin:0">No cambia la cartera ni avisa a nadie hasta que lo publiques en el paso 3.</span>
       </div>
       <p class="v3op-msg" id="v3op-msg" role="status" aria-live="polite"></p>
     </section>
+    </div>
 
-    <section class="v3op-card v3op-peg" id="v3op-pegar">
-      <h2 class="v3op-h">Pegar desde planilla</h2>
-      <p class="v3op-p">Para una rotación con varios movimientos de una sola vez. Cada fila queda como un borrador.</p>
+    <section class="v3op-card" id="v3op-ultimos">
+      <h2 class="v3op-h">3 · Revisá y publicá</h2>
+      <p class="v3op-p" id="v3op-ultimos-sub">De la cartera elegida arriba. Los borradores van primero.</p>
+      <div id="v3op-lista" style="margin-top:14px"><div class="v3op-sk" aria-hidden="true"><i></i><i class="corta"></i></div></div>
+      <p class="v3op-msg" id="v3op-msg-lista" role="status" aria-live="polite"></p>
+    </section>
+
+    <details class="v3op-card v3op-peg v3op-como" id="v3op-pegar" style="margin-bottom:14px">
+      <summary>Cargar varios movimientos de una vez (pegar desde planilla)</summary>
+      <p class="v3op-p" style="margin-top:12px">Para una rotación con varios movimientos de una sola vez. Cada fila queda como un borrador.</p>
       <div class="v3op-hint" style="margin-top:12px">Una fila por movimiento, en el orden
         <b>fecha · cartera · tipo · ticker · peso · precio · razón</b>. Separá con tabulaciones
         (es lo que sale de la planilla) o con punto y coma. La cartera podés ponerla por su nombre o
@@ -618,14 +694,7 @@ function pintarCuerpo(el, ctx) {
         <button type="button" class="v3op-b sec" data-op-revisar>Revisar</button>
       </div>
       <p class="v3op-msg" id="v3op-msg-peg" role="status" aria-live="polite"></p>
-    </section>
-
-    <section class="v3op-card" id="v3op-ultimos">
-      <h2 class="v3op-h">Últimos movimientos</h2>
-      <p class="v3op-p" id="v3op-ultimos-sub">De la cartera elegida arriba. Los borradores van primero.</p>
-      <div id="v3op-lista" style="margin-top:14px"><div class="v3op-sk" aria-hidden="true"><i></i><i class="corta"></i></div></div>
-      <p class="v3op-msg" id="v3op-msg-lista" role="status" aria-live="polite"></p>
-    </section>`;
+    </details>`;
   if (viejo) viejo.outerHTML = html; else cuerpo.insertAdjacentHTML('beforeend', html);
   enganchar(el, ctx);
 }
@@ -659,11 +728,14 @@ function enganchar(el, ctx) {
   if (peg) peg.addEventListener('input', () => { const p = q('#v3op-prev'); if (p && p.innerHTML) limpiarPrev(); });
   const tk = q('[data-op-ticker]');
   if (tk) {
-    tk.addEventListener('input', () => { tk.value = limpiarTicker(tk.value); pintarTicker(el, ctx); });
-    tk.addEventListener('blur', () => pintarTicker(el, ctx));
+    tk.addEventListener('input', () => { tk.value = limpiarTicker(tk.value); pintarTicker(el, ctx); pintarEfecto(el, ctx); });
+    tk.addEventListener('blur', () => { pintarTicker(el, ctx); pintarEfecto(el, ctx); });
   }
   const tipo = q('[data-op-tipo]');
-  if (tipo) tipo.addEventListener('change', () => pintarTicker(el, ctx));
+  if (tipo) tipo.addEventListener('change', () => { pintarTicker(el, ctx); pintarEfecto(el, ctx); });
+  // qué le hace este movimiento a la cartera: se recalcula con cada tecla del peso
+  const peso = q('[data-op-peso]');
+  if (peso) peso.addEventListener('input', () => pintarEfecto(el, ctx));
   const g = q('[data-op-guardar]');
   if (g) g.addEventListener('click', () => guardarUno(el, ctx));
   const r = q('[data-op-revisar]');
@@ -692,6 +764,8 @@ async function cargarCartera(el, ctx, vigente) {
   }
   if (pAy) pAy.textContent = c && c.moneda ? `En ${c.moneda}, como cotiza la cartera.` : '';
   if (lista) lista.innerHTML = '<div class="v3op-sk" aria-hidden="true"><i></i><i class="corta"></i></div>';
+  const hoy = el.querySelector('#v3op-hoy-cuerpo');
+  if (hoy) hoy.innerHTML = '<div class="v3op-sk" aria-hidden="true" style="margin-top:14px"><i></i><i class="corta"></i><i></i></div>';
 
   // las tres lecturas a la vez: las posiciones (el peso de hoy), el historial
   // (los publicados) y los borradores (las alertas sin publicar de esta cartera)
@@ -714,6 +788,168 @@ async function cargarCartera(el, ctx, vigente) {
     // un error al dibujar no puede dejar el esqueleto para siempre
     if (lista) lista.innerHTML = `<p class="v3op-msg mal">No pude dibujar los movimientos (${ctx.esc(codigoErr(e))}).</p>`;
   }
+  // la cartera de hoy y el efecto del formulario van aparte: si fallan al
+  // dibujarse, el formulario y la lista tienen que seguir andando
+  try {
+    pintarHoy(el, ctx);
+    pintarEfecto(el, ctx);
+  } catch (e) {
+    if (hoy) hoy.innerHTML = `<p class="v3op-msg mal">No pude dibujar la cartera (${ctx.esc(codigoErr(e))}).</p>`;
+  }
+}
+
+/* ───────────────────────── la cartera, hoy ─────────────────────────
+   Lo que está PUBLICADO en la cartera elegida: una fila por posición activa, con
+   su peso, a cuánto entró, a cuánto está y lo que rinde desde la entrada, y la
+   suma de los pesos. Es solo lectura de lo que ya se cargó en _pos y en
+   _borradores: no pide nada más a Firestore ni escribe nada. Los botones de cada
+   fila completan el formulario (prellenar); guardar sigue siendo guardarUno(). */
+const activas = () => [..._pos.values()]
+  .filter(p => p.estado !== 'cerrada' && Number(p.pesoObjetivo) > 0)
+  .sort((a, b) => (Number(b.pesoObjetivo) || 0) - (Number(a.pesoObjetivo) || 0) || String(a.id).localeCompare(String(b.id)));
+const sumaPesos = lista => lista.reduce((s, p) => s + (Number(p.pesoObjetivo) || 0), 0);
+// el peso de HOY de un ticker en la cartera publicada (0 si no está o está cerrada)
+const pesoHoy = tk => { const p = _pos.get(tk); return p && p.estado !== 'cerrada' ? Number(p.pesoObjetivo) || 0 : 0; };
+// los borradores sin publicar de esta cartera, por ticker (los mismos que lista
+// pintarLista: los que la versión anterior ya dejó en el historial no cuentan)
+function borradoresPorTicker() {
+  const viejos = new Set(_movs.map(m => String(m.alertaId || '')));
+  const m = new Map();
+  // _borradores viene del más nuevo al más viejo: recorrido al revés, gana el más nuevo
+  [..._borradores].reverse().forEach(b => {
+    const tk = tickerDe(b);
+    if (tk && esNum(b.pesoNuevo) && !viejos.has(String(b.id))) m.set(tk, Number(b.pesoNuevo));
+  });
+  return m;
+}
+// «12,5%» de una fracción, para las sumas (dos decimales como mucho)
+const fracTxt = f => (Number(f) * 100).toLocaleString('es-AR', { maximumFractionDigits: 2 }) + '%';
+const precioTxt = n => Number(n).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// la suma contra el 100 %: [clase de la etiqueta, texto]
+function estadoSuma(f) {
+  const d = Number(f) - 1;
+  if (Math.abs(d) < 0.0005) return ['pub', 'Completa'];
+  return d < 0 ? ['bor', `Falta asignar ${fracTxt(-d)}`] : ['bor', `Se pasa ${fracTxt(d)}`];
+}
+
+function pintarHoy(el, ctx) {
+  const caja = el.querySelector('#v3op-hoy-cuerpo');
+  if (!caja) return;
+  const esc = ctx.esc, c = carteraDe(_cid);
+  if (_fallo) {
+    caja.innerHTML = `<p class="v3op-msg mal">No pude leer esta cartera (${esc(_fallo)}). Elegí otra y volvé a esta, o recargá la página.</p>`;
+    return;
+  }
+  const act = activas();
+  const borr = borradoresPorTicker();
+  const cerradas = _pos.size - act.length;
+  if (!act.length && !borr.size) {
+    caja.innerHTML = `<p class="v3op-vacio" style="margin-top:14px">Esta cartera todavía no tiene posiciones. Cargá la primera
+      con el formulario: elegí «Compré», escribí el ticker y poné su peso.</p>`;
+    return;
+  }
+  const mon = monedaDe(c);
+  const suma = sumaPesos(act);
+  const [claseSuma, txtSuma] = estadoSuma(suma);
+  const maxPeso = Math.max(0.0001, ...act.map(p => Number(p.pesoObjetivo) || 0));
+  // cómo quedaría la suma con los borradores publicados
+  let proyectada = suma;
+  borr.forEach((nuevo, tk) => { proyectada += nuevo - pesoHoy(tk); });
+  const entran = [...borr].filter(([tk, nuevo]) => nuevo > 0 && !(pesoHoy(tk) > 0));
+
+  const fila = p => {
+    const tk = String(p.id).toUpperCase();
+    const e = Number(p.precioEntrada), a = Number(p.precioActual);
+    const hayA = p.precioActual != null && isFinite(a);
+    const v = e > 0 && hayA ? (a / e - 1) * 100 : null;
+    const b = borr.has(tk) ? borr.get(tk) : null;
+    return `<tr>
+      <td><span class="tk">${esc(tk)}</span><span class="em">${esc(p.empresa || '')}</span></td>
+      <td class="peso"><b>${esc(pctTxt(p.pesoObjetivo))}</b>${b != null ? `<span class="borr">→ ${esc(b > 0 ? pctTxt(b) : 'sale')} en borrador</span>` : ''}
+        <span class="barra" style="width:${Math.max(3, Math.round((Number(p.pesoObjetivo) || 0) / maxPeso * 100))}%"></span></td>
+      <td class="opc">${e > 0 ? esc(mon + precioTxt(e)) : '—'}</td>
+      <td class="opc">${hayA ? esc(mon + precioTxt(a)) : '—'}</td>
+      <td class="rinde ${v == null ? '' : v >= 0 ? 'up' : 'dn'}">${v == null ? '—'
+        : (v >= 0 ? '+' : '−') + Math.abs(v).toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'}</td>
+      <td><div class="acc">
+        <button type="button" class="v3op-b mini sec" data-op-pre="peso" data-tk="${esc(tk)}" title="Cambiar el peso de ${esc(tk)}" aria-label="Cambiar el peso de ${esc(tk)}">Cambiar peso</button>
+        <button type="button" class="v3op-b mini sec" data-op-pre="venta" data-tk="${esc(tk)}" title="Vender ${esc(tk)}" aria-label="Vender ${esc(tk)}">Vender</button>
+      </div></td>
+    </tr>`;
+  };
+  const filaEntra = ([tk, nuevo]) => `<tr>
+      <td><span class="tk">${esc(tk)}</span><span class="em">Todavía no está en la cartera</span></td>
+      <td class="peso"><b>—</b><span class="borr">→ ${esc(pctTxt(nuevo))} en borrador</span></td>
+      <td class="opc">—</td><td class="opc">—</td><td class="rinde">—</td><td></td>
+    </tr>`;
+
+  const nb = borr.size;
+  const [, txtProy] = estadoSuma(proyectada);
+  caja.innerHTML = `
+    <div class="v3op-suma">
+      <span class="n">${esc(fracTxt(suma))}</span>
+      <span class="l">asignado en ${act.length} ${act.length === 1 ? 'posición' : 'posiciones'}</span>
+      <span class="v3op-tag ${claseSuma}">${esc(txtSuma)}</span>
+    </div>
+    ${nb ? `<p class="v3op-banda">${nb === 1 ? 'Hay 1 borrador sin publicar' : `Hay ${nb} borradores sin publicar`}.
+      Si ${nb === 1 ? 'lo publicás' : 'los publicás'}, la cartera queda sumando <b>${esc(fracTxt(proyectada))}</b>
+      (${esc(txtProy.charAt(0).toLowerCase() + txtProy.slice(1))}).</p>` : ''}
+    <div class="v3op-tabla-w"><table class="v3op-tabla">
+      <thead><tr><th scope="col">Activo</th><th scope="col">Peso</th><th scope="col" class="opc">Entró a</th>
+        <th scope="col" class="opc">Hoy</th><th scope="col">Rinde</th><th scope="col"><span class="v3op-sr">Acciones</span></th></tr></thead>
+      <tbody>${act.map(fila).join('')}${entran.map(filaEntra).join('')}</tbody>
+    </table></div>
+    <p class="v3op-nota-chica">«Entró a» y «Hoy» son los precios de seguimiento que pone la corrida automática; «Rinde» es la
+      diferencia entre los dos.${cerradas > 0 ? ` Hay ${cerradas} ${cerradas === 1 ? 'posición cerrada' : 'posiciones cerradas'} que no se ${cerradas === 1 ? 'muestra' : 'muestran'}.` : ''}</p>`;
+  caja.querySelectorAll('[data-op-pre]').forEach(b =>
+    b.addEventListener('click', () => prellenar(el, ctx, b.dataset.tk, b.dataset.opPre)));
+}
+
+/* un botón de la fila completa el formulario: «Cambiar peso» deja el ticker y
+   espera el peso nuevo; «Vender» deja además el peso en 0 (sale del todo: si fue
+   una venta parcial, se corrige el número). No guarda nada. */
+function prellenar(el, ctx, tk, modo) {
+  const q = s => el.querySelector(s);
+  const tipo = q('[data-op-tipo]'), inp = q('[data-op-ticker]'), peso = q('[data-op-peso]');
+  if (!tipo || !inp || !peso) return;
+  tipo.value = modo === 'venta' ? 'venta' : 'peso';
+  inp.value = limpiarTicker(tk);
+  pintarTicker(el, ctx);
+  peso.value = modo === 'venta' ? '0' : '';
+  pintarEfecto(el, ctx);
+  const msg = q('#v3op-msg');
+  if (msg) { msg.className = 'v3op-msg'; msg.textContent = ''; }
+  const form = q('#v3op-form');
+  if (form && form.scrollIntoView) form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  const foco = modo === 'venta' ? q('[data-op-precio]') : peso;
+  if (foco) foco.focus({ preventScroll: true });
+}
+
+/* qué le hace a la cartera el movimiento que está escrito en el formulario, antes
+   de guardarlo: de cuánto a cuánto pasa el ticker y en cuánto queda la suma. Mira
+   solo lo publicado (los borradores se cuentan aparte, arriba de la tabla). */
+function pintarEfecto(el, ctx) {
+  const caja = el.querySelector('#v3op-efecto');
+  if (!caja) return;
+  const apagar = () => { caja.hidden = true; caja.innerHTML = ''; caja.className = 'v3op-efecto'; };
+  const tk = limpiarTicker((el.querySelector('[data-op-ticker]') || {}).value);
+  const crudo = norm((el.querySelector('[data-op-peso]') || {}).value).replace(',', '.');
+  if (!tk || crudo === '' || _fallo) { apagar(); return; }
+  const pct = Number(crudo);
+  if (!isFinite(pct) || pct < 0 || pct > 100) { apagar(); return; }
+  const esc = ctx.esc, nuevo = aFraccion(pct), hoy = pesoHoy(tk);
+  const queda = sumaPesos(activas()) - hoy + nuevo;
+  const [clase, txt] = estadoSuma(queda);
+  const puntos = (nuevo - hoy) * 100;
+  const dif = `${puntos >= 0 ? '+' : '−'}${Math.abs(puntos).toLocaleString('es-AR', { maximumFractionDigits: 2 })} ${Math.abs(puntos) === 1 ? 'punto' : 'puntos'}`;
+  let que;
+  if (mismoPeso(nuevo, hoy)) que = `<b>${esc(tk)}</b> ya pesa <b>${esc(fracTxt(hoy))}</b>: con ese número no cambia nada.`;
+  else if (!(nuevo > 0)) que = `<b>${esc(tk)}</b> sale de la cartera (hoy pesa <b>${esc(fracTxt(hoy))}</b>).`;
+  else if (!(hoy > 0)) que = `<b>${esc(tk)}</b> entra a la cartera con <b>${esc(fracTxt(nuevo))}</b>.`;
+  else que = `<b>${esc(tk)}</b> pasa de <b>${esc(fracTxt(hoy))}</b> a <b>${esc(fracTxt(nuevo))}</b> (${esc(dif)}).`;
+  caja.className = 'v3op-efecto' + (clase === 'pub' ? '' : ' ojo');
+  caja.innerHTML = `${que} La cartera quedaría sumando <b>${esc(fracTxt(queda))}</b>: ${esc(txt.charAt(0).toLowerCase() + txt.slice(1))}.`;
+  caja.hidden = false;
 }
 
 /* el ticker escrito: si ya está en la cartera se completa la empresa y se
@@ -808,8 +1044,9 @@ async function guardarUno(el, ctx) {
   if (btn) { btn.disabled = false; btn.textContent = 'Guardar como borrador'; }
   ['[data-op-ticker]', '[data-op-empresa]', '[data-op-peso]', '[data-op-precio]', '[data-op-razon]']
     .forEach(s => { const x = q(s); if (x) { x.value = ''; x.readOnly = false; } });
+  pintarEfecto(el, ctx);
   const cambio = (m.pesoAnterior != null ? pctTxt(m.pesoAnterior) + ' → ' : '') + pctTxt(m.pesoNuevo);
-  decir(`Guardado como borrador (${m.tk}: ${ACCION_TXT[m.accion] || m.accion}, ${cambio}). No cambia la cartera ni avisa a nadie hasta que lo publiques desde la lista de abajo.`, 'ok');
+  decir(`Guardado como borrador (${m.tk}: ${ACCION_TXT[m.accion] || m.accion}, ${cambio}). No cambia la cartera ni avisa a nadie hasta que lo publiques en el paso 3.`, 'ok');
   ctx.toast(`${m.tk} en borrador · publicalo desde la lista`);
   await recargar(el, ctx);
 }
