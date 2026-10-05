@@ -362,7 +362,7 @@ import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/
 import { EMPRESAS, SECTORES } from './empresas.js?v=3';
 import { radarSym, tickerFicha, mergeRadar, canon, esRentaFija, especieBono } from './activos.js?v=7';
 // los gráficos de adentro de los informes, dibujados con datos reales (05/10/2026)
-import { filasDe, figuraDesde, figuraFamilia, CSS_FIGURAS } from './informe-graficos.js?v=1';
+import { filasDe, figuraDesde, figuraFamilia, CSS_FIGURAS } from './informe-graficos.js?v=2';
 document.head.insertAdjacentHTML('beforeend', `<style id="inf-fig-css">${CSS_FIGURAS}</style>`);
 
 const app = getApps().length ? getApp() : initializeApp({
@@ -1422,21 +1422,44 @@ try {
   // radar a la vista (PRO), la empresa al lado de su familia. La portada no se toca:
   // ahí van fotos (pedido de Lauti del 05/10/2026). ──
   const benchFilas = (() => { try { return filasDe(benchSnap && benchSnap.exists() ? JSON.parse(benchSnap.data().json || "[]") : []); } catch (e) { return []; } })();
-  const figurasInforme = d => {
-    if (!d) return "";
-    const desde = figuraDesde({ ticker: t, benchNom: BENCH_NOM, filas, bench: benchFilas, fecha: fdate(d.fecha), precioPub: d.precio_pub });
-    let familia = "";
-    if (conRatios && fundOk && ra) {
-      const veces = v => n1.format(v) + "×", porc = v => n1.format(v) + "%";
-      const it = (campo, nombre, fmt, mejor) => ({ nombre, valor: ra[campo], mediana: medSector(campo, true), fmt, mejor });
-      familia = figuraFamilia({ ticker: t, familia: sectorTxt(ra.sector), items: [
-        it("per", "P/E (precio sobre ganancias)", veces, "bajo"), it("evebitda", "EV / EBITDA", veces, "bajo"),
-        it("pb", "Precio / valor libro", veces, "bajo"), it("margen", "Margen operativo", porc, "alto"), it("roe", "ROE", porc, "alto")] });
-    }
-    return desde || familia ? `<div class="inf-figs">${desde}${familia}</div>` : "";
+  // El gráfico del precio es el de TradingView (pedido de Lauti del 05/10/2026) y arriba
+  // quedan los dos porcentajes desde la publicación, que son nuestros. Si no sabemos en
+  // qué bolsa cotiza el papel, o TradingView no carga, vuelve el dibujo propio.
+  const conTV = !!BOLSA[t];
+  const figDesde = (d, dibujo) => figuraDesde({ ticker: t, benchNom: BENCH_NOM, filas, bench: benchFilas, fecha: fdate(d.fecha), precioPub: d.precio_pub, dibujo });
+  const figFamilia = () => {
+    if (!(conRatios && fundOk && ra)) return "";
+    const veces = v => n1.format(v) + "×", porc = v => n1.format(v) + "%";
+    const it = (campo, nombre, fmt, mejor) => ({ nombre, valor: ra[campo], mediana: medSector(campo, true), fmt, mejor });
+    return figuraFamilia({ ticker: t, familia: sectorTxt(ra.sector), items: [
+      it("per", "P/E (precio sobre ganancias)", veces, "bajo"), it("evebitda", "EV / EBITDA", veces, "bajo"),
+      it("pb", "Precio / valor libro", veces, "bajo"), it("margen", "Margen operativo", porc, "alto"), it("roe", "ROE", porc, "alto")] });
   };
-  // se llama de nuevo cuando llegan los múltiplos PRO (el informe pudo pintarse antes)
-  const pintarFiguras = () => { const c = document.getElementById("inf-figs"); if (c && S.inf) c.innerHTML = figurasInforme(S.inf); };
+  const figurasInforme = d => !d ? "" : `<div class="inf-figs"><div id="inf-fig-desde">${figDesde(d, !conTV)}</div><div id="inf-tv"></div><div id="inf-fig-fam">${figFamilia()}</div></div>`;
+  // se llama de nuevo cuando llegan los múltiplos PRO (el informe pudo pintarse antes);
+  // solo la familia: repintar todo tiraría el gráfico de TradingView ya cargado
+  const pintarFiguras = () => { const c = document.getElementById("inf-fig-fam"); if (c && S.inf) c.innerHTML = figFamilia(); };
+  // tv.js se baja recién acá (y dibuja cuando el gráfico entra en pantalla). Un año en
+  // velas diarias, con el precio en dólares en el eje: son los niveles de los que habla
+  // el informe. Mientras TradingView muestre su cartel de «no respondió», arriba vuelve
+  // el dibujo propio; si al final carga, se va.
+  const montarTVInforme = async () => {
+    const host = document.getElementById("inf-tv");
+    if (!conTV || !host || !S.inf || host.dataset.puesto) return;
+    host.dataset.puesto = "1";
+    const d = S.inf, caja = document.getElementById("inf-fig-desde");
+    if (caja) caja.dataset.dibujo = "false";
+    const propio = dibujo => { if (caja && caja.isConnected && caja.dataset.dibujo !== String(dibujo)) { caja.dataset.dibujo = String(dibujo); caja.innerHTML = figDesde(d, dibujo); } };
+    const tv = await import("./tv.js?v=1").catch(() => null);
+    if (!host.isConnected) return;
+    if (!tv) { propio(true); return; }
+    const alto = innerWidth < 600 ? 380 : 440;
+    tv.widget(host, "advanced-chart",
+      { symbol: simboloTV(t), interval: "D", range: "12M", style: "1", timezone: "America/Argentina/Buenos_Aires", withdateranges: true,
+        allow_symbol_change: false, hide_side_toolbar: true, hide_top_toolbar: true, save_image: false, calendar: false, height: String(alto) },
+      { titulo: `Precio de ${t}`, fuente: "TradingView · puede tener demora", alto });
+    new MutationObserver(() => propio(!!host.querySelector(".vtv-aviso"))).observe(host, { childList: true, subtree: true });
+  };
 
   // ── el último informe, destacado: portada, fecha, título, resumen, precio
   // en el informe y variación desde entonces ──
@@ -1559,6 +1582,7 @@ try {
       <div id="inf-figs">${figurasInforme(d)}</div>
       ${d.contenido_html || ""}
     </div>`;
+    montarTVInforme();
     if (location.hash === "#informe") full.scrollIntoView();
   };
   // informe vedado: sin sesión se invita a ingresar; con sesión (y sin PRO)

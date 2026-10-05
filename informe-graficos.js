@@ -8,6 +8,12 @@
 //   figuraFamilia()    los números de la empresa al lado de la mediana de su familia en
 //                      el radar
 //
+// Desde el 05/10/2026 (pedido de Lauti) el gráfico del precio adentro del informe es el
+// de TradingView: lo monta activo.html con tv.js, debajo de figuraDesde({ dibujo: false }),
+// que deja solo los dos porcentajes (esos son nuestros: TradingView no puede arrancar el
+// día de la publicación ni se le pueden leer los datos). El dibujo propio queda de
+// respaldo, para cuando TradingView no carga o no sabemos en qué bolsa cotiza el papel.
+//
 // Son funciones puras: reciben los datos y devuelven texto. No leen Firestore ni tocan
 // la página; quien las llama (activo.html) les pasa lo que ya bajó. Si los datos no
 // alcanzan devuelven '' y no se muestra nada: nunca se dibuja un gráfico inventado.
@@ -31,7 +37,11 @@ export function filasDe(serie) {
 
 /* ───────────────────────── adentro del informe ───────────────────────── */
 export const CSS_FIGURAS = `
-.inf-figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:14px;margin:22px 0 6px}
+.inf-figs{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin:22px 0 6px}
+.inf-figs>div:empty{display:none}
+.inf-figs .vtv{margin:0;border-color:#E7E3DA;border-radius:10px}
+.inf-fig.sola .inf-fig-res{gap:6px 22px;font-size:14.5px;margin:6px 0 0}
+.inf-fig.sola .inf-fig-res b{font-size:19px;margin-left:4px}
 .inf-fig{margin:0;background:#fff;border:1px solid #E7E3DA;border-radius:10px;padding:16px 18px;min-width:0}
 .inf-fig figcaption{font:600 15px 'IBM Plex Sans',sans-serif;color:#101010;line-height:1.35;margin:0 0 4px}
 .inf-fig .inf-fig-res{display:flex;gap:4px 16px;flex-wrap:wrap;font:500 13.5px 'IBM Plex Sans',sans-serif;color:#57534A;margin:0 0 10px}
@@ -56,8 +66,10 @@ export const CSS_FIGURAS = `
 /* La acción contra su índice desde la publicación, las dos en variación porcentual
    desde ese día. filas y bench: [{ f, c }] ordenadas por fecha. fecha: el día del
    informe (ISO). precioPub: el precio que guarda el informe (si no, el cierre de ese
-   día). Devuelve '' si el informe tiene menos de 5 ruedas o falta algún dato. */
-export function figuraDesde({ ticker, benchNom, filas, bench, fecha, precioPub }) {
+   día). Devuelve '' si el informe tiene menos de 5 ruedas o falta algún dato.
+   dibujo: false deja solo los dos porcentajes, sin la curva (va arriba del gráfico de
+   TradingView, que es el que muestra el precio). */
+export function figuraDesde({ ticker, benchNom, filas, bench, fecha, precioPub, dibujo = true }) {
   const f0 = String(fecha || '').slice(0, 10);
   const s = (filas || []).filter(r => r && r.c > 0 && r.f);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(f0) || s.length < 10) return '';
@@ -90,6 +102,15 @@ export function figuraDesde({ ticker, benchNom, filas, bench, fecha, precioPub }
   const eje = marcas.map(v => `<line x1="${L}" y1="${Y(v)}" x2="${W - R}" y2="${Y(v)}" stroke="${v === 0 ? '#C9C3B6' : '#F0EDE5'}" stroke-width="1"/>
     <text x="${L - 8}" y="${(Number(Y(v)) + 4).toFixed(1)}" text-anchor="end" font-family="'IBM Plex Sans',sans-serif" font-size="11" fill="#8B8375">${esc(v === 0 ? '0%' : pctTxt(v, 0))}</text>`).join('');
   const etiqueta = `Variación de ${ticker} desde la publicación del informe (${fCorta(f0)}): ${pctTxt(finA)}${finB != null ? `; ${benchNom} en el mismo lapso: ${pctTxt(finB)}` : ''}`;
+  const baseTxt = base.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (!dibujo) return `<figure class="inf-fig sola">
+    <figcaption>Desde que publicamos este informe</figcaption>
+    <div class="inf-fig-res">
+      <span>${esc(ticker)} <b class="${finA >= 0 ? 'up' : 'dn'}">${esc(pctTxt(finA))}</b></span>
+      ${finB != null ? `<span>${esc(benchNom)} <b class="${finB >= 0 ? 'up' : 'dn'}">${esc(pctTxt(finB))}</b></span>` : ''}
+    </div>
+    <p class="inf-fig-nota">Del ${esc(fCorta(f0))} (a US$${esc(baseTxt)}) al ${esc(fCorta(serieA[serieA.length - 1].f))}: variación del precio en dólares, con los cierres tal como se operaron y sin dividendos. Se actualiza sola.</p>
+  </figure>`;
   return `<figure class="inf-fig">
     <figcaption>Desde que publicamos este informe</figcaption>
     <div class="inf-fig-res">
@@ -105,7 +126,7 @@ export function figuraDesde({ ticker, benchNom, filas, bench, fecha, precioPub }
       <text x="${L}" y="${H - 6}" font-family="'IBM Plex Sans',sans-serif" font-size="11" fill="#8B8375">${esc(fCorta(f0))}</text>
       <text x="${W - R}" y="${H - 6}" text-anchor="end" font-family="'IBM Plex Sans',sans-serif" font-size="11" fill="#8B8375">${esc(fCorta(serieA[serieA.length - 1].f))}</text>
     </svg>
-    <p class="inf-fig-nota">Variación del precio en dólares desde el día de publicación (el punto dorado, a US$${esc(base.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}), con los cierres tal como se operaron y sin dividendos. Se actualiza sola.</p>
+    <p class="inf-fig-nota">Variación del precio en dólares desde el día de publicación (el punto dorado, a US$${esc(baseTxt)}), con los cierres tal como se operaron y sin dividendos. Se actualiza sola.</p>
   </figure>`;
 }
 

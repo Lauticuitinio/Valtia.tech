@@ -36,6 +36,11 @@ check('desde: un informe con menos de 5 ruedas no tiene figura', figuraDesde({ t
 check('desde: sin fecha o sin historia, nada', figuraDesde({ ticker: 'KO', filas, bench, fecha: '' }) === '' && figuraDesde({ ticker: 'KO', filas: [], bench, fecha }) === '');
 check('desde: sin índice dibuja solo la acción', (figuraDesde({ ticker: 'KO', benchNom: 'SPY', filas, bench: [], fecha }).match(/<path /g) || []).length === 1);
 check('desde: escapa el ticker', !figuraDesde({ ticker: '<i>K', benchNom: 'SPY', filas, bench, fecha }).includes('<i>K'));
+// sin el dibujo (va arriba del gráfico de TradingView): quedan los dos porcentajes, los mismos
+const sola = figuraDesde({ ticker: 'KO', benchNom: 'S&P 500 (SPY)', filas, bench, fecha, precioPub: null, dibujo: false });
+check('desde sin dibujo: los mismos porcentajes y ninguna curva', sola.includes('class="inf-fig sola"') && !sola.includes('<svg') && (sola.match(/\+[\d,]+%/g) || []).join() === (fig.match(/<b class="(?:up|dn)">(\+[\d,]+%)<\/b>/g) || []).map(x => x.replace(/<[^>]+>/g, '')).join() && sola.includes('S&amp;P 500 (SPY)'), sola.match(/\+[\d,]+%/g));
+check('desde sin dibujo: dice de qué día a qué día', sola.includes(fecha.split('-').reverse().join('/')) && sola.includes(filas[filas.length - 1].f.split('-').reverse().join('/')));
+check('desde sin dibujo: con datos de menos tampoco hay nada', figuraDesde({ ticker: 'KO', filas, bench, fecha: filas[filas.length - 4].f, dibujo: false }) === '' && !figuraDesde({ ticker: '<i>K', benchNom: 'SPY', filas, bench, fecha, dibujo: false }).includes('<i>K'));
 
 // la empresa al lado de su familia
 const veces = n => n.toFixed(1) + 'x';
