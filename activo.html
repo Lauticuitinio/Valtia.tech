@@ -1440,9 +1440,8 @@ try {
   // solo la familia: repintar todo tiraría el gráfico de TradingView ya cargado
   const pintarFiguras = () => { const c = document.getElementById("inf-fig-fam"); if (c && S.inf) c.innerHTML = figFamilia(); };
   // tv.js se baja recién acá (y dibuja cuando el gráfico entra en pantalla). Un año en
-  // velas diarias, con el precio en dólares en el eje: son los niveles de los que habla
-  // el informe. Mientras TradingView muestre su cartel de «no respondió», arriba vuelve
-  // el dibujo propio; si al final carga, se va.
+  // velas diarias. Mientras TradingView muestre su cartel de «no respondió», arriba
+  // vuelve el dibujo propio; si al final carga, se va.
   const montarTVInforme = async () => {
     const host = document.getElementById("inf-tv");
     if (!conTV || !host || !S.inf || host.dataset.puesto) return;
@@ -1454,10 +1453,17 @@ try {
     if (!host.isConnected) return;
     if (!tv) { propio(true); return; }
     const alto = innerWidth < 600 ? 380 : 440;
+    // Con la línea del índice (pedido de Lauti del 05/10/2026): el mismo de la tarjeta de
+    // arriba y del gráfico de la ficha. Al comparar, TradingView pasa el eje a porcentaje
+    // y lo cuenta desde el comienzo del período que se ve, no desde la publicación: por
+    // eso el cabezal lo aclara.
+    const indice = BOLSA[BENCH] ? [{ symbol: simboloTV(BENCH), position: "SameScale" }] : null;
     tv.widget(host, "advanced-chart",
-      { symbol: simboloTV(t), interval: "D", range: "12M", style: "1", timezone: "America/Argentina/Buenos_Aires", withdateranges: true,
+      Object.assign({ symbol: simboloTV(t), interval: "D", range: "12M", style: "1", timezone: "America/Argentina/Buenos_Aires", withdateranges: true,
         allow_symbol_change: false, hide_side_toolbar: true, hide_top_toolbar: true, save_image: false, calendar: false, height: String(alto) },
-      { titulo: `Precio de ${t}`, fuente: "TradingView · puede tener demora", alto });
+        indice ? { compareSymbols: indice } : {}),
+      indice ? { titulo: `${t} contra ${BENCH_NOM}`, fuente: "TradingView · porcentajes del período que elijas abajo", alto }
+             : { titulo: `Precio de ${t}`, fuente: "TradingView · puede tener demora", alto });
     new MutationObserver(() => propio(!!host.querySelector(".vtv-aviso"))).observe(host, { childList: true, subtree: true });
   };
 
