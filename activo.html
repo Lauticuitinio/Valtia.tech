@@ -1180,6 +1180,18 @@ try {
   S.inf = inf;
   // ?v=: la portada se corrigió el 25/09 y el navegador la guarda 7 días (igual que en informes.html)
   const cover = `img/${emp.slug}.svg?v=2`;
+  // La foto de la portada (img/informes/informe-xx.jpg, 05/10/2026; acá va la versión
+  // chica) con la portada azul de siempre debajo: si este informe todavía no tiene
+  // foto, el navegador no la encuentra y se ve la azul. Vale también para el informe
+  // vedado, que no se pudo leer: la foto sale del slug, no del documento.
+  const fondoPortada = d => {
+    const propia = d && d.imagen ? String(d.imagen) : "";
+    const capas = [];
+    if (/^\/?img\/informes\/[^?#]+\.jpg$/.test(propia)) capas.push(propia.replace(/(-chica)?\.jpg$/, "-chica.jpg"));
+    else { capas.push(`img/informes/${emp.slug}-chica.jpg`); if (propia) capas.push(propia); }
+    capas.push(cover);
+    return capas.map(u => `url('${esc(u)}')`).join(",");
+  };
 
   // histórico (2 años): cada fila es [fecha, cierre ajustado, apertura,
   // máximo, mínimo, volumen, cierre real]. Los índices 1 a 4 vienen ajustados
@@ -1437,9 +1449,8 @@ try {
           <p>Vamos sumando análisis fundamentales a pedido de los clientes: tesis, KPIs, valuación por año, FODA y riesgos. Si querés que ${esc(emp.nombre)} sea el próximo, decínoslo.</p>
           <div class="pie"><a class="va-link" href="mailto:soporte@valtia.tech?subject=Quiero%20el%20informe%20de%20${encodeURIComponent(emp.nombre)}">Pedir este análisis →</a><a class="va-link" href="/informes">Ver los publicados →</a></div>
         </div></div>`;
-    const img = d && d.imagen ? String(d.imagen) : cover;
     if (!d) return `<div class="va-dest">
-        <div class="img" style="background-image:url('${esc(cover)}')" aria-hidden="true"></div>
+        <div class="img" style="background-image:${fondoPortada(null)}" aria-hidden="true"></div>
         <div style="min-width:0"><div class="eb">Informe Valtia · PRO</div>
           <div class="tt">Análisis fundamental de ${esc(emp.nombre)}</div>
           <p>Tesis, KPIs, valuación por año, FODA y riesgos. El informe completo es para clientes de Valtia.</p>
@@ -1449,7 +1460,7 @@ try {
     const pp = Number(d.precio_pub) > 0 ? Number(d.precio_pub) : (esISO(f) ? cierreEn(f) : null);
     const dsd = pp && px.p ? (px.p / pp - 1) * 100 : null;
     return `<div class="va-dest">
-        <a class="img" href="#informe" style="background-image:url('${esc(img)}')" aria-label="Leer el informe"></a>
+        <a class="img" href="#informe" style="background-image:${fondoPortada(d)}" aria-label="Leer el informe"></a>
         <div style="min-width:0">
           <div class="eb">Último informe · ${esc(fLarga(f))}${d.visibilidad === "publico" ? " · gratis" : ""}</div>
           <div class="tt">${esc(d.titulo)}</div>

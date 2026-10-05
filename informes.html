@@ -438,8 +438,11 @@ const temaDe = d => {
    ni la portada de otro informe. */
 /* La foto va siempre adentro de un enlace que ya lleva el título en texto:
    alt vacío, para que un lector de pantalla no lo lea dos veces. */
-const cov = d => {
-  const src = fotoDe(d);
+/* Las fotos de las portadas (img/informes/informe-xx.jpg, 05/10/2026) tienen una versión
+   chica al lado (…-chica.jpg, 480 px) para las miniaturas: `chica` la pide. */
+const cov = (d, chica) => {
+  let src = fotoDe(d);
+  if (chica && /^\/?img\/informes\/[^?#]+\.jpg$/.test(src) && !/-chica\.jpg$/.test(src)) src = src.replace(/\.jpg$/, '-chica.jpg');
   return `<div class="cov">${src
     ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">`
     : ''}<span class="cov-l">${esc(tipoDe(d))}</span></div>`;
@@ -734,7 +737,7 @@ function portadaHTML(d, ultimos) {
           <div class="top"><span class="kick">${esc(tipoDe(u))}</span><span class="fch">${esc(fCorta(u.fecha))}</span></div>
           <h4>${esc(u.titulo || 'Sin título')}</h4>
         </div>
-        ${cov(u)}
+        ${cov(u, true)}
       </a>`).join('')}
     </div>
   </div>`;
