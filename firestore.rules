@@ -565,6 +565,20 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ── PDF DE LOS INFORMES (botón «Descargar PDF» de la ficha) ──
+    // Un doc por informe, con el mismo id, armado por informes_pdf.py del
+    // pipeline (Admin SDK). Se baja con la misma llave que el informe: el
+    // "publico" cualquiera, los demás solo los clientes. La visibilidad se
+    // mira en el informe mismo (no en una copia) para que nunca queden
+    // desfasados. Por eso los PDF no van al hosting. No se listan ni se
+    // escriben desde la web.
+    match /informesPdf/{docId} {
+      allow get: if esCliente()
+        || get(/databases/$(database)/documents/informes/$(docId)).data.visibilidad == 'publico';
+      allow list: if false;
+      allow write: if false;
+    }
+
     // ── USUARIOS PRO (acceso pago, alta manual con marcar_pro.py) ──
     // Cada usuario puede consultar SU propio doc (para que la web sepa si
     // destapar el contenido); la lista completa solo la ve el admin.
