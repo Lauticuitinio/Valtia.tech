@@ -209,12 +209,100 @@ a.va-nw:hover .t{text-decoration:underline}
 .va-disc{font-size:13px;color:#8B8375;line-height:1.7;margin:22px 0 0;max-width:820px;text-align:justify;-webkit-hyphens:auto;hyphens:auto}
 .empty-state{padding:80px 52px;text-align:center;font:400 15px 'IBM Plex Sans',sans-serif;color:var(--sub)}
 
+/* ── la ficha por partes (pedido de Lauti del 05/10/2026): pestañas arriba, una parte a
+   la vez y en orden de lectura. El informe se reparte por capítulos entre las partes y
+   usa todo el ancho; el informe corrido de siempre queda solo para el PDF (#inf-print). ── */
+#va-tabs-ancla{scroll-margin-top:calc(var(--v-nav-h) + var(--v-cot-h))}
+#informe{scroll-margin-top:calc(var(--v-nav-h) + var(--v-cot-h) + 64px)}
+.va-tabs{position:sticky;top:calc(var(--v-nav-h) + var(--v-cot-h));z-index:120;background:#fff;border-bottom:1px solid var(--va-borde);padding:0 var(--v-gutter);margin-top:8px}
+.va-tabs .va-in{display:flex;align-items:center;gap:8px 16px}
+.va-tabs-l{display:flex;gap:4px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
+.va-tabs-l::-webkit-scrollbar{display:none}
+.va-tab{flex:none;font:500 14.5px 'IBM Plex Sans',sans-serif;color:#57534A;background:none;border:0;border-bottom:2px solid transparent;padding:14px 12px 12px;cursor:pointer;white-space:nowrap}
+.va-tab:first-child{padding-left:0}
+.va-tab:hover{color:#101010}
+.va-tab.on{color:#101010;font-weight:600;border-bottom-color:#B08A3E}
+.va-tab[hidden],.va-pdf[hidden],.va-pan[hidden],.va-guion[hidden]{display:none}
+.va-pdf{flex:none;display:inline-flex;align-items:center;gap:8px;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#8A6A2F;background:#FBF5E8;border:1px solid #B08A3E;border-radius:8px;padding:8px 14px;cursor:pointer;white-space:nowrap}
+.va-pdf:hover{background:#F4E9CF;color:#101010}
+.va-pan{display:flex;flex-direction:column;gap:14px}
+.va-pan>.va-lect{margin-bottom:0}
+.va-intro{font-size:15.5px;line-height:1.6;color:#57534A;margin:2px 0 2px;max-width:900px}
+.va-intro b{color:#101010;font-weight:600}
+.va-caps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+.va-caps>.ancho{grid-column:1/-1}
+.va-caps:empty,.va-col:empty,#cap-resumen:empty,#cap-kpis:empty,#inf-fig-desde:empty,#inf-tv:empty{display:none}
+.va-grid:has(>.va-col:empty){grid-template-columns:minmax(0,1fr)}
+#inf-tv .vtv{margin:0;border-color:var(--va-borde);border-radius:10px}
+#inf-fig-fam .inf-fig,#inf-fig-desde .inf-fig{border-color:var(--va-borde)}
+/* un capítulo del informe en su tarjeta: la letra del lector, sin su caja angosta */
+.va-cap.fsr-reader{max-width:none;margin:0;padding:22px 24px;border-color:var(--va-borde);border-radius:10px;min-width:0}
+.va-cap.fsr-reader h2{font-size:19px;margin:0 0 12px;padding:0;border:0}
+.va-cap.fsr-reader p{font-size:15px}
+.va-cap.fsr-reader li{font-size:14.5px}
+.va-cap.fsr-reader .txt>:first-child{margin-top:0}
+.va-cap.fsr-reader .txt>:last-child{margin-bottom:0}
+.va-cap.fsr-reader .fsr-kpis{margin:0;grid-template-columns:repeat(auto-fit,minmax(138px,1fr))}
+.va-cap.fsr-reader .fsr-foda{margin:0}
+.va-cap.suelta{padding:0;border:0}   /* riesgos y lectura ya traen su caja */
+.va-cap.suelta .card{margin:0;font-size:14.5px}
+.va-cap.pie{padding:0;border:0}
+.va-cap.pie .disclaimer{margin:0}
+@media(min-width:1100px){.va-cap.cols .txt{columns:2;column-gap:34px}}
+/* la primera tarjeta del Resumen: el informe con su foto, el resumen y por dónde seguir */
+.va-hero{padding:0;overflow:hidden}
+.va-hero-top{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr)}
+.va-hero-top .img{min-height:210px;background:#0E1830 center/cover no-repeat}
+.va-hero-top .tx{padding:22px 24px 18px;min-width:0}
+.va-hero .eb{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#8A6A2F}
+.va-hero .tit{font:700 clamp(21px,2.1vw,27px)/1.2 'IBM Plex Sans',sans-serif;color:#101010;margin:8px 0 10px}
+.va-hero .bajada{font-size:15px;line-height:1.6;color:#57534A;margin:0 0 10px}
+.va-hero .pp{font:500 13.5px 'IBM Plex Sans',sans-serif;color:#57534A}
+.va-hero .pp b{color:#101010}.va-hero .pp b.up{color:var(--up)}.va-hero .pp b.dn{color:var(--dn)}
+.va-hero .kick{font-size:12.5px;color:#8B8375;margin-top:6px}
+.va-hero .va-cap.fsr-reader{border:0;border-top:1px solid var(--va-div);border-radius:0;padding:20px 24px 4px}
+.va-hero-pie{display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center;padding:14px 24px 22px}
+.va-sigue{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:#14213D;border:1px solid #14213D;border-radius:8px;padding:10px 16px;cursor:pointer}
+.va-sigue:hover{background:#0E1830}
+.va-guion{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid var(--va-div)}
+.va-guion button{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:10px 16px;border-radius:8px;cursor:pointer;border:1px solid rgba(176,138,62,.5);background:#fff;color:#57534A}
+.va-guion button:hover{color:#101010;border-color:#B08A3E}
+.va-guion .sig{margin-left:auto;background:#14213D;border-color:#14213D;color:#fff}
+.va-guion .sig:hover{background:#0E1830;color:#fff;border-color:#0E1830}
+@media(max-width:1080px){.va-caps{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:700px){
+  .va-hero-top{grid-template-columns:minmax(0,1fr)}
+  .va-hero-top .img{min-height:0;aspect-ratio:16/8}
+  .va-tabs .va-pdf{display:none}
+  .va-cap.fsr-reader{padding:18px 16px}
+  .va-hero .va-cap.fsr-reader{padding:18px 16px 2px}
+  .va-hero-top .tx,.va-hero-pie{padding-left:16px;padding-right:16px}
+}
+/* el PDF: se imprime solo el informe corrido, con su encabezado. En pantalla no se ve. */
+#inf-print{display:none}
+.pdf-cab{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-bottom:12px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+.pdf-cab .m{display:flex;align-items:center;gap:10px;font:700 15px 'IBM Plex Sans',sans-serif;letter-spacing:.2em;color:#0E1830}
+.pdf-cab .m small{display:block;font:500 9px 'IBM Plex Sans',sans-serif;letter-spacing:.3em;text-transform:uppercase;color:#8A6A2F;margin-top:2px}
+.pdf-cab .w{font:500 11px 'IBM Plex Sans',sans-serif;color:#8B8375;text-align:right;line-height:1.5}
+.pdf-foto{display:block;width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:20px}
+@media print{
+  body.con-pdf>*:not(main),body.con-pdf #ficha>*:not(.va-body),body.con-pdf .va-body>.va-in>*:not(#inf-print){display:none!important}
+  body.con-pdf,body.con-pdf *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.con-pdf .va-body{padding:0}
+  body.con-pdf .va-in{max-width:none}
+  body.con-pdf #inf-print{display:block}
+  body.con-pdf .fsr-reader{border:0;border-radius:0;max-width:none;padding:0}
+  body.con-pdf .fsr-reader h2{font-size:20px;margin:26px 0 10px;padding-top:18px;break-after:avoid}
+  body.con-pdf .fsr-rhead h1{font-size:28px}
+  body.con-pdf .fsr-kpi,body.con-pdf .fsr-foda .q,body.con-pdf .fsr-reader .card,body.con-pdf .inf-fig,body.con-pdf .fsr-bars,body.con-pdf .fsr-rango,body.con-pdf .pdf-cab,body.con-pdf .fsr-reader li{break-inside:avoid}
+  @page{size:A4;margin:14mm 14mm 16mm}
+}
+
 /* ── estilos del lector de informes (compartidos con informes.html) ── */
 .fsr-badge{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;background:var(--gold);color:#fff;padding:4px 10px;border-radius:6px;text-transform:uppercase}
 .fsr-tag{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;border:1px solid var(--line);border-radius:6px;padding:3px 8px;color:var(--sub);text-transform:uppercase}
 .fsr-state{border:1px dashed var(--line);border-radius:12px;text-align:center;padding:44px 20px;color:var(--sub);line-height:1.9;font-size:14px}
 .inf-meta{font:500 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:12px}
-#informe-full{margin-top:26px}
 .fsr-crumb{font:600 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin-bottom:22px}
 .fsr-crumb a{color:var(--sub)}
 .fsr-crumb a:hover{color:var(--gold)}
@@ -591,12 +679,20 @@ function ctaHtml() {
 const pintarCta = () => { const el = document.getElementById("va-cta"); if (el) el.innerHTML = ctaHtml(); };
 
 // ── columna derecha: los cascarones; cada caja se llena cuando llega su dato ──
+// (sueltas, porque la ficha completa las reparte entre sus pestañas)
+const CAJAS = {
+  carteras: `<section class="va-card" id="en-carteras"><h2 class="va-h">En las carteras Valtia</h2><div id="carteras-box"><div class="va-vacio">Buscando en las carteras…</div></div></section>`,
+  viene: `<section class="va-card" id="viene"><h2 class="va-h">Lo que viene</h2><div id="viene-box"></div><a class="va-link va-mas" href="/calendario">Agenda completa →</a></section>`,
+  noticias: `<section class="va-card" id="noticias"><h2 class="va-h">Noticias</h2><div id="act-news-list"><div class="va-vacio">Buscando noticias…</div></div><a class="va-link va-mas" href="/noticias">Más noticias →</a></section>`,
+  como: `<section class="va-card" id="como" hidden><h2 class="va-h">Cómo comprarlo desde Argentina</h2><div id="como-box"></div></section>`,
+  sent: `<section class="va-card" id="sent-card"><h2 class="va-h">Sentimiento de la comunidad</h2><div id="sentimiento"></div></section>`,
+};
 const columnaDerecha = () => `
-    <section class="va-card" id="en-carteras"><h2 class="va-h">En las carteras Valtia</h2><div id="carteras-box"><div class="va-vacio">Buscando en las carteras…</div></div></section>
-    <section class="va-card" id="viene"><h2 class="va-h">Lo que viene</h2><div id="viene-box"></div><a class="va-link va-mas" href="/calendario">Agenda completa →</a></section>
-    <section class="va-card" id="noticias"><h2 class="va-h">Noticias</h2><div id="act-news-list"><div class="va-vacio">Buscando noticias…</div></div><a class="va-link va-mas" href="/noticias">Más noticias →</a></section>
-    <section class="va-card" id="como" hidden><h2 class="va-h">Cómo comprarlo desde Argentina</h2><div id="como-box"></div></section>
-    <section class="va-card" id="sent-card"><h2 class="va-h">Sentimiento de la comunidad</h2><div id="sentimiento"></div></section>`;
+    ${CAJAS.carteras}
+    ${CAJAS.viene}
+    ${CAJAS.noticias}
+    ${CAJAS.como}
+    ${CAJAS.sent}`;
 const DISCLAIMER = `<p class="va-disc">La lectura y el puntaje son análisis general de Valtia, no una recomendación para tu caso. Los precios se sincronizan en rueda; los fundamentales, con cada balance.</p>`;
 
 // En las carteras Valtia: código, entrada y peso, solo de las carteras que la
@@ -820,6 +916,10 @@ function pintarEscribimos() {
   box.innerHTML = pintarDestacado() + notas.slice(0, 5).map(n => `<a class="va-nota" href="${n.href}">
       <span class="f">${esc(fLarga(n.f))}</span>
       <div style="min-width:0"><div class="t">${esc(n.t)}</div>${n.s ? `<div class="s">${esc(n.s)}</div>` : ""}</div></a>`).join("");
+  // con el informe a la vista arriba (la ficha por partes), esta caja solo lista lo demás:
+  // si no hay nada más, no se muestra vacía
+  const caja = box.closest("section");
+  if (caja && S.inf) caja.hidden = !box.innerHTML.trim();
 }
 // informes que lo nombran (fuera del suyo): los que la sesión puede leer
 const empDeInforme = d => EMPRESAS.find(e => e.slug && e.slug === (d.slug || d.id)) || (d.ticker ? EMPRESAS.find(e => e.ticker === String(d.ticker).toUpperCase()) : null);
@@ -1435,24 +1535,22 @@ try {
       it("per", "P/E (precio sobre ganancias)", veces, "bajo"), it("evebitda", "EV / EBITDA", veces, "bajo"),
       it("pb", "Precio / valor libro", veces, "bajo"), it("margen", "Margen operativo", porc, "alto"), it("roe", "ROE", porc, "alto")] });
   };
-  const figurasInforme = d => !d ? "" : `<div class="inf-figs"><div id="inf-fig-desde">${figDesde(d, !conTV)}</div><div id="inf-tv"></div><div id="inf-fig-fam">${figFamilia()}</div></div>`;
   // se llama de nuevo cuando llegan los múltiplos PRO (el informe pudo pintarse antes);
   // solo la familia: repintar todo tiraría el gráfico de TradingView ya cargado
-  const pintarFiguras = () => { const c = document.getElementById("inf-fig-fam"); if (c && S.inf) c.innerHTML = figFamilia(); };
-  // tv.js se baja recién acá (y dibuja cuando el gráfico entra en pantalla). Un año en
-  // velas diarias. Mientras TradingView muestre su cartel de «no respondió», arriba
-  // vuelve el dibujo propio; si al final carga, se va.
-  const montarTVInforme = async () => {
+  const pintarFiguras = () => { const c = document.getElementById("inf-fig-fam"); if (c) c.innerHTML = figFamilia(); };
+  // tv.js se baja recién cuando se abre la pestaña Gráfico. Un año en velas diarias.
+  // Mientras TradingView muestre su cartel de «no respondió», arriba vuelve el dibujo
+  // propio (si hay informe a la vista); si al final carga, se va.
+  const montarTV = async () => {
     const host = document.getElementById("inf-tv");
-    if (!conTV || !host || !S.inf || host.dataset.puesto) return;
+    if (!conTV || !host || host.dataset.puesto) return;
     host.dataset.puesto = "1";
-    const d = S.inf, caja = document.getElementById("inf-fig-desde");
-    if (caja) caja.dataset.dibujo = "false";
-    const propio = dibujo => { if (caja && caja.isConnected && caja.dataset.dibujo !== String(dibujo)) { caja.dataset.dibujo = String(dibujo); caja.innerHTML = figDesde(d, dibujo); } };
+    const caja = document.getElementById("inf-fig-desde");
+    const propio = dibujo => { if (S.inf && caja && caja.dataset.dibujo !== String(dibujo)) { caja.dataset.dibujo = String(dibujo); caja.innerHTML = figDesde(S.inf, dibujo); } };
     const tv = await import("./tv.js?v=1").catch(() => null);
     if (!host.isConnected) return;
     if (!tv) { propio(true); return; }
-    const alto = innerWidth < 600 ? 380 : 440;
+    const alto = innerWidth < 600 ? 400 : 560;
     // Con la línea del índice (pedido de Lauti del 05/10/2026): el mismo de la tarjeta de
     // arriba y del gráfico de la ficha. Al comparar, TradingView pasa el eje a porcentaje
     // y lo cuenta desde el comienzo del período que se ve, no desde la publicación: por
@@ -1485,17 +1583,60 @@ try {
           <p>Tesis, KPIs, valuación por año, FODA y riesgos. El informe completo es para clientes de Valtia.</p>
           <div class="pie">${S.user ? "" : `<a class="va-link" href="/?login=1">Ingresá con tu cuenta →</a>`}<a class="va-link" href="/planes">Ver planes →</a></div>
         </div></div>`;
+    // con el informe a la vista, el destacado es la primera tarjeta del Resumen (heroInforme)
+    return "";
+  };
+  // ── el informe, repartido por la ficha. Llega como un solo HTML (informes_lib.armar del
+  // pipeline): acá se parte por sus títulos (h2) y cada capítulo va a la parte que le
+  // toca. Lo que no se reconoce va a «Tesis y riesgos», en su orden: no se pierde nada. ──
+  const PARTE_DE = h => /resumen/i.test(h) ? "resumen" : /pasando|trimestre|resultados|negocio|contexto/i.test(h) ? "actualidad"
+    : /valuaci|paga el mercado|objetivo|m[uú]ltiplo|precio justo/i.test(h) ? "valuacion" : "tesis";
+  const partirInforme = html => {
+    const tpl = document.createElement("template");
+    tpl.innerHTML = String(html || "");
+    const caps = [];
+    let kicker = "", kpis = "", aviso = "", cap = null;
+    [...tpl.content.children].forEach(n => {
+      if (n.matches("h2")) { cap = { parte: PARTE_DE(n.textContent), titulo: n.textContent.trim(), html: "", soloTexto: true, largo: 0 }; caps.push(cap); return; }
+      if (!cap && n.matches(".kicker")) { kicker = n.textContent.trim(); return; }
+      if (!cap && n.matches(".fsr-kpis")) { kpis = n.outerHTML; return; }
+      if (n.matches(".disclaimer")) { aviso = n.outerHTML; return; }
+      // las tarjetas sueltas (riesgos, la lectura de Valtia) van cada una en su lugar
+      if (cap && n.matches("div.card")) { caps.push({ parte: cap.parte, suelta: true, html: n.outerHTML }); return; }
+      if (!cap) { cap = { parte: "resumen", titulo: "", html: "", soloTexto: true, largo: 0 }; caps.push(cap); }
+      cap.html += n.outerHTML;
+      if (!n.matches("p")) cap.soloTexto = false;
+      cap.largo += n.textContent.length;
+    });
+    return { kicker, kpis, aviso, caps };
+  };
+  // un texto largo y corrido se lee mejor en dos columnas que en renglones de 130 letras
+  const capHtml = (c, extra = "") => c.suelta ? `<div class="va-cap fsr-reader suelta${extra}">${c.html}</div>`
+    : `<section class="va-cap fsr-reader${c.soloTexto && c.largo > 520 ? " cols" : ""}${extra}">${c.titulo ? `<h2>${esc(c.titulo)}</h2>` : ""}<div class="txt">${c.html}</div></section>`;
+  const BOTON_PDF = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M5 21h14"/></svg>Descargar PDF`;
+  // la primera tarjeta del Resumen: foto, título, de qué se trata, el resumen y por dónde seguir
+  const heroInforme = (d, partes) => {
     const f = fdate(d.fecha);
     const pp = Number(d.precio_pub) > 0 ? Number(d.precio_pub) : (esISO(f) ? cierreEn(f) : null);
     const dsd = pp && px.p ? (px.p / pp - 1) * 100 : null;
-    return `<div class="va-dest">
-        <a class="img" href="#informe" style="background-image:${fondoPortada(d)}" aria-label="Leer el informe"></a>
-        <div style="min-width:0">
-          <div class="eb">Último informe · ${esc(fLarga(f))}${d.visibilidad === "publico" ? " · gratis" : ""}</div>
-          <div class="tt">${esc(d.titulo)}</div>
-          ${d.resumen ? `<p>${esc(d.resumen)}</p>` : ""}
-          <div class="pie">${pp ? `<span class="pp">Precio en el informe <b>${usd(pp)}</b>${dsd != null ? ` · desde entonces <b class="${clase(dsd)}">${signo(dsd)}</b>` : ""}</span>` : ""}<a class="va-link" href="#informe">Leer informe →</a></div>
-        </div></div>`;
+    const resumen = partes.caps.filter(c => c.parte === "resumen");
+    return `<section class="va-card va-hero" id="informe">
+      <div class="va-hero-top">
+        <div class="img" style="background-image:${fondoPortada(d)}" role="img" aria-label="Portada del informe"></div>
+        <div class="tx">
+          <div class="eb">Informe Valtia · ${esc(fLarga(f))}${d.visibilidad === "publico" ? " · gratis" : ""}</div>
+          <h2 class="tit">${esc(d.titulo)}</h2>
+          ${d.resumen ? `<p class="bajada">${esc(d.resumen)}</p>` : ""}
+          ${pp ? `<div class="pp">Precio en el informe <b>${usd(pp)}</b>${dsd != null ? ` · desde entonces <b class="${clase(dsd)}">${signo(dsd)}</b>` : ""}</div>` : ""}
+          ${partes.kicker ? `<div class="kick">${esc(partes.kicker)}</div>` : ""}
+        </div>
+      </div>
+      ${resumen.map(c => capHtml(c)).join("")}
+      <div class="va-hero-pie">
+        <button type="button" class="va-sigue" data-ir="sig">Seguir leyendo →</button>
+        <button type="button" class="va-pdf" data-pdf>${BOTON_PDF}</button>
+      </div>
+    </section>`;
   };
 
   // ── Precio: rangos, línea del activo, índice punteado y la fecha del informe ──
@@ -1521,28 +1662,81 @@ try {
     (ra && sectorTxt(ra.sector)) || sectorN,
     emp.sector === "cripto" ? "Se opera las 24 h" : [BOLSA_NOM[BOLSA[t]], emp.sector === "arg" ? "BYMA" : ""].filter(Boolean).join(" y ")]);
 
+  // ── la ficha por partes (pedido de Lauti del 05/10/2026). Las pestañas son el orden de
+  // lectura: qué es y qué pensamos → qué está pasando → los números → si está cara →
+  // la tesis y los riesgos → el gráfico. Cada parte muestra pocas cosas y dice qué son. ──
+  const PARTES = [
+    ["resumen", "Resumen", ""],
+    ["actualidad", "Qué está pasando", "Lo último de la empresa: cómo le fue y qué se está diciendo de ella."],
+    ["numeros", "Números", "Los números que miramos antes de decidir, con los de empresas parecidas al lado para comparar."],
+    ["valuacion", "Valuación", "¿Está cara o barata? Cuánto se paga hoy por sus ganancias y qué precio le ponen los analistas."],
+    ["tesis", "Tesis y riesgos", "Por qué podría convenir, qué puede salir mal y con qué nos quedamos."],
+    ["graficos", "Gráfico", `El precio en el tiempo${BOLSA[BENCH] ? `, al lado de su índice (${BENCH_NOM})` : ""}.`],
+  ];
+  const intro = k => { const p = PARTES.find(x => x[0] === k); return `<p class="va-intro"><b>${p[1]}.</b> ${esc(p[2])}</p>`; };
   ficha.innerHTML = cabecera({ tk: t, nombre: emp.nombre, meta, precio: px.p ? usd(px.p) : "—", d: px.d != null ? px.d : null, hora: horaPrecio(ts) }) + `
+  <div id="va-tabs-ancla"></div>
+  <nav class="va-tabs" id="va-tabs" aria-label="Partes de la ficha de ${esc(t)}"><div class="va-in">
+    <div class="va-tabs-l" role="tablist">${PARTES.map(([k, n]) => `<button type="button" class="va-tab" role="tab" id="tab-${k}" data-ir="${k}" aria-controls="pan-${k}" aria-selected="false">${n}</button>`).join("")}</div>
+    <button type="button" class="va-pdf" data-pdf hidden>${BOTON_PDF}</button>
+  </div></nav>
   <div class="va-body"><div class="va-in">
-    ${lecturaHtml(ra, !ra && tec ? tec.rsi : null)}
-    <div id="mi-pos"></div>
-    <div class="va-grid">
-      <div class="va-col">
-        ${precioCard}
-        <section class="va-card" id="numeros">
-          <h2 class="va-h" id="estadisticas">Los números</h2>
-          <p class="va-sub">Lo que miro antes de decidir, con la mediana de su familia en el radar al lado cuando hay con quién comparar.</p>
-          <div id="numeros-box">${numerosHtml()}</div>
-        </section>
-        <section class="va-card" id="escribimos">
-          <div class="va-esc-top"><h2 class="va-h">Lo que escribimos sobre ${esc(t)}</h2><a class="va-link" href="/informes">Todos los informes →</a></div>
-          <div id="escribimos-box"></div>
-        </section>
+    <div class="va-pan" id="pan-resumen" role="tabpanel" aria-labelledby="tab-resumen">
+      ${lecturaHtml(ra, !ra && tec ? tec.rsi : null)}
+      <div id="mi-pos"></div>
+      <div class="va-grid">
+        <div class="va-col">
+          <div id="cap-resumen"></div>
+          <section class="va-card" id="escribimos">
+            <div class="va-esc-top"><h2 class="va-h">Lo que escribimos sobre ${esc(t)}</h2><a class="va-link" href="/informes">Todos los informes →</a></div>
+            <div id="escribimos-box"></div>
+          </section>
+          ${precioCard}
+        </div>
+        <aside class="va-col" aria-label="Más sobre ${esc(t)}">
+          ${CAJAS.carteras}
+          ${CAJAS.viene}
+          ${CAJAS.como}
+          ${CAJAS.sent}
+        </aside>
       </div>
-      <aside class="va-col" aria-label="Más sobre ${esc(t)}">
-        ${columnaDerecha()}
-      </aside>
     </div>
-    <div id="informe-full"></div>
+    <div class="va-pan" id="pan-actualidad" role="tabpanel" aria-labelledby="tab-actualidad" hidden>
+      ${intro("actualidad")}
+      <div class="va-grid">
+        <div class="va-col" id="cap-actualidad"></div>
+        <aside class="va-col">${CAJAS.noticias}</aside>
+      </div>
+    </div>
+    <div class="va-pan" id="pan-numeros" role="tabpanel" aria-labelledby="tab-numeros" hidden>
+      ${intro("numeros")}
+      <div id="cap-kpis"></div>
+      <div class="va-grid">
+        <div class="va-col">
+          <section class="va-card" id="numeros">
+            <h2 class="va-h" id="estadisticas">Los números</h2>
+            <p class="va-sub">Lo que miro antes de decidir, con la mediana de su familia en el radar al lado cuando hay con quién comparar.</p>
+            <div id="numeros-box">${numerosHtml()}</div>
+          </section>
+        </div>
+        <aside class="va-col" id="inf-fig-fam">${figFamilia()}</aside>
+      </div>
+    </div>
+    <div class="va-pan" id="pan-valuacion" role="tabpanel" aria-labelledby="tab-valuacion" hidden>
+      ${intro("valuacion")}
+      <div class="va-caps" id="cap-valuacion"></div>
+    </div>
+    <div class="va-pan" id="pan-tesis" role="tabpanel" aria-labelledby="tab-tesis" hidden>
+      ${intro("tesis")}
+      <div class="va-caps" id="cap-tesis"></div>
+    </div>
+    <div class="va-pan" id="pan-graficos" role="tabpanel" aria-labelledby="tab-graficos" hidden>
+      ${intro("graficos")}
+      <div id="inf-fig-desde"></div>
+      <div id="inf-tv"></div>
+    </div>
+    <nav class="va-guion" id="va-guion" aria-label="Seguir leyendo"></nav>
+    <div id="inf-print"></div>
     ${DISCLAIMER}
   </div></div>`;
 
@@ -1572,54 +1766,121 @@ try {
         Si lo tenés en pesos (CEDEAR o acción local), el porcentaje de tu posición es otro: lo ves en Mi cartera.</div>`;
   })();
 
-  // ── informe embebido en la ficha (una sola página por activo): /activo?t=X#informe ──
-  const renderInforme = d => {
-    const full = document.getElementById("informe-full");
-    if (!full || !d) return;
-    S.inf = d;
-    pintarEscribimos();
-    if (typeof S.redibujar === "function") S.redibujar();
-    full.innerHTML = `<div class="fsr-reader" id="informe">
-      <div class="fsr-rhead">
-        <div style="display:flex;gap:9px;margin-bottom:12px;flex-wrap:wrap"><span class="fsr-badge">${esc(d.tipo || "Informe")}</span>${d.categorias ? `<span class="fsr-tag">${esc(d.categorias)}</span>` : ""}</div>
-        <h1>${esc(d.titulo)}</h1>
-        <div class="inf-meta" style="margin:12px 0 0">${venc(fdate(d.fecha))} · ${esc(d.autor || "Lautaro Cuitiño · Valtia Analytics")}</div>
-      </div>
-      <div id="inf-figs">${figurasInforme(d)}</div>
-      ${d.contenido_html || ""}
-    </div>`;
-    montarTVInforme();
-    if (location.hash === "#informe") full.scrollIntoView();
+  // ── las pestañas. Una parte a la vista por vez; la dirección guarda cuál (#valuacion)
+  // para que se pueda compartir. #informe (los enlaces de Informes y del panel) abre el
+  // Resumen, que empieza por el informe. ──
+  const $id = id => document.getElementById(id);
+  const ALIAS = { informe: "resumen", general: "resumen", grafico: "graficos", estadisticas: "numeros", noticias: "actualidad" };
+  const hayParte = k => { const b = $id("tab-" + k); return !!b && !b.hidden; };
+  const partesALaVista = () => PARTES.map(p => p[0]).filter(hayParte);
+  let parteActual = "resumen";
+  const pintarGuion = () => {
+    const v = partesALaVista(), i = v.indexOf(parteActual), nom = k => PARTES.find(p => p[0] === k)[1];
+    const g = $id("va-guion");
+    if (!g) return;
+    g.hidden = v.length < 2;
+    g.innerHTML = (i > 0 ? `<button type="button" data-ir="${v[i - 1]}">← ${esc(nom(v[i - 1]))}</button>` : "")
+      + (i >= 0 && i < v.length - 1 ? `<button type="button" class="sig" data-ir="${v[i + 1]}">Sigue: ${esc(nom(v[i + 1]))} →</button>`
+        : S.inf ? `<button type="button" class="sig" data-pdf>Llevate el informe en PDF</button>` : "");
   };
-  // informe vedado: sin sesión se invita a ingresar; con sesión (y sin PRO)
-  // solo a los planes, porque ingresar ya no lo destapa
-  const pintarVedado = () => {
-    const full = document.getElementById("informe-full");
-    if (!full || S.inf) return;
-    full.innerHTML = `<div class="fsr-state" id="informe">El informe completo de ${esc(emp.nombre)} es exclusivo para clientes de Valtia.<br>
+  const irA = (k, subir) => {
+    k = ALIAS[k] || k;
+    if (!hayParte(k)) k = "resumen";
+    parteActual = k;
+    PARTES.forEach(([p]) => {
+      const pan = $id("pan-" + p), b = $id("tab-" + p);
+      if (pan) pan.hidden = p !== k;
+      if (b) { b.classList.toggle("on", p === k); b.setAttribute("aria-selected", String(p === k)); }
+    });
+    const b = $id("tab-" + k);
+    if (b && b.scrollIntoView) b.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "instant" });
+    pintarGuion();
+    if (k === "graficos") montarTV();
+    if (k === "resumen" && typeof S.redibujar === "function") S.redibujar();
+    // si las pestañas ya quedaron pegadas arriba, la parte nueva se lee desde su comienzo
+    const ancla = $id("va-tabs-ancla");
+    if (subir && ancla && ancla.getBoundingClientRect().top < 0) ancla.scrollIntoView({ behavior: "instant" });
+  };
+  // Descargar PDF: la impresión del navegador, que sabe guardar en PDF. Lo que se
+  // imprime es solo el informe corrido (#inf-print); el nombre del archivo sale del título.
+  const descargarPDF = () => {
+    if (!S.inf) return;
+    const titulo = document.title;
+    document.title = `Informe Valtia - ${t} - ${fdate(S.inf.fecha)}`;
+    addEventListener("afterprint", () => { document.title = titulo; }, { once: true });
+    window.print();
+  };
+  ficha.addEventListener("click", e => {
+    const pdf = e.target.closest("[data-pdf]");
+    if (pdf) { descargarPDF(); return; }
+    const b = e.target.closest("[data-ir]");
+    if (!b) return;
+    const v = partesALaVista();
+    const k = b.dataset.ir === "sig" ? (v[v.indexOf(parteActual) + 1] || parteActual) : b.dataset.ir;
+    irA(k, true);
+    history.replaceState(null, "", parteActual === "resumen" ? location.pathname + location.search : "#" + parteActual);
+  });
+  addEventListener("hashchange", () => irA(location.hash.slice(1) || "resumen", true));
+
+  // ── el informe: cada capítulo a su parte, y entero (como siempre) para el PDF ──
+  const candado = () => `<div class="fsr-state">Esta parte sale del informe completo de ${esc(emp.nombre)}, que es para clientes de Valtia.<br>
        ${S.user ? `Con tu plan actual no se puede leer: conocé los <a href="/planes">planes</a>.`
                 : `<a href="/?login=1">Ingresá con tu cuenta</a> para leerlo — o conocé los <a href="/planes">planes</a>.`}</div>`;
-  };
-  if (inf) renderInforme(inf);
-  else if (emp.slug) {
-    pintarVedado();
-    if (location.hash === "#informe") document.getElementById("informe").scrollIntoView();
-  }
-  // Con #informe la página baja al informe apenas se pinta, pero las cajas que
-  // llegan después (carteras, cómo comprarlo, noticias) lo empujan hacia abajo:
-  // mientras la persona no toque nada, se lo vuelve a buscar cada vez que la
-  // ficha cambia de alto (como mucho 10 segundos).
-  if (location.hash === "#informe" && "ResizeObserver" in window) {
-    let movio = false;
-    const hasta = Date.now() + 10000;
-    ["wheel", "touchstart", "keydown", "mousedown"].forEach(ev => addEventListener(ev, () => { movio = true; }, { once: true, passive: true }));
-    const ro = new ResizeObserver(() => {
-      if (movio || Date.now() > hasta) { ro.disconnect(); return; }
-      const el = document.getElementById("informe");
-      if (el) el.scrollIntoView();
+  const renderInforme = d => {
+    if (!d) return;
+    S.inf = d;
+    const partes = partirInforme(d.contenido_html);
+    const de = k => partes.caps.filter(c => c.parte === k);
+    const poner = (id, html) => { const el = $id(id); if (el) el.innerHTML = html; };
+    poner("cap-resumen", heroInforme(d, partes));
+    poner("cap-actualidad", de("actualidad").map(c => capHtml(c)).join(""));
+    poner("cap-kpis", partes.kpis ? `<section class="va-cap fsr-reader"><h2>Los números del informe</h2>${partes.kpis}</section>` : "");
+    ["valuacion", "tesis"].forEach(k => {
+      const caps = de(k);
+      poner("cap-" + k, caps.map(c => capHtml(c, caps.length === 1 ? " ancho" : "")).join("")
+        + (k === "tesis" && partes.aviso ? `<div class="va-cap fsr-reader pie ancho">${partes.aviso}</div>` : ""));
+      const b = $id("tab-" + k);
+      if (b) b.hidden = !caps.length;
     });
-    ro.observe(ficha);
-  }
+    const caja = $id("inf-fig-desde");
+    if (caja) { caja.dataset.dibujo = String(!conTV); caja.innerHTML = figDesde(d, !conTV); }
+    // el informe corrido, tal cual se leía antes: es lo que sale en el PDF
+    const foto = /^\/?img\/informes\/[^?#]+\.jpg$/.test(String(d.imagen || "")) ? String(d.imagen) : "";
+    poner("inf-print", `<div class="pdf-cab">
+        <div class="m"><svg width="30" height="30" viewBox="0 0 34 34" fill="none" aria-hidden="true"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg><span>VALTIA<small>Analytics</small></span></div>
+        <div class="w">valtia.tech/activo?t=${esc(t)}<br>Informe de ${esc(emp.nombre)} (${esc(t)})</div>
+      </div>
+      ${foto ? `<img class="pdf-foto" src="${esc(foto)}" alt="">` : ""}
+      <div class="fsr-reader">
+        <div class="fsr-rhead">
+          <div style="display:flex;gap:9px;margin-bottom:12px;flex-wrap:wrap"><span class="fsr-badge">${esc(d.tipo || "Informe")}</span>${d.categorias ? `<span class="fsr-tag">${esc(d.categorias)}</span>` : ""}</div>
+          <h1>${esc(d.titulo)}</h1>
+          <div class="inf-meta" style="margin:12px 0 0">${venc(fdate(d.fecha))} · ${esc(d.autor || "Lautaro Cuitiño · Valtia Analytics")}</div>
+        </div>
+        <div class="inf-figs">${figDesde(d, true)}</div>
+        ${d.contenido_html || ""}
+      </div>`);
+    document.body.classList.add("con-pdf");
+    ficha.querySelectorAll(".va-tabs [data-pdf]").forEach(b => { b.hidden = false; });
+    pintarEscribimos();
+    if (typeof S.redibujar === "function") S.redibujar();
+    irA(parteActual);
+  };
+  // informe vedado: las partes que salen del informe muestran el candado. Sin sesión se
+  // invita a ingresar; con sesión (y sin PRO) solo a los planes, porque ingresar ya no lo destapa
+  const pintarVedado = () => {
+    if (S.inf) return;
+    ["actualidad", "valuacion", "tesis"].forEach(k => { const el = $id("cap-" + k); if (el) el.innerHTML = `<div class="ancho">${candado()}</div>`; });
+  };
+  // sin informe publicado para esta empresa, las dos partes que son solo del informe no van
+  if (!emp.slug) ["valuacion", "tesis"].forEach(k => { const b = $id("tab-" + k); if (b) b.hidden = true; });
+  // el gráfico de TradingView necesita saber en qué bolsa cotiza
+  if (!conTV) { const b = $id("tab-graficos"); if (b) b.hidden = true; }
+  if (inf) renderInforme(inf);
+  else if (emp.slug) pintarVedado();
+  irA(location.hash.slice(1) || "resumen");
+  // con #informe se llega derecho a la tarjeta del informe; con otra parte, a las pestañas
+  if (location.hash) ((location.hash === "#informe" && $id("informe")) || $id("va-tabs-ancla")).scrollIntoView({ behavior: "instant" });
 
   montarTopRow();
   pintarEscribimos();
