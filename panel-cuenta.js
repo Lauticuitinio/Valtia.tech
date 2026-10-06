@@ -252,16 +252,24 @@ const planDe = S => PLANES[S.isAdmin ? 'admin' : S.cliente ? 'cliente' : S.pro ?
    pone ya:true acá y desaparece su etiqueta.
    "cierre" (25/09/2026, pedido de Lauti después de ver el de Senta) sí sale: lo
    manda cierre_cartera.py desde precios_intradia.py al cierre de cada rueda, solo
-   a quien lo prende acá y con el mail verificado. */
+   a quien lo prende acá y con el mail verificado.
+   Desde el 06/10/2026 también salen (y miran este interruptor):
+   - "compraventa" y "rotacion": los mails de las carteras (avisos_rotacion.py). Una
+     operación sola es «Compras y ventas»; una rotación o varias juntas le llegan a
+     quien tenga prendido cualquiera de los dos (adentro hay compras y ventas).
+     Con el plan PRO valen PRENDIDOS si la cuenta nunca los tocó (deOrigen): el mail
+     de una compra no depende de haber pasado por esta pantalla. Tiene que coincidir
+     con POR_DEFECTO de avisos_config.py, que es quien decide del lado del envío.
+   - "informes": informes_avisos.py, apagado salvo que se prenda acá. */
 const AVISOS = [
   { k: 'cierre', pro: false, t: 'Cierre diario de tu cartera',
     d: 'Cada día de rueda, al cierre: cuánto vale, cuánto se movió en pesos y en dólares, contra el S&P 500 y lo que más se movió.', ya: true },
-  { k: 'compraventa', pro: true, t: 'Compras y ventas',
-    d: 'El mismo día que operamos, con el precio y la razón.', ya: false },
-  { k: 'rotacion', pro: true, t: 'Rotaciones de las carteras que seguís',
-    d: 'Qué entra, qué sale y por qué.', ya: false },
+  { k: 'compraventa', pro: true, deOrigen: true, t: 'Compras y ventas',
+    d: 'Cada compra o venta de las carteras, con el precio y la razón. Sale a la mañana siguiente de operar.', ya: true },
+  { k: 'rotacion', pro: true, deOrigen: true, t: 'Rotaciones de las carteras que seguís',
+    d: 'Cuando hay más de un movimiento junto: qué entra, qué sale y por qué. Con «Compras y ventas» prendido ya las recibís.', ya: true },
   { k: 'informes', pro: false, t: 'Informes nuevos',
-    d: 'Cuando sale un informe de una empresa que tenés o seguís.', ya: false },
+    d: 'Cuando sale un informe de una empresa que tenés en Mi cartera o seguís con una alerta de precio, y los informes de contexto.', ya: true },
   { k: 'eventos', pro: false, t: 'Eventos de tus activos',
     d: 'Resultados, cupones y vencimientos, unos días antes.', ya: false },
   // el newsletter es la lista `newsletter` (la misma del formulario de Noticias y la
@@ -550,20 +558,21 @@ async function pintarAvisos(el, ctx, vigente) {
   const al = alertasDe(cfg);
   const guardados = (cfg && typeof cfg[CAMPO_AVISOS] === 'object' && cfg[CAMPO_AVISOS]) || {};
   const frec = FRECS.some(([k]) => k === (cfg && cfg[CAMPO_FREC])) ? cfg[CAMPO_FREC] : FREC_DEF;
-  // apagados por defecto, y los que todavía no tienen quién los mande arrancan
-  // apagados aunque nunca se hayan tocado
-  // el del newsletter no sale del doc de avisos: dice si la casilla está en la lista
-  const estado = k => k === 'newsletter' && news ? news.length > 0 : guardados[k] === true;
-  const sinLista = a => a.k === 'newsletter' && news === null;
-  const faltantes = AVISOS.filter(a => !a.ya).length;
-  // la marca va en cada fila que todavía no sale: las alertas de tus activos
-  // salen siempre, así que nunca es "ninguno se manda"
-  const marcaFila = faltantes > 0;
   // Los dos que el SPEC marca (PRO) son del plan PRO. A una cuenta gratuita se le
   // muestran igual, pero sin interruptor: dejarla prenderlos y contestarle
   // "guardado" sería prometerle un mail que su plan no incluye. Si ya venían
   // prendidos (fue PRO y dejó de serlo) quedan marcados y el guardado no los pisa.
   const sinPlan = a => !!a.pro && !S.pro;
+  // apagados por defecto, salvo los de las carteras (deOrigen), que con el plan valen
+  // prendidos mientras la cuenta no los apague: así los trata el envío
+  // el del newsletter no sale del doc de avisos: dice si la casilla está en la lista
+  const estado = a => a.k === 'newsletter' && news ? news.length > 0
+    : typeof guardados[a.k] === 'boolean' ? guardados[a.k] : !!a.deOrigen && !sinPlan(a);
+  const sinLista = a => a.k === 'newsletter' && news === null;
+  const faltantes = AVISOS.filter(a => !a.ya).length;
+  // la marca va en cada fila que todavía no sale: las alertas de tus activos
+  // salen siempre, así que nunca es "ninguno se manda"
+  const marcaFila = faltantes > 0;
   const hayBloqueados = AVISOS.some(sinPlan);
 
   const fila = a => `<label class="v3q-av${sinPlan(a) ? ' quieto' : ''}">
@@ -573,7 +582,7 @@ async function pintarAvisos(el, ctx, vigente) {
         sinLista(a) ? '<span class="v3q-tag aun">no pudimos leer tu suscripción: recargá la página</span>' : ''}</div>
       <div class="d">${esc(a.d)}</div>
     </div>
-    <span class="v3q-sw"><input type="checkbox" data-av="${a.k}"${estado(a.k) ? ' checked' : ''}${
+    <span class="v3q-sw"><input type="checkbox" data-av="${a.k}"${estado(a) ? ' checked' : ''}${
       sinPlan(a) || sinLista(a) ? ' disabled' : ''} aria-label="${esc(a.t)}"><i></i></span>
   </label>`;
 
@@ -659,8 +668,13 @@ async function pintarAvisos(el, ctx, vigente) {
   ok.addEventListener('click', async () => {
     ok.disabled = true;
     poner('Guardando…');
+    // Uno que el plan no deja tocar no se escribe: queda como estaba (con merge, lo
+    // que no va en el mapa no se pisa). Guardarle un "apagado" a una cuenta gratuita
+    // le cortaría, sin que lo haya pedido, los avisos de las carteras abiertas que
+    // le llegan por estar en el newsletter
     const mapa = {};
     AVISOS.forEach(a => {
+      if (sinPlan(a)) return;
       const c = box.querySelector(`[data-av="${a.k}"]`);
       mapa[a.k] = !!(c && c.checked);
     });

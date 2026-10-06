@@ -21,7 +21,7 @@ import { renderAlertas, contarNoLeidas } from './panel-alertas.js?v=5';
 // panel las evalúa con los precios que lee y cuenta las que saltaron para la pastilla
 import { instalarEvaluacion, evaluarConPrecios, contarDisparadasNoVistas, fraseDisparo, fmtPrecio } from './alertas-precio.js?v=1';
 import { renderAgenda } from './panel-agenda.js?v=2';
-import { renderCuenta } from './panel-cuenta.js?v=5';
+import { renderCuenta } from './panel-cuenta.js?v=6';
 import { renderOperar } from './panel-operar.js?v=10';
 // la lista de espera PRO (waitlistPro): solo el admin la ve y solo a él se le cuenta la pastilla
 import { renderEspera, contarSinContactar } from './panel-espera.js?v=1';
