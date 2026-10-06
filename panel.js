@@ -8,21 +8,21 @@ import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, quer
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { calcular, agruparPorBroker, agruparPorActivo, normalizarTicker, reiniciarMiCartera, completarPreciosDeRentaFija }
-  from './mi-cartera.js?v=48';
+  from './mi-cartera.js?v=49';
 import { fxMercado, registrarImplicito, etiquetaFx } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
-import { renderResumen } from './panel-resumen.js?v=11';
+import { renderResumen } from './panel-resumen.js?v=12';
 import { renderComprar as renderComprarV3 } from './panel-comprar.js?v=2';
 import { renderCarteras as renderCarterasV3 } from './panel-carteras.js?v=4';
 import { renderMensual } from './panel-mensual.js?v=2';
-import { renderAlertas, contarNoLeidas } from './panel-alertas.js?v=4';
+import { renderAlertas, contarNoLeidas } from './panel-alertas.js?v=5';
 // alertas de precio por activo (la única puerta a inversores/{email}/alertasPrecio): el
 // panel las evalúa con los precios que lee y cuenta las que saltaron para la pastilla
 import { instalarEvaluacion, evaluarConPrecios, contarDisparadasNoVistas, fraseDisparo, fmtPrecio } from './alertas-precio.js?v=1';
 import { renderAgenda } from './panel-agenda.js?v=2';
 import { renderCuenta } from './panel-cuenta.js?v=5';
-import { renderOperar } from './panel-operar.js?v=9';
+import { renderOperar } from './panel-operar.js?v=10';
 // la lista de espera PRO (waitlistPro): solo el admin la ve y solo a él se le cuenta la pastilla
 import { renderEspera, contarSinContactar } from './panel-espera.js?v=1';
 // el rendimiento de las carteras y de cada posición (solo el admin)
