@@ -94,7 +94,7 @@ img{max-width:100%}
 .nl-box input:focus{border-color:#E8CE96}
 .nl-box button{width:100%;margin-top:10px;font:600 12.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#0E1830;background:#E8CE96;border:none;border-radius:8px;padding:12px;cursor:pointer}
 .nl-box button:hover{background:#fff}
-.nl-msg{font:500 13px 'IBM Plex Sans',sans-serif;margin-top:10px;color:#7FD8A4;display:none}
+.nl-msg{font:500 13px 'IBM Plex Sans',sans-serif;line-height:1.5;margin-top:10px;color:#7FD8A4;display:none}
 
 /* footer */
 footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:40px}
@@ -333,19 +333,25 @@ try {
     '<div class="empty-state">Estamos preparando nuevos análisis. Volvé pronto.</div>';
 }
 
-/* suscripción al newsletter */
+/* suscripción al newsletter. El formulario no anota a nadie en la lista: deja un
+   pedido, y a esa casilla le llega un mail con un enlace para confirmar (lo manda
+   newsletter_confirmar.py, en la corrida de cada 15 minutos). Recién al tocarlo
+   queda suscripta: así nadie puede anotar el mail de otra persona. */
 window.suscribirNews = async () => {
   const inp = document.getElementById('nl-email');
   const msg = document.getElementById('nl-msg');
   const email = (inp.value || "").trim();
   msg.style.display = 'block';
-  if (!/.+@.+\..+/.test(email)) {
+  // la misma forma que aceptan la regla de Firestore y el envío (letras, números y . _ % + -)
+  if (!/^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email) || email.length >= 120) {
     msg.style.color = '#F5A5A5'; msg.textContent = 'Escribí un email válido.';
     return;
   }
   try {
-    await addDoc(collection(db, "newsletter"), { email, fecha: serverTimestamp() });
-    msg.style.color = '#7FD8A4'; msg.textContent = '¡Listo! Te vas a enterar primero.';
+    await addDoc(collection(db, "newsletterPedidos"), { email, fecha: serverTimestamp(), estado: 'nuevo' });
+    msg.style.color = '#7FD8A4';
+    // no se afirma que el mail sale: si la casilla ya está suscripta (o ya se le escribió hoy) no sale otro
+    msg.textContent = 'Casi listo. Si esa casilla todavía no está suscripta, le llega un mail para confirmar: puede tardar hasta media hora. Si no lo ves, mirá en Spam.';
     inp.value = '';
   } catch (e) {
     msg.style.color = '#F5A5A5'; msg.textContent = 'No se pudo guardar, probá de nuevo.';

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confirmar suscripción — Valtia Analytics</title>
+<!-- página de un solo uso, con una clave en la dirección: fuera de los buscadores y
+     sin mandarle la dirección a ningún otro sitio -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/favicon-180.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0E1830">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Confirmar la suscripción al newsletter — página del sitio con las reglas
+     globales del rediseño (sitio.css), igual que la de la baja. Se llega desde el
+     botón del mail de confirmación (newsletter_confirmar.py). ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;display:flex;flex-direction:column;background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#101010;--v-ancho:560px}
+main{flex:1 0 auto;width:100%;max-width:calc(var(--v-ancho) + 2 * var(--v-gutter));margin:0 auto;padding:18px var(--v-gutter) 60px}
+.card{background:#fff;border:1px solid #E7E3DA;border-radius:12px;padding:28px 30px}
+.card p{font-size:15px;color:#57534A;line-height:1.7;margin:0 0 20px}
+.card button{font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;background:#0E1830;color:#fff;border:none;border-radius:8px;padding:13px 26px;cursor:pointer}
+.card button:hover{background:#1F7A4D;color:#fff}
+.card button:disabled{opacity:.6;cursor:default}
+.msg{font-size:14px;font-weight:600;margin-top:18px;display:none;line-height:1.6}
+.card .volver-a{display:inline-block;margin-top:22px;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8A6A2F;text-decoration:none}
+.card .volver-a:hover{color:#101010}
+footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.footer-copy{font:400 12.5px 'IBM Plex Sans',sans-serif;color:rgba(255,255,255,.35)}
+</style>
+<link rel="stylesheet" href="sitio.css?v=2">
+</head>
+<body>
+<nav class="vnav">
+  <a href="/" class="nav-brand" aria-label="Valtia Analytics — inicio">
+    <svg class="nav-logo" width="40" height="40" viewBox="0 0 34 34" fill="none" aria-hidden="true"><rect width="34" height="34" rx="4" fill="#1A3A5C"/><polyline points="5,25 11,14 17,20 23,9 29,13" stroke="#B8975A" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="23" cy="9" r="2.5" fill="#B8975A"/></svg>
+    <div><div class="nav-name">VAL<span>T</span>IA</div><div class="nav-sub">Analytics</div></div>
+  </a>
+  <div class="nav-links">
+    <a href="/">Inicio</a>
+    <a href="/cartera">Carteras</a>
+    <a href="/inversion-mensual">Inversión mensual</a>
+    <a href="/noticias">Noticias</a>
+    <a href="/informes">Informes</a>
+    <a href="/herramientas">Herramientas</a>
+    <a href="/planes">Planes</a>
+  </div>
+  <div class="nav-right">
+    <a href="/?login=1" class="nav-cta">Ingresar / Crear cuenta</a>
+  </div>
+</nav>
+
+<!-- cotizaciones en vivo, debajo del nav (módulo único del sitio: cotizaciones.js) -->
+<div id="valtia-cot"></div>
+
+<!-- título de la página: negro sobre blanco -->
+<header class="v-tit"><div class="v-tit-in">
+  <h1>Confirmar suscripción</h1>
+  <p class="v-baj">El newsletter de Valtia en tu casilla</p>
+</div></header>
+
+<main>
+  <div class="card">
+    <p id="texto">¿Confirmás que querés recibir el newsletter de Valtia en tu casilla? Son las noticias del día, de lunes a viernes a la mañana, el resumen de la semana los lunes y un aviso cuando hay una compra o una venta en las carteras abiertas.</p>
+    <button id="btn" onclick="confirmar()">Sí, suscribirme</button>
+    <div class="msg" id="msg"></div>
+    <a class="volver-a" href="/noticias">← Ir a las noticias</a>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-copy">Valtia Analytics · Córdoba, Argentina · <a href="/privacidad" style="color:inherit;text-decoration:underline">Política de Privacidad</a></div>
+</footer>
+
+<a href="mailto:soporte@valtia.tech?subject=Consulta%20desde%20valtia.tech" class="wa-float" aria-label="Escribinos por mail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E1830" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6l9 6 9-6"/></svg></a>
+
+<script type="module">
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = getApps().length ? getApp() : initializeApp({
+  apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
+  authDomain: 'valtia-analytics.firebaseapp.com',
+  projectId: 'valtia-analytics',
+});
+const db = getFirestore(app);
+/* el enlace del mail trae el pedido (id) y su clave (k). La clave es lo que demuestra
+   que quien confirma es quien recibió el mail: la regla de Firestore la compara con la
+   que guardó el envío en el pedido, que desde acá no se puede leer */
+const q = new URLSearchParams(location.search);
+const id = q.get('id') || '', k = q.get('k') || '';
+const texto = document.getElementById('texto');
+const msg = document.getElementById('msg');
+const btn = document.getElementById('btn');
+const poner = (t, color) => { msg.style.display = 'block'; msg.style.color = color; msg.textContent = t; };
+
+if (!/^[A-Za-z0-9]{20}$/.test(id) || k.length < 32) {
+  texto.textContent = 'El enlace no es válido. Usá el botón «Confirmar mi suscripción» del mail que te mandamos.';
+  btn.style.display = 'none';
+}
+
+window.confirmar = async () => {
+  btn.disabled = true;
+  msg.style.display = 'none';
+  try {
+    // sin conexión el SDK no falla: deja la escritura en espera. A los 15 segundos se
+    // avisa y se devuelve el botón (si la primera llega a salir, la segunda dice «ya se usó»)
+    await Promise.race([
+      updateDoc(doc(db, 'newsletterPedidos', id), { estado: 'confirmado', k, confirmadoEn: serverTimestamp() }),
+      new Promise((_, no) => setTimeout(() => no({ code: 'sin-respuesta' }), 15000)),
+    ]);
+    texto.textContent = 'Listo, confirmaste tu suscripción.';
+    poner('En unos minutos tu casilla entra a la lista, y el próximo newsletter te llega a la mañana, de lunes a viernes. Te das de baja cuando quieras con el enlace que viene al pie de cada mail.', '#1F7A4D');
+    btn.style.display = 'none';
+  } catch (e) {
+    const c = String((e && e.code) || '');
+    if (/permission-denied|not-found/.test(c)) {
+      // el servidor no dice por qué (el pedido no se puede leer): son los tres casos posibles
+      poner('Este enlace ya se usó o venció. Si ya habías confirmado, no hace falta hacer nada más. Si no, anotate de nuevo desde Noticias y te mandamos otro.', '#B23A3A');
+      btn.style.display = 'none';
+    } else {
+      poner('No se pudo confirmar. Revisá tu conexión y probá de nuevo en un rato.', '#B23A3A');
+      btn.disabled = false;
+    }
+  }
+};
+</script>
+<script type="module" src="nav-auth.js?v=10"></script>
+<script type="module" src="cotizaciones.js?v=3"></script>
+<script src="nav-menu.js?v=13"></script>
+</body>
+</html>

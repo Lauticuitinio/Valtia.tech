@@ -528,33 +528,80 @@ service cloud.firestore {
       allow create, delete: if isAdmin();
     }
 
-    // ── NEWSLETTER (suscripciones desde Noticias) ──
-    // Cualquiera puede suscribirse (solo crear, con forma de email); la
-    // lista solo la ve el admin. La baja es por link con el id del doc
-    // (id aleatorio no adivinable que solo viaja en el mail del suscripto),
-    // por eso delete abierto: sin lectura pública no se pueden enumerar.
-    // Desde el 05/10/2026 el interruptor «Newsletter» de Mi cuenta es esta misma
-    // lista: quien entró con su cuenta (mail VERIFICADO) puede leer SOLO los docs
-    // de su propia casilla, para saber si está suscripto y poder darse de baja. La
+    // ── NEWSLETTER (la lista de suscriptos) ──
+    // Desde el 06/10/2026 nadie entra a la lista sin demostrar que la casilla es
+    // suya (antes cualquiera podía anotar el mail de otra persona desde Noticias):
+    //  - desde Mi cuenta, con la sesión abierta y el mail VERIFICADO, cada uno
+    //    anota SOLO su propia casilla;
+    //  - el formulario público de Noticias ya no escribe acá: deja un pedido en
+    //    newsletterPedidos (abajo) y el alta la hace el envío (con la cuenta de
+    //    servicio, que no pasa por estas reglas) cuando la persona toca el enlace
+    //    del mail de confirmación.
+    // La lista solo la ve el admin. La baja es por link con el id del doc (id
+    // no adivinable que solo viaja en el mail del suscripto), por eso delete
+    // abierto: sin lectura pública no se pueden enumerar.
+    // Quien entró con su cuenta (mail VERIFICADO) puede leer SOLO los docs de su
+    // propia casilla, para saber si está suscripto y poder darse de baja. La
     // consulta del panel filtra por email == el de la sesión; cualquier otra se
     // rechaza, así que nadie puede listar casillas ajenas.
     match /newsletter/{docId} {
-      allow create: if request.resource.data.keys().hasOnly(['email', 'fecha'])
-        && request.resource.data.email is string
-        && request.resource.data.email.matches('.+@.+[.].+')
-        && request.resource.data.email.size() < 120;
+      allow create: if esVerificado()
+        && request.resource.data.keys().hasOnly(['email', 'fecha'])
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.fecha == request.time;
       allow delete: if true;
       allow read: if isAdmin()
         || (esVerificado() && resource.data.email == request.auth.token.email);
       allow update: if isAdmin();
     }
 
+    // ── PEDIDOS DE SUSCRIPCIÓN AL NEWSLETTER (formulario público, con confirmación) ──
+    // El formulario de Noticias deja acá {email, fecha, estado: 'nuevo'} y nada
+    // más: el id tiene que ser uno de los de Firestore y la fecha, la del momento.
+    // El envío (newsletter_confirmar.py, con la cuenta de servicio) le manda a
+    // esa casilla UN mail con un enlace que lleva una clave al azar; la clave
+    // queda en el pedido (campo token), que nadie de afuera puede leer.
+    // La página confirmar-suscripcion.html marca el pedido como confirmado, y la
+    // regla lo acepta SOLO si trae esa misma clave, el enlace no venció y no
+    // toca ningún otro campo. Recién ahí el envío da de alta la casilla en la
+    // lista. Sin la clave del mail nadie puede confirmar por otro, aunque sepa
+    // el id del pedido (lo conoce quien llenó el formulario).
+    match /newsletterPedidos/{docId} {
+      allow create: if docId.matches('[A-Za-z0-9]{20}')
+        && request.resource.data.keys().hasOnly(['email', 'fecha', 'estado'])
+        && request.resource.data.email is string
+        && request.resource.data.email.matches('[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]+')
+        && request.resource.data.email.size() < 120
+        && request.resource.data.fecha == request.time
+        && request.resource.data.estado == 'nuevo';
+      allow update: if resource.data.estado in ['enviando', 'enviado']
+        && resource.data.token is string
+        && resource.data.token.size() >= 32
+        && resource.data.vence is timestamp
+        && request.time < resource.data.vence
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado', 'k', 'confirmadoEn'])
+        && request.resource.data.estado == 'confirmado'
+        && request.resource.data.k == resource.data.token
+        && request.resource.data.confirmadoEn == request.time;
+      allow read, delete: if isAdmin();
+    }
+
+    // La cuenta de mails de confirmación por casilla (para que el formulario no
+    // sirva para llenarle el buzón a nadie). Solo la usa el envío.
+    match /newsletterTopes/{docId} {
+      allow read, write: if false;
+    }
+
     // ── LISTA DE ESPERA DE VALTIA PRO ──
     // Captura del interesado en la sección de planes (sin login). Igual que
     // newsletter: cualquiera crea su registro con forma de email; la lista
     // solo la ve el admin. Sin lectura pública no se puede enumerar.
+    // El id tiene que ser uno de los de Firestore (los dos formularios usan
+    // addDoc): el panel del admin lo usa para saber sobre qué fila se hizo clic
+    // en «Dar PRO», y con un id armado a mano se podía confundir una fila con otra.
     match /waitlistPro/{docId} {
-      allow create: if request.resource.data.keys().hasOnly(['email', 'fecha', 'origen'])
+      allow create: if docId.matches('[A-Za-z0-9]{20}')
+        && request.resource.data.keys().hasOnly(['email', 'fecha', 'origen'])
         && request.resource.data.email is string
         && request.resource.data.email.matches('.+@.+[.].+')
         && request.resource.data.email.size() < 120
@@ -587,13 +634,29 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // ── USUARIOS PRO (acceso pago, alta manual con marcar_pro.py) ──
+    // ── USUARIOS PRO (acceso pago, alta manual) ──
     // Cada usuario puede consultar SU propio doc (para que la web sepa si
     // destapar el contenido); la lista completa solo la ve el admin.
+    // El alta la hace el admin: con marcar_pro.py (cuenta de servicio) o, desde
+    // el 06/10/2026, con «Dar PRO» en la Lista de espera del panel. Desde la web
+    // SOLO el admin puede crear o borrar, y solo un doc con esta forma exacta:
+    // el id es el mail en minúscula (así lo busca esCliente()), y adentro van
+    // plan 'pro', una nota corta y la fecha del momento. No hay update: para
+    // cambiar algo se quita y se da de nuevo. Nadie más puede escribir acá.
     match /usuariosPro/{email} {
       allow get: if isAdmin() || (esVerificado() && request.auth.token.email == email);
       allow list: if isAdmin();
-      allow write: if false;
+      allow create: if isAdmin()
+        && email == email.lower()
+        && email.size() < 120
+        && email.matches('[^@/ ]+@[^@/ ]+[.][^@/ ]+')
+        && request.resource.data.keys().hasOnly(['plan', 'nota', 'desde'])
+        && request.resource.data.plan == 'pro'
+        && request.resource.data.nota is string
+        && request.resource.data.nota.size() < 200
+        && request.resource.data.desde == request.time;
+      allow delete: if isAdmin();
+      allow update: if false;
     }
 
     // ── BALANCE CONSOLIDADO DEL FONDO (fondo_web.json) ──
