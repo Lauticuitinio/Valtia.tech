@@ -19,7 +19,7 @@
 // No importa panel.js (sería circular): todo llega por ctx.
 import { base } from './activos.js?v=7';
 import { eventos, TIPOS, TIPO_RESUMEN } from './panel-eventos.js?v=1';
-import { evolucionComparada, convertir } from './mi-cartera.js?v=47';
+import { evolucionComparada, convertir } from './mi-cartera.js?v=48';
 import { nombreBench, benchsDisponibles } from './evolucion.js?v=3';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 // un solo criterio de "qué tipo de activo es" para Mi cartera, el Resumen y Movimientos

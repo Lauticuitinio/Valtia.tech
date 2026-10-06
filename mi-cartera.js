@@ -1680,16 +1680,16 @@ function comprasHTML(f, cur, bonos) {
    desplegable. El umbral va en la moneda y la unidad en que COTIZA el activo
    —px.precio y px.moneda, nunca el valor convertido de la vista; cada 100 VN en
    la renta fija— porque es contra eso que compara el panel en cada repintado (y
-   el pipeline, cuando exista). Sin precio, con sinDatos o en otra moneda, el
+   el pipeline, alertas_precio.py). Sin precio, con sinDatos o en otra moneda, el
    botón queda apagado y el title dice por qué. ── */
 const TXT_SIN_PRECIO_ALERTA = "Todavía no tenemos el precio de este activo: cuando llegue vas a poder ponerle una alerta.";
-/* lo que hace HOY la alerta, sin prometer de más: la compara el panel con los
-   precios que lee Mi cartera (al abrir el panel y cada dos minutos mientras estás
-   acá; el sync los actualiza cada 15 minutos en rueda). El pipeline que la revisa
-   con el panel cerrado y manda el mail todavía no existe */
-const NOTA_ALERTA = "Te avisamos acá, en el panel: cuando el precio cruce ese valor, la alerta salta y queda en Alertas. "
-  + "Por ahora se revisa cuando abrís el panel y mientras estás en Mi cartera (los precios se actualizan cada 15 minutos en rueda). "
-  + "El aviso por mail todavía no sale.";
+/* lo que hace la alerta, sin prometer de más: la compara el panel con los precios
+   que lee Mi cartera (al abrir el panel y cada dos minutos mientras estás acá) y,
+   desde el 06/10/2026, el pipeline (alertas_precio.py) cada 15 minutos en rueda,
+   con el panel cerrado también; ese es el que manda el mail. Fuera de rueda los
+   precios no se actualizan y no salta */
+const NOTA_ALERTA = "Te avisamos acá, en el panel, y por mail: cuando el precio cruce ese valor, la alerta salta, queda en Alertas y te llega un mail a la casilla de tu cuenta. "
+  + "En rueda se revisa cada 15 minutos, aunque tengas el panel cerrado. Cada alerta salta una sola vez.";
 
 /* ¿es un CEDEAR? Con el panel, su criterio único (ctx.tipoActivo, tipos-activo.js);
    sin él, lo mismo que hace ese módulo con un .BA: acción argentina por el sector

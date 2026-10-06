@@ -50,7 +50,8 @@
 // precio. El umbral va en la moneda y la unidad en que cotiza el activo (cada 100 VN en
 // renta fija), nunca convertido. Al dibujar ese segmento con disparadas sin ver, se
 // marcan vistas (apaga la pastilla del lateral) y se repinta UNA vez. El mail lo manda el
-// pipeline, que todavía no sale: acá no se promete.
+// pipeline (alertas_precio.py, desde el 06/10/2026): mira las alertas cada 15 minutos en
+// rueda, con el panel cerrado también, y avisa cuando una salta.
 import { getFirestore, collection, getDocs, doc, query, where, writeBatch, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -736,8 +737,8 @@ function fechaHoraAR(t, hoy) {
 /* ───────────────────────── tus alertas de precio: armado ───────────────────────── */
 const ladoPrecio = () => `<aside class="v3al-lat"><div class="v3al-lado"><div class="v3al-eye">Cómo te llegan</div>
     <p>Cuando un activo cruza tu umbral, la alerta salta y queda acá, en el historial, con la pastilla de Alertas encendida.</p>
-    <p>Por ahora se revisa cuando abrís el panel y mientras estás en <b>Mi cartera</b>, que relee los precios cada dos minutos (en rueda se actualizan cada 15 minutos). Con el panel cerrado no se revisa.</p>
-    <p>El aviso por mail todavía no sale.</p>
+    <p>Te avisamos también por mail, a la casilla de tu cuenta. Cada alerta salta una sola vez.</p>
+    <p>En rueda la revisamos cada 15 minutos, aunque tengas el panel cerrado. Fuera de rueda y el fin de semana los precios no se actualizan, así que no salta.</p>
   </div></aside>`;
 
 function armarPrecio(p, ctx) {

@@ -888,7 +888,7 @@ function updateChartTheme(){
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   import { getDatabase, ref, push, onValue, serverTimestamp as dbTimestamp }
            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-  import { iniciarPanel } from './panel.js?v=58';
+  import { iniciarPanel } from './panel.js?v=59';
   // Términos y Condiciones: el modal del alta y la puerta del panel
   import { exigirTerminos, cerrarTerminos, pedirTerminosAlta, anotarAlta, olvidarAlta } from './terminos-aceptar.js?v=1';
 
@@ -1301,7 +1301,7 @@ function updateChartTheme(){
 
     // "Mi cartera": seguimiento de las posiciones propias (todo usuario con
     // sesión, admin incluido). Se carga aparte para no demorar el portal.
-    import('./mi-cartera.js?v=47')
+    import('./mi-cartera.js?v=48')
       .then(m => m.initMiCartera(user, document.getElementById('tab-micartera')))
       .catch(() => {});
   }
