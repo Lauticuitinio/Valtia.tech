@@ -46,6 +46,11 @@ const SOPORTE = 'soporte@valtia.tech';
    estos dos y nada más. */
 const CAMPO_AVISOS = 'avisos';
 const CAMPO_FREC = 'frecuenciaAvisos';
+// cuándo se movió por última vez el selector de arriba. Se escribe SOLO cuando cambia: el
+// resumen diario cuenta lo que pasó desde ahí (lo anterior ya llegó suelto), y el envío
+// toma «diaria» solo si este campo existe (avisos_config.py): hasta el 06/10/2026 la
+// pantalla guardaba «diaria» como valor de fábrica sin que nadie lo eligiera
+const CAMPO_FREC_DESDE = 'frecuenciaDesde';
 
 /* ── alertas de tus activos (alertas_cartera.py) ───────────────────────────────
    Los campos, las claves y los valores son EXACTAMENTE los que aceptan
@@ -265,23 +270,28 @@ const AVISOS = [
   { k: 'cierre', pro: false, t: 'Cierre diario de tu cartera',
     d: 'Cada día de rueda, al cierre: cuánto vale, cuánto se movió en pesos y en dólares, contra el S&P 500 y lo que más se movió.', ya: true },
   { k: 'compraventa', pro: true, deOrigen: true, t: 'Compras y ventas',
-    d: 'Cada compra o venta de las carteras, con el precio y la razón. Sale a la mañana siguiente de operar.', ya: true },
+    d: 'Cada compra o venta de las carteras, con el precio y la razón. Sale el mismo día, a los pocos minutos de operar.', ya: true },
   { k: 'rotacion', pro: true, deOrigen: true, t: 'Rotaciones de las carteras que seguís',
     d: 'Cuando hay más de un movimiento junto: qué entra, qué sale y por qué. Con «Compras y ventas» prendido ya las recibís.', ya: true },
   { k: 'informes', pro: false, t: 'Informes nuevos',
     d: 'Cuando sale un informe de una empresa que tenés en Mi cartera o seguís con una alerta de precio, y los informes de contexto.', ya: true },
-  { k: 'eventos', pro: false, t: 'Eventos de tus activos',
-    d: 'Resultados, cupones y vencimientos, unos días antes.', ya: false },
+  // «Eventos de tus activos» (resultados y vencimientos, unos días antes) se unió el
+  // 06/10/2026 con «Alertas de tus activos», el bloque de arriba, que ya los manda
+  // (tipos "resultados" y "vencimientos"). La clave `eventos` del mapa no se usa más:
+  // si alguna cuenta la tiene guardada, queda como está.
   // el newsletter es la lista `newsletter` (la misma del formulario de Noticias y la
   // que lee newsletter_envio.py): el interruptor muestra si esta casilla está en la
   // lista, y Guardar la suma o la saca. Ver suscripcionNews() más abajo.
   { k: 'newsletter', pro: false, t: 'Newsletter',
     d: 'Las noticias del día, de lunes a viernes a la mañana, y los lunes el resumen de la semana.', ya: true },
   { k: 'resumen', pro: false, t: 'Resumen mensual de tu cartera',
-    d: 'Cómo te fue en el mes contra tu índice de referencia.', ya: false },
+    d: 'Los primeros días de cada mes: cuánto rindió tu cartera el mes anterior, en pesos y en dólares, contra el S&P 500.', ya: true },
 ];
 const FRECS = [['momento', 'Al momento'], ['diaria', 'Resumen diario']];
-const FREC_DEF = 'diaria';   // como el resto de los mails: como mucho uno por día
+// Quien nunca eligió recibe cada aviso al momento (así lo trata el envío: avisos_config.py);
+// «Resumen diario» junta las compras, ventas e informes del día en un solo mail a la tarde
+// (resumen_diario.py) y vale solo si la cuenta lo guarda así
+const FREC_DEF = 'momento';
 
 const db = () => getFirestore(getApp());
 const refConfig = email => doc(db(), 'inversores', email, 'alertas', 'config');
@@ -557,7 +567,9 @@ async function pintarAvisos(el, ctx, vigente) {
 
   const al = alertasDe(cfg);
   const guardados = (cfg && typeof cfg[CAMPO_AVISOS] === 'object' && cfg[CAMPO_AVISOS]) || {};
-  const frec = FRECS.some(([k]) => k === (cfg && cfg[CAMPO_FREC])) ? cfg[CAMPO_FREC] : FREC_DEF;
+  // «diaria» solo si la cuenta la eligió (tiene la hora del cambio); si no, al momento
+  const frec = cfg && cfg[CAMPO_FREC] === 'diaria' && cfg[CAMPO_FREC_DESDE] ? 'diaria' : FREC_DEF;
+  let frecGuardada = frec;
   // Los dos que el SPEC marca (PRO) son del plan PRO. A una cuenta gratuita se le
   // muestran igual, pero sin interruptor: dejarla prenderlos y contestarle
   // "guardado" sería prometerle un mail que su plan no incluye. Si ya venían
@@ -622,9 +634,10 @@ async function pintarAvisos(el, ctx, vigente) {
     AVISOS.map(fila).join('') +
     (hayBloqueados ? `<p class="v3q-nota">Los que dicen «Con Valtia PRO» llegan con ese plan:
       <a href="/planes">mirá los planes</a>.</p>` : '') +
-    `<div class="v3q-frec"><span class="l">Cuándo mandar los demás avisos</span>
+    `<div class="v3q-frec"><span class="l">Compras, ventas e informes: cuándo te los mandamos</span>
       <div class="v3q-seg" role="group" aria-label="Frecuencia de los demás avisos">${FRECS.map(([k, t]) =>
         `<button type="button" data-frec="${k}" class="${k === frec ? 'on' : ''}" aria-pressed="${k === frec}">${t}</button>`).join('')}</div></div>
+    <p class="v3q-alnota" style="margin-top:6px">«Al momento»: un mail por cada aviso, apenas pasa. «Resumen diario»: uno solo a la tarde, a las 19, con todo lo del día.</p>
     <div class="v3q-pie"><button type="button" class="v3q-btn" id="v3q-ok">Guardar</button>
       <span class="v3q-msg" id="v3q-amsg" style="margin:0">Llegan a ${esc(S.email)}.</span></div>`;
 
@@ -692,10 +705,14 @@ async function pintarAvisos(el, ctx, vigente) {
       [CAMPO_FREC]: FRECS.some(([k]) => k === elegida) ? elegida : FREC_DEF,
       actualizado: serverTimestamp(),
     };
+    // la hora del cambio, solo si el selector se movió respecto de lo que estaba guardado
+    const cambioFrec = nuevo[CAMPO_FREC] !== frecGuardada;
+    if (cambioFrec) nuevo[CAMPO_FREC_DESDE] = serverTimestamp();
     try {
       // todo junto y con merge: si el doc tuviera algo más (no debería: la regla no
       // deja), no se pisa desde acá
       await setDoc(refConfig(S.email), nuevo, { merge: true });
+      frecGuardada = nuevo[CAMPO_FREC];
       // el newsletter: sumar esta casilla a la lista o sacarla (solo si se pudo leer
       // cómo estaba). Nunca un segundo doc para la misma casilla: saldrían dos mails
       let newsMal = '';

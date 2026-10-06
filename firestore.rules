@@ -174,11 +174,19 @@ service cloud.firestore {
       // las alertas de tus activos (activo, frecuencia, tipos, umbralVar) y los
       // interruptores de avisos (avisos, frecuenciaAvisos). Ningún grupo es
       // obligatorio: lo que aparezca tiene que estar bien formado.
+      // frecuenciaDesde (06/10/2026): cuándo se movió por última vez el selector
+      // «Al momento / Resumen diario»; el resumen diario cuenta lo que pasó desde
+      // ahí. Solo puede valer la hora de esta escritura (cuando el selector
+      // cambia) o quedar como estaba: nadie le pone una fecha a mano.
       match /alertas/{docId} {
         allow read: if esDuenio();
         allow delete: if esDuenio() && docId == 'config';
         allow create, update: if esDuenio() && docId == 'config'
-          && request.resource.data.keys().hasOnly(['activo', 'frecuencia', 'tipos', 'umbralVar', 'avisos', 'frecuenciaAvisos', 'actualizado'])
+          && request.resource.data.keys().hasOnly(['activo', 'frecuencia', 'tipos', 'umbralVar', 'avisos', 'frecuenciaAvisos', 'frecuenciaDesde', 'actualizado'])
+          && (!('frecuenciaDesde' in request.resource.data)
+              || request.resource.data.frecuenciaDesde == request.time
+              || (resource != null && 'frecuenciaDesde' in resource.data
+                  && request.resource.data.frecuenciaDesde == resource.data.frecuenciaDesde))
           && (!('activo' in request.resource.data) || request.resource.data.activo is bool)
           && (!('frecuencia' in request.resource.data) || request.resource.data.frecuencia in ['diaria', 'semanal'])
           && (!('tipos' in request.resource.data)

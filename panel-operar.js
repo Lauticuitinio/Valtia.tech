@@ -39,11 +39,12 @@
 //    el peso que dejó este movimiento: devolver el peso viejo pisaría lo que
 //    hizo el otro.
 //
-// Acá NO se manda ningún mail ni se escribe avisosRotacion: el aviso de
-// rotación lo arma el pipeline (avisos_rotacion.py) en su próxima corrida,
-// mirando las entradas nuevas de `historial`, que recién aparecen al publicar.
-// Cuándo corre exactamente no está en este repo: por eso la pantalla dice
-// "la próxima corrida automática" y no promete un horario.
+// Acá NO se manda ningún mail ni se escribe avisosRotacion: el aviso lo arma
+// el pipeline (avisos_rotacion.py) mirando las entradas nuevas de `historial`,
+// que recién aparecen al publicar. Desde el 06/10/2026 lo llama la corrida de
+// precios de cada 15 minutos: un movimiento se avisa cuando pasaron los
+// VENTANA_MIN minutos del deshacer (o sea, entre 15 y 30 minutos después de
+// publicarlo), de 8 a 22; dos movimientos publicados seguidos salen juntos.
 //
 // La piel es la del panel nuevo (SPEC §0 y prototipo «Valtia Panel v3» del zip
 // completo): IBM Plex Sans en todo (sin Plex Mono ni Playfair), cifras tabulares,
@@ -583,8 +584,9 @@ function bloqueHonesto() {
       <li><span>Guardar <b>no cambia nada</b>: queda un borrador que solo ves vos, en la lista de abajo.
         La cartera sigue igual para todos y no sale ningún aviso hasta que lo publiques.</span></li>
       <li><span>Publicar escribe el <b>peso nuevo en la posición</b> (lo ve cualquiera que pueda ver la cartera)
-        y la entrada del historial. Desde acá <b>no sale ningún mail</b>: el aviso de rotación lo manda
-        la <b>próxima corrida automática</b>, mirando las entradas nuevas del historial. No sale al instante.</span></li>
+        y la entrada del historial. Desde acá <b>no sale ningún mail</b>: el aviso lo manda el sistema solo,
+        <b>entre 15 y 30 minutos después</b> (cuando ya no se puede deshacer), de 8 a 22. Si publicás dos
+        movimientos seguidos de la misma cartera, salen juntos en un solo mail.</span></li>
       <li><span>El <b>precio de entrada</b> y el de seguimiento los pone esa corrida con precios reales.
         Lo que cargás acá es el precio de la operación, y queda solo en el movimiento.</span></li>
       <li><span>Un movimiento publicado se puede <b>deshacer durante ${VENTANA_MIN} minutos</b>. Pasado ese
@@ -1316,7 +1318,7 @@ function pintarLista(el, ctx, fallo) {
     if (esBorrador) {
       acciones = `<button type="button" class="v3op-b mini" data-op-publicar="${esc(m.id)}">Publicar</button>
         <button type="button" class="v3op-b mini peligro" data-op-descartar="${esc(m.id)}">Descartar</button>
-        <span class="nota">Publicar escribe el peso en la cartera y la entrada del historial; el aviso sale en la próxima corrida automática.</span>`;
+        <span class="nota">Publicar escribe el peso en la cartera y la entrada del historial; el aviso sale por mail entre 15 y 30 minutos después.</span>`;
     } else if (nuestro) {
       acciones = `${viejo ? `<button type="button" class="v3op-b mini" data-op-publicar-viejo="${esc(m.id)}">Publicar el aviso</button>` : ''}
         ${sePuede ? `<button type="button" class="v3op-b mini peligro" data-op-deshacer="${esc(m.id)}">Deshacer</button>
@@ -1446,12 +1448,12 @@ async function publicarVarios(el, ctx, ids, btn) {
   }
   if (!sigue()) return;
   const n = lista.length, tk0 = tickerDe(lista[0]);
-  ctx.toast(n === 1 ? `${tk0} publicado · el aviso sale en la próxima corrida` : `${n} movimientos publicados · el aviso sale en la próxima corrida`);
+  ctx.toast(n === 1 ? `${tk0} publicado · el aviso sale en 15 a 30 minutos` : `${n} movimientos publicados · el aviso sale en 15 a 30 minutos`);
   await refrescarTodo(el, ctx, cid);
   if (!sigue()) return;
   decir(n === 1
-    ? `${tk0} publicado: la cartera ya muestra el peso nuevo (${pctTxt(lista[0].pesoNuevo)}). El aviso de rotación sale en la próxima corrida automática, no al instante.`
-    : `${n} movimientos publicados: la cartera ya muestra los pesos nuevos. El aviso de rotación sale en la próxima corrida automática, no al instante.`, 'ok');
+    ? `${tk0} publicado: la cartera ya muestra el peso nuevo (${pctTxt(lista[0].pesoNuevo)}). El aviso sale por mail entre 15 y 30 minutos después; hasta entonces lo podés deshacer.`
+    : `${n} movimientos publicados: la cartera ya muestra los pesos nuevos. El aviso sale por mail entre 15 y 30 minutos después, todos juntos; hasta entonces los podés deshacer.`, 'ok');
 }
 
 /* compatibilidad con lo que dejó la versión anterior de Operar: un historial en
@@ -1483,7 +1485,7 @@ async function publicarViejo(el, ctx, cid, histId, btn) {
   ctx.toast(`Aviso de ${tickerDe(m)} publicado`);
   await refrescarTodo(el, ctx, cid);
   if (!sigue()) return;
-  decir(`Aviso de ${tickerDe(m)} publicado. El peso ya estaba aplicado; el aviso de rotación sale en la próxima corrida automática, no al instante.`, 'ok');
+  decir(`Aviso de ${tickerDe(m)} publicado. El peso ya estaba aplicado; el aviso sale por mail entre 15 y 30 minutos después.`, 'ok');
 }
 
 /* ───────────────────────── descartar un borrador ─────────────────────────
