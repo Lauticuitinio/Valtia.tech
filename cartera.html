@@ -149,6 +149,54 @@ main>*{grid-column:2;min-width:0}
 .rot details summary:hover{color:var(--ink)}
 .rot details[open] summary{display:none}
 
+/* ── carteras por perfil (06/10/2026): objetivo, para qué está cada posición,
+   escenarios simulados, reglas y dónde se compra. Solo si el doc trae esos datos ── */
+.obj{margin-top:16px;border-left:3px solid var(--gold);background:#FBF8F1;border-radius:0 8px 8px 0;padding:11px 14px;font-size:14.5px;line-height:1.55;color:var(--ink)}
+.obj b{display:block;font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--gold2);margin-bottom:3px}
+.bnota{font-size:12.5px;line-height:1.55;color:var(--mut);margin-top:10px}
+.prow .pq{grid-column:1/-1;font-size:12.5px;line-height:1.5;color:var(--sub);margin-top:-2px}
+.prow .pq i{font-style:normal;color:var(--mut)}
+.box.pf{grid-column:1/-1}
+.pf-h{font:600 18px 'IBM Plex Sans',sans-serif;color:var(--ink);display:flex;align-items:baseline;gap:6px 12px;flex-wrap:wrap}
+.pf-h span{font:400 13px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+.pf-h+.pf-p{margin-top:6px}
+.pf-p{font-size:14.5px;line-height:1.65;color:var(--sub);max-width:900px}
+.pf-top{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:22px;align-items:start;margin-top:16px}
+.pf-top .kpis{margin-top:0}
+.pf-top .kpi .s{font-size:12px;color:var(--mut);margin-top:2px}
+.pf-tabs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.pf-t{width:100%;border-collapse:collapse;font-size:13.5px}
+.pf-t caption{text-align:left;font:600 12.5px 'IBM Plex Sans',sans-serif;color:var(--sub);padding-bottom:6px}
+.pf-t td{padding:7px 2px;border-bottom:1px solid var(--fila);color:var(--sub)}
+.pf-t td:last-child{text-align:right;font:500 14px 'IBM Plex Sans',sans-serif;color:var(--ink);white-space:nowrap}
+.pf-t tr.med td{color:var(--ink);font-weight:600}
+.pf-t tr:last-child td{border-bottom:none}
+.pf-fan{border:1px solid var(--borde);border-radius:8px;padding:12px 12px 8px;min-width:0}
+.pf-fan svg{width:100%;height:auto;display:block}
+.pf-fan text{font:400 11px 'IBM Plex Sans',sans-serif;fill:var(--mut)}
+.pf-fan text.fin{font-weight:600;fill:var(--ink)}
+.pf-fan .leg{display:flex;align-items:center;gap:4px 16px;flex-wrap:wrap;font-size:12.5px;color:var(--mut);margin-top:6px;line-height:1.5}
+.pf-fan .leg i{width:14px;height:8px;border-radius:2px}
+.pf-fan .leg i.ln{height:2px;border-radius:0}
+.pf-notas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:12px;margin-top:18px}
+.pf-nota{border:1px solid rgba(184,151,90,.45);background:#FDFAF2;border-radius:8px;padding:13px 16px;font-size:14px;line-height:1.6;color:var(--sub)}
+.pf-nota b{display:block;font:600 14.5px 'IBM Plex Sans',sans-serif;color:var(--ink);margin-bottom:3px}
+.pf-nota.aviso{border-color:rgba(178,58,58,.4);background:#FCF4F3}
+.pf-nota.aviso b::before{content:"Para tener en cuenta · ";color:var(--dn);font-weight:700}
+.pf-sep{border-top:1px solid var(--borde);margin:22px 0 18px}
+.pf-reglas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:12px;margin-top:12px}
+.pf-reglas>div{border:1px solid var(--borde);border-radius:8px;padding:13px 16px}
+.pf-reglas h5{font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);margin-bottom:7px}
+.pf-reglas ul{list-style:none}
+.pf-reglas li{position:relative;padding-left:13px;font-size:13.5px;line-height:1.55;color:var(--sub);margin-bottom:4px}
+.pf-reglas li::before{content:"";position:absolute;left:0;top:.62em;width:5px;height:5px;border-radius:50%;background:var(--gold)}
+.pf-chico{font-size:12.5px;line-height:1.65;color:var(--mut);margin-top:14px;max-width:980px}
+.pf-chico b{color:var(--sub);font-weight:600}
+@media(max-width:900px){.pf-top{grid-template-columns:1fr}}
+/* en celular el gráfico se achica: letras más grandes en los ejes, y las puntas
+   (mejor 5%, mediana, peor 5%) quedan en la tabla de al lado */
+@media(max-width:520px){.pf-tabs{grid-template-columns:1fr}.pf-fan text{font-size:15px}.pf-fan text.fin{display:none}}
+
 /* ── explorar las carteras ── */
 .exh{display:flex;justify-content:space-between;align-items:center;gap:10px 14px;flex-wrap:wrap;margin-bottom:14px}
 .exh h3{font:700 22px 'IBM Plex Sans',sans-serif;color:var(--ink);white-space:nowrap}
@@ -313,7 +361,8 @@ const acceso = it => it.vis === "borrador" ? ["a-prox", "Próximamente"] : it.vi
    la línea del gráfico van del color de la cartera. El teaser no trae código
    para IA y Semiconductores: quedan los del diseño. Sin código conocido, azul. */
 const COD_ID = { ia: "IA", semiconductores: "SEMI" };
-const COLOR_COD = { SP10: "#14213D", IA: "#2B5FB0", SEMI: "#5B3FA8", PAS: "#1F7A4D", CONS: "#0E7C86", AGR: "#B23A3A" };
+const COLOR_COD = { SP10: "#14213D", IA: "#2B5FB0", SEMI: "#5B3FA8", PAS: "#1F7A4D", CONS: "#0E7C86", AGR: "#B23A3A",
+  RF: "#0E7C86", RM: "#8A6D20", RV: "#B23A3A" };   // las tres por perfil: fija, mixta y variable
 const colorDe = cod => COLOR_COD[String(cod || "").toUpperCase()] || "#14213D";
 // las carteras PRO no se pueden leer sin acceso y el teaser no trae la
 // descripción: la misma línea que muestra la Home (sale de la tesis de cada
@@ -322,6 +371,9 @@ const colorDe = cod => COLOR_COD[String(cod || "").toUpperCase()] || "#14213D";
 const DESC_PUB = {
   ia: "Empresas cuyo negocio depende de la adopción de inteligencia artificial, evitando las más grandes.",
   semiconductores: "Toda la cadena del chip: diseño, fabricación y equipamiento.",
+  "renta-fija": "Bonos y letras del Tesoro, en pesos y en dólares. Para ganarle a la inflación con riesgo bajo.",
+  "renta-mixta": "Mitad bonos, mitad acciones. Para dolarizar los ahorros y además hacerlos crecer.",
+  "renta-variable": "Acciones de grandes empresas, repartidas en partes iguales. Para ganarle al S&P 500 a cinco años.",
 };
 
 // "Qué tiene": los tipos de activo de las posiciones, el de más peso primero
@@ -340,7 +392,8 @@ function tiposDe(pos) {
 // activos.js todavía devuelve la ruta con .html ('activo.html?t=NVDA'): acá se
 // sirve sin extensión, como el resto de los links internos del sitio.
 const sinHtml = h => h.replace(/\.html(?=\?|#|$)/, '');
-const linkFicha = tk => { const h = linkDe(tk); return h ? `<a href="/${sinHtml(h)}">${esc(tk)}</a>` : esc(tk); };
+// txt: lo que se lee, si no es el mismo ticker (YPF se compra en el broker como YPFD)
+const linkFicha = (tk, txt) => { const h = linkDe(tk); return h ? `<a href="/${sinHtml(h)}">${esc(txt || tk)}</a>` : esc(txt || tk); };
 
 /* ── datos ── */
 // la caché es de la cuenta con la que se leyó ("" sin sesión): otra cuenta relee
@@ -377,9 +430,13 @@ async function loadAll(user) {
       getDocs(query(collection(db, "carterasModelo", d.id, "historial"), orderBy("fecha", "desc"))),
     ]);
     // las cerradas no se listan; primero las de más peso, después las más grandes
+    // (a igual peso, el orden que trae el doc si lo trae: en las de perfil, el índice va primero)
     c.posiciones = posSnap.docs.map(p => p.data()).filter(p => p.estado === "activa")
-      .sort((a, b) => ((b.pesoObjetivo || 0) - (a.pesoObjetivo || 0)) || ((b.mcapEntrada || 0) - (a.mcapEntrada || 0)));
-    c.valores = valSnap.docs.map(v => v.data());
+      .sort((a, b) => ((b.pesoObjetivo || 0) - (a.pesoObjetivo || 0)) || ((a.orden ?? 99) - (b.orden ?? 99)) || ((b.mcapEntrada || 0) - (a.mcapEntrada || 0)));
+    // la serie empieza en la fecha de inicio: si una cartera se relanzó con otra
+    // composición, los puntos de antes no son de esta (la vidriera hace lo mismo)
+    const desde = iso(c.fechaInicio);
+    c.valores = valSnap.docs.map(v => v.data()).filter(v => !esFecha(desde) || iso(v.fecha) >= desde);
     c.historial = histSnap.docs.map(h => h.data());
     carteras.push(c);
   }
@@ -530,16 +587,102 @@ function htmlIzquierda(it, admin) {
   const riesgoSub = t && (t.volAnual != null || t.maxDD != null)
     ? [t.volAnual != null ? `vol. anual ${num(t.volAnual, 1)}%` : "", t.maxDD != null ? `peor caída ${fmtPct(t.maxDD)}` : ""].filter(Boolean).join(" · ") : "";
   const queTiene = it.abierta ? (c.queTiene ? esc(c.queTiene) : esc(tiposDe(c.posiciones))) : "";
+  // las carteras por perfil traen además para qué sirven (objetivo), a qué plazo
+  // y cuánto tienen en cada moneda
+  const mon = it.abierta && c.monedas ? [["pesos", c.monedas.pesos], ["dólares", c.monedas.dolares]]
+    .filter(m => Number(m[1]) > 0).map(m => `${num(m[1], 0)}% ${m[0]}`).join(" · ") : "";
   const ficha = fi(futura ? "Se publica" : "Publicada", conFecha ? fLarga(f0) : "")
     + fi("Revisión", esc(mayus(it.rebalanceo)))
-    + fi("Qué tiene", queTiene)
+    + fi("Horizonte", it.abierta && c.horizonte ? esc(c.horizonte) : "")
+    + fi("Qué tiene", queTiene, esc(mon))
     + fi("Riesgo", esc(mayus(riesgoTxt(it).replace(/^Riesgo /, ""))), riesgoSub);
+  const objetivo = it.abierta && c.objetivo ? `<div class="obj"><b>Objetivo</b>${esc(c.objetivo)}</div>` : "";
+  // contra qué se compara, cuando no es un índice que se explique solo
+  const bnota = it.abierta && c.benchmarkNota ? `<p class="bnota">${esc(c.benchmarkNota)}</p>` : "";
   return `<div class="box">${tags}
     <div class="fhead"><div><h2>${esc(it.nombre)}</h2><p>${desc}</p></div>${grafico}</div>
+    ${objetivo}
     <div class="kpis">${kpis}</div>
+    ${bnota}
     ${como ? `<div class="como">Cómo se arma</div>${como}` : ""}
     ${ficha ? `<div class="ficha">${ficha}</div>` : ""}
   </div>`;
+}
+
+/* ── carteras por perfil: escenarios, reglas y dónde se compra ──
+   Todo sale del doc de la cartera (lo carga seed_carteras_perfil.py); sin esos
+   campos no se dibuja nada. Los escenarios son los de una simulación con retorno
+   esperado r y volatilidad s: el valor de US$1 a los t años en el percentil z es
+   exp((ln(1+r) − s²/2)·t + s·√t·z). Las bandas del gráfico salen de esa fórmula;
+   los números de las tablas son los de la ficha de la cartera. */
+const Z95 = 1.6449, Z75 = 0.6745;
+const veces = v => v == null || !isFinite(Number(v)) ? "—" : num(v, 2) + "x";
+const pctEnt = v => v == null || !isFinite(Number(v)) ? "—" : (v > 0 ? "+" : v < 0 ? "−" : "") + num(Math.abs(v), 0) + "%";
+function svgAbanico(it, r, s, a5) {
+  const W = 560, H = 250, IZQ = 38, DER = 92, ARR = 12, ABA = 26, T = 5, N = 60;
+  const mu = Math.log(1 + r) - s * s / 2;
+  const val = (t, z) => Math.exp(mu * t + s * Math.sqrt(t) * z);
+  const ts = Array.from({ length: N + 1 }, (_, i) => i * T / N);
+  const tope = Math.max(val(T, Z95), 1.2), piso = Math.min(...ts.map(t => val(t, -Z95)), 0.9);
+  const x = t => IZQ + t / T * (W - IZQ - DER), y = v => ARR + (tope - v) / (tope - piso) * (H - ARR - ABA);
+  const linea = z => ts.map((t, i) => (i ? "L" : "M") + x(t).toFixed(1) + "," + y(val(t, z)).toFixed(1)).join("");
+  const banda = z => linea(z) + ts.slice().reverse().map(t => "L" + x(t).toFixed(1) + "," + y(val(t, -z)).toFixed(1)).join("") + "Z";
+  // marcas del eje: cada 0,5x (cada 1x si el abanico es muy alto)
+  const paso = tope - piso > 2.4 ? 1 : 0.5, marcas = [];
+  for (let v = Math.ceil(piso / paso) * paso; v <= tope + 1e-9; v += paso) marcas.push(Math.round(v * 10) / 10);
+  const fin = (z, txt, v) => `<text class="fin" x="${(W - DER + 6).toFixed(1)}" y="${(y(val(T, z)) + 4).toFixed(1)}">${esc(txt)} ${veces(v)}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Escenarios simulados de ${esc(it.nombre)} a cinco años: mediana ${veces(a5.p50)}, peor 5% ${veces(a5.p5)}, mejor 5% ${veces(a5.p95)}">
+    ${marcas.map(v => `<line x1="${IZQ}" x2="${W - DER}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="var(--fila)" stroke-width="1"></line>
+      <text x="${IZQ - 6}" y="${(y(v) + 4).toFixed(1)}" text-anchor="end">${num(v, 1)}x</text>`).join("")}
+    ${[1, 2, 3, 4, 5].map(a => `<text x="${x(a).toFixed(1)}" y="${H - 8}" text-anchor="middle">${a === 1 ? "1 año" : a + " años"}</text>`).join("")}
+    <path d="${banda(Z95)}" fill="${it.color}" fill-opacity=".10"></path>
+    <path d="${banda(Z75)}" fill="${it.color}" fill-opacity=".20"></path>
+    <line x1="${IZQ}" x2="${W - DER}" y1="${y(1).toFixed(1)}" y2="${y(1).toFixed(1)}" stroke="var(--sub)" stroke-width="1" stroke-dasharray="4 4"></line>
+    <path d="${linea(0)}" fill="none" stroke="${it.color}" stroke-width="2.5"></path>
+    ${fin(Z95, "mejor 5%", a5.p95)}${fin(0, "mediana", a5.p50)}${fin(-Z95, "peor 5%", a5.p5)}
+  </svg>`;
+}
+function htmlPerfil(it) {
+  const c = it.c;
+  if (!it.abierta || !c) return "";
+  const e = c.esperado, sim = c.simulacion, a5 = sim && sim.a5, a1 = sim && sim.a1, rg = c.reglas;
+  const notas = Array.isArray(c.notas) ? c.notas.filter(n => n && n.titulo && n.texto) : [];
+  if (!e && !a5 && !rg && !notas.length && !c.dondeComprar) return "";
+  const kpi = (l, v, s) => `<div class="kpi"><div class="l">${l}</div><div><div class="v">${v}</div><div class="s">${s}</div></div></div>`;
+  const fila = (l, v, med) => `<tr${med ? ' class="med"' : ""}><td>${l}</td><td>${v}</td></tr>`;
+  const conFan = e && a5 && isFinite(Number(e.retornoUSD)) && Number(sim.volAnual) > 0;
+  let esc1 = "";
+  if (e || a5) {
+    const tablas = (a5 ? `<table class="pf-t"><caption>Por cada US$1, a 5 años</caption>
+        ${fila("Peor 5% de los casos", veces(a5.p5))}${fila("Cuartil bajo", veces(a5.p25))}${fila("Mediana", veces(a5.p50), true)}
+        ${fila("Cuartil alto", veces(a5.p75))}${fila("Mejor 5%", veces(a5.p95))}</table>` : "")
+      + (a1 ? `<table class="pf-t"><caption>El primer año</caption>
+        ${fila("Peor 5% de los casos", pctEnt(a1.p5))}${fila("Mediana", pctEnt(a1.p50), true)}${fila("Mejor 5%", pctEnt(a1.p95))}</table>` : "");
+    esc1 = `<div class="pf-h">Qué puede pasar <span>Escenarios simulados, en dólares. No son una promesa.</span></div>
+      <div class="pf-top">
+        <div>${e ? `<div class="kpis">
+            ${kpi("Retorno esperado", e.retornoUSD != null ? num(e.retornoUSD, 1) + "%" : "—", "anual, en dólares")}
+            ${kpi("Caída típica", pctEnt(e.caidaTipica), "desde un máximo")}
+            ${kpi("Cerrar un año abajo", e.probPerder1a != null ? num(e.probPerder1a, 0) + "%" : "—", "probabilidad")}</div>` : ""}
+          ${tablas ? `<div class="pf-tabs">${tablas}</div>` : ""}</div>
+        ${conFan ? `<div class="pf-fan">${svgAbanico(it, Number(e.retornoUSD) / 100, Number(sim.volAnual) / 100, a5)}
+          <div class="leg"><span><i class="ln" style="background:${it.color}"></i>Mediana</span>
+            <span><i style="background:${it.color};opacity:.38"></i>La mitad de los casos</span>
+            <span><i style="background:${it.color};opacity:.16"></i>9 de cada 10 casos</span>
+            <span><i class="ln" style="background:var(--sub)"></i>Lo que pusiste</span></div></div>` : ""}
+      </div>`;
+  }
+  const htmlNotas = notas.length ? `<div class="pf-notas">${notas.map(n =>
+    `<div class="pf-nota${n.aviso ? " aviso" : ""}"><b>${esc(n.titulo)}</b>${esc(n.texto)}</div>`).join("")}</div>` : "";
+  const lista = (titulo, xs) => Array.isArray(xs) && xs.length
+    ? `<div><h5>${titulo}</h5><ul>${xs.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
+  const reglas = rg ? lista("Cada cuánto se toca", rg.cadaCuanto) + lista("Cuando vencen las letras", rg.vencimientos)
+    + lista("Lo que nunca entra", rg.nuncaEntra) + lista("Qué haría cambiar la cartera", rg.queCambiaria) : "";
+  const chico = (c.dondeComprar ? `<p class="pf-chico"><b>Dónde se compra.</b> ${esc(c.dondeComprar)}</p>` : "")
+    + (c.metodologia ? `<p class="pf-chico"><b>Cómo se calcula.</b> ${esc(c.metodologia)}</p>` : "");
+  return `<div class="box pf">${esc1}${htmlNotas}
+    ${reglas ? `${esc1 || htmlNotas ? '<div class="pf-sep"></div>' : ""}<div class="pf-h">Las reglas</div><div class="pf-reglas">${reglas}</div>` : ""}
+    ${chico}</div>`;
 }
 
 // una rotación del historial: entra, sale o cambia de peso (acciones de Operar)
@@ -561,10 +704,16 @@ function htmlDerecha(it) {
     const rows = c.posiciones.map(p => {
       const v = p.precioEntrada && p.precioActual != null ? (p.precioActual / p.precioEntrada - 1) * 100 : null;
       const tk = String(p.ticker || "");
-      return `<div class="prow"><div class="pa"><div class="logo" aria-hidden="true">${esc(tk)}</div><div class="tx"><div class="tk">${linkFicha(tk)}</div><div class="em" title="${esc(p.empresa || "")}">${esc(p.empresa || "")}</div></div></div>
+      // el ticker que se escribe en el broker, si no es el mismo con el que se la sigue
+      const tkB = String(p.tickerBroker || tk);
+      // en las carteras por perfil, debajo de cada posición: qué es, para qué está,
+      // cuánto rinde y cuándo vence (lo que el doc traiga)
+      const pq = c.perfil ? [[p.queEs, p.tesisPosicion].filter(Boolean).map(esc).join(" "),
+        p.rinde ? `<i>Rinde</i> ${esc(p.rinde)}` : "", esFecha(iso(p.vence)) ? `<i>Vence</i> ${esc(fLarga(p.vence))}` : ""].filter(Boolean).join(" · ") : "";
+      return `<div class="prow"><div class="pa"><div class="logo" aria-hidden="true">${esc(tkB)}</div><div class="tx"><div class="tk">${linkFicha(tk, tkB)}</div><div class="em" title="${esc(p.empresa || "")}">${esc(p.empresa || "")}</div></div></div>
         <span class="n">${pesoTxt(p.pesoObjetivo)}</span>
         <span class="n"${p.fechaIncorporacion ? ` title="Entró el ${esc(fLarga(p.fechaIncorporacion))}"` : ""}>${fmtUSD(p.precioEntrada)}</span>
-        <span class="n var ${cls(v)}">${fmtPct(v)}</span></div>`;
+        <span class="n var ${cls(v)}">${fmtPct(v)}</span>${pq ? `<div class="pq">${pq}</div>` : ""}</div>`;
     }).join("");
     cuerpo = `<div class="pwrap">${tablaPos(rows, false)}</div>`;
   } else if (it.abierta) {
@@ -619,7 +768,7 @@ function pintarDestacada(it, admin) {
   const prox = it.c ? iso(it.c.proximaRevision) : "";
   if (esFecha(prox)) partes.push(`<span>Próxima revisión <b>${fLarga(prox)}</b></span>`);
   $("#selh").innerHTML = partes.join("");
-  $("#feat").innerHTML = htmlIzquierda(it, admin) + htmlDerecha(it);
+  $("#feat").innerHTML = htmlIzquierda(it, admin) + htmlDerecha(it) + htmlPerfil(it);
   document.title = it.nombre + " — Carteras Valtia";
   // lectura al pasar el mouse (o el dedo) por el gráfico grande: fecha y ambos índices
   const svg = document.querySelector("#fchart svg"), hov = $("#fhov");
