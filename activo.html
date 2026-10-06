@@ -225,6 +225,7 @@ a.va-nw:hover .t{text-decoration:underline}
 .va-tab[hidden],.va-pdf[hidden],.va-pan[hidden],.va-guion[hidden]{display:none}
 .va-pdf{flex:none;display:inline-flex;align-items:center;gap:8px;font:600 12px 'IBM Plex Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#8A6A2F;background:#FBF5E8;border:1px solid #B08A3E;border-radius:8px;padding:8px 14px;cursor:pointer;white-space:nowrap}
 .va-pdf:hover{background:#F4E9CF;color:#101010}
+.va-pdf:disabled,.va-guion button:disabled{opacity:.65;cursor:wait}
 .va-pan{display:flex;flex-direction:column;gap:14px}
 .va-pan>.va-lect{margin-bottom:0}
 .va-intro{font-size:15.5px;line-height:1.6;color:#57534A;margin:2px 0 2px;max-width:900px}
@@ -1801,18 +1802,49 @@ try {
     const ancla = $id("va-tabs-ancla");
     if (subir && ancla && ancla.getBoundingClientRect().top < 0) ancla.scrollIntoView({ behavior: "instant" });
   };
-  // Descargar PDF: la impresión del navegador, que sabe guardar en PDF. Lo que se
-  // imprime es solo el informe corrido (#inf-print); el nombre del archivo sale del título.
-  const descargarPDF = () => {
-    if (!S.inf) return;
+  // Descargar PDF. Primero el archivo ya armado: informesPdf/{slug}, que genera el
+  // pipeline (informes_pdf.py) con el mismo texto del informe y se lee con la misma
+  // llave (el gratis cualquiera, los demás solo los clientes). Trae la huella (sha256)
+  // del contenido con el que se armó: si no es la del informe que está a la vista, ese
+  // PDF quedó viejo y no se baja. En ese caso, o si todavía no hay PDF, queda la
+  // impresión del navegador, que sabe guardar en PDF: imprime solo el informe corrido
+  // (#inf-print) y el nombre del archivo sale del título.
+  const nombrePDF = () => `Informe Valtia - ${t} - ${fdate(S.inf.fecha)}`;
+  const huellaDe = async txt => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(txt)))]
+    .map(b => b.toString(16).padStart(2, "0")).join("");
+  const imprimirPDF = () => {
     const titulo = document.title;
-    document.title = `Informe Valtia - ${t} - ${fdate(S.inf.fecha)}`;
+    document.title = nombrePDF();
     addEventListener("afterprint", () => { document.title = titulo; }, { once: true });
     window.print();
   };
+  let bajandoPDF = false;
+  const descargarPDF = async boton => {
+    if (!S.inf || bajandoPDF) return;
+    bajandoPDF = true;
+    const antes = boton ? boton.innerHTML : "";
+    if (boton) { boton.disabled = true; boton.textContent = "Preparando el PDF…"; }
+    let bajado = false;
+    try {
+      const s = emp.slug ? await getDoc(doc(db, "informesPdf", emp.slug)) : null;
+      const x = s && s.exists() ? s.data() : null;
+      if (x && x.pdf && x.pdf.toUint8Array && x.huella === await huellaDe(String(S.inf.contenido_html || ""))) {
+        const url = URL.createObjectURL(new Blob([x.pdf.toUint8Array()], { type: "application/pdf" }));
+        const a = Object.assign(document.createElement("a"), { href: url, download: nombrePDF() + ".pdf" });
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        bajado = true;
+      }
+    } catch (e) {}
+    if (boton) { boton.disabled = false; boton.innerHTML = antes; }
+    bajandoPDF = false;
+    if (!bajado) imprimirPDF();
+  };
   ficha.addEventListener("click", e => {
     const pdf = e.target.closest("[data-pdf]");
-    if (pdf) { descargarPDF(); return; }
+    if (pdf) { descargarPDF(pdf); return; }
     const b = e.target.closest("[data-ir]");
     if (!b) return;
     const v = partesALaVista();
