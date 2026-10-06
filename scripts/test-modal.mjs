@@ -450,6 +450,31 @@ ok("fuente: sin nada, null (el modal dice que no hay)", M.elegirPrecioRef({ tk: 
 ok("fuente: un catálogo con basura no cuenta", M.elegirPrecioRef({ tk: "X.BA", catalogo: { mapa: { "X.BA": [0, 1, "ARS"] } }, ahora: AHORA }) === null
    && M.elegirPrecioRef({ tk: "X.BA", catalogo: { mapa: { "X.BA": [5, 1, "EUR"] } }, ahora: AHORA }) === null);
 
+// ── una posición recién cargada, sin doc de precio: el precio de referencia del catálogo ──
+const POS_N = [{ ticker: "axp.ba" }, { ticker: "YPFD.BA" }, { ticker: "AL30" }, { ticker: "ZZZZ.BA" }, { ticker: "GGAL.BA" }, { ticker: "MALO.BA" }, { ticker: "" }];
+let pn = M.completarPreciosDeCatalogo(POS_N, { "GGAL.BA": { precio: 7000, moneda: "ARS" }, "MALO.BA": { sinDatos: true } }, PCAT, bonos, AHORA);
+ok("nueva: sin doc de precio, toma el del catálogo, marcado como de referencia y con la variación de hoy",
+   pn["AXP.BA"] && pn["AXP.BA"].precio === 33000 && pn["AXP.BA"].moneda === "ARS" && pn["AXP.BA"].delCatalogo === true
+   && pn["AXP.BA"].d === 0.42 && pn["AXP.BA"].cuando === "precio de las 13:05" && pn["AXP.BA"].factor === undefined, pn["AXP.BA"]);
+ok("nueva: si el dato es del cierre de ayer, va sin variación del día (no se inventa el «Hoy»)",
+   pn["YPFD.BA"] && pn["YPFD.BA"].precio === 40000 && pn["YPFD.BA"].d === null && /^cierre del /.test(pn["YPFD.BA"].cuando), pn["YPFD.BA"]);
+ok("nueva: la renta fija no entra (cotiza cada 100 VN: la completa el panel de bonos)", pn["AL30"] === undefined, pn["AL30"]);
+ok("nueva: lo que no está en el catálogo sigue sin precio", pn["ZZZZ.BA"] === undefined);
+ok("nueva: un doc que existe manda siempre, también el que dice sinDatos",
+   pn["GGAL.BA"].precio === 7000 && !pn["GGAL.BA"].delCatalogo && pn["MALO.BA"].sinDatos === true && pn["MALO.BA"].precio === undefined);
+pn = M.completarPreciosDeCatalogo([{ ticker: "YPFD.BA" }, { ticker: "AXP.BA" }], {}, PCAT, bonos, T("2026-10-01T15:00:00Z"));
+ok("nueva: un dato de hace más de cinco días no se usa", pn["YPFD.BA"] === undefined && pn["AXP.BA"] === undefined, pn);
+pn = M.completarPreciosDeCatalogo([{ ticker: "YPFD.BA" }], {}, PCAT, bonos, T("2026-09-29T15:00:00Z"));
+ok("nueva: de hace cinco días (un fin de semana largo) todavía sí", pn["YPFD.BA"] && pn["YPFD.BA"].precio === 40000, pn);
+ok("nueva: sin catálogo o sin precios no hace nada y no rompe",
+   Object.keys(M.completarPreciosDeCatalogo(POS_N, {}, null, bonos, AHORA)).length === 0 && M.completarPreciosDeCatalogo(POS_N, null, PCAT) === null
+   && Object.keys(M.completarPreciosDeCatalogo(null, {}, PCAT, bonos, AHORA)).length === 0
+   && Object.keys(M.completarPreciosDeCatalogo(POS_N, {}, { mapa: { "AXP.BA": [0, 1, "ARS", "2026-09-25"] } }, bonos, AHORA)).length === 0);
+// con el precio de referencia la posición se valúa como cualquiera (entra al total)
+const calcN = M.calcular([{ id: "a", ticker: "AXP.BA", cantidad: 10, precioCompra: 30000 }], M.completarPreciosDeCatalogo([{ ticker: "AXP.BA" }], {}, PCAT, bonos, AHORA));
+ok("nueva: con el precio de referencia la fila tiene valor", JSON.stringify(calcN).includes("330000"), JSON.stringify(calcN).slice(0, 300));
+ok("exports: completarPreciosDeCatalogo y completarPreciosNuevos", typeof M.completarPreciosDeCatalogo === "function" && typeof M.completarPreciosNuevos === "function");
+
 // ── diseño nuevo de Mi cartera (handoff del 24/09): agrupado, tipo, logo, tiles y Guardar ──
 // agrupar: POR TIPO de entrada; una preferencia guardada válida se respeta
 ok("agrupar: sin preferencia, por tipo", M.agruparElegido(undefined) === "tipo" && M.agruparElegido("") === "tipo" && M.agruparElegido(null) === "tipo");

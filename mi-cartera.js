@@ -2381,6 +2381,8 @@ export function renderMiCartera(el, posiciones, precios, opts = {}) {
     if (rota) pills.push(["warn", "no existe", `${f.ticker} no existe: ${punto(`${rota.s} es ${rota.esTxt}`)} Abrí la fila para pasarla al mercado que corresponde`]);
     else if (px.sinDatos) pills.push(["warn", "Ticker no encontrado", "Revisá que el ticker esté bien escrito"]);
     else if (px.veredicto && px.veredicto !== "Sin cobertura") pills.push([verCls(px.veredicto), px.veredicto, "Lectura automática de Valtia"]);
+    // recién cargada: el precio es el de referencia del catálogo (completarPreciosDeCatalogo)
+    else if (px.delCatalogo && f.actual != null) pills.push(["sin", "precio de referencia", `Recién cargada: mostramos el ${px.cuando || "último precio que tenemos"} hasta que llegue el suyo, en unos 15 minutos`]);
     else if (f.actual != null) pills.push(["sin", "Sin lectura", "Valtia no tiene lectura de valor de este activo"]);
     // sin doc de precio todavía (recién cargada): el pipeline lo crea en su
     // próxima corrida, a cualquier hora, así que "unos 15 minutos" es cierto
@@ -2701,6 +2703,9 @@ async function leerTodo() {
   // completar la renta fija desde el panel, o los bonos pierden el precio a los
   // dos minutos (en la primera carga el panel todavía no está y no hace nada)
   completarPreciosRF();
+  // una posición recién cargada todavía no tiene su doc de precio: hasta que el
+  // pipeline lo cree, el precio de referencia del catálogo (ver más abajo)
+  try { await completarPreciosNuevos(_pos, _precios, await bonosSet()); } catch (e) {}
 }
 
 /* "actualizado hace X": el sync intradía escribe cada ~15 min mientras el
@@ -2813,6 +2818,51 @@ export function completarPreciosDeRentaFija(posiciones, precios, panel, bonos) {
 }
 function completarPreciosRF() {
   completarPreciosDeRentaFija([..._pos, ..._ajustes], _precios, _panel, _bonos);
+}
+
+/* ── una posición recién cargada, sin su doc de precio todavía ──
+   precios/{ticker} lo crea el pipeline en su próxima corrida (hasta 15 minutos)
+   cuando nadie tenía ese activo. Mientras tanto la fila decía «sin precio» y
+   quedaba fuera del total: quien carga su primera posición veía una raya. El
+   precio de ese activo ya está en preciosCatalogo/latest (el doc de la
+   referencia del modal de alta): se muestra ESE, marcado como de referencia,
+   hasta que llegue el suyo.
+   Solo completa lo que FALTA: un doc que existe manda siempre, también el que
+   dice sinDatos (ese ticker no existe: no se le inventa un precio). La renta
+   fija no entra (cotiza cada 100 VN y la completa el panel de bonos). La
+   variación del día va solo si el dato es de hoy. Un dato de hace más de
+   CAT_MAX_DIAS días no se usa: mejor «sin precio» que un valor viejo.
+   Como completarPreciosDeRentaFija, es UNA función pura y exportada que usan Mi
+   cartera y el Inicio del panel, para que las dos pantallas den el mismo total.
+   Completa `precios` en el lugar y lo devuelve. */
+const CAT_MAX_DIAS = 5;
+export function completarPreciosDeCatalogo(posiciones, precios, catalogo, bonos = new Set(), ahora = Date.now()) {
+  if (!precios || !catalogo || !catalogo.mapa) return precios;
+  (posiciones || []).forEach(p => {
+    const tk = String((p && p.ticker) || "").toUpperCase();
+    if (!tk || precios[tk] || esRentaFija(tk, bonos)) return;
+    const ref = elegirPrecioRef({ tk, catalogo, ahora });
+    if (!ref || ref.fuente !== "catalogo" || !ref.fecha) return;
+    const dias = (Date.parse(diaMs(ahora) + "T12:00:00Z") - Date.parse(ref.fecha + "T12:00:00Z")) / 86400e3;
+    if (!(dias >= 0 && dias <= CAT_MAX_DIAS)) return;
+    const v = ref.deHoy ? variacionRef(ref.p, ref.pc) : null;
+    precios[tk] = { ticker: tk, precio: ref.p, d: v != null ? Math.round(v * 100) / 100 : null, moneda: ref.moneda,
+                    veredicto: "Sin cobertura", delCatalogo: true, cuando: ref.cuando };
+  });
+  return precios;
+}
+/* lo mismo, trayendo el catálogo SOLO si hay una posición sin doc de precio (lo
+   normal es que no haga falta: no suma una lectura a cada carga). bonos: el set
+   de bonosSet(), para no tomar por acción una renta fija. Nunca levanta. */
+export async function completarPreciosNuevos(posiciones, precios, bonos) {
+  try {
+    const falta = (posiciones || []).some(p => {
+      const tk = String((p && p.ticker) || "").toUpperCase();
+      return tk && precios && !precios[tk] && !esRentaFija(tk, bonos);
+    });
+    if (falta) completarPreciosDeCatalogo(posiciones, precios, await preciosCatalogoDoc(), bonos);
+  } catch (e) {}
+  return precios;
 }
 
 /* los botones de una posición (viven en su desplegable): Vendí, quitarla y cambiar

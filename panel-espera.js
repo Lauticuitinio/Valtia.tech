@@ -10,6 +10,11 @@
 //     `waitlistPro` deja leer, actualizar y borrar solo a isAdmin().
 //   · `avisado` y `respondido` los pone el pipeline (fondo-sync) con sus propios
 //     mails: acá se muestran si están y no se tocan.
+//   · «Dar PRO» (desde el 06/10/2026) crea usuariosPro/{mail en minúscula} con
+//     { plan: 'pro', nota, desde: serverTimestamp() }, lo mismo que marcar_pro.py, y
+//     «Quitar» lo borra. Cada uno pide confirmar en la misma fila. La regla de
+//     `usuariosPro` deja crear y borrar solo a isAdmin(). El mail tiene que ser el de
+//     la cuenta con la que la persona entra a Valtia: la web busca ese doc por ese mail.
 //   · No manda ningún mail. «Escribirle» abre el programa de correo del admin con un
 //     mailto: (el mail viaja en el href, que no sale de su navegador) y «Copiar mails
 //     sin contactar» los deja en el portapapeles.
@@ -23,12 +28,13 @@
 // cifras tabulares, tarjetas de 12 px, etiquetas de 6 px, el botón primario navy y el
 // secundario con el borde dorado sutil (radio 8). SOLO variables --v3-* de panel.js (así
 // anda el tema oscuro). No importa panel.js —sería un import circular—: todo llega por ctx.
-import { getFirestore, collection, getDocs, doc, updateDoc, deleteField, serverTimestamp }
+import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, deleteDoc, deleteField, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 
 const CSS_ID = 'v3-css-espera';
 const COL = 'waitlistPro';
+const PRO = 'usuariosPro';
 const db = () => getFirestore(getApp());
 // una lectura de hace menos de esto se reutiliza (la pastilla del lateral y la pestaña
 // piden lo mismo al abrir el panel); más vieja, la pestaña vuelve a leer
@@ -99,6 +105,7 @@ const CSS = `
   white-space:nowrap;line-height:1.5;vertical-align:middle}
 .v3es-tag.hecho{color:var(--v3-sub);background:var(--v3-neutro)}
 .v3es-tag.rep{color:var(--v3-gold2);background:var(--v3-goldBg);margin-left:6px}
+.v3es-tag.pro{color:var(--v3-gold2);background:var(--v3-goldBg)}
 .v3es-est{display:inline-flex;gap:4px 10px;align-items:center;flex-wrap:nowrap}
 /* vacío y error */
 .v3es-vacio{background:var(--v3-card);border:1px dashed var(--v3-line);border-radius:12px;padding:20px 22px}
@@ -152,6 +159,9 @@ const esISO = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
 const MAIL_OK = /^[A-Za-z0-9._%+'-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
 const mailOk = m => typeof m === 'string' && m.length < 120 && MAIL_OK.test(m);
 const clave = m => String(m || '').trim().toLowerCase();
+// el id que arma Firestore. Los botones de «Dar PRO» buscan la fila por ese id: uno
+// armado a mano (con un salto de línea, por ejemplo) podía apuntar a otra fila
+const idOk = id => typeof id === 'string' && /^[A-Za-z0-9]{20}$/.test(id);
 
 /* un sello de tiempo de Firestore en milisegundos, venga como venga: Timestamp del SDK,
    { seconds, nanoseconds } (lo que escribe el pipeline en Python), Date, ISO o número.
@@ -207,16 +217,19 @@ let _datos = null;     // { email, t, filas }
 let _prom = null;      // { email, p }: la lectura en curso, para no pedir dos veces lo mismo
 
 async function leer() {
-  const snap = await getDocs(collection(db(), COL));
-  return ordenar(snap.docs.map(d => aFila(d.id, d.data())));
+  // quién tiene PRO se lee junto con la lista; si esa lectura falla, la lista se ve igual
+  // y la columna «Plan» queda sin botones (pro: null)
+  const [snap, sp] = await Promise.all([getDocs(collection(db(), COL)), getDocs(collection(db(), PRO)).catch(() => null)]);
+  const pro = sp ? new Map(sp.docs.map(d => [clave(d.id), aMs((d.data() || {}).desde)])) : null;
+  return { filas: ordenar(snap.docs.map(d => aFila(d.id, d.data()))), pro };
 }
 
 function cargar(ctx, forzar) {
   const email = ctx.S.email;
   if (!forzar && _datos && _datos.email === email && Date.now() - _datos.t < FRESCO_MS) return Promise.resolve(_datos);
   if (_prom && _prom.email === email && !forzar) return _prom.p;
-  const p = leer().then(filas => {
-    const d = { email, t: Date.now(), filas };
+  const p = leer().then(({ filas, pro }) => {
+    const d = { email, t: Date.now(), filas, pro };
     if (ctx.S.email === email) _datos = d;
     return d;
   }).finally(() => { if (_prom && _prom.p === p) _prom = null; });
@@ -243,8 +256,9 @@ function pastilla(ctx) {
 }
 
 /* ───────────────────────── estado de la pantalla ───────────────────────── */
-// filtro: 'todos' | 'pend' | 'hechos'; msg: la línea de estado ({ t, k, deshacer, copia })
-const E = { email: null, filtro: 'todos', msg: null };
+// filtro: 'todos' | 'pend' | 'hechos'; msg: la línea de estado ({ t, k, deshacer, copia });
+// conf: la fila que está pidiendo confirmar ({ id, que: 'dar' | 'quitar' })
+const E = { email: null, filtro: 'todos', msg: null, conf: null };
 const _ocupados = new Set();   // ids con una escritura en curso
 let _el = null, _ctx = null, _seq = 0;
 
@@ -261,7 +275,7 @@ export async function renderEspera(el, ctx) {
       return;
     }
     _el = el; _ctx = ctx;
-    if (E.email !== ctx.S.email) { E.email = ctx.S.email; E.filtro = 'todos'; E.msg = null; _ocupados.clear(); }
+    if (E.email !== ctx.S.email) { E.email = ctx.S.email; E.filtro = 'todos'; E.msg = null; E.conf = null; _ocupados.clear(); }
     if (!el.__espera) {
       el.__espera = true;
       el.addEventListener('click', alClic);
@@ -276,8 +290,8 @@ export async function renderEspera(el, ctx) {
 
 const cabecera = () => `<div class="v3es">
   <h1 class="v3es-tit">Lista de espera PRO</h1>
-  <p class="v3es-sub">Los mails que dejaron en «Precio de lanzamiento — escribinos», en Planes. Escribiles desde acá y
-    marcá a quién ya le escribiste. Esta lista la ves solo vos.</p>`;
+  <p class="v3es-sub">Los mails que dejaron en «Precio de lanzamiento — escribinos», en Planes. Escribiles desde acá,
+    marcá a quién ya le escribiste y dale el plan PRO a quien corresponda. Esta lista la ves solo vos.</p>`;
 
 const errorHtml = (e, ctx) => `<div class="v3es-vacio"><b>No pudimos leer la lista de espera</b>
   <p>Puede ser la conexión o que la sesión no sea la de administración${e ? ` (${ctx.esc(codigoErr(e))})` : ''}. Probá de nuevo.</p>
@@ -362,7 +376,11 @@ function cuerpo(filas, ctx) {
       : 'Todavía no marcaste a nadie como contactado. Cuando le escribas a alguien, tocá «Ya le escribí» en su fila.'}</p></div>`}
     <p class="v3es-nota"><b>Aviso por mail</b> lo anota la corrida automática cuando te manda el aviso de un pedido nuevo;
       esta pantalla no lo escribe. <b>Ya le escribí</b> solo deja la marca con la fecha: el mail lo mandás vos, con
-      «Escribirle» o desde tu casilla.</p>`;
+      «Escribirle» o desde tu casilla. <b>Dar PRO</b> le abre el plan pago a esa casilla: tiene que ser el mismo mail con
+      el que la persona entra a Valtia (y tenerlo verificado), y lo ve la próxima vez que abra o recargue la página. Desde ese
+      momento esa casilla también recibe los avisos por mail de los clientes: compras, ventas e informes. Dar PRO no le manda
+      ningún mail de bienvenida.${
+      _datos && _datos.pro ? ` Hoy hay ${_datos.pro.size} cuenta${_datos.pro.size === 1 ? '' : 's'} con PRO dado a mano.` : ''}</p>`;
 }
 
 function tabla(filas, veces, ctx) {
@@ -384,6 +402,16 @@ function tabla(filas, veces, ctx) {
       ? `<span class="v3es-est"><span class="v3es-tag hecho"${f.contactadoMs != null ? ` title="${esc(fechaHora(f.contactadoMs))}"` : ''}>Contactado${f.contactadoMs != null ? ' el ' + ddmm(f.contactadoMs) : ''}</span>
           <button type="button" class="v3es-lnk" data-es-deshacer="${esc(f.id)}"${ocupado ? ' disabled' : ''} aria-label="Deshacer: ${esc(f.email || 'este pedido')} vuelve a sin contactar">Deshacer</button></span>`
       : `<button type="button" class="v3es-b mini" data-es-marcar="${esc(f.id)}"${ocupado ? ' disabled' : ''} aria-label="Ya le escribí a ${esc(f.email || 'este pedido')}">${ocupado ? 'Guardando…' : 'Ya le escribí'}</button>`;
+    const pro = _datos && _datos.pro, k = clave(f.email), conf = E.conf && E.conf.id === f.id ? E.conf.que : '';
+    const proMs = pro && pro.has(k) ? pro.get(k) : null;
+    const plan = !pro ? '<span class="v3es-mut" title="No se pudo leer quién tiene PRO: tocá «Actualizar»">—</span>'
+      : !mailOk(f.email) || !idOk(f.id) ? '<span class="v3es-mut" title="Con este pedido no se puede dar el plan desde acá: revisá el mail">—</span>'
+      : conf ? `<span class="v3es-est"><button type="button" class="v3es-b mini" data-es-pro-ok="${esc(f.id)}"${ocupado ? ' disabled' : ''}>${
+            ocupado ? 'Guardando…' : conf === 'dar' ? 'Confirmar PRO' : 'Confirmar: quitar'}</button>
+          <button type="button" class="v3es-lnk" data-es-pro-no="1"${ocupado ? ' disabled' : ''}>Cancelar</button></span>`
+      : pro.has(k) ? `<span class="v3es-est"><span class="v3es-tag pro"${proMs != null ? ` title="${esc(fechaHora(proMs))}"` : ''}>PRO${proMs != null ? ' desde ' + ddmm(proMs) : ''}</span>
+          <button type="button" class="v3es-lnk" data-es-quitar="${esc(f.id)}" aria-label="Quitarle el plan PRO a ${esc(f.email)}">Quitar</button></span>`
+      : `<button type="button" class="v3es-b sec mini" data-es-pro="${esc(f.id)}" aria-label="Darle el plan PRO a ${esc(f.email)}">Dar PRO</button>`;
     const ir = mailOk(f.email)
       ? `<a class="v3es-b sec mini" href="${esc(mailtoDe(f.email))}" aria-label="Escribirle a ${esc(f.email)}">Escribirle</a>`
       : `<span class="v3es-mut" title="El mail tiene caracteres que no parecen de un mail: revisalo antes de escribirle">${f.email ? 'Mail con formato raro' : '—'}</span>`;
@@ -393,12 +421,13 @@ function tabla(filas, veces, ctx) {
       <td data-l="Origen">${origen}</td>
       <td data-l="Aviso por mail">${aviso}</td>
       <td class="est" data-l="Estado">${estado}</td>
+      <td class="est" data-l="Plan">${plan}</td>
       <td class="ir" data-l="">${ir}</td></tr>`;
   }).join('');
   return `<div class="v3es-tw"><table class="v3es-t">
     <caption class="v3es-sr">Pedidos de la lista de espera PRO, del más nuevo al más viejo</caption>
     <thead><tr><th scope="col">Mail</th><th scope="col">Fecha</th><th scope="col">Origen</th><th scope="col">Aviso por mail</th>
-      <th scope="col">Estado</th><th scope="col"><span class="v3es-sr">Escribirle</span></th></tr></thead>
+      <th scope="col">Estado</th><th scope="col">Plan</th><th scope="col"><span class="v3es-sr">Escribirle</span></th></tr></thead>
     <tbody>${filasHtml}</tbody></table></div>`;
 }
 
@@ -422,7 +451,7 @@ function mailsParaCopiar(filas) {
 
 /* ───────────────────────── eventos ───────────────────────── */
 function alClic(ev) {
-  const t = ev.target.closest('[data-es],[data-es-filtro],[data-es-marcar],[data-es-deshacer]');
+  const t = ev.target.closest('[data-es],[data-es-filtro],[data-es-marcar],[data-es-deshacer],[data-es-pro],[data-es-quitar],[data-es-pro-ok],[data-es-pro-no]');
   if (!t || !_el || !_el.contains(t) || t.disabled) return;
   const d = t.dataset;
   if (d.esFiltro) {
@@ -430,6 +459,9 @@ function alClic(ev) {
     pintar(`[data-es-filtro="${E.filtro}"]`);
     return;
   }
+  if (d.esPro || d.esQuitar) { pedirConfirmar(d.esPro || d.esQuitar, d.esPro ? 'dar' : 'quitar'); return; }
+  if (d.esProNo) { E.conf = null; E.msg = null; pintar(); return; }
+  if (d.esProOk) { cambiarPro(d.esProOk); return; }
   if (d.esMarcar) { marcar(d.esMarcar); return; }
   if (d.esDeshacer) { deshacer(d.esDeshacer); return; }
   if (d.es === 'copiar') { copiar(); return; }
@@ -468,6 +500,64 @@ async function marcar(id) {
   pintar('#v3es-msg [data-es-deshacer]');
   pastilla(ctx);
   try { ctx.toast(`Marcado como contactado: ${f.email || 'pedido'}`); } catch (e) {}
+}
+
+/* «Dar PRO» y «Quitar» piden confirmar en la misma fila: el primer clic solo cambia el
+   botón por «Confirmar…» y explica qué va a pasar; no escribe nada */
+function pedirConfirmar(id, que) {
+  const ctx = _ctx;
+  if (!ctx || !ctx.S.isAdmin || !_datos || !_datos.pro) return;
+  const f = _datos.filas.find(x => x.id === id);
+  if (!f || !mailOk(f.email) || !idOk(id) || _ocupados.has(id)) return;
+  // el permiso se guarda con el mail en minúscula: se muestra ESE, letra por letra (una
+  // «I» mayúscula se lee como una «l» y el permiso iría a otra casilla)
+  const k = clave(f.email);
+  E.conf = { id, que };
+  E.msg = { t: que === 'dar'
+    ? `Vas a darle el plan PRO a ${k}. Tiene que ser, letra por letra, el mail con el que entra a Valtia: si usa otro, no le va a aparecer.`
+    : `Vas a quitarle el plan PRO a ${k}: deja de ver lo pago la próxima vez que abra o recargue la página.`, k: 'ok' };
+  pintar(`[data-es-pro-ok="${cssId(id)}"]`);
+}
+
+/* la escritura, ya confirmada: crea o borra usuariosPro/{mail en minúscula}. El doc es el
+   mismo que arma marcar_pro.py: { plan, nota, desde } */
+async function cambiarPro(id) {
+  const ctx = _ctx;
+  if (!ctx || !ctx.S.isAdmin || !_datos || !_datos.pro || !E.conf || E.conf.id !== id) return;
+  const email = ctx.S.email, que = E.conf.que;
+  const f = _datos.filas.find(x => x.id === id);
+  if (!f || !mailOk(f.email) || !idOk(id) || _ocupados.has(id)) return;
+  const k = clave(f.email);
+  _ocupados.add(id);
+  pintar();
+  try {
+    if (que === 'dar') await setDoc(doc(db(), PRO, k), { plan: 'pro', nota: 'alta desde la lista de espera', desde: serverTimestamp() });
+    else await deleteDoc(doc(db(), PRO, k));
+  } catch (e) {
+    _ocupados.delete(id);
+    if (ctx.S.email !== email) return;
+    E.conf = null;
+    if (que === 'dar' && /permission-denied/.test(codigoErr(e))) {
+      // dar PRO a quien ya lo tiene es pisar un doc que existe, y la regla no deja: lo
+      // más probable es que la lista esté vieja (se lo dieron desde otra pestaña o con
+      // el script). Se lee de nuevo, que es lo que lo muestra
+      E.msg = { t: `No se pudo dar el plan PRO a ${k}: puede que ya lo tuviera. Leí la lista de nuevo; si en su fila dice «PRO», ya está.`, k: 'mal' };
+      dibujar(true);
+      return;
+    }
+    E.msg = { t: `No se pudo ${que === 'dar' ? 'dar' : 'quitar'} el plan PRO a ${k} (${codigoErr(e)}). Probá de nuevo.`, k: 'mal' };
+    pintar();
+    return;
+  }
+  _ocupados.delete(id);
+  if (ctx.S.email !== email) return;
+  E.conf = null;
+  if (que === 'dar') _datos.pro.set(k, Date.now()); else _datos.pro.delete(k);
+  E.msg = { t: que === 'dar'
+    ? `Listo: ${k} ya tiene el plan PRO. Lo ve la próxima vez que abra o recargue Valtia. Avisale vos: esta pantalla no le manda ningún mail.`
+    : `Listo: ${k} ya no tiene el plan PRO.`, k: 'ok' };
+  pintar(que === 'dar' ? `[data-es-quitar="${cssId(id)}"]` : `[data-es-pro="${cssId(id)}"]`);
+  try { ctx.toast(que === 'dar' ? `Plan PRO dado a ${k}` : `Plan PRO quitado a ${k}`); } catch (e) {}
 }
 
 /* «Deshacer»: borra `contactado` con deleteField() y el pedido vuelve a sin contactar */

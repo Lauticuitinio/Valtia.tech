@@ -7,12 +7,12 @@
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, query, where }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { calcular, agruparPorBroker, agruparPorActivo, normalizarTicker, reiniciarMiCartera, completarPreciosDeRentaFija }
-  from './mi-cartera.js?v=49';
+import { calcular, agruparPorBroker, agruparPorActivo, normalizarTicker, reiniciarMiCartera, completarPreciosDeRentaFija, completarPreciosNuevos }
+  from './mi-cartera.js?v=50';
 import { fxMercado, registrarImplicito, etiquetaFx } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
-import { renderResumen } from './panel-resumen.js?v=12';
+import { renderResumen } from './panel-resumen.js?v=13';
 import { renderComprar as renderComprarV3 } from './panel-comprar.js?v=2';
 import { renderCarteras as renderCarterasV3 } from './panel-carteras.js?v=4';
 import { renderMensual } from './panel-mensual.js?v=2';
@@ -22,9 +22,9 @@ import { renderAlertas, contarNoLeidas } from './panel-alertas.js?v=5';
 import { instalarEvaluacion, evaluarConPrecios, contarDisparadasNoVistas, fraseDisparo, fmtPrecio } from './alertas-precio.js?v=1';
 import { renderAgenda } from './panel-agenda.js?v=2';
 import { renderCuenta } from './panel-cuenta.js?v=7';
-import { renderOperar } from './panel-operar.js?v=11';
+import { renderOperar } from './panel-operar.js?v=12';
 // la lista de espera PRO (waitlistPro): solo el admin la ve y solo a él se le cuenta la pastilla
-import { renderEspera, contarSinContactar } from './panel-espera.js?v=1';
+import { renderEspera, contarSinContactar } from './panel-espera.js?v=2';
 // el rendimiento de las carteras y de cada posición (solo el admin)
 import { renderRendimientos } from './panel-rendimientos.js?v=1';
 import { eventos } from './panel-eventos.js?v=1';
@@ -406,6 +406,9 @@ const cartera = () => cached('cartera', async () => {
   // la MISMA función que usa Mi cartera: si cada pantalla lo hiciera por su
   // lado, el Inicio y Mi cartera mostrarían dos totales distintos
   try { completarPreciosDeRentaFija(pos, precios, await panelBonos(), await bonosSet()); } catch (e) {}
+  // y la posición recién cargada, que todavía no tiene su doc de precio, con el
+  // precio de referencia del catálogo: también la misma función que Mi cartera
+  try { await completarPreciosNuevos(pos, precios, await bonosSet()); } catch (e) {}
   return { pos, precios };
 });
 const ventas = () => cached('ventas', async () => {
