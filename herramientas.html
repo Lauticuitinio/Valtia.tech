@@ -1094,7 +1094,9 @@ function textoEstado() {
   const ultima = E.filas.reduce((m, x) => x.fecha > m ? x.fecha : m, '');
   const n = `${E.filas.length} papeles`;
   const viejas = E.filas.filter(x => x.vieja).length;
-  const sinOperar = viejas ? ` · ${viejas} sin operar ${ultima === hoy ? 'hoy' : 'en esa rueda'}` : '';
+  // no se dice «sin operar»: en los primeros minutos de la rueda el dato llega con
+  // demora y casi todos traen todavía el cierre anterior, aunque ya estén operando
+  const sinOperar = viejas ? ` · ${viejas} con el precio de la rueda anterior` : '';
   if (ultima === hoy && E.act != null) return `${n} · precios de las ${horaAR(E.act)}${sinOperar}`;
   return ultima ? `${n} · cierre del ${ddmm(ultima)}${sinOperar}` : n;
 }
@@ -1117,7 +1119,7 @@ function pintar() {
     <thead><tr>${th('sym', 'Papel', 'l')}${th('p', 'Último')}${th('var', 'Variación')}<th scope="col" class="ant"><button type="button" disabled style="cursor:default">Cierre anterior</button></th></tr></thead>
     <tbody>${filas.map(x => `<tr>
       <td class="l">${x.link ? `<a class="acc-sym" href="${esc(x.link)}" title="Ver la ficha de ${esc(x.sym)}">${esc(x.sym)}</a>` : `<span class="acc-sym">${esc(x.sym)}</span>`}${x.nom ? `<span class="acc-nom">${esc(x.nom)}</span>` : ''}</td>
-      <td>${plata(x.p)}${x.vieja ? `<span class="acc-nom" title="No operó en la última rueda: es su último precio">del ${ddmm(x.fecha)}</span>` : ''}</td>
+      <td>${plata(x.p)}${x.vieja ? `<span class="acc-nom" title="Todavía no tenemos su precio de esta rueda: es el último que hay">del ${ddmm(x.fecha)}</span>` : ''}</td>
       <td>${x.v == null ? '<span class="acc-mut">—</span>' : `<span class="acc-var ${x.v > 0.004 ? 'up' : x.v < -0.004 ? 'dn' : 'eq'}">${pct(x.v)}</span>`}</td>
       <td class="ant">${x.pc == null ? '<span class="acc-mut">—</span>' : plata(x.pc)}</td></tr>`).join('')}</tbody></table></div>`;
 }
