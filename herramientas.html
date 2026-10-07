@@ -250,6 +250,18 @@ button{font-family:inherit}
 .acc-cab{display:flex;align-items:center;justify-content:space-between;gap:6px 14px;flex-wrap:wrap;padding:13px 16px;border-bottom:1px solid var(--line)}
 .acc-tit{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
 .acc-fuente{font:400 12px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+.acc-tabs{display:flex;gap:6px;padding:12px 16px 0;overflow-x:auto;scrollbar-width:none}
+.acc-tabs::-webkit-scrollbar{display:none}
+.acc-tab{flex:none;font:600 13px 'IBM Plex Sans',sans-serif;color:var(--sub);background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 14px;cursor:pointer;white-space:nowrap}
+.acc-tab:hover{color:var(--ink);border-color:var(--gold)}
+.acc-tab[aria-selected="true"]{color:var(--ink);border-color:var(--gold);background:rgba(176,138,62,.1)}
+.acc-tab:focus-visible,.acc-chip:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.acc-lado{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap;justify-content:flex-end}
+.acc-chips{display:inline-flex;gap:6px}
+.acc-chips[hidden]{display:none}
+.acc-chip{font:500 12.5px 'IBM Plex Sans',sans-serif;color:var(--sub);background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 11px;cursor:pointer;white-space:nowrap}
+.acc-chip[aria-pressed="true"]{color:var(--ink);border-color:var(--gold);background:rgba(176,138,62,.1)}
+.acc-tag{font:600 10.5px 'IBM Plex Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--gold2);background:rgba(176,138,62,.12);border-radius:5px;padding:2px 5px;margin-left:6px;vertical-align:1px}
 .acc-barra{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;padding:12px 16px}
 .acc-estado{font:500 13px 'IBM Plex Sans',sans-serif;color:var(--sub);line-height:1.5}
 .acc-q{width:260px;max-width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font:400 14px 'IBM Plex Sans',sans-serif;outline:none}
@@ -276,6 +288,7 @@ a.acc-sym:hover{color:var(--gold2)}
 @media(max-width:560px){
   .acc-t th.ant,.acc-t td.ant,.acc-t th.vol,.acc-t td.vol{display:none}
   .acc-q{width:100%}
+  .acc-lado{width:100%;justify-content:flex-start}
   .acc-t td,.acc-t th button{padding-left:9px;padding-right:9px}
   .acc-t td.l,.acc-t th.l button{padding-left:13px}
 }
@@ -387,7 +400,7 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
     <div class="ts-list">
       <button type="button" class="ts-item active" data-tool="heatmap" onclick="switchTool('heatmap',this)"><span class="ts-ic" aria-hidden="true">▦</span><span class="ts-label">Mapa de calor</span><span class="badge-f">GRATIS</span></button>
       <button type="button" class="ts-item" data-tool="radar" onclick="switchTool('radar',this)"><span class="ts-ic" aria-hidden="true">◎</span><span class="ts-label">Radar de valuación</span><span class="badge-p">PRO</span></button>
-      <button type="button" class="ts-item" data-tool="acciones" onclick="switchTool('acciones',this)"><span class="ts-ic" aria-hidden="true">▲</span><span class="ts-label">Acciones ARG/EEUU</span><span class="badge-f">GRATIS</span></button>
+      <button type="button" class="ts-item" data-tool="acciones" onclick="switchTool('acciones',this)"><span class="ts-ic" aria-hidden="true">▲</span><span class="ts-label">Cotizaciones</span><span class="badge-f">GRATIS</span></button>
       <button type="button" class="ts-item" data-tool="bonos" onclick="switchTool('bonos',this)"><span class="ts-ic" aria-hidden="true">≋</span><span class="ts-label">Bonos soberanos</span><span class="badge-p">PRO</span></button>
       <button type="button" class="ts-item" data-tool="ratios" onclick="switchTool('ratios',this)"><span class="ts-ic" aria-hidden="true">÷</span><span class="ts-label">Ratios de CEDEARs</span><span class="badge-p">PRO</span></button>
       <button type="button" class="ts-item" data-tool="calendario" onclick="switchTool('calendario',this)"><span class="ts-ic" aria-hidden="true">▤</span><span class="ts-label">Calendario económico</span><span class="badge-f">GRATIS</span></button>
@@ -458,22 +471,36 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
 <!-- ACCIONES ARG/EEUU: los dos listados completos con filtros (antes vivían en
      Mercados, que se sacó el 25/09/2026). Los dibuja tv.js, con su atribución. -->
 <div class="tool-content" id="tool-acciones">
-  <h1 class="tool-h1">Acciones ARG, EEUU y ETFs</h1>
-  <p class="tool-desc">Las acciones argentinas con su precio y la variación del día. Más abajo, todas las especies de BYMA y de Estados Unidos, con filtros y el gráfico de cada papel.</p>
+  <h1 class="tool-h1">Cotizaciones de BYMA y Estados Unidos</h1>
+  <p class="tool-desc">Acciones, CEDEARs, bonos, letras y obligaciones negociables de BYMA, con el último precio, la variación del día y el volumen. Más abajo, los listados de TradingView de BYMA y de Estados Unidos, con filtros y el gráfico de cada papel.</p>
   <!-- ACCIONES ARGENTINAS: tabla propia (07/10/2026). Antes era solo el cuadro de
        TradingView, que lista las 1.500 especies de BYMA (cada CEDEAR con sus variantes) y
        que el 07/10 quedó vacío. Los precios son los del catálogo (preciosCatalogo/accionesAR,
        que escribe precios_catalogo.py en fondo-sync). La dibuja el módulo de más abajo. -->
   <div class="acc-box" id="acc-ar">
     <div class="acc-cab">
-      <div class="acc-tit">Acciones argentinas</div>
-      <div class="acc-fuente" id="acc-ar-fuente">Precios en pesos, con demora</div>
+      <div class="acc-tit">Cotizaciones de BYMA</div>
+      <div class="acc-fuente" id="acc-ar-fuente">Precios con demora</div>
+    </div>
+    <div class="acc-tabs" role="tablist" aria-label="Paneles de BYMA">
+      <button type="button" class="acc-tab" role="tab" data-acc-tab="acciones" aria-selected="true">Acciones</button>
+      <button type="button" class="acc-tab" role="tab" data-acc-tab="cedears" aria-selected="false">CEDEARs</button>
+      <button type="button" class="acc-tab" role="tab" data-acc-tab="bonos" aria-selected="false">Bonos</button>
+      <button type="button" class="acc-tab" role="tab" data-acc-tab="letras" aria-selected="false">Letras</button>
+      <button type="button" class="acc-tab" role="tab" data-acc-tab="ons" aria-selected="false">Obligaciones negociables</button>
     </div>
     <div class="acc-barra">
       <div class="acc-estado" id="acc-ar-estado" role="status" aria-live="polite">Cargando los precios…</div>
-      <input type="search" class="acc-q" id="acc-ar-q" placeholder="Buscar papel o empresa" aria-label="Buscar en las acciones argentinas" autocomplete="off">
+      <div class="acc-lado">
+        <div class="acc-chips" id="acc-ar-mon" role="group" aria-label="Moneda en la que cotiza" hidden>
+          <button type="button" class="acc-chip" data-acc-mon="" aria-pressed="true">Todas</button>
+          <button type="button" class="acc-chip" data-acc-mon="ARS" aria-pressed="false">En pesos</button>
+          <button type="button" class="acc-chip" data-acc-mon="USD" aria-pressed="false">En dólares</button>
+        </div>
+        <input type="search" class="acc-q" id="acc-ar-q" placeholder="Buscar papel o empresa" aria-label="Buscar en la tabla" autocomplete="off">
+      </div>
     </div>
-    <div id="acc-ar-cuerpo"></div>
+    <div id="acc-ar-cuerpo" role="tabpanel"></div>
   </div>
   <div id="tv-acc-ar" style="margin-bottom:18px"></div>
   <div id="tv-acc-us"></div>
@@ -1016,17 +1043,20 @@ widget('#tv-acc-us','screener',
 notaLegal('#tv-acc-nota');
 </script>
 
-<!-- ACCIONES ARGENTINAS — tabla propia. Lee preciosCatalogo/accionesAR, el único doc de
-     esa colección que se puede leer sin sesión. Lo escribe fondo-sync/precios_catalogo.py
-     (refrescar_publico) en cada corrida en rueda y al cierre. Desde el 07/10/2026 sale de
-     data912 (el panel de acciones de BYMA entero): {json: {"GGAL.BA": [precio, cierre
-     anterior, moneda, fecha, volumen, variación]}, fuente: "data912", actualizado_utc}. Si
-     data912 no anda, el mismo doc trae los precios de Yahoo con la forma vieja ([precio,
-     cierre anterior, moneda, fecha], fuente: "yahoo"): la tabla entiende las dos.
+<!-- COTIZACIONES DE BYMA — tablas propias, una por pestaña. Cada una lee un doc de
+     preciosCatalogo que se puede leer sin sesión (accionesAR, cedearsAR, bonosAR, letrasAR,
+     onsAR). Los escribe fondo-sync/precios_catalogo.py (refrescar_publico) en cada corrida
+     en rueda y al cierre, desde data912 (cada panel de BYMA entero):
+       {json: {CLAVE: [precio, cierre anterior, moneda, fecha, volumen, variación]},
+        fuente: "data912", actualizado_utc}
+     La clave es el símbolo (las acciones, con «.BA»). Si data912 no anda, el doc de las
+     acciones trae los precios de Yahoo con la forma vieja ([precio, cierre anterior,
+     moneda, fecha], fuente: "yahoo") y los demás quedan con la última hora buena: la
+     tabla entiende las dos formas y siempre dice de qué hora es el dato.
      Los nombres salen de catalogo-activos.js, que se pide recién cuando se abre la
-     herramienta (pesa 99 KB), más los pocos papeles del panel que el catálogo no tiene.
-     Sin precios o sin catálogo la tabla lo dice y no rompe nada: el cuadro de TradingView
-     de abajo sigue estando. -->
+     herramienta (pesa 99 KB); las ONs y los pocos papeles que el catálogo no tiene van
+     con el símbolo solo. Cada pestaña se lee la primera vez que se abre.
+     Sin precios la tabla lo dice y no rompe nada: los cuadros de TradingView siguen abajo. -->
 <script type="module">
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -1041,19 +1071,38 @@ const cuerpo = document.getElementById('acc-ar-cuerpo');
 const estado = document.getElementById('acc-ar-estado');
 const fuenteEl = document.getElementById('acc-ar-fuente');
 const buscador = document.getElementById('acc-ar-q');
-const REFRESCO_MS = 5 * 60e3;      // el doc cambia cada 15 minutos en rueda
-// orden: 'sym' | 'p' | 'var' | 'vol'; dir: 1 de menor a mayor, -1 al revés
-const E = { filas: [], orden: 'var', dir: -1, q: '', act: null, fuente: '', leido: 0, intento: 0, pidiendo: false };
-// papeles del panel de BYMA que catalogo-activos.js no trae (los demás van con el símbolo solo)
+const chips = document.getElementById('acc-ar-mon');
+const REFRESCO_MS = 5 * 60e3;      // los docs cambian cada 15 minutos en rueda
+
+/* una pestaña por panel. doc: el de preciosCatalogo; tipos: los del catálogo de donde
+   salen los nombres; rf: renta fija (cotiza cada 100 nominales, puede estar en dólares y
+   se filtra por moneda); orden: por qué columna arranca */
+const PANELES = {
+  acciones: { doc: 'accionesAR', una: 'papel', varias: 'papeles', tipos: ['accion_ar'], rf: false, orden: 'var', busca: 'Buscar papel o empresa' },
+  cedears: { doc: 'cedearsAR', una: 'CEDEAR', varias: 'CEDEARs', tipos: ['cedear'], rf: false, orden: 'var', busca: 'Buscar CEDEAR o empresa' },
+  bonos: { doc: 'bonosAR', una: 'especie', varias: 'especies', tipos: ['bono', 'letra'], rf: true, orden: 'vol', busca: 'Buscar bono' },
+  letras: { doc: 'letrasAR', una: 'especie', varias: 'especies', tipos: ['letra', 'bono'], rf: true, orden: 'vol', busca: 'Buscar letra' },
+  ons: { doc: 'onsAR', una: 'especie', varias: 'especies', tipos: [], rf: true, orden: 'vol', busca: 'Buscar obligación negociable' },
+};
+// lo que se ve (E) y lo leído de cada panel (D): filas, hora del dato, fuente, cuándo se leyó
+const E = { tab: 'acciones' };
+const D = {};
+Object.keys(PANELES).forEach(k => {
+  D[k] = { filas: [], act: null, fuente: '', leido: 0, intento: 0, pidiendo: false, fallo: false,
+           orden: PANELES[k].orden, dir: -1, q: '', mon: '' };
+});
+// papeles del panel de acciones que catalogo-activos.js no trae (los demás, con el símbolo solo)
 const NOMBRES_EXTRA = { A3: 'A3 Mercados', ECOG: 'Ecogas Inversiones', EDSH: 'Edesa Holding', IEB: 'IEB Construcciones',
   INAG: 'Insumos Agroquímicos', IRSA: 'IRSA', METR: 'Metrogas', RAGH: 'Raghsa', REGE: 'García Reguera', RIGO: 'Rigolleau' };
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const plata = p => '$' + (p >= 1000 ? p.toLocaleString('es-AR', { maximumFractionDigits: 0 })
-  : p.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+const plata = (p, mon) => (mon === 'USD' ? 'US$' : '$') + (p >= 1000 ? p.toLocaleString('es-AR', { maximumFractionDigits: 0 })
+  : p >= 1 ? p.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  : p.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 4 }));
 const pct = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
-// cantidad de papeles operados: 933.689 → «933,7 mil»; 1.250.000 → «1,25 M»
-const cant = n => n >= 1e6 ? (n / 1e6).toLocaleString('es-AR', { maximumFractionDigits: 2 }) + ' M'
+// cantidad operada: 933.689 → «933,7 mil»; 1.250.000 → «1,25 M»; 14.620.309.150 → «14,62 mil M»
+const cant = n => n >= 1e9 ? (n / 1e9).toLocaleString('es-AR', { maximumFractionDigits: 2 }) + ' mil M'
+  : n >= 1e6 ? (n / 1e6).toLocaleString('es-AR', { maximumFractionDigits: 2 }) + ' M'
   : n >= 1e4 ? (n / 1e3).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' mil'
   : n.toLocaleString('es-AR', { maximumFractionDigits: 0 });
 // hoy y la hora en la Argentina (UTC−3, sin horario de verano)
@@ -1064,30 +1113,43 @@ const ddmm = iso => iso.slice(8, 10) + '/' + iso.slice(5, 7);
 const sinTildes = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const numero = x => (typeof x === 'number' && isFinite(x) ? x : null);
 
+/* a dónde lleva una fila: la ficha del activo, si la web la tiene. La renta fija va sin
+   enlace: la ficha de bono existe solo para las especies del panel de bonos (unas 36), y
+   desde acá no se sabe cuáles son; un enlace a una ficha vacía es peor que ninguno */
+function enlace(sym, rf) {
+  try {
+    if (rf) return '';
+    const f = tickerFicha(sym + '.BA');
+    return f ? '/activo?t=' + encodeURIComponent(f) : '';
+  } catch (e) { return ''; }
+}
+
 /* el mapa del doc → filas. PURA: nombres {SIMBOLO: nombre} (o null si el catálogo no cargó).
-   Cada papel viene como [precio, cierre anterior, moneda, fecha] (Yahoo) o con dos datos
+   Cada especie viene como [precio, cierre anterior, moneda, fecha] (Yahoo) o con dos datos
    más, volumen y variación (data912). Tres casos:
    · con la fecha de la última rueda: precio, variación y volumen de esa rueda;
    · con una fecha anterior (vieja): es su último precio; la variación y el volumen serían
      los de otro día, así que no se muestran;
    · sin fecha y sin volumen (sinOp, solo data912): todavía no operó en esta rueda. */
-function aFilas(mapa, nombres) {
+function aFilas(mapa, nombres, rf) {
   const filas = [];
   Object.keys(mapa || {}).forEach(k => {
     const v = mapa[k];
     if (!Array.isArray(v)) return;
     const p = Number(v[0]), pc = Number(v[1]);
-    if (!(p > 0) || v[2] !== 'ARS') return;
+    const mon = v[2] === 'USD' ? 'USD' : v[2] === 'ARS' ? 'ARS' : '';
+    if (!(p > 0) || !mon) return;
     const sym = k.replace(/\.BA$/, '');
-    const ficha = tickerFicha(k) || tickerFicha(sym + '.BA');
     const conVol = v.length >= 5;
     const vol = conVol ? Math.max(0, Number(v[4]) || 0) : null;
     const varDoc = v.length >= 6 ? numero(v[5]) : null;
     const fecha = /^\d{4}-\d{2}-\d{2}$/.test(String(v[3] || '')) ? String(v[3]) : '';
-    filas.push({ sym, nom: (nombres && nombres[sym]) || NOMBRES_EXTRA[sym] || '', p, pc: pc > 0 ? pc : null,
+    filas.push({ sym, nom: (nombres && nombres[sym]) || (rf ? '' : NOMBRES_EXTRA[sym]) || '', p, mon, pc: pc > 0 ? pc : null,
                  v: varDoc != null ? varDoc : (pc > 0 ? (p / pc - 1) * 100 : null),
                  vol, fecha, sinOp: conVol && !fecha && !(vol > 0),
-                 link: ficha ? '/activo?t=' + encodeURIComponent(ficha) : '' });
+                 // en la renta fija en dólares, la última letra dice por dónde liquida
+                 tag: rf && mon === 'USD' ? (/C$/.test(sym) ? 'cable' : 'MEP') : '',
+                 link: enlace(sym, rf) });
   });
   const ultima = filas.reduce((m, x) => x.fecha > m ? x.fecha : m, '');
   filas.forEach(x => {
@@ -1097,127 +1159,160 @@ function aFilas(mapa, nombres) {
   return filas;
 }
 
-function ordenadas() {
-  const q = sinTildes(E.q.trim());
-  const f = q ? E.filas.filter(x => sinTildes(x.sym).includes(q) || sinTildes(x.nom).includes(q)) : E.filas.slice();
-  const d = E.dir, campo = { p: 'p', var: 'v', vol: 'vol' }[E.orden];
+function ordenadas(d) {
+  const q = sinTildes(d.q.trim());
+  let f = d.mon ? d.filas.filter(x => x.mon === d.mon) : d.filas.slice();
+  if (q) f = f.filter(x => sinTildes(x.sym).includes(q) || sinTildes(x.nom).includes(q));
+  const s = d.dir, campo = { p: 'p', var: 'v', vol: 'vol' }[d.orden];
   f.sort((a, b) => {
-    if (!campo) return d * a.sym.localeCompare(b.sym);
+    if (!campo) return s * a.sym.localeCompare(b.sym);
     const x = a[campo], y = b[campo];
     // sin dato (no operó, o es de otra rueda): siempre al final
     if (x == null || y == null) return (x == null) - (y == null) || a.sym.localeCompare(b.sym);
-    return d * (x - y) || a.sym.localeCompare(b.sym);
+    return s * (x - y) || a.sym.localeCompare(b.sym);
   });
   return f;
 }
 
-function textoEstado() {
-  if (!E.filas.length) return '';
+function textoEstado(P, d) {
   const hoy = diaAR(Date.now());
-  const ultima = E.filas.reduce((m, x) => x.fecha > m ? x.fecha : m, '');
-  const n = `${E.filas.length} papeles`;
-  const quietos = E.filas.filter(x => x.vieja || x.sinOp).length;
+  const ultima = d.filas.reduce((m, x) => x.fecha > m ? x.fecha : m, '');
+  const n = `${d.filas.length} ${d.filas.length === 1 ? P.una : P.varias}`;
+  const quietos = d.filas.filter(x => x.vieja || x.sinOp).length;
   // con data912 se sabe por el volumen que no operaron; con Yahoo, solo que el dato de esta
   // rueda todavía no llegó (viene con demora): no se dice «sin operar»
-  const cola = !quietos ? '' : E.fuente === 'data912' ? ` · ${quietos} sin operaciones ${ultima === hoy ? 'hoy' : 'en esa rueda'}`
-    : ` · ${quietos} con el precio de la rueda anterior`;
-  if (ultima === hoy && E.act != null) return `${n} · precios de las ${horaAR(E.act)}${cola}`;
-  return ultima ? `${n} · cierre del ${ddmm(ultima)}${cola}` : n;
+  const cola = (!quietos ? '' : d.fuente === 'data912' ? ` · ${quietos} sin operaciones ${ultima === hoy ? 'hoy' : 'en esa rueda'}`
+    : ` · ${quietos} con el precio de la rueda anterior`) + (P.rf ? ' · precio cada 100 nominales' : '');
+  if (ultima === hoy && d.act != null) return `${n} · precios de las ${horaAR(d.act)}${cola}`;
+  return ultima ? `${n} · cierre del ${ddmm(ultima)}${cola}` : n + cola;
 }
 
+/* dibuja la pestaña que se ve. Sin datos todavía, lo dice (cargando, o que no se pudo) */
 function pintar() {
-  if (!E.filas.length) return;
-  estado.textContent = textoEstado();
-  fuenteEl.textContent = E.fuente === 'data912' ? 'Precios en pesos, con demora · datos de data912'
-    : 'Precios en pesos, con unos 20 minutos de demora';
-  const filas = ordenadas();
-  if (!filas.length) {
-    cuerpo.innerHTML = `<div class="acc-vacio">Ningún papel coincide con «${esc(E.q.trim())}». Probá con el símbolo (GGAL) o con parte del nombre.</div>`;
+  const P = PANELES[E.tab], d = D[E.tab];
+  chips.hidden = !P.rf;
+  chips.querySelectorAll('[data-acc-mon]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.accMon === d.mon)));
+  buscador.placeholder = P.busca;
+  if (buscador.value !== d.q) buscador.value = d.q;
+  if (!d.filas.length) {
+    estado.textContent = d.fallo ? '' : 'Cargando los precios…';
+    cuerpo.innerHTML = d.fallo ? '<div class="acc-vacio">No pudimos traer estos precios en este momento. Abajo tenés el listado completo de BYMA.</div>' : '';
     return;
   }
-  const conVol = E.filas.some(x => x.vol != null);
+  estado.textContent = textoEstado(P, d);
+  fuenteEl.textContent = d.fuente === 'data912' ? 'Precios con demora · datos de data912' : 'Precios con unos 20 minutos de demora';
+  const filas = ordenadas(d);
+  if (!filas.length) {
+    cuerpo.innerHTML = `<div class="acc-vacio">${d.q.trim() ? `Nada coincide con «${esc(d.q.trim())}»${d.mon ? ' en esa moneda' : ''}. Probá con el símbolo o con parte del nombre.`
+      : 'No hay especies en esa moneda.'}</div>`;
+    return;
+  }
+  const conVol = d.filas.some(x => x.vol != null);
   const raya = '<span class="acc-mut">—</span>';
   const th = (k, txt, cls) => {
-    const on = E.orden === k;
-    return `<th scope="col"${cls ? ` class="${cls}"` : ''}${on ? ` aria-sort="${E.dir === 1 ? 'ascending' : 'descending'}"` : ''}>`
-      + `<button type="button" data-acc-orden="${k}">${txt}${on ? (E.dir === 1 ? ' ↑' : ' ↓') : ''}</button></th>`;
+    const on = d.orden === k;
+    return `<th scope="col"${cls ? ` class="${cls}"` : ''}${on ? ` aria-sort="${d.dir === 1 ? 'ascending' : 'descending'}"` : ''}>`
+      + `<button type="button" data-acc-orden="${k}">${txt}${on ? (d.dir === 1 ? ' ↑' : ' ↓') : ''}</button></th>`;
   };
   const nota = x => x.vieja ? `<span class="acc-nom" title="Es su último precio: en esta rueda todavía no tenemos otro">del ${ddmm(x.fecha)}</span>`
     : x.sinOp ? '<span class="acc-nom" title="Todavía no operó en esta rueda: es su último precio">sin operaciones</span>' : '';
   cuerpo.innerHTML = `<div class="acc-scroll"><table class="acc-t">
-    <caption style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Acciones argentinas: último precio, variación del día${conVol ? ', volumen' : ''} y cierre anterior</caption>
-    <thead><tr>${th('sym', 'Papel', 'l')}${th('p', 'Último')}${th('var', 'Variación')}${conVol ? th('vol', 'Volumen', 'vol') : ''}<th scope="col" class="ant"><button type="button" disabled style="cursor:default">Cierre anterior</button></th></tr></thead>
+    <caption style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">${esc(P.varias)}: último precio, variación del día${conVol ? ', volumen' : ''} y cierre anterior</caption>
+    <thead><tr>${th('sym', P.rf ? 'Especie' : 'Papel', 'l')}${th('p', 'Último')}${th('var', 'Variación')}${conVol ? th('vol', 'Volumen', 'vol') : ''}<th scope="col" class="ant"><button type="button" disabled style="cursor:default">Cierre anterior</button></th></tr></thead>
     <tbody>${filas.map(x => `<tr>
-      <td class="l">${x.link ? `<a class="acc-sym" href="${esc(x.link)}" title="Ver la ficha de ${esc(x.sym)}">${esc(x.sym)}</a>` : `<span class="acc-sym">${esc(x.sym)}</span>`}${x.nom ? `<span class="acc-nom">${esc(x.nom)}</span>` : ''}</td>
-      <td>${plata(x.p)}${nota(x)}</td>
+      <td class="l">${x.link ? `<a class="acc-sym" href="${esc(x.link)}" title="Ver la ficha de ${esc(x.sym)}">${esc(x.sym)}</a>` : `<span class="acc-sym">${esc(x.sym)}</span>`}${x.tag ? `<span class="acc-tag">${x.tag}</span>` : ''}${x.nom ? `<span class="acc-nom">${esc(x.nom)}</span>` : ''}</td>
+      <td>${plata(x.p, x.mon)}${nota(x)}</td>
       <td>${x.v == null ? raya : `<span class="acc-var ${x.v > 0.004 ? 'up' : x.v < -0.004 ? 'dn' : 'eq'}">${pct(x.v)}</span>`}</td>
-      ${conVol ? `<td class="vol"${x.vol != null ? ` title="${x.vol.toLocaleString('es-AR')} papeles operados"` : ''}>${x.vol == null ? raya : cant(x.vol)}</td>` : ''}
-      <td class="ant">${x.pc == null ? raya : plata(x.pc)}</td></tr>`).join('')}</tbody></table></div>`;
+      ${conVol ? `<td class="vol"${x.vol != null ? ` title="${x.vol.toLocaleString('es-AR')} nominales operados"` : ''}>${x.vol == null ? raya : cant(x.vol)}</td>` : ''}
+      <td class="ant">${x.pc == null ? raya : plata(x.pc, x.mon)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 
+/* los nombres del catálogo, por tipo: {accion_ar: {GGAL: 'Grupo…'}, cedear: {…}, bono: {…}, letra: {…}} */
 let _nombres = null, _nombresProm = null;
 function nombres() {
   if (_nombres) return Promise.resolve(_nombres);
   if (!_nombresProm) _nombresProm = import('./catalogo-activos.js?v=2').then(m => {
     const out = {};
-    (m.CATALOGO || []).forEach(e => { if (e && e.t === 'accion_ar' && e.s) out[String(e.s).toUpperCase()] = e.n || ''; });
+    (m.CATALOGO || []).forEach(e => {
+      if (!e || !e.s || !e.t || e.m !== 'byma') return;
+      (out[e.t] = out[e.t] || {})[String(e.s).toUpperCase()] = e.n || '';
+    });
     _nombres = out;
     return out;
   }).catch(() => null);
   return _nombresProm;
 }
 
-async function cargar() {
-  if (E.pidiendo) return;
-  E.pidiendo = true;
-  E.intento = Date.now();
+async function cargar(tab) {
+  const P = PANELES[tab], d = D[tab];
+  if (d.pidiendo) return;
+  d.pidiendo = true;
+  d.intento = Date.now();
   try {
-    const [snap, noms] = await Promise.all([getDoc(doc(db, 'preciosCatalogo', 'accionesAR')), nombres()]);
+    const [snap, noms] = await Promise.all([getDoc(doc(db, 'preciosCatalogo', P.doc)), nombres()]);
     if (!snap.exists()) throw new Error('sin doc');
-    const d = snap.data() || {};
-    const filas = aFilas(JSON.parse(d.json || '{}'), noms);
+    const x = snap.data() || {};
+    // los nombres de la pestaña: el primer tipo que tenga el símbolo manda
+    const mios = {};
+    P.tipos.slice().reverse().forEach(tp => Object.assign(mios, (noms && noms[tp]) || {}));
+    const filas = aFilas(JSON.parse(x.json || '{}'), mios, P.rf);
     if (!filas.length) throw new Error('vacío');
-    E.filas = filas;
-    E.fuente = d.fuente === 'data912' ? 'data912' : 'yahoo';
-    const a = d.actualizado_utc;
-    E.act = a && typeof a.toMillis === 'function' ? a.toMillis() : null;
-    E.leido = Date.now();
-    pintar();
+    d.filas = filas;
+    d.fuente = x.fuente === 'data912' ? 'data912' : 'yahoo';
+    const a = x.actualizado_utc;
+    d.act = a && typeof a.toMillis === 'function' ? a.toMillis() : null;
+    d.leido = Date.now();
+    d.fallo = false;
   } catch (e) {
     // con una tabla ya dibujada, un refresco que falla no la borra
-    if (!E.filas.length) {
-      estado.textContent = '';
-      cuerpo.innerHTML = '<div class="acc-vacio">No pudimos traer los precios de las acciones argentinas en este momento. Abajo tenés el listado completo de BYMA.</div>';
-    }
+    if (!d.filas.length) d.fallo = true;
   }
-  E.pidiendo = false;
+  d.pidiendo = false;
+  if (E.tab === tab) pintar();
 }
 
-cuerpo.addEventListener('click', ev => {
+/* abrir una pestaña: se dibuja con lo que haya y, si nunca se leyó (o falló hace más de
+   un minuto), se pide */
+function abrir(tab) {
+  if (!PANELES[tab]) return;
+  E.tab = tab;
+  caja.querySelectorAll('[data-acc-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.accTab === tab)));
+  pintar();
+  const d = D[tab];
+  if (!d.leido && Date.now() - d.intento > 60e3) cargar(tab);
+}
+
+caja.addEventListener('click', ev => {
+  const tab = ev.target.closest('[data-acc-tab]');
+  if (tab) { abrir(tab.dataset.accTab); return; }
+  const d = D[E.tab];
+  const mon = ev.target.closest('[data-acc-mon]');
+  if (mon) { d.mon = mon.dataset.accMon; pintar(); return; }
   const b = ev.target.closest('[data-acc-orden]');
   if (!b) return;
   const k = b.dataset.accOrden;
   // el mismo encabezado da vuelta el orden; uno nuevo arranca por lo más útil
-  if (E.orden === k) E.dir = -E.dir; else { E.orden = k; E.dir = k === 'sym' ? 1 : -1; }
+  if (d.orden === k) d.dir = -d.dir; else { d.orden = k; d.dir = k === 'sym' ? 1 : -1; }
   pintar();
   const nb = cuerpo.querySelector(`[data-acc-orden="${k}"]`);
   if (nb) nb.focus();
 });
-buscador.addEventListener('input', () => { E.q = buscador.value; pintar(); });
+buscador.addEventListener('input', () => { D[E.tab].q = buscador.value; pintar(); });
 
 // se carga recién cuando la herramienta se ve (las demás no pagan el catálogo), y
-// mientras se ve se vuelve a leer cada 5 minutos. La primera carga no depende solo del
-// IntersectionObserver (hay navegadores que lo demoran): el reloj de abajo también la
-// pide. Si falló, se reintenta como mucho una vez por minuto
+// mientras se ve, la pestaña abierta se vuelve a leer cada 5 minutos. La primera carga no
+// depende solo del IntersectionObserver (hay navegadores que lo demoran): el reloj de
+// abajo también la pide. Si falló, se reintenta como mucho una vez por minuto
 const visible = () => caja.offsetParent !== null;
-const primera = () => { if (!E.leido && visible() && Date.now() - E.intento > 60e3) cargar(); };
+const primera = () => { const d = D[E.tab]; if (!d.leido && visible() && Date.now() - d.intento > 60e3) cargar(E.tab); };
 if ('IntersectionObserver' in window) {
   new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) primera(); }).observe(caja);
 }
 primera();
 setInterval(() => {
-  if (!E.leido) primera();
-  else if (!document.hidden && visible() && Date.now() - E.leido >= REFRESCO_MS) cargar();
+  const d = D[E.tab];
+  if (!d.leido) primera();
+  else if (!document.hidden && visible() && Date.now() - d.leido >= REFRESCO_MS) cargar(E.tab);
 }, 3000);
 </script>
 

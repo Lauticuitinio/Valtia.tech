@@ -309,12 +309,13 @@ service cloud.firestore {
     // Un solo doc (latest) con el último precio y el cierre anterior de cada
     // activo del catálogo, para mostrar "hoy cotiza a…" antes de cargarlo,
     // como hace Senta. Lo escribe solo el pipeline (precios_intradia.py).
-    // Desde el 07/10/2026 hay un doc más, accionesAR: el mismo formato, pero
-    // solo con las acciones argentinas. Es la tabla «Acciones argentinas» de
-    // Herramientas, que se ve sin sesión: ESE doc lo puede leer cualquiera. El
-    // catálogo entero (latest) sigue pidiendo sesión.
+    // Desde el 07/10/2026 hay cinco docs más: accionesAR, cedearsAR, bonosAR,
+    // letrasAR y onsAR, uno por panel de BYMA. Son las tablas de cotizaciones de
+    // Herramientas, que se ven sin sesión: ESOS docs los puede leer cualquiera
+    // (son precios de mercado). El catálogo entero (latest) sigue pidiendo sesión.
     match /preciosCatalogo/{docId} {
-      allow get: if isAuthenticated() || docId == 'accionesAR';
+      allow get: if isAuthenticated()
+        || docId in ['accionesAR', 'cedearsAR', 'bonosAR', 'letrasAR', 'onsAR'];
       allow list: if false;
       allow write: if false;
     }
