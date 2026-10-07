@@ -9,7 +9,7 @@ import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, quer
 import { getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { calcular, agruparPorBroker, agruparPorActivo, normalizarTicker, reiniciarMiCartera, completarPreciosDeRentaFija, completarPreciosNuevos }
   from './mi-cartera.js?v=50';
-import { fxMercado, registrarImplicito, etiquetaFx } from './fx.js?v=1';
+import { fxMercado, registrarImplicito } from './fx.js?v=1';
 import { resumenVentas, cantidadAjuste } from './ventas.js?v=6';
 import { EMPRESAS } from './empresas.js?v=3';
 import { renderResumen } from './panel-resumen.js?v=13';
@@ -141,12 +141,13 @@ body.fl-app-on #portal-view{padding:0!important;margin:0!important}
 .vp-enc{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:22px 30px 16px;
   border-bottom:1px solid var(--v3-line);background:var(--v3-bg);position:sticky;top:0;z-index:60}
 /* la izquierda cede ancho y la derecha no: el selector de moneda se queda en su lugar
-   y, si la línea de fecha y frescura no entra, baja a un segundo renglón (no se
-   corta: dice de cuándo son los precios) */
+   y, si lo de abajo del título no entra, baja a un segundo renglón (no se corta) */
 .vp-enc .izq{flex:1 1 360px;min-width:0;max-width:100%}
 /* título de página (SPEC §0): IBM Plex Sans 700 28 px, negro sobre blanco */
 .vp-enc h1{font:700 28px/1.1 'IBM Plex Sans',system-ui,sans-serif;letter-spacing:-.01em;color:var(--v3-ink);margin:0}
 .vp-enc .sub{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin-top:6px;min-width:0}
+/* sin cartel ni línea no ocupa lugar (ojo: tiene que quedar sin espacios adentro) */
+.vp-enc .sub:empty{display:none}
 .vp-enc .sub .txt{font:500 12px/1.5 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--v3-mut);
   min-width:0;overflow-wrap:anywhere}
 /* cartelito de mercado abierto/cerrado */
@@ -287,11 +288,11 @@ a.vp-ir:hover{color:var(--v3-gold2)}
 `;
 
 /* ───────────────────────── estado y utilidades ───────────────────────── */
-// frescura: el texto del encabezado (sale del precio más VIEJO); ultimoPrecioMs:
-// el sello del precio más NUEVO, que es de donde sale el cartel de mercado
-// abierto/cerrado. Por qué son dos, en sellosPrecios()
+// frescuraMs: el sello del precio más VIEJO (lo que dice el cartel de mercado al
+// pasarle el mouse); ultimoPrecioMs: el sello del precio más NUEVO, que es de
+// donde sale el cartel de mercado abierto/cerrado. Por qué son dos, en sellosPrecios()
 const S = { user: null, isAdmin: false, data: {}, email: '', verificado: false, cliente: false, pro: false, plan: 'gratis',
-  frescura: '', ultimoPrecioMs: null };
+  frescuraMs: null, ultimoPrecioMs: null };
 const db = () => getFirestore(getApp());
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -730,8 +731,19 @@ function centrarEnBarra() {
   try { bar.scrollTo({ left: Math.max(0, izq), behavior: 'smooth' }); } catch (e) { bar.scrollLeft = Math.max(0, izq); }
 }
 
-/* un solo encabezado para todo el panel (prototipo): título, fecha y frescura, y
-   a la derecha la moneda (y "+ Agregar" en Mi cartera) */
+/* un solo encabezado para todo el panel: el título y, donde están los precios del
+   usuario, el cartel del mercado; a la derecha la moneda (y "+ Agregar" en Mi
+   cartera). Hasta el 07/10/2026 llevaba debajo una línea con la fecha, la edad de
+   los precios y de dónde salía el dólar («Miércoles 7 de octubre · precios
+   actualizados hace 12 min · MEP $1.539 · dolarapi, hace 2 h»): Lauti la sacó
+   por innecesaria. Lo que decía se lee al pasar el mouse (el cartel dice la edad
+   de los precios y cada botón de moneda a cuánto toma el dólar), y el cartel
+   avisa solo cuando en plena rueda no llegan precios nuevos (estadoMercado). */
+// a cuánto se toma el dólar de ese botón; sin dato no hay cartelito
+function titDolar(c) {
+  const v = c === 'CCL' ? (S.fxSnap || {}).ccl : c === 'MEP' ? (S.fxSnap || {}).mep : null;
+  return v > 0 ? ` title="Dólar ${c} a $${esc(Number(v).toLocaleString('es-AR'))}"` : '';
+}
 function pintarEncabezado() {
   const h = $('vp-enc'); if (!h) return;
   const tab = _tab, ges = ES_GESTION.has(tab), sub = SUBVISTAS[tab], ficha = TABS.find(x => x.id === tab);
@@ -740,25 +752,23 @@ function pintarEncabezado() {
   const tit = ges ? 'Administración' : tab === 'inicio' ? 'Hola, ' + primerNombre()
     : sub ? sub.t : tab === 'fondocli' ? 'Tu posición en el fondo' : ficha ? (ficha.tit || ficha.t) : '';
   const cur = curVista(), conMon = CON_MONEDA.has(tab);
-  const partes = [hoyLargo()];
-  if (ges) partes.push('solo lo ves vos, como administrador');
-  else if (conMon && S.frescura) partes.push(S.frescura);
-  // con la moneda en dólares, de dónde sale el dólar y qué edad tiene
-  if (conMon && cur !== 'ARS' && S.fxSnap) { try { const e = etiquetaFx(S.fxSnap, cur === 'CCL' ? 'ccl' : 'mep'); if (e) partes.push(e); } catch (x) {} }
-  // el cartel del mercado va donde están los precios del usuario (las mismas
-  // pestañas que muestran la frescura); en la gestión del fondo no aparece
+  // la línea de la fecha queda solo donde el encabezado no lleva título (la
+  // administración y la posición en el fondo): sin ella quedaría una franja vacía
+  const linea = propio ? [hoyLargo(), ges ? 'solo lo ves vos, como administrador' : ''].filter(Boolean).join(' · ') : '';
+  // el cartel del mercado va donde están los precios del usuario (las pestañas
+  // con selector de moneda); en la administración no aparece
   const mkt = !ges && conMon ? cartelMercado() : '';
-  const linea = partes.filter(Boolean).join(' · ');
   // la derecha, sin espacios sueltos: vacía (Movimientos, Alertas…) no ocupa lugar
   const der = (conMon ? `<div class="vp-seg mon" role="group" aria-label="Moneda">${['ARS', 'CCL', 'MEP'].map(c =>
-      `<button type="button" data-cur="${c}" class="${cur === c ? 'on' : ''}" aria-pressed="${cur === c}">${curEtq(c)}</button>`).join('')}</div>` : '')
+      `<button type="button" data-cur="${c}" class="${cur === c ? 'on' : ''}" aria-pressed="${cur === c}"${titDolar(c)}>${curEtq(c)}</button>`).join('')}</div>` : '')
     + (tab === 'micartera' && S.verificado ? '<button type="button" class="vp-agregar" data-agregar>+ Agregar</button>' : '');
+  // el .sub va sin espacios adentro: vacío no ocupa lugar (.vp-enc .sub:empty)
   h.innerHTML = `<div class="izq">${sub ? `<a href="#panel/${sub.de}" data-go="${sub.de}" class="vp-enc-volver">← Mi cartera</a>` : ''}
-      ${propio ? '' : `<h1>${esc(tit)}</h1>`}<div class="sub">${mkt}<span class="txt" title="${esc(linea)}">${esc(linea)}</span></div></div><div class="der">${der}</div>`;
+      ${propio ? '' : `<h1>${esc(tit)}</h1>`}<div class="sub">${mkt}${linea ? `<span class="txt">${esc(linea)}</span>` : ''}</div></div><div class="der">${der}</div>`;
 }
 
-/* contadores del lateral y frescura del encabezado: no dependen de que el
-   usuario pase por el Resumen (antes solo se llenaban ahí) */
+/* contadores del lateral y sellos de los precios (cartel del mercado): no
+   dependen de que el usuario pase por el Resumen (antes solo se llenaban ahí) */
 let _latSeq = 0;
 async function actualizarLateral() {
   const email = S.email, seq = ++_latSeq;
@@ -768,19 +778,19 @@ async function actualizarLateral() {
     if (S.email !== email || seq !== _latSeq) return;
     S.fxSnap = f;
     if (cc.fallo) return;   // sin leer la cartera no se pisan los contadores con ceros
-    S.frescura = cc.pos.length ? frescura(cc.precios) : '';
+    S.frescuraMs = cc.pos.length ? frescuraMs(cc.precios) : null;
     S.ultimoPrecioMs = cc.pos.length ? ultimoPrecioMs(cc.precios) : null;
     pintarEncabezado();
     await contadores(cc, disc, bset);
   } catch (e) {}
 }
 
-// Mi cartera relee los precios cada 2 minutos: la frescura del encabezado es la
-// de esa tabla (con la regla de acá: manda la posición más desactualizada)
+// Mi cartera relee los precios cada 2 minutos: los sellos del encabezado son los
+// de esa tabla (con la regla de acá: la edad la da la posición más desactualizada)
 window.addEventListener('valtia-precios', e => {
   const d = (e && e.detail) || {};
   if (!d.email || d.email !== S.email) return;
-  S.frescura = d.n ? frescura(d.precios) : '';
+  S.frescuraMs = d.n ? frescuraMs(d.precios) : null;
   S.ultimoPrecioMs = d.n ? ultimoPrecioMs(d.precios) : null;
   if (d.fx) S.fxSnap = d.fx;
   if (CON_MONEDA.has(_tab)) pintarEncabezado();
@@ -943,7 +953,7 @@ export async function iniciarPanel({ user, isAdmin, data }) {
   S.verificado = !!user.emailVerified;
   S.cliente = S.data.valorActual != null || S.data.capitalNeto != null;
   S.pro = S.isAdmin || S.cliente;
-  S.frescura = ''; S.fxSnap = null; S.ultimoPrecioMs = null;
+  S.frescuraMs = null; S.fxSnap = null; S.ultimoPrecioMs = null;
   instalarShell();
   // las alertas de precio se evalúan en cada repintado de Mi cartera (evento
   // "valtia-precios"). Una sola vez por página: instalarEvaluacion lo controla
@@ -1101,14 +1111,15 @@ function sellosPrecios(precios) {
 }
 const frescuraMs = precios => { const s = sellosPrecios(precios); return s ? s.viejo : null; };
 const ultimoPrecioMs = precios => { const s = sellosPrecios(precios); return s ? s.nuevo : null; };
-function frescura(precios) {
-  const ms = frescuraMs(precios);
-  if (ms == null) return '';
+// la edad de los precios en palabras, a partir del sello más viejo (se calcula
+// al pintar: guardada como texto, "hace 12 min" quedaba fijo aunque pasara una hora)
+function frescura(ms) {
+  if (ms == null || !isFinite(ms)) return '';
   const min = Math.round((Date.now() - ms) / 60000);
-  if (min < 2) return 'precios actualizados recién';
-  if (min < 60) return `precios actualizados hace ${min} min`;
+  if (min < 2) return 'Precios actualizados recién';
+  if (min < 60) return `Precios actualizados hace ${min} min`;
   const h = Math.round(min / 60);
-  return h < 24 ? `precios actualizados hace ${h} h` : 'precios del ' + new Date(ms).toLocaleDateString('es-AR');
+  return h < 24 ? `Precios actualizados hace ${h} h` : 'Precios del ' + new Date(ms).toLocaleDateString('es-AR');
 }
 
 /* ── ¿el mercado argentino está abierto? ──────────────────────────────────────
@@ -1122,10 +1133,12 @@ function frescura(precios) {
    mismo truco que hoyAR(): se corre el instante tres horas y se lee en UTC. La
    zona horaria de la computadora del visitante no entra en la cuenta.
 
-   Sin dato de frescura no hay cartel: preferimos no decir nada antes que
+   Sin sello de precios no hay cartel: preferimos no decir nada antes que
    adivinar. Y dentro de la franja con precios viejos tampoco prometemos cuándo
    vuelve a abrir (si es feriado, no sabemos si mañana también lo es): se dice
-   "cerrado" y la frescura del encabezado explica el resto. */
+   "cerrado" y de cuándo son los precios ("precios de las 15:02", "precios del
+   09/10"). Es el único caso en que el encabezado habla de la edad de los precios:
+   sirve igual para un feriado que para un rato en que el sync no los trajo. */
 const RUEDA_DESDE = 11, RUEDA_HASTA = 17;
 const FRESCO_MIN = 30;
 const DIAS_SEM = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
@@ -1137,6 +1150,12 @@ function proximaApertura(a) {
   let n = 1;
   while (n < 8 && !habilAR((dia + n) % 7)) n++;
   return `abre ${n === 1 ? 'mañana' : 'el ' + DIAS_SEM[(dia + n) % 7]} ${RUEDA_DESDE}:00`;
+}
+// de cuándo es un sello, en hora de Buenos Aires: "de las 15:02" si es de hoy, "del 06/10" si no
+function deCuando(ms) {
+  const d = new Date(ms - 3 * 3600e3), p = n => String(n).padStart(2, '0');
+  const hoy = d.toISOString().slice(0, 10) === ahoraAR().toISOString().slice(0, 10);
+  return hoy ? `de las ${d.getUTCHours()}:${p(d.getUTCMinutes())}` : `del ${p(d.getUTCDate())}/${p(d.getUTCMonth() + 1)}`;
 }
 const SESGO_MIN = 5;   // desfasaje de reloj que se tolera sin borrar el cartel
 function estadoMercado(ms) {
@@ -1150,13 +1169,14 @@ function estadoMercado(ms) {
   const enRueda = habilAR(a.getUTCDay()) && h >= RUEDA_DESDE && h < RUEDA_HASTA;
   if (enRueda) return edad < FRESCO_MIN
     ? { abierto: true, txt: 'Mercado abierto', cuando: '' }
-    : { abierto: false, txt: 'Mercado cerrado', cuando: '' };
+    : { abierto: false, txt: 'Mercado cerrado', cuando: 'precios ' + deCuando(ms) };
   return { abierto: false, txt: 'Mercado cerrado', cuando: proximaApertura(a) };
 }
 function cartelMercado() {
   const e = estadoMercado(S.ultimoPrecioMs);
   if (!e) return '';
-  return `<span class="vp-mkt ${e.abierto ? 'on' : 'off'}" data-mkt><i></i>${esc(e.txt)}${e.cuando ? `<em>${esc(e.cuando)}</em>` : ''}</span>`;
+  const edad = frescura(S.frescuraMs);   // al pasar el mouse
+  return `<span class="vp-mkt ${e.abierto ? 'on' : 'off'}" data-mkt${edad ? ` title="${esc(edad)}"` : ''}><i></i>${esc(e.txt)}${e.cuando ? `<em>${esc(e.cuando)}</em>` : ''}</span>`;
 }
 /* la hora avanza y los precios envejecen aunque nadie toque el panel: el cartel
    se repinta solo (y solo él, para no robarle el foco a los botones de moneda) */
@@ -1558,7 +1578,7 @@ const ctx = {
     const s = await getDoc(doc(db(), 'historialInformes', cual === 'mep' ? '_mep' : '_ccl'));
     return s.exists() ? JSON.parse(s.data().json || '[]') : [];
   }),
-  tenencias, frescura, ordenComprar, mapaCarteras, compararSeguidas,
+  tenencias, ordenComprar, mapaCarteras, compararSeguidas,
   // guarda la regla de inversión mensual ({ aporte US$/mes, compras por mes }). Devuelve
   // true o el mensaje de error. Refresca el plan y el Resumen.
   guardarRegla: async ({ aporte, compras }) => {
