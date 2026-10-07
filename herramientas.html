@@ -945,14 +945,18 @@ notaLegal('#tv-calendario-nota');
 
 // La tabla de ratios de arriba son nueve papeles escritos a mano. Esto es el
 // listado real de BYMA: el nombre de cada CEDEAR trae su ratio de conversión.
+// 07/10/2026: las vistas con filtro de TradingView («Más capitalizadas», «Líderes por
+// volumen», «Principales ganadoras») dejaron de traer papeles para Argentina y el cuadro
+// quedaba vacío («Ningún símbolo coincide con sus criterios»). La vista general sí trae
+// las 1.500 especies: se usa esa. Si vuelven a andar, se puede volver a 'most_capitalized'
 widget('#tv-cedears','screener',
-  { market:'argentina', defaultColumn:'overview', defaultScreen:'most_capitalized', showToolbar:true },
+  { market:'argentina', defaultColumn:'overview', defaultScreen:'general', showToolbar:true },
   { titulo:'Todos los papeles de BYMA — buscá tu CEDEAR', fuente:'TradingView · BYMA' });
 notaLegal('#tv-cedears-nota');
 
 // Acciones ARG/EEUU: los listados completos que antes estaban en Mercados
 widget('#tv-acc-ar','screener',
-  { market:'argentina', defaultColumn:'overview', defaultScreen:'most_capitalized', showToolbar:true },
+  { market:'argentina', defaultColumn:'overview', defaultScreen:'general', showToolbar:true },
   { titulo:'Acciones argentinas · todas las especies de BYMA', fuente:'TradingView · precios en pesos, con filtros', alto:620 });
 widget('#tv-acc-us','screener',
   { market:'america', defaultColumn:'overview', defaultScreen:'most_capitalized', showToolbar:true },
