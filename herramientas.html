@@ -243,6 +243,43 @@ button{font-family:inherit}
 .rzona.sv{color:var(--up)}.rzona.db{color:var(--sub)}.rzona.fi{color:var(--ink)}.rzona.sc{color:var(--dn)}
 .rentry{color:var(--gold);font-weight:700}
 
+/* ACCIONES ARGENTINAS: tabla propia (los precios salen de preciosCatalogo/accionesAR).
+   La caja copia el cabezal de los cuadros de TradingView (tv.js): título en mayúsculas a
+   la izquierda y de dónde sale el dato a la derecha */
+.acc-box{background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:18px;overflow:hidden}
+.acc-cab{display:flex;align-items:center;justify-content:space-between;gap:6px 14px;flex-wrap:wrap;padding:13px 16px;border-bottom:1px solid var(--line)}
+.acc-tit{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+.acc-fuente{font:400 12px 'IBM Plex Sans',sans-serif;color:var(--mut)}
+.acc-barra{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;padding:12px 16px}
+.acc-estado{font:500 13px 'IBM Plex Sans',sans-serif;color:var(--sub);line-height:1.5}
+.acc-q{width:260px;max-width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font:400 14px 'IBM Plex Sans',sans-serif;outline:none}
+.acc-q:focus{border-color:var(--gold)}
+.acc-scroll{max-height:580px;overflow:auto;border-top:1px solid var(--line)}
+.acc-t{width:100%;border-collapse:collapse}
+.acc-t thead th{position:sticky;top:0;z-index:1;background:#fff;padding:0;border-bottom:1px solid var(--ink)}
+.acc-t th button{width:100%;font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);background:none;border:none;padding:10px 12px;cursor:pointer;text-align:right;white-space:nowrap}
+.acc-t th.l button{text-align:left;padding-left:16px}
+.acc-t th button:hover,.acc-t th[aria-sort] button{color:var(--ink)}
+.acc-t th button:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.acc-t td{padding:9px 12px;border-bottom:1px solid var(--line);color:var(--ink);font:500 14px 'IBM Plex Sans',sans-serif;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.acc-t td.l{text-align:left;padding-left:16px;white-space:normal}
+.acc-t tbody tr:last-child td{border-bottom:none}
+.acc-t tbody tr:hover td{background:var(--marfil)}
+.acc-sym{font:600 14px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+a.acc-sym{border-bottom:1px dotted var(--gold);text-decoration:none}
+a.acc-sym:hover{color:var(--gold2)}
+.acc-nom{display:block;font:400 12.5px 'IBM Plex Sans',sans-serif;color:var(--mut);margin-top:1px}
+.acc-var{font-weight:600}
+.acc-var.up{color:var(--up)}.acc-var.dn{color:var(--dn)}.acc-var.eq{color:var(--sub)}
+.acc-mut{color:var(--mut)}
+.acc-vacio{padding:22px 16px;font:400 14px 'IBM Plex Sans',sans-serif;color:var(--sub);line-height:1.6;border-top:1px solid var(--line)}
+@media(max-width:560px){
+  .acc-t th.ant,.acc-t td.ant{display:none}
+  .acc-q{width:100%}
+  .acc-t td,.acc-t th button{padding-left:9px;padding-right:9px}
+  .acc-t td.l,.acc-t th.l button{padding-left:13px}
+}
+
 /* RATIOS */
 .ratios-table{width:100%;border-collapse:collapse;font-size:14.5px}
 .ratios-table th{font:700 11.5px 'IBM Plex Sans',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);padding:10px 14px;border-bottom:1px solid var(--ink);text-align:left;white-space:nowrap}
@@ -422,7 +459,22 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
      Mercados, que se sacó el 25/09/2026). Los dibuja tv.js, con su atribución. -->
 <div class="tool-content" id="tool-acciones">
   <h1 class="tool-h1">Acciones ARG, EEUU y ETFs</h1>
-  <p class="tool-desc">Todas las especies de BYMA y de Estados Unidos, con precio, variación del día y filtros. Tocá un papel para ver su gráfico.</p>
+  <p class="tool-desc">Las acciones argentinas con su precio y la variación del día. Más abajo, todas las especies de BYMA y de Estados Unidos, con filtros y el gráfico de cada papel.</p>
+  <!-- ACCIONES ARGENTINAS: tabla propia (07/10/2026). Antes era solo el cuadro de
+       TradingView, que lista las 1.500 especies de BYMA (cada CEDEAR con sus variantes) y
+       que el 07/10 quedó vacío. Los precios son los del catálogo (preciosCatalogo/accionesAR,
+       que escribe precios_catalogo.py en fondo-sync). La dibuja el módulo de más abajo. -->
+  <div class="acc-box" id="acc-ar">
+    <div class="acc-cab">
+      <div class="acc-tit">Acciones argentinas</div>
+      <div class="acc-fuente">Valtia · precios en pesos, con unos 20 minutos de demora</div>
+    </div>
+    <div class="acc-barra">
+      <div class="acc-estado" id="acc-ar-estado" role="status" aria-live="polite">Cargando los precios…</div>
+      <input type="search" class="acc-q" id="acc-ar-q" placeholder="Buscar papel o empresa" aria-label="Buscar en las acciones argentinas" autocomplete="off">
+    </div>
+    <div id="acc-ar-cuerpo"></div>
+  </div>
   <div id="tv-acc-ar" style="margin-bottom:18px"></div>
   <div id="tv-acc-us"></div>
   <div id="tv-acc-nota"></div>
@@ -957,11 +1009,182 @@ notaLegal('#tv-cedears-nota');
 // Acciones ARG/EEUU: los listados completos que antes estaban en Mercados
 widget('#tv-acc-ar','screener',
   { market:'argentina', defaultColumn:'overview', defaultScreen:'general', showToolbar:true },
-  { titulo:'Acciones argentinas · todas las especies de BYMA', fuente:'TradingView · precios en pesos, con filtros', alto:620 });
+  { titulo:'Todas las especies de BYMA', fuente:'TradingView · acciones, CEDEARs, bonos y más, con filtros', alto:620 });
 widget('#tv-acc-us','screener',
   { market:'america', defaultColumn:'overview', defaultScreen:'most_capitalized', showToolbar:true },
   { titulo:'Acciones y ETFs de Estados Unidos', fuente:'TradingView · listado completo con filtros', alto:620 });
 notaLegal('#tv-acc-nota');
+</script>
+
+<!-- ACCIONES ARGENTINAS — tabla propia. Lee preciosCatalogo/accionesAR, el único doc de
+     esa colección que se puede leer sin sesión: {json: {"GGAL.BA": [precio, cierre
+     anterior, moneda, fecha]}, actualizado_utc}. Lo escribe fondo-sync/precios_catalogo.py:
+     entero con cada pasada del catálogo y, entre una y otra, cada 15 minutos en rueda.
+     Los nombres salen de catalogo-activos.js, que se pide recién cuando se abre la
+     herramienta (pesa 99 KB). Sin precios o sin catálogo la tabla lo dice y no rompe nada:
+     el cuadro de TradingView de abajo sigue estando. -->
+<script type="module">
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { tickerFicha } from './activos.js?v=7';
+const app = getApps().length ? getApp() : initializeApp({
+  apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
+  authDomain: 'valtia-analytics.firebaseapp.com', projectId: 'valtia-analytics' });
+const db = getFirestore(app);
+
+const caja = document.getElementById('acc-ar');
+const cuerpo = document.getElementById('acc-ar-cuerpo');
+const estado = document.getElementById('acc-ar-estado');
+const buscador = document.getElementById('acc-ar-q');
+const REFRESCO_MS = 5 * 60e3;      // el doc cambia cada 15 minutos en rueda
+// orden: 'sym' | 'p' | 'var'; dir: 1 de menor a mayor, -1 al revés
+const E = { filas: [], orden: 'var', dir: -1, q: '', act: null, leido: 0, intento: 0, pidiendo: false };
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const plata = p => '$' + (p >= 1000 ? p.toLocaleString('es-AR', { maximumFractionDigits: 0 })
+  : p.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+const pct = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+// hoy y la hora en la Argentina (UTC−3, sin horario de verano)
+const AR_MS = 3 * 3600e3;
+const diaAR = ms => new Date(ms - AR_MS).toISOString().slice(0, 10);
+const horaAR = ms => new Date(ms - AR_MS).toISOString().slice(11, 16);
+const ddmm = iso => iso.slice(8, 10) + '/' + iso.slice(5, 7);
+const sinTildes = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+/* el mapa del doc → filas. PURA: nombres {SIMBOLO: nombre} (o null si el catálogo no cargó) */
+function aFilas(mapa, nombres) {
+  const filas = [];
+  Object.keys(mapa || {}).forEach(k => {
+    const v = mapa[k];
+    if (!Array.isArray(v)) return;
+    const p = Number(v[0]), pc = Number(v[1]);
+    if (!(p > 0) || v[2] !== 'ARS') return;
+    const sym = k.replace(/\.BA$/, '');
+    const ficha = tickerFicha(k) || tickerFicha(sym + '.BA');
+    filas.push({ sym, nom: (nombres && nombres[sym]) || '', p, pc: pc > 0 ? pc : null,
+                 v: pc > 0 ? (p / pc - 1) * 100 : null,
+                 fecha: /^\d{4}-\d{2}-\d{2}$/.test(String(v[3] || '')) ? String(v[3]) : '',
+                 link: ficha ? '/activo?t=' + encodeURIComponent(ficha) : '' });
+  });
+  // Un papel que no operó en la última rueda trae el precio de un día anterior, y su
+  // «variación» sería la de ESE día: no se muestra como si fuera la de hoy (ni entra
+  // primera en el orden por variación). Queda el precio, con la fecha del dato
+  const ultima = filas.reduce((m, x) => x.fecha > m ? x.fecha : m, '');
+  filas.forEach(x => { x.vieja = !!x.fecha && x.fecha < ultima; if (x.vieja) { x.v = null; x.pc = null; } });
+  return filas;
+}
+
+function ordenadas() {
+  const q = sinTildes(E.q.trim());
+  const f = q ? E.filas.filter(x => sinTildes(x.sym).includes(q) || sinTildes(x.nom).includes(q)) : E.filas.slice();
+  const d = E.dir;
+  f.sort((a, b) => {
+    if (E.orden === 'sym') return d * a.sym.localeCompare(b.sym);
+    const x = E.orden === 'p' ? a.p : a.v, y = E.orden === 'p' ? b.p : b.v;
+    // sin variación (no hay cierre anterior): siempre al final
+    if (x == null || y == null) return (x == null) - (y == null) || a.sym.localeCompare(b.sym);
+    return d * (x - y) || a.sym.localeCompare(b.sym);
+  });
+  return f;
+}
+
+function textoEstado() {
+  if (!E.filas.length) return '';
+  const hoy = diaAR(Date.now());
+  const ultima = E.filas.reduce((m, x) => x.fecha > m ? x.fecha : m, '');
+  const n = `${E.filas.length} papeles`;
+  const viejas = E.filas.filter(x => x.vieja).length;
+  const sinOperar = viejas ? ` · ${viejas} sin operar ${ultima === hoy ? 'hoy' : 'en esa rueda'}` : '';
+  if (ultima === hoy && E.act != null) return `${n} · precios de las ${horaAR(E.act)}${sinOperar}`;
+  return ultima ? `${n} · cierre del ${ddmm(ultima)}${sinOperar}` : n;
+}
+
+function pintar() {
+  if (!E.filas.length) return;
+  estado.textContent = textoEstado();
+  const filas = ordenadas();
+  if (!filas.length) {
+    cuerpo.innerHTML = `<div class="acc-vacio">Ningún papel coincide con «${esc(E.q.trim())}». Probá con el símbolo (GGAL) o con parte del nombre.</div>`;
+    return;
+  }
+  const th = (k, txt, cls) => {
+    const on = E.orden === k;
+    return `<th scope="col"${cls ? ` class="${cls}"` : ''}${on ? ` aria-sort="${E.dir === 1 ? 'ascending' : 'descending'}"` : ''}>`
+      + `<button type="button" data-acc-orden="${k}">${txt}${on ? (E.dir === 1 ? ' ↑' : ' ↓') : ''}</button></th>`;
+  };
+  cuerpo.innerHTML = `<div class="acc-scroll"><table class="acc-t">
+    <caption style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Acciones argentinas: último precio, variación del día y cierre anterior</caption>
+    <thead><tr>${th('sym', 'Papel', 'l')}${th('p', 'Último')}${th('var', 'Variación')}<th scope="col" class="ant"><button type="button" disabled style="cursor:default">Cierre anterior</button></th></tr></thead>
+    <tbody>${filas.map(x => `<tr>
+      <td class="l">${x.link ? `<a class="acc-sym" href="${esc(x.link)}" title="Ver la ficha de ${esc(x.sym)}">${esc(x.sym)}</a>` : `<span class="acc-sym">${esc(x.sym)}</span>`}${x.nom ? `<span class="acc-nom">${esc(x.nom)}</span>` : ''}</td>
+      <td>${plata(x.p)}${x.vieja ? `<span class="acc-nom" title="No operó en la última rueda: es su último precio">del ${ddmm(x.fecha)}</span>` : ''}</td>
+      <td>${x.v == null ? '<span class="acc-mut">—</span>' : `<span class="acc-var ${x.v > 0.004 ? 'up' : x.v < -0.004 ? 'dn' : 'eq'}">${pct(x.v)}</span>`}</td>
+      <td class="ant">${x.pc == null ? '<span class="acc-mut">—</span>' : plata(x.pc)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+let _nombres = null, _nombresProm = null;
+function nombres() {
+  if (_nombres) return Promise.resolve(_nombres);
+  if (!_nombresProm) _nombresProm = import('./catalogo-activos.js?v=2').then(m => {
+    const out = {};
+    (m.CATALOGO || []).forEach(e => { if (e && e.t === 'accion_ar' && e.s) out[String(e.s).toUpperCase()] = e.n || ''; });
+    _nombres = out;
+    return out;
+  }).catch(() => null);
+  return _nombresProm;
+}
+
+async function cargar() {
+  if (E.pidiendo) return;
+  E.pidiendo = true;
+  E.intento = Date.now();
+  try {
+    const [snap, noms] = await Promise.all([getDoc(doc(db, 'preciosCatalogo', 'accionesAR')), nombres()]);
+    if (!snap.exists()) throw new Error('sin doc');
+    const d = snap.data() || {};
+    const filas = aFilas(JSON.parse(d.json || '{}'), noms);
+    if (!filas.length) throw new Error('vacío');
+    E.filas = filas;
+    const a = d.actualizado_utc;
+    E.act = a && typeof a.toMillis === 'function' ? a.toMillis() : null;
+    E.leido = Date.now();
+    pintar();
+  } catch (e) {
+    // con una tabla ya dibujada, un refresco que falla no la borra
+    if (!E.filas.length) {
+      estado.textContent = '';
+      cuerpo.innerHTML = '<div class="acc-vacio">No pudimos traer los precios de las acciones argentinas en este momento. Abajo tenés el listado completo de BYMA.</div>';
+    }
+  }
+  E.pidiendo = false;
+}
+
+cuerpo.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-acc-orden]');
+  if (!b) return;
+  const k = b.dataset.accOrden;
+  // el mismo encabezado da vuelta el orden; uno nuevo arranca por lo más útil
+  if (E.orden === k) E.dir = -E.dir; else { E.orden = k; E.dir = k === 'sym' ? 1 : -1; }
+  pintar();
+  const nb = cuerpo.querySelector(`[data-acc-orden="${k}"]`);
+  if (nb) nb.focus();
+});
+buscador.addEventListener('input', () => { E.q = buscador.value; pintar(); });
+
+// se carga recién cuando la herramienta se ve (las demás no pagan el catálogo), y
+// mientras se ve se vuelve a leer cada 5 minutos. La primera carga no depende solo del
+// IntersectionObserver (hay navegadores que lo demoran): el reloj de abajo también la
+// pide. Si falló, se reintenta como mucho una vez por minuto
+const visible = () => caja.offsetParent !== null;
+const primera = () => { if (!E.leido && visible() && Date.now() - E.intento > 60e3) cargar(); };
+if ('IntersectionObserver' in window) {
+  new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) primera(); }).observe(caja);
+}
+primera();
+setInterval(() => {
+  if (!E.leido) primera();
+  else if (!document.hidden && visible() && Date.now() - E.leido >= REFRESCO_MS) cargar();
+}, 3000);
 </script>
 
 <!-- RADAR DE VALUACIÓN — carga desde Firestore (radar/latest + radarPro/latest) -->
