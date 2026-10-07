@@ -286,7 +286,7 @@ a.acc-sym:hover{color:var(--gold2)}
 .acc-mut{color:var(--mut)}
 .acc-vacio{padding:22px 16px;font:400 14px 'IBM Plex Sans',sans-serif;color:var(--sub);line-height:1.6;border-top:1px solid var(--line)}
 @media(max-width:560px){
-  .acc-t th.ant,.acc-t td.ant,.acc-t th.vol,.acc-t td.vol{display:none}
+  .acc-t th.ant,.acc-t td.ant,.acc-t th.vol,.acc-t td.vol,.acc-t th.eqv,.acc-t td.eqv,.acc-t th.vrm,.acc-t td.vrm{display:none}
   .acc-q{width:100%}
   .acc-lado{width:100%;justify-content:flex-start}
   .acc-t td,.acc-t th button{padding-left:9px;padding-right:9px}
@@ -608,30 +608,43 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
             <tr><td><span class="ticker-badge">TSLA</span></td><td>Tesla</td><td>15:1</td><td>15 CEDEAR = 1 acción</td><td>Automotriz</td></tr>
             <tr><td><span class="ticker-badge">MELI</span></td><td>MercadoLibre</td><td>120:1</td><td>120 CEDEAR = 1 acción</td><td>Comercio electrónico</td></tr>
             <tr><td><span class="ticker-badge">META</span></td><td>Meta Platforms</td><td>24:1</td><td>24 CEDEAR = 1 acción</td><td>Tecnología</td></tr>
-            <tr><td><span class="ticker-badge">SPY</span></td><td>SPDR S&amp;P 500 ETF</td><td>20:1</td><td>20 CEDEAR = 1 unidad</td><td>ETF índice</td></tr>
+            <tr><td><span class="ticker-badge">SPY</span></td><td>SPDR S&amp;P 500 ETF</td><td>60:1</td><td>60 CEDEAR = 1 unidad</td><td>ETF índice</td></tr>
           </tbody>
         </table></div>
       </div>
     </div>
     <!-- Atrás del candado hay CUATRO filas escritas a mano, sin precio ni
          comparativa. El texto dice lo que realmente se destapa; el ratio de
-         cualquier otro CEDEAR está gratis abajo, en el listado de BYMA. -->
+         cualquier otro CEDEAR está gratis abajo, en la tabla de todos los CEDEARs. -->
     <div class="pro-overlay">
       <h4>El resto de la tabla</h4>
-      <p>Cuatro CEDEARs más de referencia —ETFs y acciones— con su ratio de conversión. Es una tabla corta y la estamos ampliando: el ratio de cualquier otro CEDEAR lo tenés gratis acá abajo, en el listado de BYMA.</p>
+      <p>Cuatro CEDEARs más de referencia —ETFs y acciones— con su ratio de conversión. Es una tabla corta y la estamos ampliando: el ratio de cualquier otro CEDEAR lo tenés gratis acá abajo, en la tabla de todos los CEDEARs.</p>
       <a href="/planes" class="btn">Ver planes →</a>
     </div>
   </div>
 
-  <!-- Todos los CEDEARs de BYMA, de TradingView: el nombre de cada papel trae
-       su ratio de conversión. Es un embebido: se MUESTRA, no se leen datos de
-       adentro (otro dominio, y los términos de TradingView lo prohíben). -->
-  <div id="tv-cedears"></div>
+  <!-- TODOS LOS CEDEARs (07/10/2026): tabla propia. Antes iba acá el cuadro de TradingView
+       de BYMA, donde el ratio había que leerlo en el nombre de cada papel. El ratio sale
+       de la nómina de BYMA que ya trae catalogo-activos.js (445 CEDEARs) y el precio, del
+       mismo doc público que la pestaña CEDEARs de Cotizaciones. La dibuja el módulo
+       «RATIOS DE CEDEARs» de más abajo. -->
+  <div class="acc-box" id="rat-ced">
+    <div class="acc-cab">
+      <div class="acc-tit">Todos los CEDEARs — ratio y precio</div>
+      <div class="acc-fuente" id="rat-ced-fuente">Ratios de la nómina de BYMA · precios en pesos, con demora</div>
+    </div>
+    <div class="acc-barra">
+      <div class="acc-estado" id="rat-ced-estado" role="status" aria-live="polite">Cargando los CEDEARs…</div>
+      <div class="acc-lado">
+        <input type="search" class="acc-q" id="rat-ced-q" placeholder="Buscar CEDEAR o empresa (AAPL, Tesla…)" aria-label="Buscar en la tabla de CEDEARs" autocomplete="off">
+      </div>
+    </div>
+    <div id="rat-ced-cuerpo"></div>
+  </div>
   <p class="nota" style="margin-bottom:8px">
-    Buscá el CEDEAR por su ticker (AAPL, NVDA, TSLA…): el ratio de conversión viene en el nombre del papel.
-    Los ratios los fija cada emisor y se pueden ajustar — antes de operar, confirmalo con tu broker.
+    El ratio dice cuántos CEDEARs hacen falta para tener una acción del exterior. Lo fija cada emisor y se puede
+    ajustar: antes de operar, confirmalo con tu broker.
   </p>
-  <div id="tv-cedears-nota"></div>
 </div>
 
 <!-- CALENDARIO ECONÓMICO: se queda con el widget de eventos de TradingView -->
@@ -1021,16 +1034,10 @@ notaLegal('#hm-nota');
 widget('#tv-calendario','events',{importanceFilter:'-1,0,1',countryFilter:'ar,us,eu,gb,cn,jp,br',isTransparent:false},{titulo:'Calendario global',fuente:'TradingView · tiempo real',alto:600});
 notaLegal('#tv-calendario-nota');
 
-// La tabla de ratios de arriba son nueve papeles escritos a mano. Esto es el
-// listado real de BYMA: el nombre de cada CEDEAR trae su ratio de conversión.
-// 07/10/2026: las vistas con filtro de TradingView («Más capitalizadas», «Líderes por
-// volumen», «Principales ganadoras») dejaron de traer papeles para Argentina y el cuadro
-// quedaba vacío («Ningún símbolo coincide con sus criterios»). La vista general sí trae
-// las 1.500 especies: se usa esa. Si vuelven a andar, se puede volver a 'most_capitalized'
-widget('#tv-cedears','screener',
-  { market:'argentina', defaultColumn:'overview', defaultScreen:'general', showToolbar:true },
-  { titulo:'Todos los papeles de BYMA — buscá tu CEDEAR', fuente:'TradingView · BYMA' });
-notaLegal('#tv-cedears-nota');
+// «Ratios de CEDEARs» ya no lleva un cuadro de TradingView: desde el 07/10/2026 la tabla
+// de todos los CEDEARs es propia (módulo «RATIOS DE CEDEARs», más abajo). Ese día las
+// vistas con filtro de TradingView para Argentina («Más capitalizadas», «Líderes por
+// volumen») habían dejado de traer papeles y los cuadros de BYMA quedaban vacíos.
 
 // Cotizaciones: el listado de Estados Unidos. El de BYMA (todas las especies) salió el
 // 07/10/2026: lo reemplazan las tablas propias de «Cotizaciones de BYMA», más arriba
@@ -1038,6 +1045,167 @@ widget('#tv-acc-us','screener',
   { market:'america', defaultColumn:'overview', defaultScreen:'most_capitalized', showToolbar:true },
   { titulo:'Acciones y ETFs de Estados Unidos', fuente:'TradingView · listado completo con filtros', alto:620 });
 notaLegal('#tv-acc-nota');
+</script>
+
+<!-- RATIOS DE CEDEARs — la tabla de todos los CEDEARs de la herramienta «Ratios de CEDEARs».
+     La lista y el ratio salen de catalogo-activos.js (la nómina de BYMA: r = CEDEARs por cada
+     acción del subyacente; u = el símbolo de afuera si no es el mismo; b = la bolsa si no es
+     de EE.UU.). El precio y la variación, de preciosCatalogo/cedearsAR, el mismo doc público
+     de la pestaña CEDEARs de Cotizaciones. Si los precios no llegan, la tabla sale igual con
+     los ratios, que es para lo que está. Se carga recién cuando la herramienta se abre. -->
+<script type="module">
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { tickerFicha } from './activos.js?v=7';
+const app = getApps().length ? getApp() : initializeApp({
+  apiKey: 'AIzaSyCxKNw0995b8a7XXyENiMjDQbfRCe9IBlw',
+  authDomain: 'valtia-analytics.firebaseapp.com', projectId: 'valtia-analytics' });
+const db = getFirestore(app);
+
+const caja = document.getElementById('rat-ced');
+const cuerpo = document.getElementById('rat-ced-cuerpo');
+const estado = document.getElementById('rat-ced-estado');
+const buscador = document.getElementById('rat-ced-q');
+const REFRESCO_MS = 5 * 60e3;
+// orden: 'sym' | 'r' | 'p' | 'var'; dir: 1 de menor a mayor, -1 al revés
+const E = { filas: [], orden: 'sym', dir: 1, q: '', act: null, conPrecios: false, leido: 0, intento: 0, pidiendo: false, fallo: false };
+const BOLSAS = { B3: 'Brasil', XETRA: 'Alemania', FRA: 'Alemania', LSE: 'Londres' };
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const plata = p => '$' + (p >= 1000 ? p.toLocaleString('es-AR', { maximumFractionDigits: 0 })
+  : p.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+const pct = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+const num = x => Number(x.toFixed(2)).toLocaleString('es-AR', { maximumFractionDigits: 2 });
+const AR_MS = 3 * 3600e3;
+const diaAR = ms => new Date(ms - AR_MS).toISOString().slice(0, 10);
+const horaAR = ms => new Date(ms - AR_MS).toISOString().slice(11, 16);
+const sinTildes = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+/* "20:1" (veinte CEDEARs son una acción) o "1:3" (un CEDEAR son tres), como la nómina */
+const ratioTxt = r => r >= 1 ? `${num(r)}:1` : `1:${num(1 / r)}`;
+const equivalencia = r => r >= 1
+  ? `${num(r)} ${Math.abs(r - 1) < 1e-9 ? 'CEDEAR' : 'CEDEARs'} = 1 acción`
+  : `1 CEDEAR = ${num(1 / r)} acciones`;
+
+/* el catálogo + el mapa de precios → filas. PURA. precios: {SIMBOLO: [precio, cierre
+   anterior, moneda, fecha, volumen, variación]} o null. La variación va solo si el papel
+   operó en la última rueda (tiene la fecha más nueva del doc) */
+function aFilas(cedears, precios) {
+  const m = precios || {};
+  const ultima = Object.keys(m).reduce((u, k) => { const f = Array.isArray(m[k]) ? String(m[k][3] || '') : ''; return f > u ? f : u; }, '');
+  return cedears.map(e => {
+    const sym = String(e.s).toUpperCase(), v = m[sym];
+    const p = Array.isArray(v) && Number(v[0]) > 0 && v[2] === 'ARS' ? Number(v[0]) : null;
+    const deHoy = p != null && !!v[3] && v[3] === ultima;
+    const va = deHoy && typeof v[5] === 'number' && isFinite(v[5]) ? v[5] : null;
+    const ficha = tickerFicha(sym + '.BA');
+    return { sym, nom: e.n || '', r: Number(e.r), u: e.u || '', b: e.b || '', p, v: va,
+             link: ficha ? '/activo?t=' + encodeURIComponent(ficha) : '' };
+  }).filter(x => x.r > 0);
+}
+
+function ordenadas() {
+  const q = sinTildes(E.q.trim());
+  const f = q ? E.filas.filter(x => sinTildes(x.sym).includes(q) || sinTildes(x.nom).includes(q) || sinTildes(x.u).includes(q)) : E.filas.slice();
+  const s = E.dir, campo = { r: 'r', p: 'p', var: 'v' }[E.orden];
+  f.sort((a, b) => {
+    if (!campo) return s * a.sym.localeCompare(b.sym);
+    const x = a[campo], y = b[campo];
+    if (x == null || y == null) return (x == null) - (y == null) || a.sym.localeCompare(b.sym);
+    return s * (x - y) || a.sym.localeCompare(b.sym);
+  });
+  return f;
+}
+
+function pintar() {
+  if (!E.filas.length) {
+    estado.textContent = E.fallo ? '' : 'Cargando los CEDEARs…';
+    cuerpo.innerHTML = E.fallo ? '<div class="acc-vacio">No pudimos cargar la tabla de CEDEARs en este momento. Probá de nuevo en unos minutos.</div>' : '';
+    return;
+  }
+  const conPrecio = E.filas.filter(x => x.p != null).length;
+  estado.textContent = `${E.filas.length} CEDEARs`
+    + (E.conPrecios && E.act != null ? ` · ${diaAR(E.act) === diaAR(Date.now()) ? 'precios de las ' + horaAR(E.act) : 'precios del último cierre'} · ${conPrecio} con precio`
+      : ' · sin precios por ahora');
+  const filas = ordenadas();
+  if (!filas.length) {
+    cuerpo.innerHTML = `<div class="acc-vacio">Ningún CEDEAR coincide con «${esc(E.q.trim())}». Probá con el símbolo (AAPL) o con parte del nombre de la empresa.</div>`;
+    return;
+  }
+  const raya = '<span class="acc-mut">—</span>';
+  const th = (k, txt, cls) => {
+    const on = E.orden === k;
+    return `<th scope="col"${cls ? ` class="${cls}"` : ''}${on ? ` aria-sort="${E.dir === 1 ? 'ascending' : 'descending'}"` : ''}>`
+      + `<button type="button" data-rat-orden="${k}">${txt}${on ? (E.dir === 1 ? ' ↑' : ' ↓') : ''}</button></th>`;
+  };
+  cuerpo.innerHTML = `<div class="acc-scroll"><table class="acc-t">
+    <caption style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">CEDEARs: ratio de conversión, equivalencia, último precio y variación del día</caption>
+    <thead><tr>${th('sym', 'CEDEAR', 'l')}${th('r', 'Ratio')}<th scope="col" class="eqv"><button type="button" disabled style="cursor:default">Equivalencia</button></th>${th('p', 'Último')}${th('var', 'Variación', 'vrm')}</tr></thead>
+    <tbody>${filas.map(x => {
+      const extra = [x.u ? `afuera: ${x.u}` : '', x.b ? `cotiza en ${BOLSAS[x.b] || x.b}` : ''].filter(Boolean).join(' · ');
+      return `<tr>
+      <td class="l">${x.link ? `<a class="acc-sym" href="${esc(x.link)}" title="Ver la ficha de ${esc(x.sym)}">${esc(x.sym)}</a>` : `<span class="acc-sym">${esc(x.sym)}</span>`}<span class="acc-nom">${esc(x.nom)}${extra ? ` · ${esc(extra)}` : ''}</span></td>
+      <td><b>${ratioTxt(x.r)}</b></td>
+      <td class="eqv">${equivalencia(x.r)}</td>
+      <td>${x.p == null ? raya : plata(x.p)}</td>
+      <td class="vrm">${x.v == null ? raya : `<span class="acc-var ${x.v > 0.004 ? 'up' : x.v < -0.004 ? 'dn' : 'eq'}">${pct(x.v)}</span>`}</td></tr>`;
+    }).join('')}</tbody></table></div>`;
+}
+
+let _cat = null;
+async function cargar() {
+  if (E.pidiendo) return;
+  E.pidiendo = true;
+  E.intento = Date.now();
+  try {
+    // el catálogo se pide una vez; los precios, cada vez (y si fallan, la tabla sale igual)
+    if (!_cat) {
+      const mod = await import('./catalogo-activos.js?v=2');
+      _cat = (mod.CATALOGO || []).filter(e => e && e.t === 'cedear' && e.m === 'byma' && e.s && Number(e.r) > 0);
+    }
+    if (!_cat.length) throw new Error('sin catálogo');
+    let precios = null, act = null;
+    try {
+      const snap = await getDoc(doc(db, 'preciosCatalogo', 'cedearsAR'));
+      if (snap.exists()) {
+        const d = snap.data() || {};
+        precios = JSON.parse(d.json || '{}');
+        act = d.actualizado_utc && typeof d.actualizado_utc.toMillis === 'function' ? d.actualizado_utc.toMillis() : null;
+      }
+    } catch (e) {}
+    E.filas = aFilas(_cat, precios);
+    E.conPrecios = !!precios;
+    E.act = act;
+    E.leido = Date.now();
+    E.fallo = false;
+  } catch (e) {
+    if (!E.filas.length) E.fallo = true;
+  }
+  E.pidiendo = false;
+  pintar();
+}
+
+cuerpo.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-rat-orden]');
+  if (!b) return;
+  const k = b.dataset.ratOrden;
+  if (E.orden === k) E.dir = -E.dir; else { E.orden = k; E.dir = k === 'sym' ? 1 : -1; }
+  pintar();
+  const nb = cuerpo.querySelector(`[data-rat-orden="${k}"]`);
+  if (nb) nb.focus();
+});
+buscador.addEventListener('input', () => { E.q = buscador.value; pintar(); });
+
+const visible = () => caja.offsetParent !== null;
+const primera = () => { if (!E.leido && visible() && Date.now() - E.intento > 60e3) cargar(); };
+if ('IntersectionObserver' in window) {
+  new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) primera(); }).observe(caja);
+}
+primera();
+setInterval(() => {
+  if (!E.leido) primera();
+  else if (!document.hidden && visible() && Date.now() - E.leido >= REFRESCO_MS) cargar();
+}, 3000);
 </script>
 
 <!-- COTIZACIONES DE BYMA — tablas propias, una por pestaña. Cada una lee un doc de
