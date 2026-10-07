@@ -472,7 +472,7 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
      Mercados, que se sacó el 25/09/2026). Los dibuja tv.js, con su atribución. -->
 <div class="tool-content" id="tool-acciones">
   <h1 class="tool-h1">Cotizaciones de BYMA y Estados Unidos</h1>
-  <p class="tool-desc">Acciones, CEDEARs, bonos, letras y obligaciones negociables de BYMA, con el último precio, la variación del día y el volumen. Más abajo, los listados de TradingView de BYMA y de Estados Unidos, con filtros y el gráfico de cada papel.</p>
+  <p class="tool-desc">Acciones, CEDEARs, bonos, letras y obligaciones negociables de BYMA, con el último precio, la variación del día y el volumen. Más abajo, el listado de TradingView de las acciones y los ETFs de Estados Unidos, con filtros y el gráfico de cada papel.</p>
   <!-- ACCIONES ARGENTINAS: tabla propia (07/10/2026). Antes era solo el cuadro de
        TradingView, que lista las 1.500 especies de BYMA (cada CEDEAR con sus variantes) y
        que el 07/10 quedó vacío. Los precios son los del catálogo (preciosCatalogo/accionesAR,
@@ -502,7 +502,6 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
     </div>
     <div id="acc-ar-cuerpo" role="tabpanel"></div>
   </div>
-  <div id="tv-acc-ar" style="margin-bottom:18px"></div>
   <div id="tv-acc-us"></div>
   <div id="tv-acc-nota"></div>
 </div>
@@ -1033,10 +1032,8 @@ widget('#tv-cedears','screener',
   { titulo:'Todos los papeles de BYMA — buscá tu CEDEAR', fuente:'TradingView · BYMA' });
 notaLegal('#tv-cedears-nota');
 
-// Acciones ARG/EEUU: los listados completos que antes estaban en Mercados
-widget('#tv-acc-ar','screener',
-  { market:'argentina', defaultColumn:'overview', defaultScreen:'general', showToolbar:true },
-  { titulo:'Todas las especies de BYMA', fuente:'TradingView · acciones, CEDEARs, bonos y más, con filtros', alto:620 });
+// Cotizaciones: el listado de Estados Unidos. El de BYMA (todas las especies) salió el
+// 07/10/2026: lo reemplazan las tablas propias de «Cotizaciones de BYMA», más arriba
 widget('#tv-acc-us','screener',
   { market:'america', defaultColumn:'overview', defaultScreen:'most_capitalized', showToolbar:true },
   { titulo:'Acciones y ETFs de Estados Unidos', fuente:'TradingView · listado completo con filtros', alto:620 });
@@ -1056,7 +1053,7 @@ notaLegal('#tv-acc-nota');
      Los nombres salen de catalogo-activos.js, que se pide recién cuando se abre la
      herramienta (pesa 99 KB); las ONs y los pocos papeles que el catálogo no tiene van
      con el símbolo solo. Cada pestaña se lee la primera vez que se abre.
-     Sin precios la tabla lo dice y no rompe nada: los cuadros de TradingView siguen abajo. -->
+     Sin precios la tabla lo dice y no rompe nada más de la página. -->
 <script type="module">
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -1196,7 +1193,7 @@ function pintar() {
   if (buscador.value !== d.q) buscador.value = d.q;
   if (!d.filas.length) {
     estado.textContent = d.fallo ? '' : 'Cargando los precios…';
-    cuerpo.innerHTML = d.fallo ? '<div class="acc-vacio">No pudimos traer estos precios en este momento. Abajo tenés el listado completo de BYMA.</div>' : '';
+    cuerpo.innerHTML = d.fallo ? '<div class="acc-vacio">No pudimos traer estos precios en este momento. Probá de nuevo en unos minutos.</div>' : '';
     return;
   }
   estado.textContent = textoEstado(P, d);
