@@ -274,7 +274,7 @@ a.acc-sym:hover{color:var(--gold2)}
 .acc-mut{color:var(--mut)}
 .acc-vacio{padding:22px 16px;font:400 14px 'IBM Plex Sans',sans-serif;color:var(--sub);line-height:1.6;border-top:1px solid var(--line)}
 @media(max-width:560px){
-  .acc-t th.ant,.acc-t td.ant{display:none}
+  .acc-t th.ant,.acc-t td.ant,.acc-t th.vol,.acc-t td.vol{display:none}
   .acc-q{width:100%}
   .acc-t td,.acc-t th button{padding-left:9px;padding-right:9px}
   .acc-t td.l,.acc-t th.l button{padding-left:13px}
@@ -467,7 +467,7 @@ footer{background:#0B1327;padding:28px var(--v-gutter);display:flex;justify-cont
   <div class="acc-box" id="acc-ar">
     <div class="acc-cab">
       <div class="acc-tit">Acciones argentinas</div>
-      <div class="acc-fuente">Valtia · precios en pesos, con unos 20 minutos de demora</div>
+      <div class="acc-fuente" id="acc-ar-fuente">Precios en pesos, con demora</div>
     </div>
     <div class="acc-barra">
       <div class="acc-estado" id="acc-ar-estado" role="status" aria-live="polite">Cargando los precios…</div>
@@ -1017,12 +1017,16 @@ notaLegal('#tv-acc-nota');
 </script>
 
 <!-- ACCIONES ARGENTINAS — tabla propia. Lee preciosCatalogo/accionesAR, el único doc de
-     esa colección que se puede leer sin sesión: {json: {"GGAL.BA": [precio, cierre
-     anterior, moneda, fecha]}, actualizado_utc}. Lo escribe fondo-sync/precios_catalogo.py:
-     entero con cada pasada del catálogo y, entre una y otra, cada 15 minutos en rueda.
+     esa colección que se puede leer sin sesión. Lo escribe fondo-sync/precios_catalogo.py
+     (refrescar_publico) en cada corrida en rueda y al cierre. Desde el 07/10/2026 sale de
+     data912 (el panel de acciones de BYMA entero): {json: {"GGAL.BA": [precio, cierre
+     anterior, moneda, fecha, volumen, variación]}, fuente: "data912", actualizado_utc}. Si
+     data912 no anda, el mismo doc trae los precios de Yahoo con la forma vieja ([precio,
+     cierre anterior, moneda, fecha], fuente: "yahoo"): la tabla entiende las dos.
      Los nombres salen de catalogo-activos.js, que se pide recién cuando se abre la
-     herramienta (pesa 99 KB). Sin precios o sin catálogo la tabla lo dice y no rompe nada:
-     el cuadro de TradingView de abajo sigue estando. -->
+     herramienta (pesa 99 KB), más los pocos papeles del panel que el catálogo no tiene.
+     Sin precios o sin catálogo la tabla lo dice y no rompe nada: el cuadro de TradingView
+     de abajo sigue estando. -->
 <script type="module">
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -1035,23 +1039,38 @@ const db = getFirestore(app);
 const caja = document.getElementById('acc-ar');
 const cuerpo = document.getElementById('acc-ar-cuerpo');
 const estado = document.getElementById('acc-ar-estado');
+const fuenteEl = document.getElementById('acc-ar-fuente');
 const buscador = document.getElementById('acc-ar-q');
 const REFRESCO_MS = 5 * 60e3;      // el doc cambia cada 15 minutos en rueda
-// orden: 'sym' | 'p' | 'var'; dir: 1 de menor a mayor, -1 al revés
-const E = { filas: [], orden: 'var', dir: -1, q: '', act: null, leido: 0, intento: 0, pidiendo: false };
+// orden: 'sym' | 'p' | 'var' | 'vol'; dir: 1 de menor a mayor, -1 al revés
+const E = { filas: [], orden: 'var', dir: -1, q: '', act: null, fuente: '', leido: 0, intento: 0, pidiendo: false };
+// papeles del panel de BYMA que catalogo-activos.js no trae (los demás van con el símbolo solo)
+const NOMBRES_EXTRA = { A3: 'A3 Mercados', ECOG: 'Ecogas Inversiones', EDSH: 'Edesa Holding', IEB: 'IEB Construcciones',
+  INAG: 'Insumos Agroquímicos', IRSA: 'IRSA', METR: 'Metrogas', RAGH: 'Raghsa', REGE: 'García Reguera', RIGO: 'Rigolleau' };
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const plata = p => '$' + (p >= 1000 ? p.toLocaleString('es-AR', { maximumFractionDigits: 0 })
   : p.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 const pct = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+// cantidad de papeles operados: 933.689 → «933,7 mil»; 1.250.000 → «1,25 M»
+const cant = n => n >= 1e6 ? (n / 1e6).toLocaleString('es-AR', { maximumFractionDigits: 2 }) + ' M'
+  : n >= 1e4 ? (n / 1e3).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' mil'
+  : n.toLocaleString('es-AR', { maximumFractionDigits: 0 });
 // hoy y la hora en la Argentina (UTC−3, sin horario de verano)
 const AR_MS = 3 * 3600e3;
 const diaAR = ms => new Date(ms - AR_MS).toISOString().slice(0, 10);
 const horaAR = ms => new Date(ms - AR_MS).toISOString().slice(11, 16);
 const ddmm = iso => iso.slice(8, 10) + '/' + iso.slice(5, 7);
-const sinTildes = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const sinTildes = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const numero = x => (typeof x === 'number' && isFinite(x) ? x : null);
 
-/* el mapa del doc → filas. PURA: nombres {SIMBOLO: nombre} (o null si el catálogo no cargó) */
+/* el mapa del doc → filas. PURA: nombres {SIMBOLO: nombre} (o null si el catálogo no cargó).
+   Cada papel viene como [precio, cierre anterior, moneda, fecha] (Yahoo) o con dos datos
+   más, volumen y variación (data912). Tres casos:
+   · con la fecha de la última rueda: precio, variación y volumen de esa rueda;
+   · con una fecha anterior (vieja): es su último precio; la variación y el volumen serían
+     los de otro día, así que no se muestran;
+   · sin fecha y sin volumen (sinOp, solo data912): todavía no operó en esta rueda. */
 function aFilas(mapa, nombres) {
   const filas = [];
   Object.keys(mapa || {}).forEach(k => {
@@ -1061,27 +1080,31 @@ function aFilas(mapa, nombres) {
     if (!(p > 0) || v[2] !== 'ARS') return;
     const sym = k.replace(/\.BA$/, '');
     const ficha = tickerFicha(k) || tickerFicha(sym + '.BA');
-    filas.push({ sym, nom: (nombres && nombres[sym]) || '', p, pc: pc > 0 ? pc : null,
-                 v: pc > 0 ? (p / pc - 1) * 100 : null,
-                 fecha: /^\d{4}-\d{2}-\d{2}$/.test(String(v[3] || '')) ? String(v[3]) : '',
+    const conVol = v.length >= 5;
+    const vol = conVol ? Math.max(0, Number(v[4]) || 0) : null;
+    const varDoc = v.length >= 6 ? numero(v[5]) : null;
+    const fecha = /^\d{4}-\d{2}-\d{2}$/.test(String(v[3] || '')) ? String(v[3]) : '';
+    filas.push({ sym, nom: (nombres && nombres[sym]) || NOMBRES_EXTRA[sym] || '', p, pc: pc > 0 ? pc : null,
+                 v: varDoc != null ? varDoc : (pc > 0 ? (p / pc - 1) * 100 : null),
+                 vol, fecha, sinOp: conVol && !fecha && !(vol > 0),
                  link: ficha ? '/activo?t=' + encodeURIComponent(ficha) : '' });
   });
-  // Un papel que no operó en la última rueda trae el precio de un día anterior, y su
-  // «variación» sería la de ESE día: no se muestra como si fuera la de hoy (ni entra
-  // primera en el orden por variación). Queda el precio, con la fecha del dato
   const ultima = filas.reduce((m, x) => x.fecha > m ? x.fecha : m, '');
-  filas.forEach(x => { x.vieja = !!x.fecha && x.fecha < ultima; if (x.vieja) { x.v = null; x.pc = null; } });
+  filas.forEach(x => {
+    x.vieja = !!x.fecha && x.fecha < ultima;
+    if (x.vieja || x.sinOp) { x.v = null; x.pc = null; x.vol = null; }
+  });
   return filas;
 }
 
 function ordenadas() {
   const q = sinTildes(E.q.trim());
   const f = q ? E.filas.filter(x => sinTildes(x.sym).includes(q) || sinTildes(x.nom).includes(q)) : E.filas.slice();
-  const d = E.dir;
+  const d = E.dir, campo = { p: 'p', var: 'v', vol: 'vol' }[E.orden];
   f.sort((a, b) => {
-    if (E.orden === 'sym') return d * a.sym.localeCompare(b.sym);
-    const x = E.orden === 'p' ? a.p : a.v, y = E.orden === 'p' ? b.p : b.v;
-    // sin variación (no hay cierre anterior): siempre al final
+    if (!campo) return d * a.sym.localeCompare(b.sym);
+    const x = a[campo], y = b[campo];
+    // sin dato (no operó, o es de otra rueda): siempre al final
     if (x == null || y == null) return (x == null) - (y == null) || a.sym.localeCompare(b.sym);
     return d * (x - y) || a.sym.localeCompare(b.sym);
   });
@@ -1093,35 +1116,43 @@ function textoEstado() {
   const hoy = diaAR(Date.now());
   const ultima = E.filas.reduce((m, x) => x.fecha > m ? x.fecha : m, '');
   const n = `${E.filas.length} papeles`;
-  const viejas = E.filas.filter(x => x.vieja).length;
-  // no se dice «sin operar»: en los primeros minutos de la rueda el dato llega con
-  // demora y casi todos traen todavía el cierre anterior, aunque ya estén operando
-  const sinOperar = viejas ? ` · ${viejas} con el precio de la rueda anterior` : '';
-  if (ultima === hoy && E.act != null) return `${n} · precios de las ${horaAR(E.act)}${sinOperar}`;
-  return ultima ? `${n} · cierre del ${ddmm(ultima)}${sinOperar}` : n;
+  const quietos = E.filas.filter(x => x.vieja || x.sinOp).length;
+  // con data912 se sabe por el volumen que no operaron; con Yahoo, solo que el dato de esta
+  // rueda todavía no llegó (viene con demora): no se dice «sin operar»
+  const cola = !quietos ? '' : E.fuente === 'data912' ? ` · ${quietos} sin operaciones ${ultima === hoy ? 'hoy' : 'en esa rueda'}`
+    : ` · ${quietos} con el precio de la rueda anterior`;
+  if (ultima === hoy && E.act != null) return `${n} · precios de las ${horaAR(E.act)}${cola}`;
+  return ultima ? `${n} · cierre del ${ddmm(ultima)}${cola}` : n;
 }
 
 function pintar() {
   if (!E.filas.length) return;
   estado.textContent = textoEstado();
+  fuenteEl.textContent = E.fuente === 'data912' ? 'Precios en pesos, con demora · datos de data912'
+    : 'Precios en pesos, con unos 20 minutos de demora';
   const filas = ordenadas();
   if (!filas.length) {
     cuerpo.innerHTML = `<div class="acc-vacio">Ningún papel coincide con «${esc(E.q.trim())}». Probá con el símbolo (GGAL) o con parte del nombre.</div>`;
     return;
   }
+  const conVol = E.filas.some(x => x.vol != null);
+  const raya = '<span class="acc-mut">—</span>';
   const th = (k, txt, cls) => {
     const on = E.orden === k;
     return `<th scope="col"${cls ? ` class="${cls}"` : ''}${on ? ` aria-sort="${E.dir === 1 ? 'ascending' : 'descending'}"` : ''}>`
       + `<button type="button" data-acc-orden="${k}">${txt}${on ? (E.dir === 1 ? ' ↑' : ' ↓') : ''}</button></th>`;
   };
+  const nota = x => x.vieja ? `<span class="acc-nom" title="Es su último precio: en esta rueda todavía no tenemos otro">del ${ddmm(x.fecha)}</span>`
+    : x.sinOp ? '<span class="acc-nom" title="Todavía no operó en esta rueda: es su último precio">sin operaciones</span>' : '';
   cuerpo.innerHTML = `<div class="acc-scroll"><table class="acc-t">
-    <caption style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Acciones argentinas: último precio, variación del día y cierre anterior</caption>
-    <thead><tr>${th('sym', 'Papel', 'l')}${th('p', 'Último')}${th('var', 'Variación')}<th scope="col" class="ant"><button type="button" disabled style="cursor:default">Cierre anterior</button></th></tr></thead>
+    <caption style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Acciones argentinas: último precio, variación del día${conVol ? ', volumen' : ''} y cierre anterior</caption>
+    <thead><tr>${th('sym', 'Papel', 'l')}${th('p', 'Último')}${th('var', 'Variación')}${conVol ? th('vol', 'Volumen', 'vol') : ''}<th scope="col" class="ant"><button type="button" disabled style="cursor:default">Cierre anterior</button></th></tr></thead>
     <tbody>${filas.map(x => `<tr>
       <td class="l">${x.link ? `<a class="acc-sym" href="${esc(x.link)}" title="Ver la ficha de ${esc(x.sym)}">${esc(x.sym)}</a>` : `<span class="acc-sym">${esc(x.sym)}</span>`}${x.nom ? `<span class="acc-nom">${esc(x.nom)}</span>` : ''}</td>
-      <td>${plata(x.p)}${x.vieja ? `<span class="acc-nom" title="Todavía no tenemos su precio de esta rueda: es el último que hay">del ${ddmm(x.fecha)}</span>` : ''}</td>
-      <td>${x.v == null ? '<span class="acc-mut">—</span>' : `<span class="acc-var ${x.v > 0.004 ? 'up' : x.v < -0.004 ? 'dn' : 'eq'}">${pct(x.v)}</span>`}</td>
-      <td class="ant">${x.pc == null ? '<span class="acc-mut">—</span>' : plata(x.pc)}</td></tr>`).join('')}</tbody></table></div>`;
+      <td>${plata(x.p)}${nota(x)}</td>
+      <td>${x.v == null ? raya : `<span class="acc-var ${x.v > 0.004 ? 'up' : x.v < -0.004 ? 'dn' : 'eq'}">${pct(x.v)}</span>`}</td>
+      ${conVol ? `<td class="vol"${x.vol != null ? ` title="${x.vol.toLocaleString('es-AR')} papeles operados"` : ''}>${x.vol == null ? raya : cant(x.vol)}</td>` : ''}
+      <td class="ant">${x.pc == null ? raya : plata(x.pc)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 
 let _nombres = null, _nombresProm = null;
@@ -1147,6 +1178,7 @@ async function cargar() {
     const filas = aFilas(JSON.parse(d.json || '{}'), noms);
     if (!filas.length) throw new Error('vacío');
     E.filas = filas;
+    E.fuente = d.fuente === 'data912' ? 'data912' : 'yahoo';
     const a = d.actualizado_utc;
     E.act = a && typeof a.toMillis === 'function' ? a.toMillis() : null;
     E.leido = Date.now();
