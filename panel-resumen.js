@@ -116,7 +116,6 @@ const CSS = `
 .rs-at b{color:var(--v3-ink)}
 .rs-tag{font:700 11px 'IBM Plex Sans',sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:6px;white-space:nowrap;flex:none}
 .rs-tag.warn{color:var(--v3-warn);background:var(--v3-warnBg)}
-.rs-tag.nota{color:var(--v3-mut);background:var(--v3-neutro)}
 /* ── tarjetas de hoy ── */
 .rs-hoy{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:12px;margin-bottom:26px}
 .rs a.rs-h{display:block;background:var(--v3-card);border:1px solid var(--v3-line);border-radius:10px;padding:16px 18px;color:var(--v3-ink);transition:border-color .15s;min-width:0}
@@ -509,6 +508,8 @@ function donaTipo(filas, bset, bp, cat, ctx) {
   return tt.length ? dona('Por tipo', tt, fmtP(tt[0].p), tt[0].corto, ctx, ' data-rs="tipo"') : '';
 }
 
+// qué significa el resultado cuando se mira en dólares (va de cartelito, sin comillas adentro)
+const NOTA_USD = 'El costo y el valor se convierten con la cotización de hoy: el rendimiento es el mismo que en pesos, no tu retorno medido en dólares.';
 function tarjetaPrincipal(cc, bset, vs, ctx, dia, bp, cat) {
   const esc = ctx.esc, r = cc.r, m = ctx.curMoneda(cc.cur);
   const filas = r.filas || [], n = filas.length;
@@ -535,7 +536,10 @@ function tarjetaPrincipal(cc, bset, vs, ctx, dia, bp, cat) {
     donas += donaTipo(filas, bset, bp, cat, ctx);
   }
 
-  // avisos: sin precio del sync, sin dólar para convertir, y qué significa ver en dólares
+  // avisos: sin precio del sync y sin dólar para convertir. Hasta el 07/10/2026 había
+  // un tercero, fijo al mirar en dólares («Nota: el costo y el valor se convierten con
+  // la cotización de hoy…»): Lauti lo sacó. Esa aclaración se lee al pasar el mouse
+  // por el resultado (NOTA_USD)
   const avisos = [];
   const sinPx = filas.filter(f => f.actual == null);
   if (sinPx.length === 1) {
@@ -547,11 +551,10 @@ function tarjetaPrincipal(cc, bset, vs, ctx, dia, bp, cat) {
   }
   const sinFx = filas.filter(f => f.actual != null && f.dValor == null).length;
   if (sinFx) avisos.push(['warn', 'Atención', `Sin cotización del dólar: ${sinFx} ${sinFx === 1 ? 'posición no suma' : 'posiciones no suman'} al total en ${m === 'ARS' ? 'pesos' : 'dólares'}.`]);
-  if (cc.cur !== 'ARS') avisos.push(['nota', 'Nota', 'El costo y el valor se convierten con la cotización de hoy, así que el rendimiento es el mismo que en pesos: no es tu retorno medido en dólares.']);
 
   const valor = tot > 0
     ? `<div class="rs-total">${ctx.money(r.total, m)}</div>
-       <div class="rs-pl"><span class="v ${upCls(r.plTot)}">${ctx.moneyS(r.plTot, m)}</span>
+       <div class="rs-pl"${cc.cur !== 'ARS' ? ` title="${NOTA_USD}"` : ''}><span class="v ${upCls(r.plTot)}">${ctx.moneyS(r.plTot, m)}</span>
          ${r.plTotPct != null && isFinite(r.plTotPct) ? `<span class="rs-pill ${r.plTotPct >= 0 ? 'up' : 'dn'}">${pctS(r.plTotPct)}</span>` : ''}
          <span class="s">sobre ${N(ctx.money(r.costoTot, m))} invertidos</span></div>`
     : `<div class="rs-total rs-mu">—</div><div class="rs-pl"><span class="s">${sinFx
