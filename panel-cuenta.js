@@ -56,12 +56,13 @@ const CAMPO_FREC_DESDE = 'frecuenciaDesde';
    Los campos, las claves y los valores son EXACTAMENTE los que aceptan
    firestore.rules (match /alertas/{docId}) y los que normaliza config_valida():
      activo: bool (apagadas por defecto) · frecuencia: 'diaria' | 'semanal'
-     tipos: { zona, estirada, resultados, vencimientos, variacion: bool }
-       (un tipo que no vino en el doc cuenta como prendido, igual que en el pipeline)
+     tipos: { zona, estirada, resultados, vencimientos, cupones, variacion: bool }
+       (un tipo que no vino en el doc cuenta como prendido, igual que en el pipeline;
+       «cupones», los cobros de renta y amortización de los bonos en dólares, desde el 22/10/2026)
      umbralVar: 3 | 5 | 8 (5 por defecto) */
 const TIPOS_ALERTA = [['zona', 'Entrada en zona de valor del radar'], ['estirada', 'Pasa a «Estirada»'],
   ['resultados', 'Resultados en los próximos días'], ['vencimientos', 'Vencimientos de bonos y letras'],
-  ['variacion', 'Movimientos fuertes de precio']];
+  ['cupones', 'Cobros de cupones de tus bonos'], ['variacion', 'Movimientos fuertes de precio']];
 const FRECS_ALERTA = [['diaria', 'Diaria'], ['semanal', 'Semanal (lunes)']];
 const UMBRALES = [3, 5, 8];
 const UMBRAL_DEF = 5;

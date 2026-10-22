@@ -191,7 +191,7 @@ service cloud.firestore {
           && (!('frecuencia' in request.resource.data) || request.resource.data.frecuencia in ['diaria', 'semanal'])
           && (!('tipos' in request.resource.data)
               || (request.resource.data.tipos is map
-                  && request.resource.data.tipos.keys().hasOnly(['zona', 'estirada', 'resultados', 'vencimientos', 'variacion'])
+                  && request.resource.data.tipos.keys().hasOnly(['zona', 'estirada', 'resultados', 'vencimientos', 'cupones', 'variacion'])
                   && request.resource.data.tipos.values().hasOnly([true, false])))
           && (!('umbralVar' in request.resource.data) || request.resource.data.umbralVar in [3, 5, 8])
           && (!('avisos' in request.resource.data)
