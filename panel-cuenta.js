@@ -256,9 +256,12 @@ const planDe = S => PLANES[S.isAdmin ? 'admin' : S.cliente ? 'cliente' : S.pro ?
    no están en esta lista: tienen su bloque propio arriba, con otros campos de este
    mismo documento, y esas sí salen. Cuando el envío de uno de estos exista, se le
    pone ya:true acá y desaparece su etiqueta.
-   "cierre" (25/09/2026, pedido de Lauti después de ver el de Senta) sí sale: lo
-   manda cierre_cartera.py desde precios_intradia.py al cierre de cada rueda, solo
-   a quien lo prende acá y con el mail verificado.
+   "cierre" (25/09/2026, pedido de Lauti después de ver el de Senta) lo manda
+   cierre_cartera.py desde precios_intradia.py al cierre de cada rueda. Hasta el
+   23/10/2026 era un interruptor de esta lista; ese día Lauti pidió que salga a todos
+   «y que no salga la opción de elegir»: salió de la pantalla y el envío ya no mira el
+   campo (cierre_cartera.CIERRE_PARA_TODOS). Si alguna cuenta lo tiene guardado, queda
+   como está.
    Desde el 06/10/2026 también salen (y miran este interruptor):
    - "compraventa" y "rotacion": los mails de las carteras (avisos_rotacion.py). Una
      operación sola es «Compras y ventas»; una rotación o varias juntas le llegan a
@@ -268,8 +271,6 @@ const planDe = S => PLANES[S.isAdmin ? 'admin' : S.cliente ? 'cliente' : S.pro ?
      con POR_DEFECTO de avisos_config.py, que es quien decide del lado del envío.
    - "informes": informes_avisos.py, apagado salvo que se prenda acá. */
 const AVISOS = [
-  { k: 'cierre', pro: false, t: 'Cierre diario de tu cartera',
-    d: 'Cada día de rueda, al cierre: cuánto vale, cuánto se movió en pesos y en dólares, contra el S&P 500 y lo que más se movió.', ya: true },
   { k: 'compraventa', pro: true, deOrigen: true, t: 'Compras y ventas',
     d: 'Cada compra o venta de las carteras, con el precio y la razón. Sale el mismo día, a los pocos minutos de operar.', ya: true },
   { k: 'rotacion', pro: true, deOrigen: true, t: 'Rotaciones de las carteras que seguís',
