@@ -6,3 +6,32 @@ dev-portal.html
 # archivos temporales de las pruebas del panel (tokens de cuentas de prueba)
 _tok*.txt
 _aud.js
+
+# --- Claves y credenciales: nunca al repositorio (13/11/2026) ---
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+.git-credentials
+gitconfig
+serviceAccount*.json
+*firebase-adminsdk*.json
+*credentials*.json
+*secret*.json
+_tok*
+*.bak
+
+# --- Cosas locales que no son del sitio ---
+.claude/
+_backup_pre_switch/
+Analisis de Empresas/
+database.rules.json
+main.html
+package-lock.json
+scripts/seed-carteras.js
+valtia-*.md
+*.docx

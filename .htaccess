@@ -118,6 +118,10 @@ DirectoryIndex index.html
   Header always set Content-Security-Policy "upgrade-insecure-requests; frame-ancestors 'self'"
   Header always set X-Content-Type-Options "nosniff"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  # Permissions-Policy (13/11/2026): el sitio no usa cámara, micrófono,
+  #   ubicación, pagos del navegador ni USB; si alguna vez se colara un
+  #   script ajeno, tampoco puede pedirlos.
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
 </IfModule>
 
 # --- Archivos que no son para el visitante -------------------
